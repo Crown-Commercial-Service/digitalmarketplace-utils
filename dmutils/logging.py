@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 import uuid
+import sys
 
 from flask import g, request
 from flask.ctx import has_app_context
@@ -16,9 +17,11 @@ def init_app(app):
     app.config.setdefault('DM_REQUEST_ID_HEADER', 'DM-Request-ID')
     app.config.setdefault('DM_DOWNSTREAM_REQUEST_ID_HEADER', '')
 
-    handler = get_handler(app)
+    logging.getLogger().addHandler(logging.NullHandler())
 
-    app.logger.addHandler(handler)
+    del app.logger.handlers[:]
+    app.logger.addHandler(get_handler(app))
+
     app.logger.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
 
     request_id_header = app.config['DM_REQUEST_ID_HEADER']
@@ -35,14 +38,22 @@ def init_app(app):
         return response
 
 
-def get_handler(app):
+def configure_handler(handler, app):
     formatter = CustomFormatter(LOG_FORMAT, app.config['DM_APP_NAME'])
 
-    handler = logging.FileHandler(app.config['DM_LOG_PATH'])
     handler.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
     handler.setFormatter(formatter)
 
     return handler
+
+
+def get_handler(app):
+    handler = None
+    if app.debug:
+        handler = logging.StreamHandler(sys.stderr)
+    else:
+        handler = logging.FileHandler(app.config['DM_LOG_PATH'])
+    return configure_handler(handler, app)
 
 
 def get_request_id(request, request_id_header, downstream_header):

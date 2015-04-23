@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 import tempfile
+import logging
 
 from werkzeug.test import EnvironBuilder
 from werkzeug.wrappers import Request
 import mock
 from flask import Flask, g
+import pytest
 
 from dmutils.logging import get_request_id, CustomFormatter, init_app
 
@@ -71,17 +73,22 @@ class MatchingRecord(object):
         return not self.__eq__(other)
 
 
-@mock.patch('dmutils.logging.get_request_id')
-def test_request_id_is_set_on_response(mock_get_request_id):
-    app = Flask(__name__)
-    app.config['DM_LOG_PATH'] = tempfile.mkstemp()[1]
-    client = app.test_client()
-    mock_get_request_id.return_value = 'generated'
+@pytest.fixture
+def app():
+    return Flask(__name__)
 
-    init_app(app)
-    with app.app_context():
-        response = client.get('/')
-        assert response.headers['DM-REQUEST-ID'] == 'generated'
+
+@mock.patch('dmutils.logging.get_request_id')
+def test_request_id_is_set_on_response(mock_get_request_id, app):
+    with tempfile.NamedTemporaryFile() as f:
+        app.config['DM_LOG_PATH'] = f.name
+        client = app.test_client()
+        mock_get_request_id.return_value = 'generated'
+
+        init_app(app)
+        with app.app_context():
+            response = client.get('/')
+            assert response.headers['DM-REQUEST-ID'] == 'generated'
 
 
 def test_formatter_request_id_not_in_app_context():
@@ -89,16 +96,32 @@ def test_formatter_request_id_not_in_app_context():
     assert formatter._get_request_id() == 'not-in-request'
 
 
-def test_formatter_no_request_id():
-    app = Flask(__name__)
+def test_formatter_no_request_id(app):
     formatter = CustomFormatter('test', 'test')
     with app.app_context():
         assert formatter._get_request_id() == 'no-request-id'
 
 
-def test_formatter_request_id():
-    app = Flask(__name__)
+def test_formatter_request_id(app):
     formatter = CustomFormatter('test', 'test')
     with app.app_context():
         g.request_id = 'generated'
         assert formatter._get_request_id() == 'generated'
+
+
+def test_init_app_adds_stream_handler_in_debug(app):
+    app.config['DEBUG'] = True
+    init_app(app)
+
+    assert len(app.logger.handlers) == 1
+    assert isinstance(app.logger.handlers[0], logging.StreamHandler)
+
+
+def test_init_app_adds_file_handler_in_non_debug(app):
+    with tempfile.NamedTemporaryFile() as f:
+        app.config['DEBUG'] = False
+        app.config['DM_LOG_PATH'] = f.name
+        init_app(app)
+
+        assert len(app.logger.handlers) == 1
+        assert isinstance(app.logger.handlers[0], logging.FileHandler)
