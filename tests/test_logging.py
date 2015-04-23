@@ -8,7 +8,7 @@ import mock
 from flask import Flask, g
 import pytest
 
-from dmutils.logging import get_request_id, CustomFormatter, init_app
+from dmutils.logging import get_request_id, init_app, RequestIdFilter
 
 
 def test_get_request_id_from_request_id_header():
@@ -91,22 +91,19 @@ def test_request_id_is_set_on_response(mock_get_request_id, app):
             assert response.headers['DM-REQUEST-ID'] == 'generated'
 
 
-def test_formatter_request_id_not_in_app_context():
-    formatter = CustomFormatter('test', 'test')
-    assert formatter._get_request_id() == 'not-in-request'
+def test_request_id_filter_not_in_app_context():
+    assert RequestIdFilter().request_id == 'not-in-request'
 
 
 def test_formatter_no_request_id(app):
-    formatter = CustomFormatter('test', 'test')
     with app.app_context():
-        assert formatter._get_request_id() == 'no-request-id'
+        assert RequestIdFilter().request_id == 'no-request-id'
 
 
 def test_formatter_request_id(app):
-    formatter = CustomFormatter('test', 'test')
     with app.app_context():
         g.request_id = 'generated'
-        assert formatter._get_request_id() == 'generated'
+        assert RequestIdFilter().request_id == 'generated'
 
 
 def test_init_app_adds_stream_handler_in_debug(app):

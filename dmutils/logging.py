@@ -8,6 +8,7 @@ from flask.ctx import has_app_context
 
 LOG_FORMAT = '%(asctime)s %(app_name)s %(levelname)s %(request_id)s: ' \
              '%(message)s [in %(pathname)s:%(lineno)d]'
+TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 
 def init_app(app):
@@ -39,10 +40,10 @@ def init_app(app):
 
 
 def configure_handler(handler, app):
-    formatter = CustomFormatter(LOG_FORMAT, app.config['DM_APP_NAME'])
-
     handler.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
-    handler.setFormatter(formatter)
+    handler.setFormatter(logging.Formatter(LOG_FORMAT, TIME_FORMAT))
+    handler.addFilter(AppNameFilter(app.config['DM_APP_NAME']))
+    handler.addFilter(RequestIdFilter())
 
     return handler
 
@@ -65,13 +66,19 @@ def get_request_id(request, request_id_header, downstream_header):
         return str(uuid.uuid4())
 
 
-class CustomFormatter(logging.Formatter):
-    def __init__(self, log_format, app_name):
-        super(CustomFormatter, self).__init__(log_format,
-                                              '%Y-%m-%dT%H:%M:%S')
+class AppNameFilter(logging.Filter):
+    def __init__(self, app_name):
         self.app_name = app_name
 
-    def _get_request_id(self):
+    def filter(self, record):
+        record.app_name = self.app_name
+
+        return record
+
+
+class RequestIdFilter(logging.Filter):
+    @property
+    def request_id(self):
         if not has_app_context():
             return 'not-in-request'
         elif not hasattr(g, 'request_id'):
@@ -79,11 +86,7 @@ class CustomFormatter(logging.Formatter):
         else:
             return g.request_id
 
-    def _build_record(self, record):
-        record.app_name = self.app_name
-        record.request_id = self._get_request_id()
+    def filter(self, record):
+        record.request_id = self.request_id
 
         return record
-
-    def format(self, record):
-        return super(CustomFormatter, self).format(self._build_record(record))
