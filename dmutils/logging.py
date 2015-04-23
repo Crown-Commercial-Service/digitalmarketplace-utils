@@ -25,6 +25,11 @@ def init_app(app):
     def after_request(response):
         request_id_header = current_app.config['DM_REQUEST_ID_HEADER']
         response.headers[request_id_header] = request.request_id
+
+        current_app.logger.info('Request: %s %s %s',
+                                request.method,
+                                request.url,
+                                response.status)
         return response
 
     logging.getLogger().addHandler(logging.NullHandler())
