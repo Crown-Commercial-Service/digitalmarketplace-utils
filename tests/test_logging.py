@@ -78,7 +78,7 @@ def test_request_id_is_set_on_response(inited_app):
 
     with inited_app.app_context():
         response = client.get('/', headers={'DM-REQUEST-ID': 'generated'})
-        assert response.headers['DM-REQUEST-ID'] == 'generated'
+        assert response.headers['DM-Request-ID'] == 'generated'
 
 
 def test_request_id_filter_not_in_app_context():
