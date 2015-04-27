@@ -26,10 +26,10 @@ def init_app(app):
         request_id_header = current_app.config['DM_REQUEST_ID_HEADER']
         response.headers[request_id_header] = request.request_id
 
-        current_app.logger.info('Request: %s %s %s',
+        current_app.logger.info('%s %s %s',
                                 request.method,
-                                request.url,
-                                response.status)
+                                request.path,
+                                response.status_code)
         return response
 
     logging.getLogger().addHandler(logging.NullHandler())
@@ -38,6 +38,8 @@ def init_app(app):
 
     app.logger.addHandler(get_handler(app))
     app.logger.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
+
+    app.logger.info("Logging configured")
 
 
 class CustomRequest(Request):
