@@ -89,6 +89,15 @@ class SearchAPIClient(BaseAPIClient):
 
         return self._put(url, data=data)
 
+    def search_services(self, query="", filters=None):
+        params = {"q": query}
+        if filters is not None:
+            params.update(filters)
+
+        return self._get(
+            self._url("/search"),
+            params=params)['search']
+
     def _convert_service(self, service_id, service, supplier_name):
         data = {k: service[k] for k in self.FIELDS if k in service}
         data['supplierName'] = supplier_name
