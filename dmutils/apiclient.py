@@ -6,17 +6,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class APIError(StandardError):
-    def __init__(self, message, requests_error):
-        super(APIError, self).__init__(message)
-        self.requests_error = requests_error
+class APIError(requests.HTTPError):
+    def __init__(self, http_error):
+        super(APIError, self).__init__(
+            http_error.message,
+            response=http_error.response,
+            request=http_error.request)
 
     @property
     def response_message(self):
         try:
-            return self.requests_error.response.json()['error']
+            return self.response.json()['error']
         except TypeError:
-            return str(self.requests_error.response.content)
+            return str(self.response.content)
 
 
 class BaseAPIClient(object):
@@ -50,6 +52,9 @@ class BaseAPIClient(object):
                 return response.json()
             except requests.HTTPError as e:
                 raise APIError(e.message, e)
+            except requests.RequestException as e:
+                logger.exception(e.message)
+                raise
 
 
 class SearchAPIClient(BaseAPIClient):
