@@ -1,5 +1,13 @@
 #!/bin/bash
 
+function pretty() {
+  local blue="\033[34m"
+  local reset="\033[0m"
+  while read line; do
+    echo -e "${blue}[publishing]${reset} ${line}"
+  done
+}
+
 function get_sha(){
     REF=$(git log -n 1 -- VERSION --name-only)
     SHA=$(echo $REF | awk '{ print $2 }')
@@ -26,7 +34,7 @@ function push_tag_or_die(){
 
 function push_tag(){
     git tag -a $VERSION -m "Version tag for ${VERSION}"
-    echo "Pushing tags to github ${VERSION} to PyPI" | pretty
+    echo "Pushing tags to github ${VERSION} to Github" | pretty
     git push origin --tags
 }
 
