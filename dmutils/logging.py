@@ -36,8 +36,12 @@ def init_app(app):
 
     del app.logger.handlers[:]
 
-    app.logger.addHandler(get_handler(app))
-    app.logger.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
+    handler = get_handler(app)
+    loglevel = logging.getLevelName(app.config['DM_LOG_LEVEL'])
+    loggers = [app.logger, logging.getLogger('dmutils')]
+    for logger in loggers:
+        logger.addHandler(handler)
+        logger.setLevel(loglevel)
 
     app.logger.info("Logging configured")
 
