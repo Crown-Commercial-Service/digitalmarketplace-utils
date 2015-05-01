@@ -7,7 +7,7 @@ from flask import request, current_app
 from flask.wrappers import Request
 from flask.ctx import has_request_context
 
-LOG_FORMAT = '%(asctime)s %(app_name)s %(levelname)s %(request_id)s: ' \
+LOG_FORMAT = '%(asctime)s %(app_name)s %(name) %(levelname)s %(request_id)s ' \
              '%(message)s [in %(pathname)s:%(lineno)d]'
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
@@ -36,8 +36,12 @@ def init_app(app):
 
     del app.logger.handlers[:]
 
-    app.logger.addHandler(get_handler(app))
-    app.logger.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
+    handler = get_handler(app)
+    loglevel = logging.getLevelName(app.config['DM_LOG_LEVEL'])
+    loggers = [app.logger, logging.getLogger('dmutils')]
+    for logger in loggers:
+        logger.addHandler(handler)
+        logger.setLevel(loglevel)
 
     app.logger.info("Logging configured")
 
