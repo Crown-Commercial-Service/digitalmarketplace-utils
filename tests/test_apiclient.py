@@ -2,11 +2,10 @@ import os
 import json
 
 import requests_mock
-import requests
 import pytest
 import mock
 
-from dmutils.apiclient import SearchAPIClient
+from dmutils.apiclient import SearchAPIClient, DataAPIClient, APIError
 
 
 @pytest.yield_fixture
@@ -18,6 +17,11 @@ def rmock():
 @pytest.fixture
 def search_client():
     return SearchAPIClient('http://baseurl', 'auth-token', True)
+
+
+@pytest.fixture
+def data_client():
+    return DataAPIClient('http://baseurl', 'auth-token', True)
 
 
 @pytest.fixture
@@ -127,9 +131,9 @@ class TestSearchApiClient(object):
         assert result is None
         assert not rmock.called
 
-    def test_should_raise_requests_error_on_failure(
+    def test_should_raise_error_on_failure(
             self, search_client, rmock, service):
-        with pytest.raises(requests.HTTPError):
+        with pytest.raises(APIError):
             rmock.put(
                 'http://baseurl/g-cloud/services/12345',
                 json={'error': 'some error'},
@@ -141,3 +145,73 @@ class TestSearchApiClient(object):
         file_path = os.path.join("example_listings", "{}.json".format(name))
         with open(file_path) as f:
             return json.load(f)
+
+
+class TestDataApiClient(object):
+    def test_init_app_sets_attributes(self, data_client):
+        app = mock.Mock()
+        app.config = {
+            "DM_DATA_API_URL": "http://example",
+            "DM_DATA_API_AUTH_TOKEN": "example-token",
+        }
+        data_client.init_app(app)
+
+        assert data_client.base_url == "http://example"
+        assert data_client.auth_token == "example-token"
+
+    def test_get_service(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/services/123",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_service(123)
+
+        assert result == "result"
+        assert rmock.called
+
+    def test_find_service(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/services",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.find_service()
+
+        assert result == "result"
+        assert rmock.called
+
+    def test_find_service_adds_page_parameter(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/services?page=2",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.find_service(page=2)
+
+        assert result == "result"
+        assert rmock.called
+
+    def test_find_service_adds_supplier_id_parameter(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/services?supplier_id=1",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.find_service(supplier_id=1)
+
+        assert result == "result"
+        assert rmock.called
+
+    def test_update_service(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/services/123",
+            json={"services": "result"},
+            status_code=200,
+        )
+
+        result = data_client.update_service(
+            123, {"foo": "bar"}, "person", "reason")
+
+        assert result == {"services": "result"}
+        assert rmock.called
