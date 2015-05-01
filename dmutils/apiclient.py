@@ -22,7 +22,7 @@ class APIError(requests.HTTPError):
 
 
 class BaseAPIClient(object):
-    def __init__(self, base_url=None, auth_token=None, enabled=None):
+    def __init__(self, base_url=None, auth_token=None, enabled=True):
         self.base_url = base_url
         self.auth_token = auth_token
         self.enabled = enabled
@@ -37,24 +37,25 @@ class BaseAPIClient(object):
         return self._request("POST", url, data=data)
 
     def _request(self, method, url, data=None, params=None):
-        if self.enabled:
-            try:
-                logger.debug("API request %s %s", method, url)
-                headers = {
-                    "Content-type": "application/json",
-                    "Authorization": "Bearer {}".format(self.auth_token),
-                }
-                response = requests.request(
-                    method, url,
-                    headers=headers, data=data, params=params)
-                response.raise_for_status()
+        if not self.enabled:
+            return None
+        try:
+            logger.debug("API request %s %s", method, url)
+            headers = {
+                "Content-type": "application/json",
+                "Authorization": "Bearer {}".format(self.auth_token),
+            }
+            response = requests.request(
+                method, url,
+                headers=headers, json=data, params=params)
+            response.raise_for_status()
 
-                return response.json()
-            except requests.HTTPError as e:
-                raise APIError(e)
-            except requests.RequestException as e:
-                logger.exception(e.message)
-                raise
+            return response.json()
+        except requests.HTTPError as e:
+            raise APIError(e)
+        except requests.RequestException as e:
+            logger.exception(e.message)
+            raise
 
 
 class SearchAPIClient(BaseAPIClient):
