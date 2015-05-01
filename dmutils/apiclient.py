@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class APIError(requests.HTTPError):
     def __init__(self, http_error):
         super(APIError, self).__init__(
-            http_error.message,
+            http_error,
             response=http_error.response,
             request=http_error.request)
 
@@ -51,7 +51,7 @@ class BaseAPIClient(object):
 
                 return response.json()
             except requests.HTTPError as e:
-                raise APIError(e.message, e)
+                raise APIError(e)
             except requests.RequestException as e:
                 logger.exception(e.message)
                 raise
