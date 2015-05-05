@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 
+import six
 import requests
 from requests import ConnectionError  # noqa
 
@@ -109,7 +110,7 @@ class SearchAPIClient(BaseAPIClient):
             q = q[0]
         params = {"q": q}
 
-        for filter_name, filter_values in filters.iteritems():
+        for filter_name, filter_values in six.iteritems(filters):
             if filter_name == "minimumContractPeriod":
                 filter_values = ','.join(filter_values)
 
