@@ -66,6 +66,18 @@ class TestSearchApiClient(object):
         assert search_client.auth_token == "example-token"
         assert not search_client.enabled
 
+    def test_get_status(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/_status",
+            json={"status": "ok"},
+            status_code=200)
+
+        result = data_client.get_status()
+        print("result = {}".format(result))
+
+        assert result['status'] == "ok"
+        assert rmock.called
+
     def test_convert_service(self, search_client, service):
         converted = search_client._convert_service(
             service['id'], service, "Supplier Name")
@@ -158,6 +170,18 @@ class TestDataApiClient(object):
 
         assert data_client.base_url == "http://example"
         assert data_client.auth_token == "example-token"
+
+    def test_get_status(self, data_client, rmock):
+            rmock.get(
+                "http://baseurl/_status",
+                json={"status": "ok"},
+                status_code=200)
+
+            result = data_client.get_status()
+            print("result = {}".format(result))
+
+            assert result['status'] == "ok"
+            assert rmock.called
 
     def test_get_service(self, data_client, rmock):
         rmock.get(

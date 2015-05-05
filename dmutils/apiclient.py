@@ -77,6 +77,10 @@ class SearchAPIClient(BaseAPIClient):
     def _url(self, path):
         return "{}/g-cloud/services{}".format(self.base_url, path)
 
+    def get_status(self):
+        return self._get(
+            "{}/_status".format(self.base_url))
+
     def index(self, service_id, service, supplier_name):
         url = self._url("/{}".format(service_id))
         data = self._convert_service(service_id, service, supplier_name)
@@ -97,6 +101,10 @@ class DataAPIClient(BaseAPIClient):
     def init_app(self, app):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
+
+    def get_status(self):
+        return self._get(
+            "{}/_status".format(self.base_url))
 
     def get_service(self, service_id):
         return self._get(
