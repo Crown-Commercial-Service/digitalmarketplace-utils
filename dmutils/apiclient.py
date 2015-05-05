@@ -57,6 +57,10 @@ class BaseAPIClient(object):
             logger.exception(e.message)
             raise
 
+    def get_status(self):
+        return self._get(
+            "{}/_status".format(self.base_url))
+
 
 class SearchAPIClient(BaseAPIClient):
     FIELDS = [
