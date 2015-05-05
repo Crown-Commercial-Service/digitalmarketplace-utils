@@ -89,14 +89,20 @@ class SearchAPIClient(BaseAPIClient):
 
         return self._put(url, data=data)
 
-    def search_services(self, query="", filters=None):
-        params = {"q": query}
-        if filters is not None:
-            params.update(filters)
+    def search_services(self, q="", **filters):
+        if isinstance(q, list):
+            q = q[0]
+        params = {"q": q}
 
-        return self._get(
-            self._url("/search"),
-            params=params)['search']
+        for filter_name, filter_values in filters.iteritems():
+            if filter_name == "minimumContractPeriod":
+                filter_values = ','.join(filter_values)
+
+            params['filter_{}'.format(filter_name)] = filter_values
+
+        response = self._get(self._url("/search"), params=params)
+
+        return response['search']
 
     def _convert_service(self, service_id, service, supplier_name):
         data = {k: service[k] for k in self.FIELDS if k in service}
