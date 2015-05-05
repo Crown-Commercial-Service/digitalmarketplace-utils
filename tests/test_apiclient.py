@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-import json
+from flask import json
+from datetime import datetime
 
 import requests_mock
 import pytest
@@ -239,15 +240,15 @@ class TestDataApiClient(object):
         assert data_client.auth_token == "example-token"
 
     def test_get_status(self, data_client, rmock):
-            rmock.get(
-                "http://baseurl/_status",
-                json={"status": "ok"},
-                status_code=200)
+        rmock.get(
+            "http://baseurl/_status",
+            json={"status": "ok"},
+            status_code=200)
 
-            result = data_client.get_status()
+        result = data_client.get_status()
 
-            assert result['status'] == "ok"
-            assert rmock.called
+        assert result['status'] == "ok"
+        assert rmock.called
 
     def test_get_service(self, data_client, rmock):
         rmock.get(
@@ -305,3 +306,99 @@ class TestDataApiClient(object):
 
         assert result == {"services": "result"}
         assert rmock.called
+
+    def test_authenticate_user_is_called_with_correct_params(
+            self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/auth",
+            text=json.dumps(self.user()),
+            status_code=200)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user['id'] == "id"
+        assert user['email_address'] == "email_address"
+        assert user['supplier']['supplier_id'] == 1234
+        assert user['supplier']['name'] == "name"
+
+    def test_authenticate_user_returns_none_on_404(
+            self, data_client, rmock):
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps({'authorization': False}),
+            status_code=404)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_returns_none_on_403(
+            self, data_client, rmock):
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps({'authorization': False}),
+            status_code=403)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_returns_none_on_400(
+            self, data_client, rmock):
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps({'authorization': False}),
+            status_code=400)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_returns_none_on_non_supplier(
+            self, data_client, rmock):
+        user_with_no_supplier = self.user()
+        del user_with_no_supplier['users']['supplier']
+
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps(user_with_no_supplier),
+            status_code=200)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_raises_on_500(
+            self, data_client, rmock):
+        with pytest.raises(APIError):
+            rmock.post(
+                'http://baseurl/users/auth',
+                text=json.dumps({'authorization': False}),
+                status_code=500)
+
+            data_client.authenticate_user("email_address", "password")
+
+    @staticmethod
+    def user():
+        timestamp = datetime.now()
+
+        return {'users': {
+            'id': 'id',
+            'email_address': 'email_address',
+            'name': 'name',
+            'role': 'role',
+            'active': 'active',
+            'locked': False,
+            'created_at': timestamp,
+            'updated_at': timestamp,
+            'password_changed_at': timestamp,
+            'supplier': {
+                'supplier_id': 1234,
+                'name': 'name'
+            }
+        }}
