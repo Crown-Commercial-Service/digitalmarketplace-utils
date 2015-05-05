@@ -139,6 +139,28 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
+    def get_suppliers(self, prefix=None):
+        params = None
+        if prefix:
+            params = {
+                "prefix": prefix
+            }
+        return self._get(
+            "{}/suppliers".format(self.base_url),
+            params
+        )
+
+    def get_supplier_by_id(self, supplier_id):
+        return self._get(
+            "{}/suppliers/{}".format(self.base_url, supplier_id)
+        )
+
+    def get_services_by_supplier_id(self, supplier_id):
+        return self._get(
+            "{}/services".format(self.base_url),
+            {"supplier_id": supplier_id}
+        )
+
     def get_service(self, service_id):
         return self._get(
             "{}/services/{}".format(self.base_url, service_id))['services']
