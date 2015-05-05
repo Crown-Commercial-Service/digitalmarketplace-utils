@@ -1,6 +1,8 @@
 from __future__ import absolute_import
-import requests
 import logging
+
+import requests
+from requests import ConnectionError  # noqa
 
 
 logger = logging.getLogger(__name__)
