@@ -73,6 +73,21 @@ class SearchAPIClient(BaseAPIClient):
         "serviceFeatures",
         "serviceTypes",
         "supplierName",
+        "freeOption",
+        "trialOption",
+        "minimumContractPeriod",
+        "supportForThirdParties",
+        "selfServiceProvisioning",
+        "datacentresEUCode",
+        "dataBackupRecovery",
+        "dataExtractionRemoval",
+        "networksConnected",
+        "apiAccess",
+        "openStandardsSupported",
+        "openSource",
+        "persistentStorage",
+        "guaranteedResources",
+        "elasticCloud",
     ]
 
     def init_app(self, app):

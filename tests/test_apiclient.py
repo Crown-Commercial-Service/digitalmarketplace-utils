@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import json
 
@@ -29,6 +30,7 @@ def service():
     """A stripped down G6-IaaS service"""
     return {
         "id": "1234567890123456",
+        "supplierId": 1,
         "lot": "IaaS",
         "title": "My Iaas Service",
         "lastUpdated": "2014-12-23T14:46:17Z",
@@ -49,6 +51,40 @@ def service():
             "[To be completed]",
             "This is my second \"feture\""
         ],
+        "minimumContractPeriod": "Month",
+        "terminationCost": True,
+        "priceInterval": "",
+        "trialOption": True,
+        "priceUnit": "Person",
+        "educationPricing": True,
+        "vatIncluded": False,
+        "priceString": "£10.0067 per person",
+        "priceMin": 10.0067,
+        "freeOption": False,
+        "openStandardsSupported": True,
+        "supportForThirdParties": False,
+        "supportResponseTime": "3 weeks.",
+        "incidentEscalation": True,
+        "serviceOffboarding": True,
+        "serviceOnboarding": False,
+        "analyticsAvailable": False,
+        "persistentStorage": True,
+        "elasticCloud": True,
+        "guaranteedResources": False,
+        "selfServiceProvisioning": False,
+        "openSource": False,
+        "apiType": "SOAP, Rest | JSON",
+        "apiAccess": True,
+        "networksConnected": [
+            "Public Services Network (PSN)",
+            "Government Secure intranet (GSi)"
+        ],
+        "offlineWorking": True,
+        "dataExtractionRemoval": False,
+        "dataBackupRecovery": True,
+        "datacentreTier": "TIA-942 Tier 3",
+        "datacentresSpecifyLocation": True,
+        "datacentresEUCode": False,
     }
 
 
@@ -102,6 +138,24 @@ class TestSearchApiClient(object):
             "Storage"
         ]
         assert converted["service"]["supplierName"] == "Supplier Name"
+        assert not converted["service"]["freeOption"]
+        assert converted["service"]["trialOption"]
+        assert converted["service"]["minimumContractPeriod"] == "Month"
+        assert not converted["service"]["supportForThirdParties"]
+        assert not converted["service"]["selfServiceProvisioning"]
+        assert not converted["service"]["datacentresEUCode"]
+        assert converted["service"]["dataBackupRecovery"]
+        assert not converted["service"]["dataExtractionRemoval"]
+        assert converted["service"]["networksConnected"] == [
+            "Public Services Network (PSN)",
+            "Government Secure intranet (GSi)"
+        ]
+        assert converted["service"]["apiAccess"]
+        assert converted["service"]["openStandardsSupported"]
+        assert not converted["service"]["openSource"]
+        assert converted["service"]["persistentStorage"]
+        assert not converted["service"]["guaranteedResources"]
+        assert converted["service"]["elasticCloud"]
 
     def test_convert_service_with_minimum_fields_for_indexing(
             self, search_client, service):
@@ -178,7 +232,6 @@ class TestDataApiClient(object):
                 status_code=200)
 
             result = data_client.get_status()
-            print("result = {}".format(result))
 
             assert result['status'] == "ok"
             assert rmock.called
