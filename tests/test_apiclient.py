@@ -206,6 +206,19 @@ class TestSearchApiClient(object):
                 status_code=400)
             search_client.index("12345", service, "Supplier name")
 
+    def test_search_services(self, search_client, rmock):
+        rmock.get(
+            'http://baseurl/g-cloud/services/search?q=foo&'
+            'filter_minimumContractPeriod=a,b&'
+            'filter_something=a&filter_something=b',
+            json={'search': "myresponse"},
+            status_code=200)
+        result = search_client.search_services(
+            q='foo',
+            minimumContractPeriod=['a', 'b'],
+            something=['a', 'b'])
+        assert result == "myresponse"
+
     @staticmethod
     def load_example_listing(name):
         file_path = os.path.join("example_listings", "{}.json".format(name))
