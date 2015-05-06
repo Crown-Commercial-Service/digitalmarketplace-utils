@@ -3,7 +3,6 @@ import logging
 
 import six
 import requests
-from requests import ConnectionError  # noqa
 
 
 logger = logging.getLogger(__name__)
@@ -64,13 +63,14 @@ class BaseAPIClient(object):
         try:
             return self._get(
                 "{}/_status".format(self.base_url))
-        except APIError as e:
-            return e.response.json()
         except requests.RequestException as e:
-            return {
-                "status": "error",
-                "message": "{}".format(e.message),
-            }
+            try:
+                return e.response.json()
+            except ValueError:
+                return {
+                    "status": "error",
+                    "message": "{}".format(e.message),
+                }
 
 
 class SearchAPIClient(BaseAPIClient):
