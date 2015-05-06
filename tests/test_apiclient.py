@@ -485,7 +485,7 @@ class TestDataApiClient(object):
 
         result = data_client.get_suppliers()
 
-        assert result == "result"
+        assert result == {"services": "result"}
         assert rmock.called
 
     def test_get_suppliers_with_prefix(self, data_client, rmock):
@@ -496,7 +496,7 @@ class TestDataApiClient(object):
 
         result = data_client.get_suppliers(prefix='a')
 
-        assert result == "result"
+        assert result == {"services": "result"}
         assert rmock.called
 
     def test_get_supplier_by_id(self, data_client, rmock):
@@ -507,7 +507,7 @@ class TestDataApiClient(object):
 
         result = data_client.get_supplier_by_id(123)
 
-        assert result == "result"
+        assert result == {"services": "result"}
         assert rmock.called
 
     def test_get_services_by_supplier(self, data_client, rmock):
@@ -518,5 +518,5 @@ class TestDataApiClient(object):
 
         result = data_client.get_services_by_supplier_id(123)
 
-        assert result == "result"
+        assert result == {"services": "result"}
         assert rmock.called
