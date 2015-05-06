@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-import json
 
+from flask import json
 import requests_mock
 import pytest
 import mock
@@ -239,15 +239,15 @@ class TestDataApiClient(object):
         assert data_client.auth_token == "example-token"
 
     def test_get_status(self, data_client, rmock):
-            rmock.get(
-                "http://baseurl/_status",
-                json={"status": "ok"},
-                status_code=200)
+        rmock.get(
+            "http://baseurl/_status",
+            json={"status": "ok"},
+            status_code=200)
 
-            result = data_client.get_status()
+        result = data_client.get_status()
 
-            assert result['status'] == "ok"
-            assert rmock.called
+        assert result['status'] == "ok"
+        assert rmock.called
 
     def test_get_service(self, data_client, rmock):
         rmock.get(
@@ -268,7 +268,7 @@ class TestDataApiClient(object):
 
         result = data_client.find_service()
 
-        assert result == "result"
+        assert result == {"services": "result"}
         assert rmock.called
 
     def test_find_service_adds_page_parameter(self, data_client, rmock):
@@ -279,7 +279,7 @@ class TestDataApiClient(object):
 
         result = data_client.find_service(page=2)
 
-        assert result == "result"
+        assert result == {"services": "result"}
         assert rmock.called
 
     def test_find_service_adds_supplier_id_parameter(self, data_client, rmock):
@@ -290,7 +290,7 @@ class TestDataApiClient(object):
 
         result = data_client.find_service(supplier_id=1)
 
-        assert result == "result"
+        assert result == {"services": "result"}
         assert rmock.called
 
     def test_update_service(self, data_client, rmock):
@@ -302,6 +302,192 @@ class TestDataApiClient(object):
 
         result = data_client.update_service(
             123, {"foo": "bar"}, "person", "reason")
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
+    def test_get_user_by_id(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/users/1234",
+            json=self.user(),
+            status_code=200)
+        user = data_client.get_user(user_id=1234)
+
+        assert user == self.user()['users']
+
+    def test_get_user_by_email_address(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/users?email=myemail",
+            json=self.user(),
+            status_code=200)
+        user = data_client.get_user(email_address="myemail")
+
+        assert user == self.user()['users']
+
+    def test_get_user_fails_if_both_email_and_id_are_provided(
+            self, data_client, rmock):
+
+        with pytest.raises(ValueError):
+            data_client.get_user(user_id=123, email_address="myemail")
+
+    def test_get_user_fails_if_neither_email_or_id_are_provided(
+            self, data_client, rmock):
+
+        with pytest.raises(ValueError):
+            data_client.get_user()
+
+    def test_authenticate_user_is_called_with_correct_params(
+            self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/auth",
+            json=self.user(),
+            status_code=200)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user['id'] == "id"
+        assert user['email_address'] == "email_address"
+        assert user['supplier']['supplier_id'] == 1234
+        assert user['supplier']['name'] == "name"
+
+    def test_authenticate_user_returns_none_on_404(
+            self, data_client, rmock):
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps({'authorization': False}),
+            status_code=404)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_returns_none_on_403(
+            self, data_client, rmock):
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps({'authorization': False}),
+            status_code=403)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_returns_none_on_400(
+            self, data_client, rmock):
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps({'authorization': False}),
+            status_code=400)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_returns_none_on_non_supplier(
+            self, data_client, rmock):
+        user_with_no_supplier = self.user()
+        del user_with_no_supplier['users']['supplier']
+
+        rmock.post(
+            'http://baseurl/users/auth',
+            text=json.dumps(user_with_no_supplier),
+            status_code=200)
+
+        user = data_client.authenticate_user(
+            "email_address", "password")
+
+        assert user is None
+
+    def test_authenticate_user_raises_on_500(self, data_client, rmock):
+        with pytest.raises(APIError):
+            rmock.post(
+                'http://baseurl/users/auth',
+                text=json.dumps({'authorization': False}),
+                status_code=500)
+
+            data_client.authenticate_user("email_address", "password")
+
+    def test_update_user_password(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        assert data_client.update_user_password(123, "newpassword")
+        assert rmock.last_request.json() == {
+            "users": {"password": "newpassword"}
+        }
+
+    def test_update_user_password_returns_false_on_non_200(
+            self, data_client, rmock):
+        for status_code in [400, 403, 404, 500]:
+            rmock.post(
+                "http://baseurl/users/123",
+                json={},
+                status_code=status_code)
+            assert not data_client.update_user_password(123, "newpassword")
+
+    @staticmethod
+    def user():
+        return {'users': {
+            'id': 'id',
+            'email_address': 'email_address',
+            'name': 'name',
+            'role': 'role',
+            'active': 'active',
+            'locked': False,
+            'created_at': "2015-05-05T05:05:05",
+            'updated_at': "2015-05-05T05:05:05",
+            'password_changed_at': "2015-05-05T05:05:05",
+            'supplier': {
+                'supplier_id': 1234,
+                'name': 'name'
+            }
+        }}
+
+    def test_get_suppliers_with_no_prefix(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.find_suppliers()
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
+    def test_find_suppliers_with_prefix(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers?prefix=a",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.find_suppliers(prefix='a')
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
+    def test_get_supplier_by_id(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_supplier(123)
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
+    def test_get_services_by_supplier(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/services?supplier_id=123",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.find_service(supplier_id=123)
 
         assert result == {"services": "result"}
         assert rmock.called
