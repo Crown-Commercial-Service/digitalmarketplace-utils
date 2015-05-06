@@ -148,10 +148,15 @@ class DataAPIClient(BaseAPIClient):
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
     def get_service(self, service_id):
-        return self._get(
-            "{}/services/{}".format(self.base_url, service_id))['services']
+        try:
+            return self._get(
+                "{}/services/{}".format(self.base_url, service_id))
+        except APIError as e:
+            if e.response.status_code != 404:
+                raise
+        return None
 
-    def find_service(self, supplier_id=None, page=None):
+    def find_services(self, supplier_id=None, page=None):
         params = {}
         if supplier_id is not None:
             params['supplier_id'] = supplier_id
@@ -160,7 +165,7 @@ class DataAPIClient(BaseAPIClient):
 
         return self._get(
             self.base_url + "/services",
-            params=params)['services']
+            params=params)
 
     def update_service(self, service_id, service, user, reason):
         return self._post(
@@ -186,20 +191,25 @@ class DataAPIClient(BaseAPIClient):
         else:
             raise ValueError("Either user_id or email_address must be set")
 
-        return self._get(url, params=params)['users']
+        try:
+            return self._get(url, params=params)
+        except APIError as e:
+            if e.response.status_code != 404:
+                raise
+        return None
 
     def authenticate_user(self, email_address, password, supplier=True):
         try:
             response = self._post(
                 '{}/users/auth'.format(self.base_url),
                 data={
-                    "auth_users": {
-                        "email_address": email_address,
+                    "authUsers": {
+                        "emailAddress": email_address,
                         "password": password,
                     }
                 })
             if not supplier or "supplier" in response['users']:
-                return response['users']
+                return response
         except APIError as e:
             if e.response.status_code not in [400, 403, 404]:
                 raise
