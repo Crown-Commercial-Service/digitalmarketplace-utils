@@ -25,5 +25,6 @@ setup(
     include_package_data=True,
     install_requires=[
         'Flask>=0.10',
+        'six==1.9.0',
     ],
 )

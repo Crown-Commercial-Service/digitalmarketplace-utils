@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 
+import six
 import requests
 from requests import ConnectionError  # noqa
 
@@ -73,6 +74,21 @@ class SearchAPIClient(BaseAPIClient):
         "serviceFeatures",
         "serviceTypes",
         "supplierName",
+        "freeOption",
+        "trialOption",
+        "minimumContractPeriod",
+        "supportForThirdParties",
+        "selfServiceProvisioning",
+        "datacentresEUCode",
+        "dataBackupRecovery",
+        "dataExtractionRemoval",
+        "networksConnected",
+        "apiAccess",
+        "openStandardsSupported",
+        "openSource",
+        "persistentStorage",
+        "guaranteedResources",
+        "elasticCloud",
     ]
 
     def init_app(self, app):
@@ -88,6 +104,21 @@ class SearchAPIClient(BaseAPIClient):
         data = self._convert_service(service_id, service, supplier_name)
 
         return self._put(url, data=data)
+
+    def search_services(self, q="", **filters):
+        if isinstance(q, list):
+            q = q[0]
+        params = {"q": q}
+
+        for filter_name, filter_values in six.iteritems(filters):
+            if filter_name == "minimumContractPeriod":
+                filter_values = ','.join(filter_values)
+
+            params['filter_{}'.format(filter_name)] = filter_values
+
+        response = self._get(self._url("/search"), params=params)
+
+        return response['search']
 
     def _convert_service(self, service_id, service, supplier_name):
         data = {k: service[k] for k in self.FIELDS if k in service}
