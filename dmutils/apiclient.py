@@ -61,8 +61,16 @@ class BaseAPIClient(object):
             raise
 
     def get_status(self):
-        return self._get(
-            "{}/_status".format(self.base_url))
+        try:
+            return self._get(
+                "{}/_status".format(self.base_url))
+        except APIError as e:
+            return e.response.json()
+        except requests.RequestException as e:
+            return {
+                "status": "error",
+                "message": "{}".format(e.message),
+            }
 
 
 class SearchAPIClient(BaseAPIClient):
