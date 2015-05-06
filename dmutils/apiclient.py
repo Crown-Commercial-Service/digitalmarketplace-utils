@@ -20,7 +20,7 @@ class APIError(requests.HTTPError):
     def response_message(self):
         try:
             return self.response.json()['error']
-        except TypeError:
+        except (TypeError, KeyError):
             return str(self.response.content)
 
 
@@ -55,7 +55,11 @@ class BaseAPIClient(object):
 
             return response.json()
         except requests.HTTPError as e:
-            raise APIError(e)
+            e = APIError(e)
+            logger.warning(
+                "API %s request on %s failed with %s '%s'",
+                method, url, e.response.status_code, e.response_message)
+            raise e
         except requests.RequestException as e:
             logger.exception(e.message)
             raise
