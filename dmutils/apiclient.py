@@ -169,6 +169,21 @@ class DataAPIClient(BaseAPIClient):
                 "services": service,
             })
 
+    def get_user(self, user_id=None, email_address=None):
+        if user_id is not None and email_address is not None:
+            raise ValueError(
+                "Cannot get user by both user_id and email_address")
+        elif user_id is not None:
+            url = "{}/users/{}".format(self.base_url, user_id)
+            params = {}
+        elif email_address is not None:
+            url = "{}/users".format(self.base_url)
+            params = {"email": email_address}
+        else:
+            raise ValueError("Either user_id or email_address must be set")
+
+        return self._get(url, params=params)['users']
+
     def authenticate_user(self, email_address, password, supplier=True):
         try:
             response = self._post(
@@ -185,3 +200,17 @@ class DataAPIClient(BaseAPIClient):
             if e.response.status_code not in [400, 403, 404]:
                 raise
         return None
+
+    def update_user_password(self, user_id, new_password):
+        try:
+            self._post(
+                '{}/users/{}'.format(self.base_url, user_id),
+                data={"users": {"password": new_password}}
+            )
+
+            logger.info("Updated password for user %s", user_id)
+            return True
+        except APIError as e:
+            logger.info("Password update failed for user %s: %s",
+                        user_id, e.response.status_code)
+            return False
