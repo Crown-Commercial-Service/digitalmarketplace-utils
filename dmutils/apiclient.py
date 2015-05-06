@@ -3,6 +3,8 @@ import logging
 
 import six
 import requests
+from requests import ConnectionError  # noqa
+from flask import has_request_context, request, current_app
 
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,7 @@ class BaseAPIClient(object):
                 "Content-type": "application/json",
                 "Authorization": "Bearer {}".format(self.auth_token),
             }
+            headers = self._add_request_id_header(headers)
             response = requests.request(
                 method, url,
                 headers=headers, json=data, params=params)
@@ -58,6 +61,15 @@ class BaseAPIClient(object):
         except requests.RequestException as e:
             logger.exception(e.message)
             raise
+
+    def _add_request_id_header(self, headers):
+        if not has_request_context():
+            return headers
+        if 'DM_REQUEST_ID_HEADER' not in current_app.config:
+            return headers
+        header = current_app.config['DM_REQUEST_ID_HEADER']
+        headers[header] = request.request_id
+        return headers
 
     def get_status(self):
         try:

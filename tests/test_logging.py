@@ -3,10 +3,7 @@ import tempfile
 import logging
 
 from werkzeug.test import EnvironBuilder
-from werkzeug.wrappers import Request
 import mock
-from flask import Flask
-import pytest
 
 from dmutils.logging import init_app, RequestIdFilter, CustomRequest
 
@@ -60,23 +57,10 @@ def test_get_request_id_generates_id(uuid4_mock):
     assert request_id == 'generated'
 
 
-@pytest.fixture
-def app():
-    return Flask(__name__)
+def test_request_id_is_set_on_response(app_with_logging):
+    client = app_with_logging.test_client()
 
-
-@pytest.yield_fixture
-def inited_app(app):
-    with tempfile.NamedTemporaryFile() as f:
-        app.config['DM_LOG_PATH'] = f.name
-        init_app(app)
-        yield app
-
-
-def test_request_id_is_set_on_response(inited_app):
-    client = inited_app.test_client()
-
-    with inited_app.app_context():
+    with app_with_logging.app_context():
         response = client.get('/', headers={'DM-REQUEST-ID': 'generated'})
         assert response.headers['DM-Request-ID'] == 'generated'
 
@@ -85,9 +69,9 @@ def test_request_id_filter_not_in_app_context():
     assert RequestIdFilter().request_id == 'no-request-id'
 
 
-def test_formatter_request_id(inited_app):
+def test_formatter_request_id(app_with_logging):
     headers = {'DM-Request-Id': 'generated'}
-    with inited_app.test_request_context('/', headers=headers):
+    with app_with_logging.test_request_context('/', headers=headers):
         assert RequestIdFilter().request_id == 'generated'
 
 
