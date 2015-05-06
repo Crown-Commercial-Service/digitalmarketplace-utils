@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-from flask import json
-from datetime import datetime
 
+from flask import json
 import requests_mock
 import pytest
 import mock
@@ -341,7 +340,7 @@ class TestDataApiClient(object):
             self, data_client, rmock):
         rmock.post(
             "http://baseurl/users/auth",
-            text=json.dumps(self.user()),
+            json=self.user(),
             status_code=200)
 
         user = data_client.authenticate_user(
