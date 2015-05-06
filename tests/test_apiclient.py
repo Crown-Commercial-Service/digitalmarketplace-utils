@@ -447,3 +447,47 @@ class TestDataApiClient(object):
                 'name': 'name'
             }
         }}
+
+    def test_get_suppliers_with_no_prefix(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_suppliers()
+
+        assert result == "result"
+        assert rmock.called
+
+    def test_get_suppliers_with_prefix(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers?prefix=a",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_suppliers(prefix='a')
+
+        assert result == "result"
+        assert rmock.called
+
+    def test_get_supplier_by_id(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_supplier_by_id(123)
+
+        assert result == "result"
+        assert rmock.called
+
+    def test_get_services_by_supplier(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/services?supplier_id=123",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_services_by_supplier_id(123)
+
+        assert result == "result"
+        assert rmock.called
