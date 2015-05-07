@@ -19,7 +19,7 @@ class APIError(requests.HTTPError):
     def response_message(self):
         try:
             return self.response.json()['error']
-        except TypeError:
+        except (TypeError, KeyError):
             return str(self.response.content)
 
 
@@ -54,7 +54,11 @@ class BaseAPIClient(object):
 
             return response.json()
         except requests.HTTPError as e:
-            raise APIError(e)
+            e = APIError(e)
+            logger.warning(
+                "API %s request on %s failed with %s '%s'",
+                method, url, e.response.status_code, e.response_message)
+            raise e
         except requests.RequestException as e:
             logger.exception(e.message)
             raise
@@ -144,10 +148,15 @@ class DataAPIClient(BaseAPIClient):
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
     def get_service(self, service_id):
-        return self._get(
-            "{}/services/{}".format(self.base_url, service_id))['services']
+        try:
+            return self._get(
+                "{}/services/{}".format(self.base_url, service_id))
+        except APIError as e:
+            if e.response.status_code != 404:
+                raise
+        return None
 
-    def find_service(self, supplier_id=None, page=None):
+    def find_services(self, supplier_id=None, page=None):
         params = {}
         if supplier_id is not None:
             params['supplier_id'] = supplier_id
@@ -156,7 +165,7 @@ class DataAPIClient(BaseAPIClient):
 
         return self._get(
             self.base_url + "/services",
-            params=params)['services']
+            params=params)
 
     def update_service(self, service_id, service, user, reason):
         return self._post(
@@ -168,3 +177,54 @@ class DataAPIClient(BaseAPIClient):
                 },
                 "services": service,
             })
+
+    def get_user(self, user_id=None, email_address=None):
+        if user_id is not None and email_address is not None:
+            raise ValueError(
+                "Cannot get user by both user_id and email_address")
+        elif user_id is not None:
+            url = "{}/users/{}".format(self.base_url, user_id)
+            params = {}
+        elif email_address is not None:
+            url = "{}/users".format(self.base_url)
+            params = {"email": email_address}
+        else:
+            raise ValueError("Either user_id or email_address must be set")
+
+        try:
+            return self._get(url, params=params)
+        except APIError as e:
+            if e.response.status_code != 404:
+                raise
+        return None
+
+    def authenticate_user(self, email_address, password, supplier=True):
+        try:
+            response = self._post(
+                '{}/users/auth'.format(self.base_url),
+                data={
+                    "authUsers": {
+                        "emailAddress": email_address,
+                        "password": password,
+                    }
+                })
+            if not supplier or "supplier" in response['users']:
+                return response
+        except APIError as e:
+            if e.response.status_code not in [400, 403, 404]:
+                raise
+        return None
+
+    def update_user_password(self, user_id, new_password):
+        try:
+            self._post(
+                '{}/users/{}'.format(self.base_url, user_id),
+                data={"users": {"password": new_password}}
+            )
+
+            logger.info("Updated password for user %s", user_id)
+            return True
+        except APIError as e:
+            logger.info("Password update failed for user %s: %s",
+                        user_id, e.response.status_code)
+            return False
