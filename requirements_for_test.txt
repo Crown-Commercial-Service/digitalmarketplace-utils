@@ -1,3 +1,4 @@
+-r requirements.txt
 pytest==2.7.0
 mock==1.0.1
 requests-mock==0.6.0
