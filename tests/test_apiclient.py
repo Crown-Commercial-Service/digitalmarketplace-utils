@@ -227,6 +227,32 @@ class TestSearchApiClient(object):
 
 
 class TestDataApiClient(object):
+    def test_request_id_is_added_if_available(
+            self, data_client, rmock, app_with_logging):
+        headers = {'DM-Request-Id': 'generated'}
+        with app_with_logging.test_request_context('/', headers=headers):
+            rmock.get(
+                "http://baseurl/_status",
+                json={"status": "ok"},
+                status_code=200)
+
+            data_client.get_status()
+
+            assert rmock.last_request.headers["DM-Request-Id"] == "generated"
+
+    def test_request_id_is_not_added_if_logging_is_not_loaded(
+            self, data_client, rmock, app):
+        headers = {'DM-Request-Id': 'generated'}
+        with app.test_request_context('/', headers=headers):
+            rmock.get(
+                "http://baseurl/_status",
+                json={"status": "ok"},
+                status_code=200)
+
+            data_client.get_status()
+
+            assert "DM-Request-Id" not in rmock.last_request.headers
+
     def test_init_app_sets_attributes(self, data_client):
         app = mock.Mock()
         app.config = {
