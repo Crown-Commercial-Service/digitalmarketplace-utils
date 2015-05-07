@@ -477,7 +477,7 @@ class TestDataApiClient(object):
             }
         }}
 
-    def test_get_suppliers_with_no_prefix(self, data_client, rmock):
+    def test_find_suppliers_with_no_prefix(self, data_client, rmock):
         rmock.get(
             "http://baseurl/suppliers",
             json={"services": "result"},
@@ -499,17 +499,6 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
-    def test_get_supplier_by_id(self, data_client, rmock):
-        rmock.get(
-            "http://baseurl/suppliers/123",
-            json={"services": "result"},
-            status_code=200)
-
-        result = data_client.get_supplier(123)
-
-        assert result == {"services": "result"}
-        assert rmock.called
-
     def test_find_services_by_supplier(self, data_client, rmock):
         rmock.get(
             "http://baseurl/services?supplier_id=123",
@@ -517,6 +506,17 @@ class TestDataApiClient(object):
             status_code=200)
 
         result = data_client.find_services(supplier_id=123)
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
+    def test_get_supplier_by_id(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_supplier(123)
 
         assert result == {"services": "result"}
         assert rmock.called
