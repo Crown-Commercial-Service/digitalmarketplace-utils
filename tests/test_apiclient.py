@@ -327,7 +327,8 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
-    def test_find_services_adds_supplier_id_parameter(self, data_client, rmock):
+    def test_find_services_adds_supplier_id_parameter(
+            self, data_client, rmock):
         rmock.get(
             "http://baseurl/services?supplier_id=1",
             json={"services": "result"},

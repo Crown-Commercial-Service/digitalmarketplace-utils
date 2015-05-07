@@ -12,6 +12,8 @@ with open('dmutils/__init__.py', 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1)))
 
+with open('requirements.txt', 'rb') as f:
+    install_requires = f.read().decode('utf-8').splitlines()
 
 setup(
     name='digitalmarketplace-utils',
@@ -23,9 +25,5 @@ setup(
     long_description=__doc__,
     packages=['dmutils'],
     include_package_data=True,
-    install_requires=[
-        'Flask>=0.10',
-        'six==1.9.0',
-        'requests==2.7.0',
-    ],
+    install_requires=install_requires,
 )
