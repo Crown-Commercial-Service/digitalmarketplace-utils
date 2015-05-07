@@ -45,4 +45,3 @@ def test_init_app_converts_truthy_to_bool(app, os_environ):
         init_app(app)
 
         assert app.config['MY_SETTING'] is False
-
