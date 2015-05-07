@@ -85,7 +85,7 @@ def service():
         "datacentreTier": "TIA-942 Tier 3",
         "datacentresSpecifyLocation": True,
         "datacentresEUCode": False,
-    }
+        }
 
 
 class TestSearchApiClient(object):
@@ -95,7 +95,7 @@ class TestSearchApiClient(object):
             "DM_SEARCH_API_URL": "http://example",
             "DM_SEARCH_API_AUTH_TOKEN": "example-token",
             "ES_ENABLED": False,
-        }
+            }
         search_client.init_app(app)
 
         assert search_client.base_url == "http://example"
@@ -186,6 +186,21 @@ class TestSearchApiClient(object):
         result = search_client.index("12345", service, "Supplier name")
         assert result == {'message': 'acknowledged'}
 
+    def test_delete_to_delete_method_service_id(
+            self, search_client, rmock):
+        rmock.delete(
+            'http://baseurl/g-cloud/services/12345',
+            json={"services": {
+                "_id": "12345",
+                "_index": "g-cloud",
+                "_type": "services",
+                "_version": 1,
+                "found": True
+            }},
+            status_code=200)
+        result = search_client.delete("12345")
+        assert result['services']['found'] is True
+
     def test_should_not_call_search_api_is_es_disabled(
             self, search_client, rmock, service):
         search_client.enabled = False
@@ -258,7 +273,7 @@ class TestDataApiClient(object):
         app.config = {
             "DM_DATA_API_URL": "http://example",
             "DM_DATA_API_AUTH_TOKEN": "example-token",
-        }
+            }
         data_client.init_app(app)
 
         assert data_client.base_url == "http://example"

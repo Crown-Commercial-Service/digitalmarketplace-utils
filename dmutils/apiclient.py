@@ -40,6 +40,9 @@ class BaseAPIClient(object):
     def _post(self, url, data):
         return self._request("POST", url, data=data)
 
+    def _delete(self, url):
+        return self._request("DELETE", url)
+
     def _request(self, method, url, data=None, params=None):
         if not self.enabled:
             return None
@@ -128,6 +131,16 @@ class SearchAPIClient(BaseAPIClient):
         data = self._convert_service(service_id, service, supplier_name)
 
         return self._put(url, data=data)
+
+    def delete(self, service_id):
+        url = self._url("/{}".format(service_id))
+
+        try:
+            return self._delete(url)
+        except APIError as e:
+            if e.response.status_code != 404:
+                raise
+        return None
 
     def search_services(self, q="", **filters):
         if isinstance(q, list):
