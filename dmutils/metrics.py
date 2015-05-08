@@ -3,6 +3,7 @@ from datetime import datetime
 
 from boto.ec2.cloudwatch import connect_to_region
 from flask import current_app, _app_ctx_stack as stack
+from contextlib2 import ContextDecorator
 
 
 def flask_client():
@@ -63,3 +64,21 @@ class CloudWatchClient(object):
             dimensions=self.dimensions(dimensions),
             statistics=statistics)
 
+    def timer(self, name):
+        return Timer(self, name)
+
+
+class Timer(ContextDecorator):
+    def __init__(self, client, name):
+        self.client = client
+        self.name = name
+
+    def __enter__(self):
+        self.start = datetime.now()
+
+    def __exit__(self, *exc):
+        elapsed = datetime.now() - self.start
+        self.client._put_metric(
+            self.name,
+            int(elapsed.total_seconds() * 1000),
+            unit="Milliseconds")

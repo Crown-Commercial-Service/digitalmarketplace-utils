@@ -1,3 +1,5 @@
+import time
+
 import mock
 
 from dmutils import metrics
@@ -30,6 +32,18 @@ def test_put_metric(cloudwatch):
         unit="Count",
         dimensions=dict(),
         statistics=None)
+
+
+def test_timer(cloudwatch):
+    client = metrics.client("myregion", "mynamespace")
+    with client.timer("mytimer"):
+        time.sleep(0.1)
+
+    cloudwatch.put_metric_data.assert_called()
+    args, kwargs = cloudwatch.put_metric_data.call_args
+
+    assert 0 < kwargs['value'] < 150
+    assert kwargs['unit'] == "Milliseconds"
 
 
 def test_flask_client_returns_none_before_init():
