@@ -2,6 +2,34 @@ import copy
 from datetime import datetime
 
 from boto.ec2.cloudwatch import connect_to_region
+from flask import current_app, _app_ctx_stack as stack
+
+
+def flask_client():
+    return CloudWatchFlaskClient()
+
+
+class CloudWatchFlaskClient(object):
+    def init_app(self, app):
+        c = app.config
+        c.setdefault('DM_METRICS_REGION', 'eu-west-1')
+        c.setdefault('DM_METRICS_NAMESPACE', c.get('DM_ENVIRONMENT', 'none'))
+        dimensions = {
+            "applicationName": c.get('DM_APP_NAME', 'none'),
+        }
+        dimensions.update(c.get('DM_METRICS_DIMENSIONS', dict()))
+        c['DM_METRICS_DIMENSIONS'] = dimensions
+
+    @property
+    def client(self):
+        ctx = stack.top
+        if ctx is not None:
+            if not hasattr(ctx, 'dmutils_metrics_client'):
+                ctx.dmutils_metrics_client = client(
+                    current_app.config['DM_METRICS_REGION'],
+                    current_app.config['DM_METRICS_NAMESPACE'],
+                    current_app.config['DM_METRICS_DIMENSIONS'])
+            return ctx.dmutils_metrics_client
 
 
 def client(region, namespace, default_dimensions=None):
