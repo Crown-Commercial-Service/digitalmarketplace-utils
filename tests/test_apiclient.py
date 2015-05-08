@@ -116,12 +116,13 @@ class TestSearchApiClient(object):
 
     def test_convert_service(self, search_client, service):
         converted = search_client._convert_service(
-            service['id'], service, "Supplier Name")
+            service['id'], service, "Supplier Name", "Framework Name")
 
         assert "service" in converted
         assert "service" in converted
         assert converted["service"]["id"] == "1234567890123456"
         assert converted["service"]["lot"] == "IaaS"
+        assert converted["service"]["frameworkName"] == "Framework Name"
         assert converted["service"]["serviceName"] == "My Iaas Service"
         assert \
             converted["service"]["serviceSummary"] == "IaaS Service Summary"
@@ -164,11 +165,12 @@ class TestSearchApiClient(object):
         del service["serviceFeatures"]
 
         converted = search_client._convert_service(
-            service['id'], service, "Supplier Name")
+            service['id'], service, "Supplier Name", "Framework Name")
 
         assert "service" in converted
         assert converted["service"]["id"] == "1234567890123456"
         assert converted["service"]["lot"] == "IaaS"
+        assert converted["service"]["frameworkName"] == "Framework Name"
         assert converted["service"]["serviceName"] == "My Iaas Service"
         assert \
             converted["service"]["serviceSummary"] == "IaaS Service Summary"
@@ -183,7 +185,11 @@ class TestSearchApiClient(object):
             'http://baseurl/g-cloud/services/12345',
             json={'message': 'acknowledged'},
             status_code=200)
-        result = search_client.index("12345", service, "Supplier name")
+        result = search_client.index(
+            "12345",
+            service,
+            "Supplier name",
+            "Framework Name")
         assert result == {'message': 'acknowledged'}
 
     def test_delete_to_delete_method_service_id(
@@ -208,7 +214,11 @@ class TestSearchApiClient(object):
             'http://baseurl/g-cloud/services/12345',
             json={'message': 'acknowledged'},
             status_code=200)
-        result = search_client.index("12345", service, "Supplier name")
+        result = search_client.index(
+            "12345",
+            service,
+            "Supplier name",
+            "Framework Name")
         assert result is None
         assert not rmock.called
 
@@ -219,7 +229,11 @@ class TestSearchApiClient(object):
                 'http://baseurl/g-cloud/services/12345',
                 json={'error': 'some error'},
                 status_code=400)
-            search_client.index("12345", service, "Supplier name")
+            search_client.index(
+                "12345",
+                service,
+                "Supplier name",
+                "Framework Name")
 
     def test_search_services(self, search_client, rmock):
         rmock.get(

@@ -115,7 +115,7 @@ class SearchAPIClient(BaseAPIClient):
         "openSource",
         "persistentStorage",
         "guaranteedResources",
-        "elasticCloud",
+        "elasticCloud"
     ]
 
     def init_app(self, app):
@@ -126,9 +126,13 @@ class SearchAPIClient(BaseAPIClient):
     def _url(self, path):
         return "{}/g-cloud/services{}".format(self.base_url, path)
 
-    def index(self, service_id, service, supplier_name):
+    def index(self, service_id, service, supplier_name, framework_name):
         url = self._url("/{}".format(service_id))
-        data = self._convert_service(service_id, service, supplier_name)
+        data = self._convert_service(
+            service_id,
+            service,
+            supplier_name,
+            framework_name)
 
         return self._put(url, data=data)
 
@@ -157,8 +161,14 @@ class SearchAPIClient(BaseAPIClient):
 
         return response['search']
 
-    def _convert_service(self, service_id, service, supplier_name):
+    def _convert_service(
+            self,
+            service_id,
+            service,
+            supplier_name,
+            framework_name):
         data = {k: service[k] for k in self.FIELDS if k in service}
+        data['frameworkName'] = framework_name
         data['supplierName'] = supplier_name
         data['id'] = service_id
 
