@@ -1,21 +1,4 @@
-from flask import Flask
-import pytest
-import mock
-
 from dmutils.config import init_app
-
-
-@pytest.fixture
-def app():
-    return Flask(__name__)
-
-
-@pytest.fixture
-def os_environ(request):
-    env_patch = mock.patch('os.environ', {})
-    request.addfinalizer(env_patch.stop)
-
-    return env_patch.start()
 
 
 def test_init_app_updates_known_config_options(app, os_environ):

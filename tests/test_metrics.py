@@ -1,23 +1,7 @@
-from datetime import datetime
-
 import mock
-import pytest
-from boto.ec2.cloudwatch import CloudWatchConnection
 
 from dmutils import metrics
-
-
-@pytest.yield_fixture
-def cloudwatch():
-    with mock.patch('dmutils.metrics.connect_to_region') as connect_to_region:
-        conn = mock.Mock(spec=CloudWatchConnection)
-        connect_to_region.return_value = conn
-        yield conn
-
-
-class IsDatetime(object):
-    def __eq__(self, other):
-        return isinstance(other, datetime)
+from .helpers import IsDatetime
 
 
 @mock.patch('dmutils.metrics.connect_to_region')
