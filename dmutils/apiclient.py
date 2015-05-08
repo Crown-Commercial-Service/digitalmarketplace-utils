@@ -115,7 +115,7 @@ class SearchAPIClient(BaseAPIClient):
         "openSource",
         "persistentStorage",
         "guaranteedResources",
-        "elasticCloud"
+        "elasticCloud",
     ]
 
     def init_app(self, app):
