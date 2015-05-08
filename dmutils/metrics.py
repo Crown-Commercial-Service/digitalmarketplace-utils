@@ -63,9 +63,3 @@ class CloudWatchClient(object):
             dimensions=self.dimensions(dimensions),
             statistics=statistics)
 
-    def inc(self, name, value=1, timestamp=None, dimensions=None):
-        self._put_metric(name,
-                         value=value,
-                         timestamp=timestamp,
-                         unit="Count",
-                         dimensions=dimensions)

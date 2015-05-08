@@ -18,9 +18,9 @@ def test_client_default_dimensions_defaults_to_dict(cloudwatch):
     assert client.default_dimensions == dict()
 
 
-def test_inc_produces_a_counter(cloudwatch):
+def test_put_metric(cloudwatch):
     client = metrics.client("myregion", "mynamespace")
-    client.inc("foo")
+    client._put_metric("foo", 1, unit="Count")
 
     cloudwatch.put_metric_data.assert_called_with(
         namespace="mynamespace",
