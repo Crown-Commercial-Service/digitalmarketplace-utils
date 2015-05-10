@@ -52,14 +52,14 @@ def test_flask_client_returns_none_before_init():
     assert client.client is None
 
 
-def test_flask_client_returns_none_when_not_in_app_context(app):
+def test_flask_client_returns_none_when_not_in_app_context(app, cloudwatch):
     client = metrics.flask_client()
     client.init_app(app)
 
     assert client.client is None
 
 
-def test_flask_client_returns_client_when_in_app_context(app):
+def test_flask_client_returns_client_when_in_app_context(app, cloudwatch):
     client = metrics.flask_client()
     client.init_app(app)
 
@@ -67,14 +67,14 @@ def test_flask_client_returns_client_when_in_app_context(app):
         assert isinstance(client.client, metrics.CloudWatchClient)
 
 
-def test_flask_client_adds_application_name_dimension(app):
+def test_flask_client_adds_application_name_dimension(app, cloudwatch):
     client = metrics.flask_client()
     client.init_app(app)
 
     assert app.config['DM_METRICS_DIMENSIONS'] == {'applicationName': 'none'}
 
 
-def test_flask_client_merges_configured_dimensions(app):
+def test_flask_client_merges_configured_dimensions(app, cloudwatch):
     client = metrics.flask_client()
     app.config['DM_METRICS_DIMENSIONS'] = {
         "customDimension": "value",
