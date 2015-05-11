@@ -380,6 +380,19 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
+    def test_update_service_status(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/services/123/status/published",
+            json={"services": "result"},
+            status_code=200,
+        )
+
+        result = data_client.update_service_status(
+            123, "published", "person", "reason")
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
     def test_get_user_by_id(self, data_client, rmock):
         rmock.get(
             "http://baseurl/users/1234",
