@@ -109,7 +109,6 @@ class TestSearchApiClient(object):
             status_code=200)
 
         result = data_client.get_status()
-        print("result = {}".format(result))
 
         assert result['status'] == "ok"
         assert rmock.called

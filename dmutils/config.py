@@ -7,6 +7,8 @@ def init_app(app):
     for key, value in app.config.items():
         if key in os.environ:
             app.config[key] = convert_to_boolean(os.environ[key])
+    app.config['DM_ENVIRONMENT'] = os.environ.get('DM_ENVIRONMENT',
+                                                  'development')
 
 
 def convert_to_boolean(value):
