@@ -46,28 +46,33 @@ class BaseAPIClient(object):
     def _request(self, method, url, data=None, params=None):
         if not self.enabled:
             return None
+
+        logger.debug("API request %s %s", method, url)
+        headers = {
+            "Content-type": "application/json",
+            "Authorization": "Bearer {}".format(self.auth_token),
+        }
+        headers = self._add_request_id_header(headers)
+
         try:
-            logger.debug("API request %s %s", method, url)
-            headers = {
-                "Content-type": "application/json",
-                "Authorization": "Bearer {}".format(self.auth_token),
-            }
-            headers = self._add_request_id_header(headers)
             response = requests.request(
                 method, url,
                 headers=headers, json=data, params=params)
             response.raise_for_status()
-
-            return response.json()
         except requests.HTTPError as e:
-            e = APIError(e)
+            api_error = APIError(e)
             logger.warning(
                 "API %s request on %s failed with %s '%s'",
                 method, url, e.response.status_code, e.response_message)
-            raise e
+            raise api_error
         except requests.RequestException as e:
-            logger.exception(e.message)
-            raise
+            api_error = APIError(e)
+            logger.warning(
+                "API %s request on %s failed with %s '%s'",
+                method, url, None, e.message)
+            raise api_error
+
+        return response.json()
 
     def _add_request_id_header(self, headers):
         if not has_request_context():
