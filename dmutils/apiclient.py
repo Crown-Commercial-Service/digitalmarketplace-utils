@@ -229,6 +229,17 @@ class DataAPIClient(BaseAPIClient):
                 "services": service,
             })
 
+    def update_service_status(self, service_id, status, user, reason):
+        return self._post(
+            "{}/services/{}/status/{}".format(
+                self.base_url, service_id, status),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": reason,
+                },
+            })
+
     def get_user(self, user_id=None, email_address=None):
         if user_id is not None and email_address is not None:
             raise ValueError(
