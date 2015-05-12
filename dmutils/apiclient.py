@@ -149,7 +149,9 @@ class SearchAPIClient(BaseAPIClient):
     def search_services(self, q="", **filters):
         if isinstance(q, list):
             q = q[0]
-        params = {"q": q}
+        params = dict()
+        if q != "":
+            params['q'] = q
 
         for filter_name, filter_values in six.iteritems(filters):
             if filter_name == "minimumContractPeriod":
