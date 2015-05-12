@@ -247,6 +247,15 @@ class TestSearchApiClient(object):
             something=['a', 'b'])
         assert result == "myresponse"
 
+    def test_search_services_with_blank_query(self, search_client, rmock):
+        rmock.get(
+            'http://baseurl/g-cloud/services/search?',
+            json={'search': "myresponse"},
+            status_code=200)
+        result = search_client.search_services(q='')
+        assert result == "myresponse"
+        assert rmock.last_request.query == ''
+
     @staticmethod
     def load_example_listing(name):
         file_path = os.path.join("example_listings", "{}.json".format(name))
