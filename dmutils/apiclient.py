@@ -21,7 +21,7 @@ class APIError(requests.HTTPError):
     def response_message(self):
         try:
             return self.response.json()['error']
-        except (TypeError, KeyError):
+        except (TypeError, KeyError, ValueError):
             return str(self.response.content)
 
 
