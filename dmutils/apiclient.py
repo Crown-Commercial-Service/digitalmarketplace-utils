@@ -85,7 +85,7 @@ class BaseAPIClient(object):
         except requests.RequestException as e:
             try:
                 return e.response.json()
-            except ValueError:
+            except (ValueError, AttributeError):
                 return {
                     "status": "error",
                     "message": "{}".format(e.message),
