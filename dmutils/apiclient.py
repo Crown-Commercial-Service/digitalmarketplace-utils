@@ -161,7 +161,24 @@ class SearchAPIClient(BaseAPIClient):
 
         response = self._get(self._url("/search"), params=params)
 
-        return response['search']
+        if 'search' in response:
+            return self._build_search_result_from_legacy_response(response)
+        else:
+            return response
+
+    def _build_search_result_from_legacy_response(self, response):
+        result = dict()
+        if 'links' in response:
+            result['links'] = response['links']
+        result.update({
+            'meta': {
+                'query': response['search']['query'],
+                'took': response['search']['took'],
+                'total': response['search']['total'],
+            },
+            'services': response['search']['services'],
+        })
+        return result
 
     def _convert_service(
             self,

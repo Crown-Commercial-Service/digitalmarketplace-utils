@@ -234,26 +234,88 @@ class TestSearchApiClient(object):
                 "Supplier name",
                 "Framework Name")
 
-    def test_search_services(self, search_client, rmock):
+    def test_search_services_legacy(self, search_client, rmock):
+        search_response = {
+            "links": {
+                "next": "nextlink",
+            },
+            "search": {
+                "query": {
+                    "q": "foo",
+                    "filter_minimumContractPeriod": "a,b",
+                    "filter_something": ["a", "b"],
+                },
+                "services": [
+                    "a service",
+                ],
+                "total": 1,
+                "took": 10,
+            }
+        }
         rmock.get(
             'http://baseurl/g-cloud/services/search?q=foo&'
             'filter_minimumContractPeriod=a,b&'
             'filter_something=a&filter_something=b',
-            json={'search': "myresponse"},
+            json=search_response,
+            status_code=200)
+
+        result = search_client.search_services(
+            q='foo',
+            minimumContractPeriod=['a', 'b'],
+            something=['a', 'b'])
+
+        assert result['links'] == {"next": "nextlink"}
+        assert "query" in result['meta']
+        assert result['meta']['total'] == 1
+        assert result['meta']['took'] == 10
+        assert result['services'] == ["a service"]
+
+    def test_search_services(self, search_client, rmock):
+        search_response = {
+            "links": {
+                "next": "nextlink",
+            },
+            "meta": {
+                "query": {
+                    "q": "foo",
+                    "filter_minimumContractPeriod": "a,b",
+                    "filter_something": ["a", "b"],
+                },
+                "total": 1,
+                "took": 10,
+            },
+            "services": [
+                "a service",
+            ]
+        }
+        rmock.get(
+            'http://baseurl/g-cloud/services/search?q=foo&'
+            'filter_minimumContractPeriod=a,b&'
+            'filter_something=a&filter_something=b',
+            json=search_response,
             status_code=200)
         result = search_client.search_services(
             q='foo',
             minimumContractPeriod=['a', 'b'],
             something=['a', 'b'])
-        assert result == "myresponse"
+
+        assert result['links'] == {"next": "nextlink"}
+        assert "query" in result['meta']
+        assert result['meta']['total'] == 1
+        assert result['meta']['took'] == 10
+        assert result['services'] == ["a service"]
 
     def test_search_services_with_blank_query(self, search_client, rmock):
+        search_response = {
+            'meta': {'query': dict()},
+            'services': ["a service"],
+        }
         rmock.get(
             'http://baseurl/g-cloud/services/search?',
-            json={'search': "myresponse"},
+            json=search_response,
             status_code=200)
         result = search_client.search_services(q='')
-        assert result == "myresponse"
+        assert result['meta']['query'] == dict()
         assert rmock.last_request.query == ''
 
     @staticmethod
