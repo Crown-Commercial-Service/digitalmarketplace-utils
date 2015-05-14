@@ -1,6 +1,11 @@
 from __future__ import absolute_import
 import logging
 
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
+
 import six
 import requests
 from requests import ConnectionError  # noqa
@@ -46,6 +51,8 @@ class BaseAPIClient(object):
     def _request(self, method, url, data=None, params=None):
         if not self.enabled:
             return None
+
+        url = urlparse.urljoin(self.base_url, url)
 
         logger.debug("API request %s %s", method, url)
         headers = {
@@ -129,7 +136,7 @@ class SearchAPIClient(BaseAPIClient):
         self.enabled = app.config['ES_ENABLED']
 
     def _url(self, path):
-        return "{}/g-cloud/services{}".format(self.base_url, path)
+        return "/g-cloud/services{}".format(path)
 
     def index(self, service_id, service, supplier_name, framework_name):
         url = self._url("/{}".format(service_id))
@@ -196,19 +203,19 @@ class DataAPIClient(BaseAPIClient):
                 "prefix": prefix
             }
         return self._get(
-            "{}/suppliers".format(self.base_url),
+            "/suppliers",
             params
         )
 
     def get_supplier(self, supplier_id):
         return self._get(
-            "{}/suppliers/{}".format(self.base_url, supplier_id)
+            "/suppliers/{}".format(supplier_id)
         )
 
     def get_service(self, service_id):
         try:
             return self._get(
-                "{}/services/{}".format(self.base_url, service_id))
+                "/services/{}".format(service_id))
         except APIError as e:
             if e.response.status_code != 404:
                 raise
@@ -227,7 +234,7 @@ class DataAPIClient(BaseAPIClient):
 
     def update_service(self, service_id, service, user, reason):
         return self._post(
-            "{}/services/{}".format(self.base_url, service_id),
+            "/services/{}".format(service_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -238,8 +245,7 @@ class DataAPIClient(BaseAPIClient):
 
     def update_service_status(self, service_id, status, user, reason):
         return self._post(
-            "{}/services/{}/status/{}".format(
-                self.base_url, service_id, status),
+            "/services/{}/status/{}".format(service_id, status),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -262,15 +268,15 @@ class DataAPIClient(BaseAPIClient):
 
         try:
             return self._get(url, params=params)
-        except APIError as e:
-            if e.response.status_code != 404:
+        except HTTPError as e:
+            if e.status_code != 404:
                 raise
         return None
 
     def authenticate_user(self, email_address, password, supplier=True):
         try:
             response = self._post(
-                '{}/users/auth'.format(self.base_url),
+                '/users/auth',
                 data={
                     "authUsers": {
                         "emailAddress": email_address,
@@ -287,7 +293,7 @@ class DataAPIClient(BaseAPIClient):
     def update_user_password(self, user_id, new_password):
         try:
             self._post(
-                '{}/users/{}'.format(self.base_url, user_id),
+                '/users/{}'.format(user_id),
                 data={"users": {"password": new_password}}
             )
 
