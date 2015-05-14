@@ -15,19 +15,36 @@ from flask import has_request_context, request, current_app
 logger = logging.getLogger(__name__)
 
 
-class APIError(requests.HTTPError):
-    def __init__(self, http_error):
-        super(APIError, self).__init__(
-            http_error,
-            response=http_error.response,
-            request=http_error.request)
+REQUEST_ERROR_STATUS_CODE = 503
+REQUEST_ERROR_MESSAGE = "Request failed"
+
+
+class APIError(Exception):
+    def __init__(self, response=None, message=None):
+        self.response = response
+        self._message = message
 
     @property
-    def response_message(self):
+    def message(self):
         try:
             return self.response.json()['error']
-        except (TypeError, KeyError, ValueError):
-            return str(self.response.content)
+        except (TypeError, ValueError, AttributeError, KeyError):
+            return self._message or REQUEST_ERROR_MESSAGE
+
+    @property
+    def status_code(self):
+        try:
+            return self.response.status_code
+        except AttributeError:
+            return REQUEST_ERROR_STATUS_CODE
+
+
+class HTTPError(APIError):
+    pass
+
+
+class InvalidResponse(APIError):
+    pass
 
 
 class BaseAPIClient(object):
@@ -66,20 +83,16 @@ class BaseAPIClient(object):
                 method, url,
                 headers=headers, json=data, params=params)
             response.raise_for_status()
-        except requests.HTTPError as e:
-            api_error = APIError(e)
-            logger.warning(
-                "API %s request on %s failed with %s '%s'",
-                method, url, e.response.status_code, e.response_message)
-            raise api_error
         except requests.RequestException as e:
-            api_error = APIError(e)
+            api_error = HTTPError(e.response)
             logger.warning(
                 "API %s request on %s failed with %s '%s'",
-                method, url, None, e.message)
+                method, url, api_error.status_code, e.message)
             raise api_error
-
-        return response.json()
+        try:
+            return response.json()
+        except ValueError as e:
+            raise InvalidResponse(response, message=e.message)
 
     def _add_request_id_header(self, headers):
         if not has_request_context():
@@ -92,9 +105,8 @@ class BaseAPIClient(object):
 
     def get_status(self):
         try:
-            return self._get(
-                "{}/_status".format(self.base_url))
-        except requests.RequestException as e:
+            return self._get("{}/_status".format(self.base_url))
+        except APIError as e:
             try:
                 return e.response.json()
             except (ValueError, AttributeError):
@@ -153,8 +165,8 @@ class SearchAPIClient(BaseAPIClient):
 
         try:
             return self._delete(url)
-        except APIError as e:
-            if e.response.status_code != 404:
+        except HTTPError as e:
+            if e.status_code != 404:
                 raise
         return None
 
@@ -216,8 +228,8 @@ class DataAPIClient(BaseAPIClient):
         try:
             return self._get(
                 "/services/{}".format(service_id))
-        except APIError as e:
-            if e.response.status_code != 404:
+        except HTTPError as e:
+            if e.status_code != 404:
                 raise
         return None
 
@@ -285,8 +297,8 @@ class DataAPIClient(BaseAPIClient):
                 })
             if not supplier or "supplier" in response['users']:
                 return response
-        except APIError as e:
-            if e.response.status_code not in [400, 403, 404]:
+        except HTTPError as e:
+            if e.status_code not in [400, 403, 404]:
                 raise
         return None
 
@@ -299,7 +311,7 @@ class DataAPIClient(BaseAPIClient):
 
             logger.info("Updated password for user %s", user_id)
             return True
-        except APIError as e:
+        except HTTPError as e:
             logger.info("Password update failed for user %s: %s",
-                        user_id, e.response.status_code)
+                        user_id, e.status_code)
             return False
