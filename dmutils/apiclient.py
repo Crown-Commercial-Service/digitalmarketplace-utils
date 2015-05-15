@@ -1,28 +1,49 @@
 from __future__ import absolute_import
 import logging
 
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
+
 import six
 import requests
-from requests import ConnectionError  # noqa
 from flask import has_request_context, request, current_app
 
 
 logger = logging.getLogger(__name__)
 
 
-class APIError(requests.HTTPError):
-    def __init__(self, http_error):
-        super(APIError, self).__init__(
-            http_error,
-            response=http_error.response,
-            request=http_error.request)
+REQUEST_ERROR_STATUS_CODE = 503
+REQUEST_ERROR_MESSAGE = "Request failed"
+
+
+class APIError(Exception):
+    def __init__(self, response=None, message=None):
+        self.response = response
+        self._message = message
 
     @property
-    def response_message(self):
+    def message(self):
         try:
             return self.response.json()['error']
-        except (TypeError, KeyError, ValueError):
-            return str(self.response.content)
+        except (TypeError, ValueError, AttributeError, KeyError):
+            return self._message or REQUEST_ERROR_MESSAGE
+
+    @property
+    def status_code(self):
+        try:
+            return self.response.status_code
+        except AttributeError:
+            return REQUEST_ERROR_STATUS_CODE
+
+
+class HTTPError(APIError):
+    pass
+
+
+class InvalidResponse(APIError):
+    pass
 
 
 class BaseAPIClient(object):
@@ -46,28 +67,32 @@ class BaseAPIClient(object):
     def _request(self, method, url, data=None, params=None):
         if not self.enabled:
             return None
+
+        url = urlparse.urljoin(self.base_url, url)
+
+        logger.debug("API request %s %s", method, url)
+        headers = {
+            "Content-type": "application/json",
+            "Authorization": "Bearer {}".format(self.auth_token),
+        }
+        headers = self._add_request_id_header(headers)
+
         try:
-            logger.debug("API request %s %s", method, url)
-            headers = {
-                "Content-type": "application/json",
-                "Authorization": "Bearer {}".format(self.auth_token),
-            }
-            headers = self._add_request_id_header(headers)
             response = requests.request(
                 method, url,
                 headers=headers, json=data, params=params)
             response.raise_for_status()
-
-            return response.json()
-        except requests.HTTPError as e:
-            e = APIError(e)
+        except requests.RequestException as e:
+            api_error = HTTPError(e.response)
             logger.warning(
                 "API %s request on %s failed with %s '%s'",
-                method, url, e.response.status_code, e.response_message)
-            raise e
-        except requests.RequestException as e:
-            logger.exception(e.message)
-            raise
+                method, url, api_error.status_code, e)
+            raise api_error
+        try:
+            return response.json()
+        except ValueError as e:
+            raise InvalidResponse(response,
+                                  message="No JSON object could be decoded")
 
     def _add_request_id_header(self, headers):
         if not has_request_context():
@@ -80,9 +105,8 @@ class BaseAPIClient(object):
 
     def get_status(self):
         try:
-            return self._get(
-                "{}/_status".format(self.base_url))
-        except requests.RequestException as e:
+            return self._get("{}/_status".format(self.base_url))
+        except APIError as e:
             try:
                 return e.response.json()
             except (ValueError, AttributeError):
@@ -124,7 +148,7 @@ class SearchAPIClient(BaseAPIClient):
         self.enabled = app.config['ES_ENABLED']
 
     def _url(self, path):
-        return "{}/g-cloud/services{}".format(self.base_url, path)
+        return "/g-cloud/services{}".format(path)
 
     def index(self, service_id, service, supplier_name, framework_name):
         url = self._url("/{}".format(service_id))
@@ -141,8 +165,8 @@ class SearchAPIClient(BaseAPIClient):
 
         try:
             return self._delete(url)
-        except APIError as e:
-            if e.response.status_code != 404:
+        except HTTPError as e:
+            if e.status_code != 404:
                 raise
         return None
 
@@ -191,21 +215,21 @@ class DataAPIClient(BaseAPIClient):
                 "prefix": prefix
             }
         return self._get(
-            "{}/suppliers".format(self.base_url),
+            "/suppliers",
             params
         )
 
     def get_supplier(self, supplier_id):
         return self._get(
-            "{}/suppliers/{}".format(self.base_url, supplier_id)
+            "/suppliers/{}".format(supplier_id)
         )
 
     def get_service(self, service_id):
         try:
             return self._get(
-                "{}/services/{}".format(self.base_url, service_id))
-        except APIError as e:
-            if e.response.status_code != 404:
+                "/services/{}".format(service_id))
+        except HTTPError as e:
+            if e.status_code != 404:
                 raise
         return None
 
@@ -222,7 +246,7 @@ class DataAPIClient(BaseAPIClient):
 
     def update_service(self, service_id, service, user, reason):
         return self._post(
-            "{}/services/{}".format(self.base_url, service_id),
+            "/services/{}".format(service_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -233,8 +257,7 @@ class DataAPIClient(BaseAPIClient):
 
     def update_service_status(self, service_id, status, user, reason):
         return self._post(
-            "{}/services/{}/status/{}".format(
-                self.base_url, service_id, status),
+            "/services/{}/status/{}".format(service_id, status),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -257,15 +280,15 @@ class DataAPIClient(BaseAPIClient):
 
         try:
             return self._get(url, params=params)
-        except APIError as e:
-            if e.response.status_code != 404:
+        except HTTPError as e:
+            if e.status_code != 404:
                 raise
         return None
 
     def authenticate_user(self, email_address, password, supplier=True):
         try:
             response = self._post(
-                '{}/users/auth'.format(self.base_url),
+                '/users/auth',
                 data={
                     "authUsers": {
                         "emailAddress": email_address,
@@ -274,21 +297,21 @@ class DataAPIClient(BaseAPIClient):
                 })
             if not supplier or "supplier" in response['users']:
                 return response
-        except APIError as e:
-            if e.response.status_code not in [400, 403, 404]:
+        except HTTPError as e:
+            if e.status_code not in [400, 403, 404]:
                 raise
         return None
 
     def update_user_password(self, user_id, new_password):
         try:
             self._post(
-                '{}/users/{}'.format(self.base_url, user_id),
+                '/users/{}'.format(user_id),
                 data={"users": {"password": new_password}}
             )
 
             logger.info("Updated password for user %s", user_id)
             return True
-        except APIError as e:
+        except HTTPError as e:
             logger.info("Password update failed for user %s: %s",
-                        user_id, e.response.status_code)
+                        user_id, e.status_code)
             return False

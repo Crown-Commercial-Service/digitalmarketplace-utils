@@ -2,17 +2,31 @@
 import os
 
 from flask import json
+import requests
 import requests_mock
 import pytest
 import mock
 
-from dmutils.apiclient import SearchAPIClient, DataAPIClient, APIError
+from dmutils.apiclient import BaseAPIClient, SearchAPIClient, DataAPIClient
+from dmutils.apiclient import APIError, HTTPError, InvalidResponse
+from dmutils.apiclient import REQUEST_ERROR_STATUS_CODE, REQUEST_ERROR_MESSAGE
 
 
 @pytest.yield_fixture
 def rmock():
     with requests_mock.mock() as rmock:
         yield rmock
+
+
+@pytest.yield_fixture
+def raw_rmock():
+    with mock.patch('dmutils.apiclient.requests.request') as rmock:
+        yield rmock
+
+
+@pytest.fixture
+def base_client():
+    return BaseAPIClient('http://baseurl', 'auth-token', True)
 
 
 @pytest.fixture
@@ -86,6 +100,57 @@ def service():
         "datacentresSpecifyLocation": True,
         "datacentresEUCode": False,
         }
+
+
+class TestBaseApiClient(object):
+    def test_connection_error_raises_api_error(self, base_client, raw_rmock):
+        raw_rmock.side_effect = requests.exceptions.ConnectionError(
+            None
+        )
+        with pytest.raises(HTTPError) as e:
+            base_client._request("GET", '/')
+
+        assert e.value.message == REQUEST_ERROR_MESSAGE
+        assert e.value.status_code == REQUEST_ERROR_STATUS_CODE
+
+    def test_http_error_raises_api_error(self, base_client, rmock):
+        rmock.request(
+            "GET",
+            "http://baseurl/",
+            text="Internal Error",
+            status_code=500)
+
+        with pytest.raises(HTTPError) as e:
+            base_client._request("GET", '/')
+
+        assert e.value.message == REQUEST_ERROR_MESSAGE
+        assert e.value.status_code == 500
+
+    def test_non_2xx_response_raises_api_error(self, base_client, rmock):
+        rmock.request(
+            "GET",
+            "http://baseurl/",
+            json={"error": "Not found"},
+            status_code=404)
+
+        with pytest.raises(HTTPError) as e:
+            base_client._request("GET", '/')
+
+        assert e.value.message == "Not found"
+        assert e.value.status_code == 404
+
+    def test_invalid_json_raises_api_error(self, base_client, rmock):
+        rmock.request(
+            "GET",
+            "http://baseurl/",
+            text="Internal Error",
+            status_code=200)
+
+        with pytest.raises(InvalidResponse) as e:
+            base_client._request("GET", '/')
+
+        assert e.value.message == "No JSON object could be decoded"
+        assert e.value.status_code == 200
 
 
 class TestSearchApiClient(object):
