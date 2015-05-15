@@ -87,12 +87,13 @@ class BaseAPIClient(object):
             api_error = HTTPError(e.response)
             logger.warning(
                 "API %s request on %s failed with %s '%s'",
-                method, url, api_error.status_code, e.message)
+                method, url, api_error.status_code, e)
             raise api_error
         try:
             return response.json()
         except ValueError as e:
-            raise InvalidResponse(response, message=e.message)
+            raise InvalidResponse(response,
+                                  message="No JSON object could be decoded")
 
     def _add_request_id_header(self, headers):
         if not has_request_context():
