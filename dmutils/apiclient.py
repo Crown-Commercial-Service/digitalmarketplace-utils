@@ -8,7 +8,6 @@ except ImportError:
 
 import six
 import requests
-from requests import ConnectionError  # noqa
 from flask import has_request_context, request, current_app
 
 
