@@ -28,7 +28,7 @@ def init_app(app):
 
         current_app.logger.info('%s %s %s',
                                 request.method,
-                                request.path,
+                                request.url,
                                 response.status_code)
         return response
 
