@@ -186,7 +186,6 @@ class SearchAPIClient(BaseAPIClient):
 
             params['filter_{}'.format(filter_name)] = filter_values
 
-        print params
         response = self._get(self._url("/search"), params=params)
 
         return response['search']
