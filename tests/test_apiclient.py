@@ -604,6 +604,17 @@ class TestDataApiClient(object):
 
             data_client.authenticate_user("email_address", "password")
 
+    def test_create_user(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users",
+            json={"users": "result"},
+            status_code=201)
+
+        result = data_client.create_user({"foo": "bar"})
+
+        assert result == {"users": "result"}
+        assert rmock.called
+
     def test_update_user_password(self, data_client, rmock):
         rmock.post(
             "http://baseurl/users/123",

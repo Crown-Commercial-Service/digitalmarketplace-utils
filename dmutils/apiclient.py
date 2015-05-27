@@ -285,6 +285,13 @@ class DataAPIClient(BaseAPIClient):
                 },
             })
 
+    def create_user(self, user):
+        return self._post(
+            "/users",
+            data={
+                "users": user,
+            })
+
     def get_user(self, user_id=None, email_address=None):
         if user_id is not None and email_address is not None:
             raise ValueError(
