@@ -211,15 +211,16 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
-    def find_suppliers(self, prefix=None):
-        params = None
+    def find_suppliers(self, prefix=None, page=None):
+        params = {}
         if prefix:
-            params = {
-                "prefix": prefix
-            }
+            params["prefix"] = prefix
+        if page is not None:
+            params['page'] = page
+
         return self._get(
             "/suppliers",
-            params
+            params=params
         )
 
     def get_supplier(self, supplier_id):
