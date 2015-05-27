@@ -684,3 +684,15 @@ class TestDataApiClient(object):
 
         assert result == {"services": "result"}
         assert rmock.called
+
+    def test_create_supplier(self, data_client, rmock):
+        rmock.put(
+            "http://baseurl/suppliers/123",
+            json={"suppliers": "result"},
+            status_code=201,
+        )
+
+        result = data_client.create_supplier(123, {"foo": "bar"})
+
+        assert result == {"suppliers": "result"}
+        assert rmock.called

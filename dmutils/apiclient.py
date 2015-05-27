@@ -227,6 +227,12 @@ class DataAPIClient(BaseAPIClient):
             "/suppliers/{}".format(supplier_id)
         )
 
+    def create_supplier(self, supplier_id, supplier):
+        return self._put(
+            "/suppliers/{}".format(supplier_id),
+            data={"suppliers": supplier},
+        )
+
     def get_service(self, service_id):
         try:
             return self._get(
