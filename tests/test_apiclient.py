@@ -450,6 +450,19 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
+    def test_create_service(self, data_client, rmock):
+        rmock.put(
+            "http://baseurl/services/123",
+            json={"services": "result"},
+            status_code=201,
+        )
+
+        result = data_client.create_service(
+            123, {"foo": "bar"}, "person", "reason")
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
     def test_update_service(self, data_client, rmock):
         rmock.post(
             "http://baseurl/services/123",

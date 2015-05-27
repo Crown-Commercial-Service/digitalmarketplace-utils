@@ -247,6 +247,17 @@ class DataAPIClient(BaseAPIClient):
             self.base_url + "/services",
             params=params)
 
+    def create_service(self, service_id, service, user, reason):
+        return self._put(
+            "/services/{}".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": reason,
+                },
+                "services": service,
+            })
+
     def update_service(self, service_id, service, user, reason):
         return self._post(
             "/services/{}".format(service_id),
