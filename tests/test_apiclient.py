@@ -324,10 +324,10 @@ class TestSearchApiClient(object):
     def test_search_services_with_pagination(self, search_client, rmock):
         rmock.get(
             'http://baseurl/g-cloud/services/search?page=10',
-            json={'search': "myresponse"},
+            json={'services': "myresponse"},
             status_code=200)
         result = search_client.search_services(q='', page=10)
-        assert result == "myresponse"
+        assert result == {'services': "myresponse"}
         assert rmock.last_request.query == 'page=10'
 
     @staticmethod
