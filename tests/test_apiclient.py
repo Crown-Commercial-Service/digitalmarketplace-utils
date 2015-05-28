@@ -450,6 +450,19 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
+    def test_create_service(self, data_client, rmock):
+        rmock.put(
+            "http://baseurl/services/123",
+            json={"services": "result"},
+            status_code=201,
+        )
+
+        result = data_client.create_service(
+            123, {"foo": "bar"}, "person", "reason")
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
     def test_update_service(self, data_client, rmock):
         rmock.post(
             "http://baseurl/services/123",
@@ -591,6 +604,17 @@ class TestDataApiClient(object):
 
             data_client.authenticate_user("email_address", "password")
 
+    def test_create_user(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users",
+            json={"users": "result"},
+            status_code=201)
+
+        result = data_client.create_user({"foo": "bar"})
+
+        assert result == {"users": "result"}
+        assert rmock.called
+
     def test_update_user_password(self, data_client, rmock):
         rmock.post(
             "http://baseurl/users/123",
@@ -650,6 +674,17 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
+    def test_find_supplier_adds_page_parameter(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers?page=2",
+            json={"suppliers": "result"},
+            status_code=200)
+
+        result = data_client.find_suppliers(page=2)
+
+        assert result == {"suppliers": "result"}
+        assert rmock.called
+
     def test_find_services_by_supplier(self, data_client, rmock):
         rmock.get(
             "http://baseurl/services?supplier_id=123",
@@ -670,4 +705,16 @@ class TestDataApiClient(object):
         result = data_client.get_supplier(123)
 
         assert result == {"services": "result"}
+        assert rmock.called
+
+    def test_create_supplier(self, data_client, rmock):
+        rmock.put(
+            "http://baseurl/suppliers/123",
+            json={"suppliers": "result"},
+            status_code=201,
+        )
+
+        result = data_client.create_supplier(123, {"foo": "bar"})
+
+        assert result == {"suppliers": "result"}
         assert rmock.called

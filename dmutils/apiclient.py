@@ -210,20 +210,27 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
-    def find_suppliers(self, prefix=None):
-        params = None
+    def find_suppliers(self, prefix=None, page=None):
+        params = {}
         if prefix:
-            params = {
-                "prefix": prefix
-            }
+            params["prefix"] = prefix
+        if page is not None:
+            params['page'] = page
+
         return self._get(
             "/suppliers",
-            params
+            params=params
         )
 
     def get_supplier(self, supplier_id):
         return self._get(
             "/suppliers/{}".format(supplier_id)
+        )
+
+    def create_supplier(self, supplier_id, supplier):
+        return self._put(
+            "/suppliers/{}".format(supplier_id),
+            data={"suppliers": supplier},
         )
 
     def get_service(self, service_id):
@@ -246,6 +253,17 @@ class DataAPIClient(BaseAPIClient):
             self.base_url + "/services",
             params=params)
 
+    def create_service(self, service_id, service, user, reason):
+        return self._put(
+            "/services/{}".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": reason,
+                },
+                "services": service,
+            })
+
     def update_service(self, service_id, service, user, reason):
         return self._post(
             "/services/{}".format(service_id),
@@ -265,6 +283,13 @@ class DataAPIClient(BaseAPIClient):
                     "updated_by": user,
                     "update_reason": reason,
                 },
+            })
+
+    def create_user(self, user):
+        return self._post(
+            "/users",
+            data={
+                "users": user,
             })
 
     def get_user(self, user_id=None, email_address=None):
