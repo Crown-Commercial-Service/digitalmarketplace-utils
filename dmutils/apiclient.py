@@ -86,7 +86,7 @@ class BaseAPIClient(object):
             api_error = HTTPError(e.response)
             logger.warning(
                 "API %s request on %s failed with %s '%s'",
-                method, url, api_error.status_code, e)
+                method, url, api_error.status_code, api_error.message)
             raise api_error
         try:
             return response.json()
