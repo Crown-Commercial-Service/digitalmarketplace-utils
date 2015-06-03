@@ -1,4 +1,5 @@
 import os
+import datetime
 from flask_featureflags import FEATURE_FLAGS_CONFIG
 
 def get_version_label():
@@ -21,3 +22,11 @@ def get_flags(current_app):
                 flags[config_var] = current_app.config[config_var]
 
     return flags
+
+def enabled_since(date_string):
+    if date_string:
+        # Check format like YYYY-MM-DD
+        datetime.datetime.strptime(date_string, '%Y-%m-%d')
+        return date_string
+
+    return False
