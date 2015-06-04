@@ -4,6 +4,7 @@ Common utils for Digital Marketplace apps.
 import re
 import ast
 import pip.download
+import itertools
 from pip.req import parse_requirements
 from setuptools import setup
 
@@ -14,9 +15,13 @@ with open('dmutils/__init__.py', 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1)))
 
-requirements = parse_requirements('requirements.txt', session=pip.download.PipSession())
+requirements = list(parse_requirements('requirements.txt', session=pip.download.PipSession()))
+
 install_requires = [str(r.req) for r in requirements]
-dependency_links = [str(r.url) for r in requirements]
+dependency_links = filter(
+    lambda x: x != 'None',
+    [str(r.link if hasattr(r, 'link') else r.url) for r in requirements]
+)
 
 setup(
     name='digitalmarketplace-utils',
