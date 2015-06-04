@@ -9,6 +9,7 @@ def init_app(
         config_object,
         bootstrap=None,
         data_api_client=None,
+        db=None,
         feature_flags=None,
         login_manager=None,
         search_api_client=None,
@@ -26,7 +27,10 @@ def init_app(
         bootstrap.init_app(application)
     if data_api_client:
         data_api_client.init_app(application)
+    if db:
+        db.init_app(application)
     if feature_flags:
+        # Standardize FeatureFlags, only accept inline config variables
         feature_flags.init_app(application)
         feature_flags.clear_handlers()
         feature_flags.add_handler(InlineFeatureFlag())
