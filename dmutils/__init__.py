@@ -16,7 +16,8 @@ def init_app(
 ):
 
     application.config.from_object(config_object)
-    config_object.init_app(application)
+    if hasattr(config_object, 'init_app'):
+        config_object.init_app(application)
 
     # all belong to dmutils
     config.init_app(application)
@@ -38,6 +39,3 @@ def init_app(
         login_manager.init_app(application)
     if search_api_client:
         search_api_client.init_app(application)
-
-    logging.init_app(application)
-    proxy_fix.init_app(application)
