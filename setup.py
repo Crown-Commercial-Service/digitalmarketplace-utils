@@ -18,10 +18,6 @@ with open('dmutils/__init__.py', 'rb') as f:
 requirements = list(parse_requirements('requirements.txt', session=pip.download.PipSession()))
 
 install_requires = [str(r.req) for r in requirements]
-dependency_links = filter(
-    lambda x: x != 'None',
-    [str(r.link if hasattr(r, 'link') else r.url) for r in requirements]
-)
 
 setup(
     name='digitalmarketplace-utils',
@@ -33,6 +29,5 @@ setup(
     long_description=__doc__,
     packages=['dmutils'],
     include_package_data=True,
-    install_requires=install_requires,
-    dependency_links=dependency_links
+    install_requires=install_requires
 )
