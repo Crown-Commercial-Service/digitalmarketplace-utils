@@ -233,6 +233,26 @@ class DataAPIClient(BaseAPIClient):
             data={"suppliers": supplier},
         )
 
+    def update_supplier(self, supplier_id, supplier, user):
+        return self._post(
+            "/suppliers/{}".format(supplier_id),
+            data={
+                "suppliers": supplier,
+                "updated_by": user,
+            },
+        )
+
+    def update_contact_information(self, supplier_id, contact_id,
+                                   contact, user):
+        return self._post(
+            "/suppliers/{}/contact-information/{}".format(
+                supplier_id, contact_id),
+            data={
+                "contactInformation": contact,
+                "updated_by": user,
+            },
+        )
+
     def get_service(self, service_id):
         try:
             return self._get(
