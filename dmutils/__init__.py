@@ -4,6 +4,7 @@ from flask_featureflags.contrib.inline import InlineFeatureFlag
 
 __version__ = '0.18.0'
 
+
 def init_app(
         application,
         config_object,

@@ -6,6 +6,6 @@ install:
   - pip install -r requirements_for_test.txt
   - pip install -e .
 script:
-  - py.test
+  - ./scripts/run_tests.sh
 notifications:
   email: false

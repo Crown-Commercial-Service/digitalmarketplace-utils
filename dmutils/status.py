@@ -2,6 +2,7 @@ import os
 import datetime
 from flask_featureflags import FEATURE_FLAGS_CONFIG
 
+
 def get_version_label():
     try:
         path = os.path.join(os.path.dirname(__file__),
@@ -10,6 +11,7 @@ def get_version_label():
             return f.read().strip()
     except IOError:
         return None
+
 
 def get_flags(current_app):
     """ Loop through config variables and return a dictionary of flags.  """
@@ -22,6 +24,7 @@ def get_flags(current_app):
                 flags[config_var] = current_app.config[config_var]
 
     return flags
+
 
 def enabled_since(date_string):
     if date_string:
