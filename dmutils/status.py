@@ -5,8 +5,7 @@ from flask_featureflags import FEATURE_FLAGS_CONFIG
 
 def get_version_label():
     try:
-        path = os.path.join(os.path.dirname(__file__),
-                            '..', '..', 'version_label')
+        path = os.getcwd()
         with open(path) as f:
             return f.read().strip()
     except IOError:
