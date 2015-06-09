@@ -750,3 +750,106 @@ class TestDataApiClient(object):
         assert rmock.request_history[0].json() == {
             'contactInformation': {'foo': 'bar'}, 'updated_by': 'supplier'
         }
+
+    def test_list_draft_service(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/draft-services?supplier_id=2",
+            json={"draft-services": "result"},
+            status_code=200,
+        )
+
+        result = data_client.list_draft_service(2)
+
+        assert result == {"draft-services": "result"}
+        assert rmock.called
+
+    def test_fetch_draft_service(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/services/2/draft",
+            json={"draft-services": "result"},
+            status_code=200,
+        )
+
+        result = data_client.fetch_draft_service(2)
+
+        assert result == {"draft-services": "result"}
+        assert rmock.called
+
+    def test_delete_draft_service(self, data_client, rmock):
+        rmock.delete(
+            "http://baseurl/services/2/draft",
+            json={"done": "it"},
+            status_code=200,
+        )
+
+        result = data_client.delete_draft_service(
+            2, 'user'
+        )
+
+        assert result == {"done": "it"}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+                'update_details': {
+                    'update_reason': 'deprecated', 'updated_by': 'user'
+                }
+        }
+
+    def test_create_draft_service(self, data_client, rmock):
+        rmock.put(
+            "http://baseurl/services/2/draft",
+            json={"done": "it"},
+            status_code=201,
+        )
+
+        result = data_client.create_draft_service(
+            2, 'user'
+        )
+
+        assert result == {"done": "it"}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+                'update_details': {
+                    'update_reason': 'deprecated', 'updated_by': 'user'
+                }
+        }
+
+    def test_edit_draft_service(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/services/2/draft",
+            json={"done": "it"},
+            status_code=200,
+        )
+
+        result = data_client.edit_draft_service(
+            2, {"field": "value"}, 'user'
+        )
+
+        assert result == {"done": "it"}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+                'services': {
+                    "field": "value"
+                },
+                'update_details': {
+                    'update_reason': 'deprecated', 'updated_by': 'user'
+                }
+        }
+
+    def test_launch_draft_service(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/services/2/draft/publish",
+            json={"done": "it"},
+            status_code=200,
+        )
+
+        result = data_client.launch_draft_service(
+            2, 'user'
+        )
+
+        assert result == {"done": "it"}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+                'update_details': {
+                    'update_reason': 'deprecated', 'updated_by': 'user'
+                }
+        }

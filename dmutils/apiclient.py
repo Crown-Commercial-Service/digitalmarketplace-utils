@@ -60,7 +60,7 @@ class BaseAPIClient(object):
     def _post(self, url, data):
         return self._request("POST", url, data=data)
 
-    def _delete(self, url, data):
+    def _delete(self, url, data=None):
         return self._request("DELETE", url, data=data)
 
     def _request(self, method, url, data=None, params=None):
@@ -252,7 +252,7 @@ class DataAPIClient(BaseAPIClient):
 
     def launch_draft_service(self, service_id, user):
         return self._post(
-            "/'/services/{}/draft/publish".format(service_id),
+            "/services/{}/draft/publish".format(service_id),
             data={
                 "update_details": {
                     "updated_by": user,
