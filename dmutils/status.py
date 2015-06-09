@@ -1,9 +1,11 @@
+import os
 import datetime
 from flask_featureflags import FEATURE_FLAGS_CONFIG
 
 
-def get_version_label(path):
+def get_version_label():
     try:
+        path = os.getcwd()
         with open(path) as f:
             return f.read().strip()
     except IOError:
