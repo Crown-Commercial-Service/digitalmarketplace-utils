@@ -13,7 +13,6 @@ from flask import has_request_context, request, current_app
 
 logger = logging.getLogger(__name__)
 
-
 REQUEST_ERROR_STATUS_CODE = 503
 REQUEST_ERROR_MESSAGE = "Request failed"
 
@@ -61,8 +60,8 @@ class BaseAPIClient(object):
     def _post(self, url, data):
         return self._request("POST", url, data=data)
 
-    def _delete(self, url):
-        return self._request("DELETE", url)
+    def _delete(self, url, data):
+        return self._request("DELETE", url, data=data)
 
     def _request(self, method, url, data=None, params=None):
         if not self.enabled:
@@ -209,6 +208,57 @@ class DataAPIClient(BaseAPIClient):
     def init_app(self, app):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
+
+    def list_draft_service(self, supplier_id):
+        return self._get(
+            "/draft-services?supplier_id={}".format(supplier_id)
+        )
+
+    def fetch_draft_service(self, service_id):
+        return self._get(
+            "/services/{}/draft".format(service_id)
+        )
+
+    def delete_draft_service(self, service_id, user):
+        return self._delete(
+            "/services/{}/draft".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+            })
+
+    def create_draft_service(self, service_id, user):
+        return self._put(
+            "/services/{}/draft".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+            })
+
+    def edit_draft_service(self, service_id, service, user):
+        return self._post(
+            "/services/{}/draft".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+                "services": service,
+            })
+
+    def launch_draft_service(self, service_id, user):
+        return self._post(
+            "/'/services/{}/draft/publish".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+            })
 
     def find_suppliers(self, prefix=None, page=None):
         params = {}

@@ -47,9 +47,8 @@ class Validate(object):
                 return
             # File has previously been uploaded
             if (
-                            question_id in self.service and
-                            'upload' == question_content.get('type')
-            ):
+                question_id in self.service and
+                    'upload' == question_content.get('type')):
                 return
 
         for rule in question_content["validations"]:
@@ -188,7 +187,7 @@ class Validate(object):
     def under_10_items(self, question_id, question):
         items_with_empty_removed = [
             list_item for list_item in question if list_item.strip()
-            ]
+        ]
         if len(items_with_empty_removed) <= 10:
             self.clean_data[question_id] = items_with_empty_removed
             return True
