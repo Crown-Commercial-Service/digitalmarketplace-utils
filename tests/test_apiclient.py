@@ -751,26 +751,26 @@ class TestDataApiClient(object):
             'contactInformation': {'foo': 'bar'}, 'updated_by': 'supplier'
         }
 
-    def test_list_draft_service(self, data_client, rmock):
+    def test_find_draft_services(self, data_client, rmock):
         rmock.get(
             "http://baseurl/draft-services?supplier_id=2",
             json={"draft-services": "result"},
             status_code=200,
         )
 
-        result = data_client.list_draft_service(2)
+        result = data_client.find_draft_services(2)
 
         assert result == {"draft-services": "result"}
         assert rmock.called
 
-    def test_fetch_draft_service(self, data_client, rmock):
+    def test_get_draft_service(self, data_client, rmock):
         rmock.get(
             "http://baseurl/services/2/draft",
             json={"draft-services": "result"},
             status_code=200,
         )
 
-        result = data_client.fetch_draft_service(2)
+        result = data_client.get_draft_service(2)
 
         assert result == {"draft-services": "result"}
         assert rmock.called
@@ -813,14 +813,14 @@ class TestDataApiClient(object):
                 }
         }
 
-    def test_edit_draft_service(self, data_client, rmock):
+    def test_update_draft_service(self, data_client, rmock):
         rmock.post(
             "http://baseurl/services/2/draft",
             json={"done": "it"},
             status_code=200,
         )
 
-        result = data_client.edit_draft_service(
+        result = data_client.update_draft_service(
             2, {"field": "value"}, 'user'
         )
 

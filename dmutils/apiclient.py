@@ -209,12 +209,12 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
-    def list_draft_service(self, supplier_id):
+    def find_draft_services(self, supplier_id):
         return self._get(
             "/draft-services?supplier_id={}".format(supplier_id)
         )
 
-    def fetch_draft_service(self, service_id):
+    def get_draft_service(self, service_id):
         return self._get(
             "/services/{}/draft".format(service_id)
         )
@@ -239,7 +239,7 @@ class DataAPIClient(BaseAPIClient):
                 },
             })
 
-    def edit_draft_service(self, service_id, service, user):
+    def update_draft_service(self, service_id, service, user):
         return self._post(
             "/services/{}/draft".format(service_id),
             data={
