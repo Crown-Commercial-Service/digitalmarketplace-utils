@@ -2,7 +2,7 @@ from . import logging, config, proxy_fix
 import flask_featureflags
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 
-__version__ = '0.22.0'
+__version__ = '0.23.0'
 
 
 def init_app(
@@ -40,3 +40,8 @@ def init_app(
         login_manager.init_app(application)
     if search_api_client:
         search_api_client.init_app(application)
+
+    @application.after_request
+    def add_header(response):
+        response.headers['X-Frame-Options'] = 'DENY'
+        return response
