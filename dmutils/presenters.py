@@ -30,8 +30,8 @@ class Presenters(object):
         }
 
     def _boolean(self, value):
-        if value == True:
+        if value is True:
             return "Yes"
-        if value == False:
+        if value is False:
             return "No"
         return ""
