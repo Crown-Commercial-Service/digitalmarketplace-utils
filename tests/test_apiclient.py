@@ -789,9 +789,9 @@ class TestDataApiClient(object):
         assert result == {"done": "it"}
         assert rmock.called
         assert rmock.request_history[0].json() == {
-                'update_details': {
-                    'update_reason': 'deprecated', 'updated_by': 'user'
-                }
+            'update_details': {
+                'update_reason': 'deprecated', 'updated_by': 'user'
+            }
         }
 
     def test_create_draft_service(self, data_client, rmock):
@@ -808,9 +808,9 @@ class TestDataApiClient(object):
         assert result == {"done": "it"}
         assert rmock.called
         assert rmock.request_history[0].json() == {
-                'update_details': {
-                    'update_reason': 'deprecated', 'updated_by': 'user'
-                }
+            'update_details': {
+                'update_reason': 'deprecated', 'updated_by': 'user'
+            }
         }
 
     def test_update_draft_service(self, data_client, rmock):
@@ -827,12 +827,12 @@ class TestDataApiClient(object):
         assert result == {"done": "it"}
         assert rmock.called
         assert rmock.request_history[0].json() == {
-                'services': {
-                    "field": "value"
-                },
-                'update_details': {
-                    'update_reason': 'deprecated', 'updated_by': 'user'
-                }
+            'services': {
+                "field": "value"
+            },
+            'update_details': {
+                'update_reason': 'deprecated', 'updated_by': 'user'
+            }
         }
 
     def test_launch_draft_service(self, data_client, rmock):
@@ -849,7 +849,7 @@ class TestDataApiClient(object):
         assert result == {"done": "it"}
         assert rmock.called
         assert rmock.request_history[0].json() == {
-                'update_details': {
-                    'update_reason': 'deprecated', 'updated_by': 'user'
-                }
+            'update_details': {
+                'update_reason': 'deprecated', 'updated_by': 'user'
+            }
         }
