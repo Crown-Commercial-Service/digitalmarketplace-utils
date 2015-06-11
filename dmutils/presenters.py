@@ -28,3 +28,10 @@ class Presenters(object):
             "url": value or "",
             "filename": value.split("/")[-1] or ""
         }
+        
+    def _boolean(self, value):
+        if value == True:
+            return "Yes"
+        if value == False:
+            return "No"
+        return None
