@@ -8,14 +8,13 @@ class ContentLoader(object):
 
     def __init__(self, manifest, content_directory):
 
-        with open(manifest, "r") as file:
-            section_order = yaml.load(file)
+        section_order = self._read_yaml_file(manifest)
 
         self._directory = content_directory
         self._question_cache = {}
         self.sections = [
             self.__populate_section__(s) for s in section_order
-            ]
+        ]
 
     def get_section(self, requested_section):
 
@@ -29,12 +28,11 @@ class ContentLoader(object):
 
             question_file = self._directory + question + ".yml"
 
-            if not os.path.isfile(question_file):
+            if not self._yaml_file_exists(question_file):
                 self._question_cache[question] = {}
                 return {}
 
-            with open(question_file, "r") as file:
-                question_content = yaml.load(file)
+            question_content = self._read_yaml_file(question_file)
 
             question_content["id"] = question
 
@@ -49,16 +47,24 @@ class ContentLoader(object):
 
         return self._question_cache[question]
 
+    def _yaml_file_exists(self, yaml_file):
+        return os.path.isfile(yaml_file)
+
+    def _read_yaml_file(self, yaml_file):
+        with open(yaml_file, "r") as file:
+            question_content = yaml.load(file)
+            return question_content
+
     def __populate_section__(self, section):
         section["questions"] = [
             self.get_question(q) for q in section["questions"]
-            ]
+        ]
         all_dependencies = [
             q["depends_on_lots"] for q in section["questions"]
-            ]
+        ]
         section["depends_on_lots"] = [
             y for x in all_dependencies for y in x  # flatten array
-            ]
+        ]
         section["id"] = self.__make_id__(section["name"])
         return section
 
