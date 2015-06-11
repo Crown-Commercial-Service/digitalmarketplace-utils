@@ -16,11 +16,11 @@ class TestPresenters(unittest.TestCase):
             "1234567891023456",
             {"type": "service_id"}
         )
-        self.assertEquals(
+        self.assertEqual(
             G5,
             ["5.G5.12345"]
         )
-        self.assertEquals(
+        self.assertEqual(
             G6,
             ["1234", "5678", "9102", "3456"]
         )
@@ -30,7 +30,7 @@ class TestPresenters(unittest.TestCase):
             "http://example.com/path/to/file.pdf",
             {"type": "upload"}
         )
-        self.assertEquals(
+        self.assertEqual(
             file,
             {
                 "url": "http://example.com/path/to/file.pdf",
@@ -55,7 +55,7 @@ class TestPresenters(unittest.TestCase):
             "",
             {"type": "boolean"}
         )
-        self.assertEquals(yes, "Yes")
-        self.assertEquals(no, "No")
-        self.assertEquals(nothing, "")
-        self.assertEquals(empty, "")
+        self.assertEqual(yes, "Yes")
+        self.assertEqual(no, "No")
+        self.assertEqual(nothing, "")
+        self.assertEqual(empty, "")
