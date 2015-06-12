@@ -209,6 +209,18 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
+    def find_audit_events(self, audit_type=None, page=None):
+        params = {}
+        if audit_type:
+            params["audit-type"] = audit_type
+        if page is not None:
+            params['page'] = page
+
+        return self._get(
+            "/audit-events",
+            params
+        )
+
     def find_draft_services(self, supplier_id):
         return self._get(
             "/draft-services?supplier_id={}".format(supplier_id)
