@@ -17,6 +17,12 @@ class Presenters(object):
         else:
             return value
 
+    def present_all(self, service_data, content):
+        return {
+            key: self.present(value, content.get_question(key))
+            for key, value in service_data.items()
+        }
+
     def _service_id(self, value):
         if re.findall("[a-zA-Z]", str(value)):
             return [value]
