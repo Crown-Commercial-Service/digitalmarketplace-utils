@@ -1,12 +1,37 @@
 # coding=utf-8
 
 import unittest
+import mock
 
 from dmutils.presenters import Presenters
+from dmutils.content_loader import ContentLoader
 presenters = Presenters()
 
 
 class TestPresenters(unittest.TestCase):
+
+    def test_present_all(self):
+        content = mock.Mock()
+        content.get_question.return_value = {
+            "id": "id",
+            "type": "service_id"
+        }
+        self.assertEqual(
+            presenters.present_all(
+                {
+                    "id": "1234567891023456",
+                    "field_1": True,
+                    "field_2": "Cloud infrastructure"
+                },
+                content
+            ),
+            {
+                "id": ["1234", "5678", "9102", "3456"],
+                "field_1": [True],
+                "field_2": ["Cloud infrastructure"]
+            }
+        )
+
     def test_service_id(self):
         G5 = presenters.present(
             "5.G5.12345",
