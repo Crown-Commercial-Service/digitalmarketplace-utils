@@ -12,9 +12,10 @@ class ContentLoader(object):
 
         self._directory = content_directory
         self._question_cache = {}
-        self.sections = [
+        self._all_sections = [
             self.__populate_section__(s) for s in section_order
         ]
+        self.sections = self._all_sections
 
     def get_section(self, requested_section):
 
@@ -36,16 +37,27 @@ class ContentLoader(object):
 
             question_content["id"] = question
 
-            # wrong way to do it? question should be shown by default.
-            question_content["depends_on_lots"] = (
-                self.__get_dependent_lots__(question_content["dependsOnLots"])
-            ) if "dependsOnLots" in question_content else (
-                ["saas", "paas", "iaas", "scs"]
-            )
-
             self._question_cache[question] = question_content
 
         return self._question_cache[question]
+
+    def filter(self, service_data):
+
+        self.sections = self._all_sections
+        filtered_sections = []
+
+        for section in self.sections:
+            filtered_questions = []
+            for question in section["questions"]:
+                if self._question_should_be_shown(
+                    question.get("depends"), service_data
+                ):
+                    filtered_questions.append(question)
+            if len(filtered_questions):
+                section["questions"] = filtered_questions
+                filtered_sections.append(section)
+
+        self.sections = filtered_sections
 
     def _yaml_file_exists(self, yaml_file):
         return os.path.isfile(yaml_file)
@@ -59,12 +71,6 @@ class ContentLoader(object):
         section["questions"] = [
             self.get_question(q) for q in section["questions"]
         ]
-        all_dependencies = [
-            q["depends_on_lots"] for q in section["questions"]
-        ]
-        section["depends_on_lots"] = [
-            y for x in all_dependencies for y in x  # flatten array
-        ]
         section["id"] = self.__make_id__(section["name"])
         return section
 
@@ -73,7 +79,8 @@ class ContentLoader(object):
             re.sub("\s", "_", name)
         )
 
-    def __get_dependent_lots__(self, dependent_lots_as_string):
-        return [
-            x.strip() for x in dependent_lots_as_string.lower().split(",")
-            ]
+    def _question_should_be_shown(self, dependencies, service_data):
+        for depends in dependencies:
+            if not service_data[depends["on"]] in depends["being"]:
+                return False
+        return True
