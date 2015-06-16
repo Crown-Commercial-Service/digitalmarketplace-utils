@@ -43,7 +43,7 @@ def init_app(
 
     @application.after_request
     def add_header(response):
-        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers.set('X-Frame-Options', 'DENY')
         response.headers.set('Content-Security-Policy', "default-src 'self'")
         response.headers.set('X-Content-Security-Policy', "default-src 'self'")
         response.headers.set('X-WebKit-CSP', "default-src 'self'")
