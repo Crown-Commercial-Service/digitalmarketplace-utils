@@ -16,12 +16,14 @@ def get_mocked_yaml_reader(mocked_content={}):
     return read
 
 
+@mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
+@mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
 class TestContentLoader(unittest.TestCase):
 
-    @mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-    @mock.patch(
-        "dmutils.content_loader.ContentLoader._read_yaml_file",
-        side_effect=get_mocked_yaml_reader({
+    def test_a_simple_question(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
             "manifest.yml": """
                 -
                   name: First section
@@ -32,10 +34,6 @@ class TestContentLoader(unittest.TestCase):
                 question: 'First question'
             """
         })
-    )
-    def test_a_simple_question(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -45,10 +43,10 @@ class TestContentLoader(unittest.TestCase):
             "First question"
         )
 
-    @mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-    @mock.patch(
-        "dmutils.content_loader.ContentLoader._read_yaml_file",
-        side_effect=get_mocked_yaml_reader({
+    def test_a_question_with_a_dependency(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
                 name: First section
@@ -64,10 +62,6 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-    )
-    def test_a_question_with_a_dependency(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -80,10 +74,10 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    @mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-    @mock.patch(
-        "dmutils.content_loader.ContentLoader._read_yaml_file",
-        side_effect=get_mocked_yaml_reader({
+    def test_a_question_with_a_dependency_that_doesnt_match(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
                 name: First section
@@ -98,10 +92,6 @@ class TestContentLoader(unittest.TestCase):
                   being: SCS
           """
         })
-    )
-    def test_a_question_with_a_dependency_that_doesnt_match(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -114,10 +104,10 @@ class TestContentLoader(unittest.TestCase):
             0
         )
 
-    @mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-    @mock.patch(
-        "dmutils.content_loader.ContentLoader._read_yaml_file",
-        side_effect=get_mocked_yaml_reader({
+    def test_a_question_which_depends_on_one_of_several_answers(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
                 name: First section
@@ -136,10 +126,6 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-    )
-    def test_a_question_which_depends_on_one_of_several_answers(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -152,10 +138,10 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    @mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-    @mock.patch(
-        "dmutils.content_loader.ContentLoader._read_yaml_file",
-        side_effect=get_mocked_yaml_reader({
+    def test_a_question_which_depends_on_one_of_several_answers(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
                 name: First section
@@ -174,10 +160,6 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-    )
-    def test_a_question_which_depends_on_one_of_several_answers(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -190,10 +172,10 @@ class TestContentLoader(unittest.TestCase):
             0
         )
 
-    @mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-    @mock.patch(
-        "dmutils.content_loader.ContentLoader._read_yaml_file",
-        side_effect=get_mocked_yaml_reader({
+    def test_a_section_which_has_a_mixture_of_dependencies(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
                 name: First section
@@ -224,10 +206,6 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-    )
-    def test_a_section_which_has_a_mixture_of_dependencies(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -240,10 +218,10 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    @mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-    @mock.patch(
-        "dmutils.content_loader.ContentLoader._read_yaml_file",
-        side_effect=get_mocked_yaml_reader({
+    def test_that_filtering_isnt_cumulative(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
                 name: First section
@@ -270,10 +248,6 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-    )
-    def test_that_filtering_isnt_cumulative(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
         content = ContentLoader(
             "manifest.yml",
             "folder/"
