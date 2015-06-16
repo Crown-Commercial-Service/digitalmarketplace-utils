@@ -209,12 +209,22 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
-    def find_audit_events(self, audit_type=None, page=None):
+    def find_audit_events(
+            self,
+            audit_type=None,
+            date=None,
+            page=None,
+            acknowledged=None):
+
         params = {}
         if audit_type:
             params["audit-type"] = audit_type
         if page is not None:
             params['page'] = page
+        if date is not None:
+            params['date'] = date
+        if acknowledged is not None:
+            params['acknowledged'] = acknowledged
 
         return self._get(
             "/audit-events",
