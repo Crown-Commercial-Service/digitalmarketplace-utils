@@ -10,24 +10,25 @@ import yaml
 from dmutils.content_loader import ContentLoader
 
 
-class MonkeyPatch:
+class MockedYamlFiles:
     def __init__(self, mocked_content=""):
         self.mocked_content = mocked_content
 
-    def read_yaml_file(self, yaml_file):
+    def read(self, yaml_file):
         return yaml.load(self.mocked_content[yaml_file])
-
-    def yaml_file_exists(self, file):
-        return True
 
 
 class TestContentLoader(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        ContentLoader._yaml_file_exists = MonkeyPatch().yaml_file_exists
 
-    def test_a_simple_question(self):
-        ContentLoader._read_yaml_file = MonkeyPatch({
+    def setUp(self):
+        ContentLoader._yaml_file_exists = mock.patch(
+            "ContentLoader._yaml_file_exists",
+            return_value=True
+        )
+
+    @mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+    def test_a_simple_question(self, mocked_read_yaml_file):
+        mocked_read_yaml_file.side_effect = MockedYamlFiles({
             "manifest.yml": """
                 -
                   name: First section
@@ -37,7 +38,8 @@ class TestContentLoader(unittest.TestCase):
             "folder/firstQuestion.yml": """
                 question: 'First question'
             """
-        }).read_yaml_file
+        }).read
+
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -47,8 +49,9 @@ class TestContentLoader(unittest.TestCase):
             "First question"
         )
 
-    def test_a_question_with_a_dependency(self):
-        ContentLoader._read_yaml_file = MonkeyPatch({
+    @mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+    def test_a_question_with_a_dependency(self, mocked_read_yaml_file):
+        mocked_read_yaml_file.side_effect = MockedYamlFiles({
           "manifest.yml": """
               -
                 name: First section
@@ -63,7 +66,7 @@ class TestContentLoader(unittest.TestCase):
                       being: SCS
 
           """
-        }).read_yaml_file
+        }).read
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -76,8 +79,11 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    def test_a_question_with_a_dependency_that_doesnt_match(self):
-        ContentLoader._read_yaml_file = MonkeyPatch({
+    @mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+    def test_a_question_with_a_dependency_that_doesnt_match(
+        self, mocked_read_yaml_file
+    ):
+        mocked_read_yaml_file.side_effect = MockedYamlFiles({
           "manifest.yml": """
               -
                 name: First section
@@ -91,7 +97,7 @@ class TestContentLoader(unittest.TestCase):
                   "on": lot
                   being: SCS
           """
-        }).read_yaml_file
+        }).read
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -104,8 +110,11 @@ class TestContentLoader(unittest.TestCase):
             0
         )
 
-    def test_a_question_which_depends_on_one_of_several_answers(self):
-        ContentLoader._read_yaml_file = MonkeyPatch({
+    @mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+    def ftest_a_question_which_depends_on_one_of_several_answers(
+        self, mocked_read_yaml_file
+    ):
+        mocked_read_yaml_file.side_effect = MockedYamlFiles({
           "manifest.yml": """
               -
                 name: First section
@@ -123,7 +132,7 @@ class TestContentLoader(unittest.TestCase):
                        - PaaS
 
           """
-        }).read_yaml_file
+        }).read
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -136,8 +145,11 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    def test_a_question_which_depends_on_one_of_several_answers(self):
-        ContentLoader._read_yaml_file = MonkeyPatch({
+    @mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+    def test_a_question_which_depends_on_one_of_several_answers(
+        self, mocked_read_yaml_file
+    ):
+        mocked_read_yaml_file.side_effect = MockedYamlFiles({
           "manifest.yml": """
               -
                 name: First section
@@ -155,7 +167,7 @@ class TestContentLoader(unittest.TestCase):
                        - PaaS
 
           """
-        }).read_yaml_file
+        }).read
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -168,8 +180,11 @@ class TestContentLoader(unittest.TestCase):
             0
         )
 
-    def test_a_section_which_has_a_mixture_of_dependencies(self):
-        ContentLoader._read_yaml_file = MonkeyPatch({
+    @mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+    def test_a_section_which_has_a_mixture_of_dependencies(
+        self, mocked_read_yaml_file
+    ):
+        mocked_read_yaml_file.side_effect = MockedYamlFiles({
           "manifest.yml": """
               -
                 name: First section
@@ -199,7 +214,7 @@ class TestContentLoader(unittest.TestCase):
                       being: IaaS
 
           """
-        }).read_yaml_file
+        }).read
         content = ContentLoader(
             "manifest.yml",
             "folder/"
@@ -212,8 +227,11 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    def test_that_filtering_isnt_cumulative(self):
-        ContentLoader._read_yaml_file = MonkeyPatch({
+    @mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+    def test_that_filtering_isnt_cumulative(
+        self, mocked_read_yaml_file
+    ):
+        mocked_read_yaml_file.side_effect = MockedYamlFiles({
           "manifest.yml": """
               -
                 name: First section
@@ -239,7 +257,7 @@ class TestContentLoader(unittest.TestCase):
                       being: PaaS
 
           """
-        }).read_yaml_file
+        }).read
         content = ContentLoader(
             "manifest.yml",
             "folder/"
