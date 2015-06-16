@@ -8,14 +8,14 @@ class ContentLoader(object):
 
     def __init__(self, manifest, content_directory):
 
-        with open(manifest, "r") as file:
-            section_order = yaml.load(file)
+        section_order = self._read_yaml_file(manifest)
 
         self._directory = content_directory
         self._question_cache = {}
-        self.sections = [
-            self.__populate_section__(s) for s in section_order
-            ]
+        self._all_sections = [
+            self._populate_section(s) for s in section_order
+        ]
+        self.sections = self._all_sections
 
     def get_section(self, requested_section):
 
@@ -29,45 +29,58 @@ class ContentLoader(object):
 
             question_file = self._directory + question + ".yml"
 
-            if not os.path.isfile(question_file):
+            if not self._yaml_file_exists(question_file):
                 self._question_cache[question] = {}
                 return {}
 
-            with open(question_file, "r") as file:
-                question_content = yaml.load(file)
+            question_content = self._read_yaml_file(question_file)
 
             question_content["id"] = question
-
-            # wrong way to do it? question should be shown by default.
-            question_content["depends_on_lots"] = (
-                self.__get_dependent_lots__(question_content["dependsOnLots"])
-            ) if "dependsOnLots" in question_content else (
-                ["saas", "paas", "iaas", "scs"]
-            )
 
             self._question_cache[question] = question_content
 
         return self._question_cache[question]
 
-    def __populate_section__(self, section):
+    def filter(self, service_data):
+
+        self.sections = self._all_sections
+        filtered_sections = []
+
+        for section in self.sections:
+            filtered_questions = []
+            for question in section["questions"]:
+                if self._question_should_be_shown(
+                    question.get("depends"), service_data
+                ):
+                    filtered_questions.append(question)
+            if len(filtered_questions):
+                section["questions"] = filtered_questions
+                filtered_sections.append(section)
+
+        self.sections = filtered_sections
+
+    def _yaml_file_exists(self, yaml_file):
+        return os.path.isfile(yaml_file)
+
+    def _read_yaml_file(self, yaml_file):
+        with open(yaml_file, "r") as file:
+            question_content = yaml.load(file)
+            return question_content
+
+    def _populate_section(self, section):
         section["questions"] = [
             self.get_question(q) for q in section["questions"]
-            ]
-        all_dependencies = [
-            q["depends_on_lots"] for q in section["questions"]
-            ]
-        section["depends_on_lots"] = [
-            y for x in all_dependencies for y in x  # flatten array
-            ]
-        section["id"] = self.__make_id__(section["name"])
+        ]
+        section["id"] = self._make_id(section["name"])
         return section
 
-    def __make_id__(self, name):
+    def _make_id(self, name):
         return inflection.underscore(
             re.sub("\s", "_", name)
         )
 
-    def __get_dependent_lots__(self, dependent_lots_as_string):
-        return [
-            x.strip() for x in dependent_lots_as_string.lower().split(",")
-            ]
+    def _question_should_be_shown(self, dependencies, service_data):
+        for depends in dependencies:
+            if not service_data[depends["on"]] in depends["being"]:
+                return False
+        return True
