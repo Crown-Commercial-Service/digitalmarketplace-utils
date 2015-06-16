@@ -13,7 +13,7 @@ class ContentLoader(object):
         self._directory = content_directory
         self._question_cache = {}
         self._all_sections = [
-            self.__populate_section__(s) for s in section_order
+            self._populate_section(s) for s in section_order
         ]
         self.sections = self._all_sections
 
@@ -67,14 +67,14 @@ class ContentLoader(object):
             question_content = yaml.load(file)
             return question_content
 
-    def __populate_section__(self, section):
+    def _populate_section(self, section):
         section["questions"] = [
             self.get_question(q) for q in section["questions"]
         ]
-        section["id"] = self.__make_id__(section["name"])
+        section["id"] = self._make_id(section["name"])
         return section
 
-    def __make_id__(self, name):
+    def _make_id(self, name):
         return inflection.underscore(
             re.sub("\s", "_", name)
         )
