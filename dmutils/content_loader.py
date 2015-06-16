@@ -83,6 +83,8 @@ class ContentLoader(object):
         if dependencies is None:
             return True
         for depends in dependencies:
+            if not depends["on"] in service_data:
+                return False
             if not service_data[depends["on"]] in depends["being"]:
                 return False
         return True
