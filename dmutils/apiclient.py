@@ -212,7 +212,7 @@ class DataAPIClient(BaseAPIClient):
     def find_audit_events(
             self,
             audit_type=None,
-            date=None,
+            audit_date=None,
             page=None,
             acknowledged=None):
 
@@ -221,8 +221,8 @@ class DataAPIClient(BaseAPIClient):
             params["audit-type"] = audit_type
         if page is not None:
             params['page'] = page
-        if date is not None:
-            params['date'] = date
+        if audit_date is not None:
+            params['audit_date'] = audit_date
         if acknowledged is not None:
             params['acknowledged'] = acknowledged
 
