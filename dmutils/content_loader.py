@@ -80,6 +80,8 @@ class ContentLoader(object):
         )
 
     def _question_should_be_shown(self, dependencies, service_data):
+        if dependencies is None:
+            return True
         for depends in dependencies:
             if not service_data[depends["on"]] in depends["being"]:
                 return False
