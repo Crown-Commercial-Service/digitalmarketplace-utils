@@ -12,10 +12,9 @@ class ContentLoader(object):
 
         self._directory = content_directory
         self._question_cache = {}
-        self._all_sections = [
+        self.sections = [
             self._populate_section(s) for s in section_order
         ]
-        self.sections = self._all_sections
 
     def get_section(self, requested_section):
 
@@ -45,7 +44,7 @@ class ContentLoader(object):
 
         filtered_sections = []
 
-        for section in self._all_sections:
+        for section in self.sections:
             filtered_questions = []
             for question in section["questions"]:
                 if self._question_should_be_shown(
@@ -57,10 +56,6 @@ class ContentLoader(object):
                 filtered_sections.append(section)
 
         return filtered_sections
-
-    def filter(self, service_data):
-        self.sections = self._all_sections
-        self.sections = self.get_sections_filtered_by(service_data)
 
     def _yaml_file_exists(self, yaml_file):
         return os.path.isfile(yaml_file)
