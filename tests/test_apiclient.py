@@ -909,3 +909,22 @@ class TestDataApiClient(object):
 
         assert result == {"audit-event": "result"}
         assert rmock.called
+
+    def test_acknowledge_audit_event(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events/123/acknowledge",  # noqa
+            json={"audit-event": "result"},
+            status_code=200,
+        )
+
+        result = data_client.acknowledge_audit_event(
+            audit_event_id=123,
+            user='user')
+
+        assert rmock.called
+        assert result == {"audit-event": "result"}
+        assert rmock.request_history[0].json() == {
+            'update_details': {
+                'updated_by': 'user'
+            }
+        }

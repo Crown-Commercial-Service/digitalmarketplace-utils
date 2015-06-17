@@ -231,6 +231,15 @@ class DataAPIClient(BaseAPIClient):
             params
         )
 
+    def acknowledge_audit_event(self, audit_event_id, user):
+        return self._post(
+            "/audit-events/{}/acknowledge".format(audit_event_id),
+            data={
+                "update_details": {
+                    "updated_by": user
+                }
+            })
+
     def find_draft_services(self, supplier_id):
         return self._get(
             "/draft-services?supplier_id={}".format(supplier_id)
