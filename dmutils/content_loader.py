@@ -45,12 +45,12 @@ class ContentLoader(object):
         filtered_sections = []
 
         for section in self.sections:
-            filtered_questions = []
-            for question in section["questions"]:
+            filtered_questions = [
+                question for question in section["questions"]
                 if self._question_should_be_shown(
                     question.get("depends"), service_data
-                ):
-                    filtered_questions.append(question)
+                )
+            ]
             if len(filtered_questions):
                 section["questions"] = filtered_questions
                 filtered_sections.append(section)
