@@ -222,7 +222,7 @@ class DataAPIClient(BaseAPIClient):
         if page is not None:
             params['page'] = page
         if audit_date is not None:
-            params['audit_date'] = audit_date
+            params['audit-date'] = audit_date
         if acknowledged is not None:
             params['acknowledged'] = acknowledged
 
