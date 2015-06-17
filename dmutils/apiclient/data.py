@@ -101,6 +101,9 @@ class DataAPIClient(BaseAPIClient):
             },
         )
 
+    def get_archived_service(self, archived_service_id):
+        return self._get("/archived-services/{}".format(archived_service_id))
+
     def get_service(self, service_id):
         try:
             return self._get(

@@ -388,6 +388,17 @@ class TestDataApiClient(object):
         assert result['status'] == "ok"
         assert rmock.called
 
+    def test_get_archived_service(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/archived-services/123",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.get_archived_service(123)
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
     def test_get_service(self, data_client, rmock):
         rmock.get(
             "http://baseurl/services/123",
