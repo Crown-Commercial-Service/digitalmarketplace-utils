@@ -4,9 +4,8 @@ Common utils for Digital Marketplace apps.
 import re
 import ast
 import pip.download
-import itertools
 from pip.req import parse_requirements
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
@@ -28,7 +27,7 @@ setup(
     author='GDS Developers',
     description='Common utils for Digital Marketplace apps.',
     long_description=__doc__,
-    packages=['dmutils'],
+    packages=find_packages(),
     include_package_data=True,
     install_requires=install_requires
 )
