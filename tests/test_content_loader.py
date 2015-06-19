@@ -276,3 +276,46 @@ class TestContentLoader(unittest.TestCase):
             len(sections),
             0
         )
+
+    def test_get_next_section(
+        self, mocked_read_yaml_file, mocked_yaml_file_exists
+    ):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
+            "manifest.yml": """
+              -
+                name: First section
+                questions:
+                  - firstQuestion
+              -
+                name: Second section
+                questions:
+                  - firstQuestion
+              -
+                name: Third section
+                questions:
+                  - firstQuestion
+            """,
+            "folder/firstQuestion.yml": "question: 'First question'"
+        })
+
+        content = ContentLoader(
+            "manifest.yml",
+            "folder/"
+        )
+
+        sections = content.sections
+
+        self.assertEqual(
+            content.get_next_section_id("first_section", sections),
+            "second_section"
+        )
+
+        self.assertEqual(
+            content.get_next_section_id("second_section", sections),
+            "third_section"
+        )
+
+        self.assertEqual(
+            content.get_next_section_id("third_section", sections),
+            None
+        )

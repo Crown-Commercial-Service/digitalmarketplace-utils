@@ -63,6 +63,18 @@ class ContentLoader(object):
         else:
             return None
 
+    def get_next_section_id(self, section_id, sections):
+
+        previous_section_is_current = False
+
+        for section in sections:
+            if previous_section_is_current:
+                return section["id"]
+            if section["id"] == section_id:
+                previous_section_is_current = True
+
+        return None
+
     def _yaml_file_exists(self, yaml_file):
         return os.path.isfile(yaml_file)
 
