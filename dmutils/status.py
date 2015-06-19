@@ -1,5 +1,6 @@
 import os
 import datetime
+from formats import DATE_FORMAT
 from flask_featureflags import FEATURE_FLAGS_CONFIG
 
 
@@ -28,7 +29,7 @@ def get_flags(current_app):
 def enabled_since(date_string):
     if date_string:
         # Check format like YYYY-MM-DD
-        datetime.datetime.strptime(date_string, '%Y-%m-%d')
+        datetime.datetime.strptime(date_string, DATE_FORMAT)
         return date_string
 
     return False

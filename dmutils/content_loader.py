@@ -12,10 +12,9 @@ class ContentLoader(object):
 
         self._directory = content_directory
         self._question_cache = {}
-        self._all_sections = [
+        self.sections = [
             self._populate_section(s) for s in section_order
         ]
-        self.sections = self._all_sections
 
     def get_section(self, requested_section):
 
@@ -34,30 +33,35 @@ class ContentLoader(object):
                 return {}
 
             question_content = self._read_yaml_file(question_file)
-
             question_content["id"] = question
-
             self._question_cache[question] = question_content
 
         return self._question_cache[question]
 
-    def filter(self, service_data):
+    def get_sections_filtered_by(self, service_data):
+        return [
+            section for section in [
+                self.get_section_filtered_by(section["id"], service_data)
+                for section in self.sections
+            ] if section is not None
+        ]
 
-        self.sections = self._all_sections
-        filtered_sections = []
+    def get_section_filtered_by(self, section_id, service_data):
 
-        for section in self.sections:
-            filtered_questions = []
-            for question in section["questions"]:
-                if self._question_should_be_shown(
-                    question.get("depends"), service_data
-                ):
-                    filtered_questions.append(question)
-            if len(filtered_questions):
-                section["questions"] = filtered_questions
-                filtered_sections.append(section)
+        section = self.get_section(section_id)
 
-        self.sections = filtered_sections
+        filtered_questions = [
+            question for question in section["questions"]
+            if self._question_should_be_shown(
+                question.get("depends"), service_data
+            )
+        ]
+
+        if len(filtered_questions):
+            section["questions"] = filtered_questions
+            return section
+        else:
+            return None
 
     def _yaml_file_exists(self, yaml_file):
         return os.path.isfile(yaml_file)
