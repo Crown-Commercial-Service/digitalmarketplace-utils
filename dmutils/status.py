@@ -1,6 +1,6 @@
 import os
 import datetime
-from formats import DATE_FORMAT
+from .formats import DATE_FORMAT
 from flask_featureflags import FEATURE_FLAGS_CONFIG
 
 
