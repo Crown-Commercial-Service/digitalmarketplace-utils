@@ -2,7 +2,7 @@ from . import logging, config, proxy_fix
 import flask_featureflags
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 
 def init_app(
