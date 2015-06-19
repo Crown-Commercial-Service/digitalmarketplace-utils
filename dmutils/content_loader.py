@@ -89,7 +89,7 @@ class ContentBuilder(object):
 class YAMLLoader(object):
 
     def __init__(self):
-        self._cache = []
+        self._cache = {}
 
     def read(self, yaml_file):
         if yaml_file not in self._cache:
