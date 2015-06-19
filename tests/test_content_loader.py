@@ -7,7 +7,7 @@ import os
 import tempfile
 import yaml
 
-from dmutils.content_loader import ContentLoader
+from dmutils.content_loader import YAMLLoader, ContentBuilder
 
 
 def get_mocked_yaml_reader(mocked_content={}):
@@ -16,13 +16,10 @@ def get_mocked_yaml_reader(mocked_content={}):
     return read
 
 
-@mock.patch("dmutils.content_loader.ContentLoader._yaml_file_exists")
-@mock.patch("dmutils.content_loader.ContentLoader._read_yaml_file")
+@mock.patch("dmutils.content_loader.YAMLLoader.read")
 class TestContentLoader(unittest.TestCase):
 
-    def test_a_simple_question(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
+    def test_a_simple_question(self, mocked_read_yaml_file):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
             "manifest.yml": """
                 -
@@ -34,18 +31,17 @@ class TestContentLoader(unittest.TestCase):
                 question: 'First question'
             """
         })
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
         self.assertEqual(
             content.get_question("firstQuestion").get("question"),
             "First question"
         )
 
-    def test_a_question_with_a_dependency(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
+    def test_a_question_with_a_dependency(self, mocked_read_yaml_file):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
@@ -62,9 +58,10 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
         sections = content.get_sections_filtered_by({
             "lot": "SCS"
@@ -75,7 +72,7 @@ class TestContentLoader(unittest.TestCase):
         )
 
     def test_a_question_with_a_dependency_that_doesnt_match(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
+        self, mocked_read_yaml_file
     ):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
@@ -92,9 +89,10 @@ class TestContentLoader(unittest.TestCase):
                   being: SCS
           """
         })
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
         sections = content.get_sections_filtered_by({
             "lot": "SaaS"
@@ -105,7 +103,7 @@ class TestContentLoader(unittest.TestCase):
         )
 
     def test_a_question_which_depends_on_one_of_several_answers(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
+        self, mocked_read_yaml_file
     ):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
@@ -126,9 +124,10 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
         sections = content.get_sections_filtered_by({
             "lot": "SaaS"
@@ -139,7 +138,7 @@ class TestContentLoader(unittest.TestCase):
         )
 
     def test_a_question_which_depends_on_one_of_several_answers(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
+        self, mocked_read_yaml_file
     ):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
@@ -160,9 +159,10 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
         sections = content.get_sections_filtered_by({
             "lot": "IaaS"
@@ -173,7 +173,7 @@ class TestContentLoader(unittest.TestCase):
         )
 
     def test_a_section_which_has_a_mixture_of_dependencies(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
+        self, mocked_read_yaml_file
     ):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
@@ -206,9 +206,10 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
         sections = content.get_sections_filtered_by({
             "lot": "IaaS"
@@ -218,9 +219,7 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    def test_that_filtering_isnt_cumulative(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
+    def test_that_filtering_isnt_cumulative(self, mocked_read_yaml_file):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
           "manifest.yml": """
               -
@@ -248,9 +247,10 @@ class TestContentLoader(unittest.TestCase):
 
           """
         })
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
 
         sections = content.get_sections_filtered_by({
@@ -277,9 +277,7 @@ class TestContentLoader(unittest.TestCase):
             0
         )
 
-    def test_get_next_section(
-        self, mocked_read_yaml_file, mocked_yaml_file_exists
-    ):
+    def test_get_next_section(self, mocked_read_yaml_file):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
             "manifest.yml": """
               -
@@ -298,9 +296,10 @@ class TestContentLoader(unittest.TestCase):
             "folder/firstQuestion.yml": "question: 'First question'"
         })
 
-        content = ContentLoader(
+        content = ContentBuilder(
             "manifest.yml",
-            "folder/"
+            "folder/",
+            YAMLLoader()
         )
 
         sections = content.sections
