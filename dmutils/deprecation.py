@@ -14,7 +14,7 @@ def deprecated(dies_at):
         @wraps(view)
         def func(*args, **kwargs):
             message = "Calling deprecated view '%s'. Dies in %s."
-            time_left = dies_at - datetime.now()
+            time_left = dies_at - datetime.utcnow()
             if time_left < timedelta(days=7):
                 current_app.logger.error(message, view.__name__, time_left)
             else:

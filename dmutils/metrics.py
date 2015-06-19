@@ -54,7 +54,7 @@ class CloudWatchClient(object):
     def _put_metric(self, name, value=None, timestamp=None, unit=None,
                     dimensions=None, statistics=None):
         if timestamp is None:
-            timestamp = datetime.now()
+            timestamp = datetime.utcnow()
         self._conn.put_metric_data(
             namespace=self.namespace,
             name=name,
@@ -74,10 +74,10 @@ class Timer(ContextDecorator):
         self.name = name
 
     def __enter__(self):
-        self.start = datetime.now()
+        self.start = datetime.utcnow()
 
     def __exit__(self, *exc):
-        elapsed = datetime.now() - self.start
+        elapsed = datetime.utcnow() - self.start
         self.client._put_metric(
             self.name,
             int(elapsed.total_seconds() * 1000),
