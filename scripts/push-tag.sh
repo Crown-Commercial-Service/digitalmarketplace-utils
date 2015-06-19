@@ -8,6 +8,14 @@ function pretty() {
   done
 }
 
+function warn() {
+  local orange="\033[33m"
+  local reset="\033[0m"
+  while read line; do
+    echo -e "${orange}[warning]${reset} ${line}"
+  done
+}
+
 function get_sha(){
     REF=$(git log -n 1 -- VERSION --name-only)
     SHA=$(echo $REF | awk '{ print $2 }')
@@ -25,7 +33,7 @@ function get_version(){
 function push_tag_or_die(){
     TAG_EXISTS=$(git tag | grep -G "^${VERSION}$")
     if [ "$TAG_EXISTS" ]; then
-        echo "Tag already exists, exiting" | pretty
+        echo "Tag already exists, exiting" | warn
         exit 0
     else
         push_tag $VERSION
