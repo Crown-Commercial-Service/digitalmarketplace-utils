@@ -866,3 +866,78 @@ class TestDataApiClient(object):
                 'update_reason': 'deprecated', 'updated_by': 'user'
             }
         }
+
+    def test_find_audit_events(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/audit-events",
+            json={"audit-event": "result"},
+            status_code=200,
+        )
+
+        result = data_client.find_audit_events()
+
+        assert result == {"audit-event": "result"}
+        assert rmock.called
+
+    def test_find_audit_events_with_page_and_type(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/audit-events?page=123&audit-type=sometype",
+            json={"audit-event": "result"},
+            status_code=200,
+        )
+
+        result = data_client.find_audit_events(page=123, audit_type='sometype')
+
+        assert result == {"audit-event": "result"}
+        assert rmock.called
+
+    def test_find_audit_events_with_all_params(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/audit-events?page=123&audit-type=sometype&audit-date=2010-01-01&acknowledged=all",  # noqa
+            json={"audit-event": "result"},
+            status_code=200,
+        )
+
+        result = data_client.find_audit_events(
+            page=123,
+            audit_type='sometype',
+            acknowledged='all',
+            audit_date='2010-01-01')
+
+        assert result == {"audit-event": "result"}
+        assert rmock.called
+
+    def test_find_audit_events_with_no_none_params(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/audit-events?page=123&audit-type=sometype&acknowledged=all",  # noqa
+            json={"audit-event": "result"},
+            status_code=200,
+        )
+
+        result = data_client.find_audit_events(
+            page=123,
+            audit_type='sometype',
+            acknowledged='all',
+            audit_date=None)
+
+        assert result == {"audit-event": "result"}
+        assert rmock.called
+
+    def test_acknowledge_audit_event(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events/123/acknowledge",  # noqa
+            json={"audit-event": "result"},
+            status_code=200,
+        )
+
+        result = data_client.acknowledge_audit_event(
+            audit_event_id=123,
+            user='user')
+
+        assert rmock.called
+        assert result == {"audit-event": "result"}
+        assert rmock.request_history[0].json() == {
+            'update_details': {
+                'updated_by': 'user'
+            }
+        }

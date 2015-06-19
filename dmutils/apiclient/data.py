@@ -7,6 +7,37 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
+    def find_audit_events(
+            self,
+            audit_type=None,
+            audit_date=None,
+            page=None,
+            acknowledged=None):
+
+        params = {}
+        if audit_type:
+            params["audit-type"] = audit_type
+        if page is not None:
+            params['page'] = page
+        if audit_date is not None:
+            params['audit-date'] = audit_date
+        if acknowledged is not None:
+            params['acknowledged'] = acknowledged
+
+        return self._get(
+            "/audit-events",
+            params
+        )
+
+    def acknowledge_audit_event(self, audit_event_id, user):
+        return self._post(
+            "/audit-events/{}/acknowledge".format(audit_event_id),
+            data={
+                "update_details": {
+                    "updated_by": user
+                }
+            })
+
     def find_draft_services(self, supplier_id):
         return self._get(
             "/draft-services?supplier_id={}".format(supplier_id)
