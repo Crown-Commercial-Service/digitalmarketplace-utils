@@ -7,33 +7,46 @@ import os
 class ContentBuilder(object):
 
     def __init__(self, manifest, content_directory, yaml_loader):
-
         self.yaml_loader = yaml_loader
         section_order = yaml_loader.read(manifest)
         self._directory = content_directory
 
-        self.sections = [
+        self._all_sections = [
             self._populate_section(s) for s in section_order
         ]
 
-    def get_section(self, requested_section):
+        self.sections = self._all_sections
 
-        for section in self.sections:
+    def get_section(self, requested_section):
+        for section in self._all_sections:
             if section["id"] == requested_section:
                 return section
+        return None
 
     def get_question(self, question):
         return self.yaml_loader.read(self._directory + question + ".yml")
 
-    def get_sections_filtered_by(self, service_data):
-        return [
+    def filter(self, service_data):
+        self.sections = [
             section for section in [
-                self.get_section_filtered_by(section["id"], service_data)
-                for section in self.sections
+                self._get_section_filtered_by(section["id"], service_data)
+                for section in self._all_sections
             ] if section is not None
         ]
 
-    def get_section_filtered_by(self, section_id, service_data):
+    def get_next_section_id(self, section_id):
+
+        previous_section_is_current = False
+
+        for section in self.sections:
+            if previous_section_is_current:
+                return section["id"]
+            if section["id"] == section_id:
+                previous_section_is_current = True
+
+        return None
+
+    def _get_section_filtered_by(self, section_id, service_data):
 
         section = self.get_section(section_id)
 
@@ -49,18 +62,6 @@ class ContentBuilder(object):
             return section
         else:
             return None
-
-    def get_next_section_id(self, section_id, sections):
-
-        previous_section_is_current = False
-
-        for section in sections:
-            if previous_section_is_current:
-                return section["id"]
-            if section["id"] == section_id:
-                previous_section_is_current = True
-
-        return None
 
     def _populate_section(self, section):
         section["questions"] = [

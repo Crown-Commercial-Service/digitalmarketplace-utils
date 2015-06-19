@@ -63,11 +63,11 @@ class TestContentLoader(unittest.TestCase):
             "folder/",
             YAMLLoader()
         )
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "SCS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             1
         )
 
@@ -94,11 +94,11 @@ class TestContentLoader(unittest.TestCase):
             "folder/",
             YAMLLoader()
         )
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "SaaS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             0
         )
 
@@ -129,11 +129,11 @@ class TestContentLoader(unittest.TestCase):
             "folder/",
             YAMLLoader()
         )
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "SaaS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             1
         )
 
@@ -164,11 +164,11 @@ class TestContentLoader(unittest.TestCase):
             "folder/",
             YAMLLoader()
         )
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "IaaS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             0
         )
 
@@ -211,11 +211,11 @@ class TestContentLoader(unittest.TestCase):
             "folder/",
             YAMLLoader()
         )
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "IaaS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             1
         )
 
@@ -253,27 +253,27 @@ class TestContentLoader(unittest.TestCase):
             YAMLLoader()
         )
 
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "IaaS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             1
         )
 
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "PaaS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             1
         )
 
-        sections = content.get_sections_filtered_by({
+        content.filter({
             "lot": "SCS"
         })
         self.assertEqual(
-            len(sections),
+            len(content.sections),
             0
         )
 
@@ -305,16 +305,16 @@ class TestContentLoader(unittest.TestCase):
         sections = content.sections
 
         self.assertEqual(
-            content.get_next_section_id("first_section", sections),
+            content.get_next_section_id("first_section"),
             "second_section"
         )
 
         self.assertEqual(
-            content.get_next_section_id("second_section", sections),
+            content.get_next_section_id("second_section"),
             "third_section"
         )
 
         self.assertEqual(
-            content.get_next_section_id("third_section", sections),
+            content.get_next_section_id("third_section"),
             None
         )
