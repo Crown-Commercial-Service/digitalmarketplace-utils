@@ -58,12 +58,14 @@ class ContentBuilder(object):
         ]
 
         if len(filtered_questions):
-            section["questions"] = filtered_questions
-            return section
+            filtered_section = section.copy()
+            filtered_section["questions"] = filtered_questions
+            return filtered_section
         else:
             return None
 
     def _populate_section(self, section):
+        section = section.copy()
         section["questions"] = [
             self.get_question(q) for q in section["questions"]
         ]
@@ -93,8 +95,6 @@ class YAMLLoader(object):
 
     def read(self, yaml_file):
         if yaml_file not in self._cache:
-            if not os.path.isfile(yaml_file):
-                return None
             with open(yaml_file, "r") as file:
                 self._cache[yaml_file] = yaml.load(file)
         return self._cache[yaml_file]

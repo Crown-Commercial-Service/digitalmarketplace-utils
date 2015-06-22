@@ -315,39 +315,28 @@ class TestContentBuilder(unittest.TestCase):
             content.get_next_section_id("first_section"),
             "second_section"
         )
-
         self.assertEqual(
             content.get_next_section_id("second_section"),
             "third_section"
         )
-
         self.assertEqual(
             content.get_next_section_id("third_section"),
             None
         )
 
 
-@mock.patch('os.path.isfile')
 class TestYAMLLoader(unittest.TestCase):
 
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
-    def test_loading_existant_file(self, mocked_open, mocked_isfile):
+    def test_loading_existant_file(self, mocked_open):
         yaml_loader = YAMLLoader()
         self.assertEqual(
-            yaml_loader.read('something.yml'),
+            yaml_loader.read('anything.yml'),
             {'foo': 'bar'}
         )
 
-    def test_loading_file_that_doesnt_exist(self, mocked_isfile):
-        mocked_isfile.return_value = False
-        yaml_loader = YAMLLoader()
-        self.assertEqual(
-            yaml_loader.read('something.yml'),
-            None
-        )
-
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
-    def test_caching(self, mocked_open, mocked_isfile):
+    def test_caching(self, mocked_open):
         yaml_loader = YAMLLoader()
         self.assertEqual(
             yaml_loader.read('something.yml'),
@@ -359,3 +348,106 @@ class TestYAMLLoader(unittest.TestCase):
         )
         mocked_open.assert_called_once_with('something.yml', 'r')
         self.assertEqual(len(yaml_loader._cache), 1)
+
+
+class TestInCombination(unittest.TestCase):
+
+    @mock.patch.object(builtins, 'open', side_effect=[
+        io.StringIO(u"""
+          -
+            name: First section
+            questions:
+              - firstQuestion
+              - secondQuestion
+        """),
+        io.StringIO(u"""
+          question: 'First question'
+          depends:
+              -
+                "on": lot
+                being: IaaS
+        """),
+        io.StringIO(u"""
+          question: 'Second question'
+          depends:
+              -
+                "on": lot
+                being: SaaS
+        """)
+    ])
+    def test_that_filtering_doesnt_remove_original_objects(self, mocked_open):
+        content = ContentBuilder(
+            "manifest.yml",
+            "folder/",
+            YAMLLoader()
+        )
+        self.assertEqual(
+            len(content.sections[0]['questions']),
+            2
+        )
+        content.filter({"lot": "SaaS"})
+        self.assertEqual(
+            len(content.sections[0]['questions']),
+            1
+        )
+        content.filter({"lot": "IaaS"})
+        self.assertEqual(
+            len(content.sections[0]['questions']),
+            1
+        )
+
+    @mock.patch.object(builtins, 'open', side_effect=[
+        io.StringIO(u"""
+          -
+            name: First section
+            questions:
+              - firstQuestion
+          -
+            name: Second section
+            questions:
+              - secondQuestion
+        """),
+        io.StringIO(u"""
+          question: 'First question'
+          depends:
+              -
+                "on": lot
+                being: IaaS
+        """),
+        io.StringIO(u"""
+          question: 'Second question'
+          depends:
+              -
+                "on": lot
+                being: PaaS
+        """)
+    ])
+    def test_sharing_of_yaml_loader(self, mocked_open):
+
+        yaml_loader = YAMLLoader()
+
+        will_only_have_iaas_questions = ContentBuilder(
+            "manifest.yml",
+            "folder/",
+            yaml_loader
+        )
+        will_only_have_paas_questions = ContentBuilder(
+            "manifest.yml",
+            "folder/",
+            yaml_loader
+        )
+        will_only_have_iaas_questions.filter({
+            "lot": "IaaS"
+        })
+        will_only_have_paas_questions.filter({
+            "lot": "PaaS"
+        })
+
+        self.assertEqual(
+            len(will_only_have_iaas_questions.sections),
+            1
+        )
+        self.assertEqual(
+            len(will_only_have_paas_questions.sections),
+            1
+        )
