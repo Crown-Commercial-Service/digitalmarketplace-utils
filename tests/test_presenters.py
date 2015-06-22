@@ -4,7 +4,6 @@ import unittest
 import mock
 
 from dmutils.presenters import Presenters
-from dmutils.content_loader import ContentLoader
 presenters = Presenters()
 
 

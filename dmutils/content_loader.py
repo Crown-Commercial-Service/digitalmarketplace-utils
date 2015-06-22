@@ -4,49 +4,49 @@ import re
 import os
 
 
-class ContentLoader(object):
+class ContentBuilder(object):
 
-    def __init__(self, manifest, content_directory):
-
-        section_order = self._read_yaml_file(manifest)
-
+    def __init__(self, manifest, content_directory, yaml_loader):
+        self.yaml_loader = yaml_loader
+        section_order = yaml_loader.read(manifest)
         self._directory = content_directory
-        self._question_cache = {}
-        self.sections = [
+
+        self._all_sections = [
             self._populate_section(s) for s in section_order
         ]
 
-    def get_section(self, requested_section):
+        self.sections = self._all_sections
 
-        for section in self.sections:
+    def get_section(self, requested_section):
+        for section in self._all_sections:
             if section["id"] == requested_section:
                 return section
+        return None
 
     def get_question(self, question):
+        return self.yaml_loader.read(self._directory + question + ".yml")
 
-        if question not in self._question_cache:
-
-            question_file = self._directory + question + ".yml"
-
-            if not self._yaml_file_exists(question_file):
-                self._question_cache[question] = {}
-                return {}
-
-            question_content = self._read_yaml_file(question_file)
-            question_content["id"] = question
-            self._question_cache[question] = question_content
-
-        return self._question_cache[question]
-
-    def get_sections_filtered_by(self, service_data):
-        return [
+    def filter(self, service_data):
+        self.sections = [
             section for section in [
-                self.get_section_filtered_by(section["id"], service_data)
-                for section in self.sections
+                self._get_section_filtered_by(section["id"], service_data)
+                for section in self._all_sections
             ] if section is not None
         ]
 
-    def get_section_filtered_by(self, section_id, service_data):
+    def get_next_section_id(self, section_id):
+
+        previous_section_is_current = False
+
+        for section in self.sections:
+            if previous_section_is_current:
+                return section["id"]
+            if section["id"] == section_id:
+                previous_section_is_current = True
+
+        return None
+
+    def _get_section_filtered_by(self, section_id, service_data):
 
         section = self.get_section(section_id)
 
@@ -58,20 +58,14 @@ class ContentLoader(object):
         ]
 
         if len(filtered_questions):
-            section["questions"] = filtered_questions
-            return section
+            filtered_section = section.copy()
+            filtered_section["questions"] = filtered_questions
+            return filtered_section
         else:
             return None
 
-    def _yaml_file_exists(self, yaml_file):
-        return os.path.isfile(yaml_file)
-
-    def _read_yaml_file(self, yaml_file):
-        with open(yaml_file, "r") as file:
-            question_content = yaml.load(file)
-            return question_content
-
     def _populate_section(self, section):
+        section = section.copy()
         section["questions"] = [
             self.get_question(q) for q in section["questions"]
         ]
@@ -92,3 +86,15 @@ class ContentLoader(object):
             if not service_data[depends["on"]] in depends["being"]:
                 return False
         return True
+
+
+class YAMLLoader(object):
+
+    def __init__(self):
+        self._cache = {}
+
+    def read(self, yaml_file):
+        if yaml_file not in self._cache:
+            with open(yaml_file, "r") as file:
+                self._cache[yaml_file] = yaml.load(file)
+        return self._cache[yaml_file]
