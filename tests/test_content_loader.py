@@ -6,8 +6,15 @@ import mock
 import os
 import tempfile
 import yaml
+import io
 
 from dmutils.content_loader import YAMLLoader, ContentBuilder
+
+from sys import version_info
+if version_info.major == 2:
+    import __builtin__ as builtins
+else:
+    import builtins
 
 
 def get_mocked_yaml_reader(mocked_content={}):
@@ -17,7 +24,7 @@ def get_mocked_yaml_reader(mocked_content={}):
 
 
 @mock.patch("dmutils.content_loader.YAMLLoader.read")
-class TestContentLoader(unittest.TestCase):
+class TestContentBuilder(unittest.TestCase):
 
     def test_a_simple_question(self, mocked_read_yaml_file):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
@@ -112,7 +119,7 @@ class TestContentLoader(unittest.TestCase):
                 questions:
                   - firstQuestion
           """,
-          "firstQuestion.yml": """
+          "folder/firstQuestion.yml": """
                 question: 'First question'
                 depends:
                     -
@@ -137,7 +144,7 @@ class TestContentLoader(unittest.TestCase):
             1
         )
 
-    def test_a_question_which_depends_on_one_of_several_answers(
+    def test_a_question_which_shouldnt_be_shown(
         self, mocked_read_yaml_file
     ):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
@@ -318,3 +325,37 @@ class TestContentLoader(unittest.TestCase):
             content.get_next_section_id("third_section"),
             None
         )
+
+
+@mock.patch('os.path.isfile')
+class TestYAMLLoader(unittest.TestCase):
+
+    @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
+    def test_loading_existant_file(self, mocked_open, mocked_isfile):
+        yaml_loader = YAMLLoader()
+        self.assertEqual(
+            yaml_loader.read('something.yml'),
+            {'foo': 'bar'}
+        )
+
+    def test_loading_file_that_doesnt_exist(self, mocked_isfile):
+        mocked_isfile.return_value = False
+        yaml_loader = YAMLLoader()
+        self.assertEqual(
+            yaml_loader.read('something.yml'),
+            None
+        )
+
+    @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
+    def test_caching(self, mocked_open, mocked_isfile):
+        yaml_loader = YAMLLoader()
+        self.assertEqual(
+            yaml_loader.read('something.yml'),
+            {'foo': 'bar'}
+        )
+        self.assertEqual(
+            yaml_loader.read('something.yml'),
+            {'foo': 'bar'}
+        )
+        mocked_open.assert_called_once_with('something.yml', 'r')
+        self.assertEqual(len(yaml_loader._cache), 1)
