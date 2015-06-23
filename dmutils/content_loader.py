@@ -24,7 +24,11 @@ class ContentBuilder(object):
         return None
 
     def get_question(self, question):
-        return self.yaml_loader.read(self._directory + question + ".yml")
+        question_content = self.yaml_loader.read(
+            self._directory + question + ".yml"
+        )
+        question_content["id"] = question
+        return question_content
 
     def filter(self, service_data):
         self.sections = [

@@ -47,6 +47,10 @@ class TestContentBuilder(unittest.TestCase):
             content.get_question("firstQuestion").get("question"),
             "First question"
         )
+        self.assertEqual(
+            content.get_question("firstQuestion").get("id"),
+            "firstQuestion"
+        )
 
     def test_a_question_with_a_dependency(self, mocked_read_yaml_file):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
