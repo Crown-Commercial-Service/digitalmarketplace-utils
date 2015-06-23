@@ -360,7 +360,7 @@ class TestYAMLLoader(unittest.TestCase):
         yaml_loader = YAMLLoader()
         self.assertEqual(
             yaml_loader.read('something.yml'),
-            None
+            {}
         )
 
 
