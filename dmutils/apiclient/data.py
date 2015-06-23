@@ -152,7 +152,7 @@ class DataAPIClient(BaseAPIClient):
             "/draft-services/{}/create".format(framework_slug),
             data={
                 "update_details": {
-                    "updated_by": user,
+                    "updated_by": user
                 },
                 "services": {
                     "supplierId": supplier_id,
@@ -161,19 +161,20 @@ class DataAPIClient(BaseAPIClient):
 
             })
 
-    def find_draft_services(self, supplier_id):
+    # Also optionally accepts a service_id and a framework
+    def list_draft_services(self, supplier_id):
         return self._get(
             "/draft-services?supplier_id={}".format(supplier_id)
         )
 
-    def get_draft_service(self, service_id):
+    def get_draft_service(self, draft_id):
         return self._get(
-            "/services/{}/draft".format(service_id)
+            "/draft-services/{}".format(draft_id)
         )
 
-    def delete_draft_service(self, service_id, user):
+    def delete_draft_service(self, draft_id, user):
         return self._delete(
-            "/services/{}/draft".format(service_id),
+            "/draft-services/{}".format(draft_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -191,9 +192,9 @@ class DataAPIClient(BaseAPIClient):
                 },
             })
 
-    def update_draft_service(self, service_id, service, user):
+    def update_draft_service(self, draft_id, service, user):
         return self._post(
-            "/services/{}/draft".format(service_id),
+            "/draft-services/{}".format(draft_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -202,9 +203,9 @@ class DataAPIClient(BaseAPIClient):
                 "services": service,
             })
 
-    def launch_draft_service(self, service_id, user):
+    def publish_draft_service(self, draft_id, user):
         return self._post(
-            "/services/{}/draft/publish".format(service_id),
+            "/draft-services/{}/publish".format(draft_id),
             data={
                 "update_details": {
                     "updated_by": user,

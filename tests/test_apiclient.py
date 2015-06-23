@@ -463,14 +463,14 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
-    def test_create_service(self, data_client, rmock):
+    def test_import_service(self, data_client, rmock):
         rmock.put(
             "http://baseurl/services/123",
             json={"services": "result"},
             status_code=201,
         )
 
-        result = data_client.create_service(
+        result = data_client.import_service(
             123, {"foo": "bar"}, "person", "reason")
 
         assert result == {"services": "result"}
@@ -764,21 +764,21 @@ class TestDataApiClient(object):
             'contactInformation': {'foo': 'bar'}, 'updated_by': 'supplier'
         }
 
-    def test_find_draft_services(self, data_client, rmock):
+    def test_list_draft_services(self, data_client, rmock):
         rmock.get(
             "http://baseurl/draft-services?supplier_id=2",
             json={"draft-services": "result"},
             status_code=200,
         )
 
-        result = data_client.find_draft_services(2)
+        result = data_client.list_draft_services(2)
 
         assert result == {"draft-services": "result"}
         assert rmock.called
 
     def test_get_draft_service(self, data_client, rmock):
         rmock.get(
-            "http://baseurl/services/2/draft",
+            "http://baseurl/draft-services/2",
             json={"draft-services": "result"},
             status_code=200,
         )
@@ -790,7 +790,7 @@ class TestDataApiClient(object):
 
     def test_delete_draft_service(self, data_client, rmock):
         rmock.delete(
-            "http://baseurl/services/2/draft",
+            "http://baseurl/draft-services/2",
             json={"done": "it"},
             status_code=200,
         )
@@ -807,14 +807,14 @@ class TestDataApiClient(object):
             }
         }
 
-    def test_create_draft_service(self, data_client, rmock):
+    def test_copy_draft_service_from_existing_service(self, data_client, rmock):
         rmock.put(
-            "http://baseurl/services/2/draft",
+            "http://baseurl/draft-services/copy-from/2",
             json={"done": "it"},
             status_code=201,
         )
 
-        result = data_client.create_draft_service(
+        result = data_client.copy_draft_service_from_existing_service(
             2, 'user'
         )
 
@@ -828,7 +828,7 @@ class TestDataApiClient(object):
 
     def test_update_draft_service(self, data_client, rmock):
         rmock.post(
-            "http://baseurl/services/2/draft",
+            "http://baseurl/draft-services/2",
             json={"done": "it"},
             status_code=200,
         )
@@ -848,14 +848,14 @@ class TestDataApiClient(object):
             }
         }
 
-    def test_launch_draft_service(self, data_client, rmock):
+    def test_publish_draft_service(self, data_client, rmock):
         rmock.post(
-            "http://baseurl/services/2/draft/publish",
+            "http://baseurl/draft-services/2/publish",
             json={"done": "it"},
             status_code=200,
         )
 
-        result = data_client.launch_draft_service(
+        result = data_client.publish_draft_service(
             2, 'user'
         )
 
