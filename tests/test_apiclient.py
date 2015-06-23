@@ -771,7 +771,8 @@ class TestDataApiClient(object):
             status_code=200,
         )
 
-        result = data_client.list_draft_services(2)
+        result = data_client.list_draft_services(
+            2, service_id='1234567890123456', framework='g-cloud-6')
 
         assert result == {"draft-services": "result"}
         assert rmock.called

@@ -147,11 +147,18 @@ class DataAPIClient(BaseAPIClient):
 
     # Services
 
-    # Also optionally accepts a service_id and a framework
-    def list_draft_services(self, supplier_id):
-        return self._get(
-            "/draft-services?supplier_id={}".format(supplier_id)
-        )
+    def list_draft_services(
+            self, supplier_id, service_id=None, framework=None):
+
+        url = "/draft-services?supplier_id={}".format(supplier_id)
+
+        if service_id:
+            url = "{}&service_id={}".format(url, service_id)
+
+        if framework:
+            url = "{}&framework={}".format(url, framework)
+
+        return self._get(url)
 
     def get_draft_service(self, draft_id):
         return self._get(
