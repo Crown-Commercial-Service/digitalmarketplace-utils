@@ -38,6 +38,20 @@ class DataAPIClient(BaseAPIClient):
                 }
             })
 
+    def create_new_draft_service(self, framework_slug, supplier_id, user, lot):
+        return self._post(
+            "/draft-services/{}/create".format(framework_slug),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                },
+                "services": {
+                    "supplierId": supplier_id,
+                    "lot": lot
+                }
+
+            })
+
     def find_draft_services(self, supplier_id):
         return self._get(
             "/draft-services?supplier_id={}".format(supplier_id)
@@ -58,9 +72,9 @@ class DataAPIClient(BaseAPIClient):
                 },
             })
 
-    def create_draft_service(self, service_id, user):
+    def copy_draft_service_from_existing_service(self, service_id, user):
         return self._put(
-            "/services/{}/draft".format(service_id),
+            "/draft-services/copy-from/{}".format(service_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -155,7 +169,7 @@ class DataAPIClient(BaseAPIClient):
             self.base_url + "/services",
             params=params)
 
-    def create_service(self, service_id, service, user, reason):
+    def import_service(self, service_id, service, user, reason):
         return self._put(
             "/services/{}".format(service_id),
             data={
