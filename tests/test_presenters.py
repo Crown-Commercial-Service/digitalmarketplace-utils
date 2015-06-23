@@ -33,7 +33,7 @@ class TestPresenters(unittest.TestCase):
 
     def test_present_all_with_none(self):
         content = mock.Mock()
-        content.get_question.return_value = None
+        content.get_question.return_value = {}
 
         self.assertEqual(
             presenters.present_all(

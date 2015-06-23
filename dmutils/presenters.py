@@ -8,9 +8,6 @@ class Presenters(object):
 
     def present(self, value, question_content):
 
-        if question_content is None:
-            return value
-
         if "type" in question_content:
             field_type = question_content["type"]
         else:

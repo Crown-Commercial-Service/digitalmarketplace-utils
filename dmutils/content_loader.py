@@ -100,7 +100,7 @@ class YAMLLoader(object):
     def read(self, yaml_file):
         if yaml_file not in self._cache:
             if not os.path.isfile(yaml_file):
-                return None
+                return {}
             with open(yaml_file, "r") as file:
                 self._cache[yaml_file] = yaml.load(file)
         return self._cache[yaml_file]
