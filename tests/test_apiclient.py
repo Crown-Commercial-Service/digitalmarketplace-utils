@@ -807,7 +807,8 @@ class TestDataApiClient(object):
             }
         }
 
-    def test_copy_draft_service_from_existing_service(self, data_client, rmock):
+    def test_copy_draft_service_from_existing_service(
+            self, data_client, rmock):
         rmock.put(
             "http://baseurl/draft-services/copy-from/2",
             json={"done": "it"},
@@ -864,6 +865,29 @@ class TestDataApiClient(object):
         assert rmock.request_history[0].json() == {
             'update_details': {
                 'update_reason': 'deprecated', 'updated_by': 'user'
+            }
+        }
+
+    def test_create_new_draft_service(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/draft-services/g-cloud-7/create",
+            json={"done": "it"},
+            status_code=201,
+        )
+
+        result = data_client.create_new_draft_service(
+            'g-cloud-7', 2, 'user', 'IaaS'
+        )
+
+        assert result == {"done": "it"}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+            'update_details': {
+                'updated_by': 'user'
+            },
+            'services': {
+                    'supplierId': 2,
+                    'lot': 'IaaS'
             }
         }
 
