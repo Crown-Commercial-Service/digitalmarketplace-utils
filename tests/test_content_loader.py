@@ -288,6 +288,56 @@ class TestContentBuilder(unittest.TestCase):
             0
         )
 
+    def test_get_section(self, mocked_read_yaml_file):
+        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
+          "manifest.yml": """
+              -
+                name: First section
+                questions:
+                  - firstQuestion
+              -
+                name: Second section
+                questions:
+                  - secondQuestion
+          """,
+          "folder/firstQuestion.yml": """
+                question: 'First question'
+                depends:
+                    -
+                      "on": lot
+                      being: IaaS
+          """,
+          "folder/secondQuestion.yml": """
+                question: 'Second question'
+                depends:
+                    -
+                      "on": lot
+                      being: PaaS
+
+          """
+        })
+        content = ContentBuilder(
+            "manifest.yml",
+            "folder/",
+            YAMLLoader()
+        )
+
+        content.filter({
+            "lot": "IaaS"
+        })
+        self.assertEqual(
+            content.get_section("first_section").get("id"),
+            "first_section"
+        )
+
+        content.filter({
+            "lot": "SCS"
+        })
+        self.assertEqual(
+            content.get_section("first_section"),
+            None
+        )
+
     def test_get_next_section(self, mocked_read_yaml_file):
         mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
             "manifest.yml": """
