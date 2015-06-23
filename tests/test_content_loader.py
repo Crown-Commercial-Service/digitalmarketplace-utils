@@ -327,16 +327,18 @@ class TestContentBuilder(unittest.TestCase):
 
 class TestYAMLLoader(unittest.TestCase):
 
+    @mock.patch('os.path.isfile', return_value=True)
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
-    def test_loading_existant_file(self, mocked_open):
+    def test_loading_existant_file(self, mocked_is_file, mocked_open):
         yaml_loader = YAMLLoader()
         self.assertEqual(
             yaml_loader.read('anything.yml'),
             {'foo': 'bar'}
         )
 
+    @mock.patch('os.path.isfile', return_value=True)
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
-    def test_caching(self, mocked_open):
+    def test_caching(self, mocked_open, mocked_is_file):
         yaml_loader = YAMLLoader()
         self.assertEqual(
             yaml_loader.read('something.yml'),
@@ -349,7 +351,16 @@ class TestYAMLLoader(unittest.TestCase):
         mocked_open.assert_called_once_with('something.yml', 'r')
         self.assertEqual(len(yaml_loader._cache), 1)
 
+    @mock.patch('os.path.isfile', return_value=False)
+    def test_file_not_found(self, mocked_is_file):
+        yaml_loader = YAMLLoader()
+        self.assertEqual(
+            yaml_loader.read('something.yml'),
+            None
+        )
 
+
+@mock.patch('os.path.isfile', return_value=True)
 class TestInCombination(unittest.TestCase):
 
     @mock.patch.object(builtins, 'open', side_effect=[
@@ -375,7 +386,9 @@ class TestInCombination(unittest.TestCase):
                 being: SaaS
         """)
     ])
-    def test_that_filtering_doesnt_remove_original_objects(self, mocked_open):
+    def test_that_filtering_doesnt_remove_original_objects(
+        self, mocked_open, mocked_is_file
+    ):
         content = ContentBuilder(
             "manifest.yml",
             "folder/",
@@ -422,7 +435,7 @@ class TestInCombination(unittest.TestCase):
                 being: PaaS
         """)
     ])
-    def test_sharing_of_yaml_loader(self, mocked_open):
+    def test_sharing_of_yaml_loader(self, mocked_open, mocked_is_file):
 
         yaml_loader = YAMLLoader()
 
