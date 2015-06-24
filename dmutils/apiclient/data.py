@@ -147,7 +147,7 @@ class DataAPIClient(BaseAPIClient):
 
     # Services
 
-    def list_draft_services(
+    def find_draft_services(
             self, supplier_id, service_id=None, framework=None):
 
         url = "/draft-services?supplier_id={}".format(supplier_id)

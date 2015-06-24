@@ -764,14 +764,14 @@ class TestDataApiClient(object):
             'contactInformation': {'foo': 'bar'}, 'updated_by': 'supplier'
         }
 
-    def test_list_draft_services(self, data_client, rmock):
+    def test_find_draft_services(self, data_client, rmock):
         rmock.get(
             "http://baseurl/draft-services?supplier_id=2",
             json={"draft-services": "result"},
             status_code=200,
         )
 
-        result = data_client.list_draft_services(
+        result = data_client.find_draft_services(
             2, service_id='1234567890123456', framework='g-cloud-6')
 
         assert result == {"draft-services": "result"}
