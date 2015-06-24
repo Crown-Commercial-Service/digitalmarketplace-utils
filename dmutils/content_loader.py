@@ -18,7 +18,7 @@ class ContentBuilder(object):
         self.sections = self._all_sections
 
     def get_section(self, requested_section):
-        for section in self._all_sections:
+        for section in self.sections:
             if section["id"] == requested_section:
                 return section
         return None
@@ -50,9 +50,15 @@ class ContentBuilder(object):
 
         return None
 
+    def _get_section_from_all(self, requested_section):
+        for section in self._all_sections:
+            if section["id"] == requested_section:
+                return section
+        return None
+
     def _get_section_filtered_by(self, section_id, service_data):
 
-        section = self.get_section(section_id)
+        section = self._get_section_from_all(section_id)
 
         filtered_questions = [
             question for question in section["questions"]
