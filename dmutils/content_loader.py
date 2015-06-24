@@ -38,7 +38,10 @@ class ContentBuilder(object):
             ] if section is not None
         ]
 
-    def get_next_section_id(self, section_id):
+    def get_next_section_id(self, section_id=None):
+
+        if section_id is None:
+            return self.sections[0]["id"]
 
         previous_section_is_current = False
 
