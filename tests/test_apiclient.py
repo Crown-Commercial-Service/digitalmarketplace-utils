@@ -687,6 +687,17 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
+    def test_find_suppliers_with_framework(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers?framework=gcloud",
+            json={"services": "result"},
+            status_code=200)
+
+        result = data_client.find_suppliers(framework='gcloud')
+
+        assert result == {"services": "result"}
+        assert rmock.called
+
     def test_find_supplier_adds_page_parameter(self, data_client, rmock):
         rmock.get(
             "http://baseurl/suppliers?page=2",
