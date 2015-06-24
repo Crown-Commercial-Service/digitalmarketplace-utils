@@ -38,17 +38,30 @@ class ContentBuilder(object):
             ] if section is not None
         ]
 
-    def get_next_section_id(self, section_id):
+    def get_next_section_id(self, section_id=None, only_editable=False):
 
-        previous_section_is_current = False
+        previous_section_is_current = section_id is None
 
         for section in self.sections:
-            if previous_section_is_current:
-                return section["id"]
+
+            if only_editable:
+                if (
+                    previous_section_is_current and
+                    "editable" in section and
+                    section["editable"]
+                ):
+                    return section["id"]
+            else:
+                if previous_section_is_current:
+                    return section["id"]
+
             if section["id"] == section_id:
                 previous_section_is_current = True
 
         return None
+
+    def get_next_editable_section_id(self, section_id=None):
+        return self.get_next_section_id(section_id, True)
 
     def _get_section_from_all(self, requested_section):
         for section in self._all_sections:

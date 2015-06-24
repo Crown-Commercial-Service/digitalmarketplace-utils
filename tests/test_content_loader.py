@@ -351,6 +351,7 @@ class TestContentBuilder(unittest.TestCase):
                   - firstQuestion
               -
                 name: Third section
+                editable: True
                 questions:
                   - firstQuestion
             """,
@@ -366,6 +367,10 @@ class TestContentBuilder(unittest.TestCase):
         sections = content.sections
 
         self.assertEqual(
+            content.get_next_section_id(),
+            "first_section"
+        )
+        self.assertEqual(
             content.get_next_section_id("first_section"),
             "second_section"
         )
@@ -376,6 +381,15 @@ class TestContentBuilder(unittest.TestCase):
         self.assertEqual(
             content.get_next_section_id("third_section"),
             None
+        )
+
+        self.assertEqual(
+            content.get_next_editable_section_id(),
+            "third_section"
+        )
+        self.assertEqual(
+            content.get_next_editable_section_id("second_section"),
+            "third_section"
         )
 
 
