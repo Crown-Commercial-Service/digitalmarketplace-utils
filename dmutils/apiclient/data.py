@@ -87,6 +87,11 @@ class DataAPIClient(BaseAPIClient):
             },
         )
 
+    def get_selection_answers(self, supplier_id, framework_slug):
+        return self._get(
+            "/suppliers/{}/selection-answers/{}".format(
+                supplier_id, framework_slug))
+
     def answer_selection_questions(self, supplier_id, framework_slug,
                                    answers, user):
         return self._put(
