@@ -7,6 +7,8 @@ class DataAPIClient(BaseAPIClient):
         self.base_url = app.config['DM_DATA_API_URL']
         self.auth_token = app.config['DM_DATA_API_AUTH_TOKEN']
 
+    # Audit Events
+
     def find_audit_events(
             self,
             audit_type=None,
@@ -38,56 +40,7 @@ class DataAPIClient(BaseAPIClient):
                 }
             })
 
-    def find_draft_services(self, supplier_id):
-        return self._get(
-            "/draft-services?supplier_id={}".format(supplier_id)
-        )
-
-    def get_draft_service(self, service_id):
-        return self._get(
-            "/services/{}/draft".format(service_id)
-        )
-
-    def delete_draft_service(self, service_id, user):
-        return self._delete(
-            "/services/{}/draft".format(service_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
-                },
-            })
-
-    def create_draft_service(self, service_id, user):
-        return self._put(
-            "/services/{}/draft".format(service_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
-                },
-            })
-
-    def update_draft_service(self, service_id, service, user):
-        return self._post(
-            "/services/{}/draft".format(service_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
-                },
-                "services": service,
-            })
-
-    def launch_draft_service(self, service_id, user):
-        return self._post(
-            "/services/{}/draft/publish".format(service_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
-                },
-            })
+    # Suppliers
 
     def find_suppliers(self, prefix=None, page=None, framework=None):
         params = {}
@@ -134,60 +87,7 @@ class DataAPIClient(BaseAPIClient):
             },
         )
 
-    def get_archived_service(self, archived_service_id):
-        return self._get("/archived-services/{}".format(archived_service_id))
-
-    def get_service(self, service_id):
-        try:
-            return self._get(
-                "/services/{}".format(service_id))
-        except HTTPError as e:
-            if e.status_code != 404:
-                raise
-        return None
-
-    def find_services(self, supplier_id=None, page=None):
-        params = {}
-        if supplier_id is not None:
-            params['supplier_id'] = supplier_id
-        if page is not None:
-            params['page'] = page
-
-        return self._get(
-            self.base_url + "/services",
-            params=params)
-
-    def create_service(self, service_id, service, user, reason):
-        return self._put(
-            "/services/{}".format(service_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": reason,
-                },
-                "services": service,
-            })
-
-    def update_service(self, service_id, service, user, reason):
-        return self._post(
-            "/services/{}".format(service_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": reason,
-                },
-                "services": service,
-            })
-
-    def update_service_status(self, service_id, status, user, reason):
-        return self._post(
-            "/services/{}/status/{}".format(service_id, status),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": reason,
-                },
-            })
+    # Users
 
     def create_user(self, user):
         return self._post(
@@ -246,3 +146,133 @@ class DataAPIClient(BaseAPIClient):
             logger.info("Password update failed for user %s: %s",
                         user_id, e.status_code)
             return False
+
+    # Services
+
+    def find_draft_services(
+            self, supplier_id, service_id=None, framework=None):
+
+        url = "/draft-services?supplier_id={}".format(supplier_id)
+
+        if service_id:
+            url = "{}&service_id={}".format(url, service_id)
+
+        if framework:
+            url = "{}&framework={}".format(url, framework)
+
+        return self._get(url)
+
+    def get_draft_service(self, draft_id):
+        return self._get(
+            "/draft-services/{}".format(draft_id)
+        )
+
+    def delete_draft_service(self, draft_id, user):
+        return self._delete(
+            "/draft-services/{}".format(draft_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+            })
+
+    def copy_draft_service_from_existing_service(self, service_id, user):
+        return self._put(
+            "/draft-services/copy-from/{}".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+            })
+
+    def update_draft_service(self, draft_id, service, user):
+        return self._post(
+            "/draft-services/{}".format(draft_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+                "services": service,
+            })
+
+    def publish_draft_service(self, draft_id, user):
+        return self._post(
+            "/draft-services/{}/publish".format(draft_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": "deprecated",
+                },
+            })
+
+    def create_new_draft_service(self, framework_slug, supplier_id, user, lot):
+        return self._post(
+            "/draft-services/{}/create".format(framework_slug),
+            data={
+                "update_details": {
+                    "updated_by": user
+                },
+                "services": {
+                    "supplierId": supplier_id,
+                    "lot": lot
+                }
+
+            })
+
+    def get_archived_service(self, archived_service_id):
+        return self._get("/archived-services/{}".format(archived_service_id))
+
+    def get_service(self, service_id):
+        try:
+            return self._get(
+                "/services/{}".format(service_id))
+        except HTTPError as e:
+            if e.status_code != 404:
+                raise
+        return None
+
+    def find_services(self, supplier_id=None, page=None):
+        params = {}
+        if supplier_id is not None:
+            params['supplier_id'] = supplier_id
+        if page is not None:
+            params['page'] = page
+
+        return self._get(
+            self.base_url + "/services",
+            params=params)
+
+    def import_service(self, service_id, service, user, reason):
+        return self._put(
+            "/services/{}".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": reason,
+                },
+                "services": service,
+            })
+
+    def update_service(self, service_id, service, user, reason):
+        return self._post(
+            "/services/{}".format(service_id),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": reason,
+                },
+                "services": service,
+            })
+
+    def update_service_status(self, service_id, status, user, reason):
+        return self._post(
+            "/services/{}/status/{}".format(service_id, status),
+            data={
+                "update_details": {
+                    "updated_by": user,
+                    "update_reason": reason,
+                },
+            })
