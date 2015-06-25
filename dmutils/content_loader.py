@@ -5,17 +5,8 @@ import os
 
 
 class ContentBuilder(object):
-
-    def __init__(self, manifest, content_directory, yaml_loader):
-        self.yaml_loader = yaml_loader
-        section_order = yaml_loader.read(manifest)
-        self._directory = content_directory
-
-        self._all_sections = [
-            self._populate_section(s) for s in section_order
-        ]
-
-        self.sections = self._all_sections
+    def __init__(self, sections):
+        self.sections = list(sections)
 
     def get_section(self, requested_section):
         for section in self.sections:
@@ -23,27 +14,10 @@ class ContentBuilder(object):
                 return section
         return None
 
-    def get_question(self, question):
-        question_content = self.yaml_loader.read(
-            self._directory + question + ".yml"
-        )
-        question_content["id"] = question
-        return question_content
-
-    def filter(self, service_data):
-        self.sections = [
-            section for section in [
-                self._get_section_filtered_by(section["id"], service_data)
-                for section in self._all_sections
-            ] if section is not None
-        ]
-
     def get_next_section_id(self, section_id=None, only_editable=False):
-
         previous_section_is_current = section_id is None
 
         for section in self.sections:
-
             if only_editable:
                 if (
                     previous_section_is_current and
@@ -63,15 +37,16 @@ class ContentBuilder(object):
     def get_next_editable_section_id(self, section_id=None):
         return self.get_next_section_id(section_id, True)
 
-    def _get_section_from_all(self, requested_section):
-        for section in self._all_sections:
-            if section["id"] == requested_section:
-                return section
-        return None
+    def filter(self, service_data):
+        sections = filter(None, [
+            self._get_section_filtered_by(section, service_data)
+            for section in self.sections
+        ])
 
-    def _get_section_filtered_by(self, section_id, service_data):
+        return ContentBuilder(sections)
 
-        section = self._get_section_from_all(section_id)
+    def _get_section_filtered_by(self, section, service_data):
+        section = section.copy()
 
         filtered_questions = [
             question for question in section["questions"]
@@ -81,24 +56,10 @@ class ContentBuilder(object):
         ]
 
         if len(filtered_questions):
-            filtered_section = section.copy()
-            filtered_section["questions"] = filtered_questions
-            return filtered_section
+            section["questions"] = filtered_questions
+            return section
         else:
             return None
-
-    def _populate_section(self, section):
-        section = section.copy()
-        section["questions"] = [
-            self.get_question(q) for q in section["questions"]
-        ]
-        section["id"] = self._make_id(section["name"])
-        return section
-
-    def _make_id(self, name):
-        return inflection.underscore(
-            re.sub("\s", "_", name)
-        )
 
     def _question_should_be_shown(self, dependencies, service_data):
         if dependencies is None:
@@ -111,15 +72,53 @@ class ContentBuilder(object):
         return True
 
 
-class YAMLLoader(object):
-
-    def __init__(self):
+class ContentLoader(object):
+    def __init__(self, manifest, content_directory):
         self._cache = {}
+        self._directory = content_directory
 
-    def read(self, yaml_file):
-        if yaml_file not in self._cache:
-            if not os.path.isfile(yaml_file):
-                return {}
-            with open(yaml_file, "r") as file:
-                self._cache[yaml_file] = yaml.load(file)
-        return self._cache[yaml_file]
+        manifest_sections = read_yaml(manifest)
+
+        self._questions = {
+            q: self._load_question(q)
+            for section in manifest_sections
+            for q in section["questions"]
+        }
+
+        self._sections = [
+            self._populate_section(s) for s in manifest_sections
+        ]
+
+    def get_question(self, question):
+        return self._questions.get(question, {}).copy()
+
+    def get_builder(self):
+        return ContentBuilder(self._sections)
+
+    def _populate_section(self, section):
+        section["id"] = self._make_id(section["name"])
+        section["questions"] = [
+            self.get_question(q) for q in section["questions"]
+        ]
+
+        return section
+
+    def _load_question(self, question):
+        question_content = read_yaml(
+            self._directory + question + ".yml"
+        )
+        question_content["id"] = question
+
+        return question_content
+
+    def _make_id(self, name):
+        return inflection.underscore(
+            re.sub("\s", "_", name)
+        )
+
+
+def read_yaml(yaml_file):
+    if not os.path.isfile(yaml_file):
+        return {}
+    with open(yaml_file, "r") as file:
+        return yaml.load(file)

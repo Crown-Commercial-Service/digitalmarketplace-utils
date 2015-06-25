@@ -8,7 +8,7 @@ import tempfile
 import yaml
 import io
 
-from dmutils.content_loader import YAMLLoader, ContentBuilder
+from dmutils.content_loader import ContentLoader, ContentBuilder, read_yaml
 
 from sys import version_info
 if version_info.major == 2:
@@ -17,354 +17,250 @@ else:
     import builtins
 
 
-def get_mocked_yaml_reader(mocked_content={}):
-    def read(yaml_file):
-        return yaml.load(mocked_content[yaml_file])
-    return read
-
-
-@mock.patch("dmutils.content_loader.YAMLLoader.read")
 class TestContentBuilder(unittest.TestCase):
+    def test_content_builder_init(self):
+        content = ContentBuilder([])
 
-    def test_a_simple_question(self, mocked_read_yaml_file):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-            "manifest.yml": """
-                -
-                  name: First section
-                  questions:
-                    - firstQuestion
-            """,
-            "folder/firstQuestion.yml": """
-                question: 'First question'
-            """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-        self.assertEqual(
-            content.get_question("firstQuestion").get("question"),
-            "First question"
-        )
-        self.assertEqual(
-            content.get_question("firstQuestion").get("id"),
-            "firstQuestion"
-        )
+        self.assertEqual(content.sections, [])
 
-    def test_a_question_with_a_dependency(self, mocked_read_yaml_file):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-          "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-          """,
-          "folder/firstQuestion.yml": """
-                question: 'First question'
-                depends:
-                    -
-                      "on": lot
-                      being: SCS
+    def test_content_builder_init_copies_section_list(self):
+        sections = []
+        content = ContentBuilder(sections)
 
-          """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-        content.filter({
-            "lot": "SCS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            1
-        )
+        sections.append('new')
+        self.assertEqual(content.sections, [])
 
-    def test_a_question_with_a_dependency_that_doesnt_match(
-        self, mocked_read_yaml_file
-    ):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-          "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-          """,
-          "folder/firstQuestion.yml": """
-            question: 'First question'
-            depends:
-                -
-                  "on": lot
-                  being: SCS
-          """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-        content.filter({
-            "lot": "SaaS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            0
-        )
+    def test_a_question_with_a_dependency(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [{
+                "question": 'First question',
+                "depends": [{
+                    "on": "lot",
+                    "being": ["SCS"]
+                }]
+            }]
+        }]).filter({"lot": "SCS"})
 
-    def test_a_question_which_depends_on_one_of_several_answers(
-        self, mocked_read_yaml_file
-    ):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-          "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-          """,
-          "folder/firstQuestion.yml": """
-                question: 'First question'
-                depends:
-                    -
-                      "on": lot
-                      being:
-                       - SCS
-                       - SaaS
-                       - PaaS
+        self.assertEqual(len(content.sections), 1)
 
-          """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-        content.filter({
-            "lot": "SaaS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            1
-        )
+    def test_missing_depends_key_filter(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [{
+                "question": 'First question',
+                "depends": [{
+                    "on": "lot",
+                    "being": ["SCS"]
+                }]
+            }]
+        }]).filter({})
 
-    def test_a_question_which_shouldnt_be_shown(
-        self, mocked_read_yaml_file
-    ):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-          "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-          """,
-          "folder/firstQuestion.yml": """
-                question: 'First question'
-                depends:
-                    -
-                      "on": lot
-                      being:
-                       - SCS
-                       - SaaS
-                       - PaaS
+        self.assertEqual(len(content.sections), 0)
 
-          """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-        content.filter({
-            "lot": "IaaS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            0
-        )
+    def test_question_without_dependencies(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [{
+                "question": 'First question',
+            }]
+        }]).filter({'lot': 'SaaS'})
 
-    def test_a_section_which_has_a_mixture_of_dependencies(
-        self, mocked_read_yaml_file
-    ):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-          "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-                  - secondQuestion
-              -
-                name: Second section
-                questions:
-                  - firstQuestion
-          """,
-          "folder/firstQuestion.yml": """
-                question: 'First question'
-                depends:
-                    -
-                      "on": lot
-                      being:
-                       - SCS
-                       - SaaS
-                       - PaaS
-          """,
-          "folder/secondQuestion.yml": """
-                question: 'Second question'
-                depends:
-                    -
-                      "on": lot
-                      being: IaaS
+        self.assertEqual(len(content.sections), 1)
 
-          """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-        content.filter({
-            "lot": "IaaS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            1
-        )
+    def test_a_question_with_a_dependency_that_doesnt_match(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [{
+                "question": 'First question',
+                "depends": [{
+                    "on": "lot",
+                    "being": ["SCS"]
+                }]
+            }]
+        }]).filter({"lot": "SaaS"})
 
-    def test_that_filtering_isnt_cumulative(self, mocked_read_yaml_file):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-          "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-              -
-                name: Second section
-                questions:
-                  - secondQuestion
-          """,
-          "folder/firstQuestion.yml": """
-                question: 'First question'
-                depends:
-                    -
-                      "on": lot
-                      being: IaaS
-          """,
-          "folder/secondQuestion.yml": """
-                question: 'Second question'
-                depends:
-                    -
-                      "on": lot
-                      being: PaaS
+        self.assertEqual(len(content.sections), 0)
 
-          """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
+    def test_a_question_which_depends_on_one_of_several_answers(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [{
+                "question": 'First question',
+                "depends": [{
+                    "on": "lot",
+                    "being": ["SCS", "SaaS", "PaaS"]
+                }]
+            }]
+        }])
 
-        content.filter({
-            "lot": "IaaS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            1
-        )
+        self.assertEqual(len(content.filter({"lot": "SaaS"}).sections), 1)
+        self.assertEqual(len(content.filter({"lot": "PaaS"}).sections), 1)
+        self.assertEqual(len(content.filter({"lot": "SCS"}).sections), 1)
 
-        content.filter({
-            "lot": "PaaS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            1
-        )
+    def test_a_question_which_shouldnt_be_shown(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [{
+                "question": 'First question',
+                "depends": [{
+                    "on": "lot",
+                    "being": ["SCS", "SaaS", "PaaS"]
+                }]
+            }]
+        }])
 
-        content.filter({
-            "lot": "SCS"
-        })
-        self.assertEqual(
-            len(content.sections),
-            0
-        )
+        self.assertEqual(len(content.filter({"lot": "IaaS"}).sections), 0)
 
-    def test_get_section(self, mocked_read_yaml_file):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-          "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-              -
-                name: Second section
-                questions:
-                  - secondQuestion
-          """,
-          "folder/firstQuestion.yml": """
-                question: 'First question'
-                depends:
-                    -
-                      "on": lot
-                      being: IaaS
-          """,
-          "folder/secondQuestion.yml": """
-                question: 'Second question'
-                depends:
-                    -
-                      "on": lot
-                      being: PaaS
+    def test_a_section_which_has_a_mixture_of_dependencies(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [
+                {
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                },
+                {
+                    "question": 'Second question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["IaaS"]
+                    }]
+                },
+            ]
+        }]).filter({"lot": "IaaS"})
 
-          """
-        })
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
+        self.assertEqual(len(content.sections), 1)
 
-        content.filter({
-            "lot": "IaaS"
-        })
+    def test_section_modification(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [
+                {
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                },
+                {
+                    "question": 'Second question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["IaaS"]
+                    }]
+                },
+            ]
+        }])
+
+        content2 = content.filter({"lot": "IaaS"})
+
+        self.assertEqual(len(content.sections[0]["questions"]), 2)
+        self.assertEqual(len(content2.sections[0]["questions"]), 1)
+
+    def test_that_filtering_is_cumulative(self):
+        content = ContentBuilder([{
+            "name": "First section",
+            "questions": [
+                {
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                },
+                {
+                    "question": 'Second question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "IaaS"]
+                    }]
+                },
+                {
+                    "question": 'Third question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SaaS", "IaaS"]
+                    }]
+                },
+            ]
+        }])
+
+        content = content.filter({"lot": "SCS"})
+        self.assertEqual(len(content.sections[0]["questions"]), 2)
+
+        content = content.filter({"lot": "IaaS"})
+        self.assertEqual(len(content.sections[0]["questions"]), 1)
+
+        content = content.filter({"lot": "PaaS"})
+        self.assertEqual(len(content.sections), 0)
+
+    def test_get_section(self):
+        content = ContentBuilder([{
+            "id": "first_section",
+            "name": "First section",
+            "questions": [
+                {
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                }
+            ]
+        }])
+
         self.assertEqual(
             content.get_section("first_section").get("id"),
             "first_section"
         )
 
-        content.filter({
-            "lot": "SCS"
-        })
+        content = content.filter({"lot": "IaaS"})
         self.assertEqual(
             content.get_section("first_section"),
             None
         )
 
-    def test_get_next_section(self, mocked_read_yaml_file):
-        mocked_read_yaml_file.side_effect = get_mocked_yaml_reader({
-            "manifest.yml": """
-              -
-                name: First section
-                questions:
-                  - firstQuestion
-              -
-                name: Second section
-                questions:
-                  - firstQuestion
-              -
-                name: Third section
-                editable: True
-                questions:
-                  - firstQuestion
-            """,
-            "folder/firstQuestion.yml": "question: 'First question'"
-        })
-
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-
-        sections = content.sections
+    def test_get_next_section(self):
+        content = ContentBuilder([
+            {
+                "id": "first_section",
+                "name": "First section",
+                "questions": [{
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                }]
+            },
+            {
+                "id": "second_section",
+                "name": "Second section",
+                "questions": [{
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                }]
+            },
+            {
+                "id": "third_section",
+                "name": "Third section",
+                "editable": True,
+                "questions": [{
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                }]
+            },
+        ])
 
         self.assertEqual(
             content.get_next_section_id(),
@@ -393,142 +289,120 @@ class TestContentBuilder(unittest.TestCase):
         )
 
 
-class TestYAMLLoader(unittest.TestCase):
+class TestReadYaml(unittest.TestCase):
 
     @mock.patch('os.path.isfile', return_value=True)
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
     def test_loading_existant_file(self, mocked_is_file, mocked_open):
-        yaml_loader = YAMLLoader()
         self.assertEqual(
-            yaml_loader.read('anything.yml'),
+            read_yaml('anything.yml'),
             {'foo': 'bar'}
         )
-
-    @mock.patch('os.path.isfile', return_value=True)
-    @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
-    def test_caching(self, mocked_open, mocked_is_file):
-        yaml_loader = YAMLLoader()
-        self.assertEqual(
-            yaml_loader.read('something.yml'),
-            {'foo': 'bar'}
-        )
-        self.assertEqual(
-            yaml_loader.read('something.yml'),
-            {'foo': 'bar'}
-        )
-        mocked_open.assert_called_once_with('something.yml', 'r')
-        self.assertEqual(len(yaml_loader._cache), 1)
 
     @mock.patch('os.path.isfile', return_value=False)
     def test_file_not_found(self, mocked_is_file):
-        yaml_loader = YAMLLoader()
         self.assertEqual(
-            yaml_loader.read('something.yml'),
+            read_yaml('something.yml'),
             {}
         )
 
 
-@mock.patch('os.path.isfile', return_value=True)
-class TestInCombination(unittest.TestCase):
+@mock.patch('dmutils.content_loader.read_yaml')
+class TestContentLoader(unittest.TestCase):
 
-    @mock.patch.object(builtins, 'open', side_effect=[
-        io.StringIO(u"""
-          -
-            name: First section
-            questions:
-              - firstQuestion
-              - secondQuestion
-        """),
-        io.StringIO(u"""
-          question: 'First question'
-          depends:
-              -
-                "on": lot
-                being: IaaS
-        """),
-        io.StringIO(u"""
-          question: 'Second question'
-          depends:
-              -
-                "on": lot
-                being: SaaS
-        """)
-    ])
-    def test_that_filtering_doesnt_remove_original_objects(
-        self, mocked_open, mocked_is_file
-    ):
-        content = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            YAMLLoader()
-        )
-        self.assertEqual(
-            len(content.sections[0]['questions']),
-            2
-        )
-        content.filter({"lot": "SaaS"})
-        self.assertEqual(
-            len(content.sections[0]['questions']),
-            1
-        )
-        content.filter({"lot": "IaaS"})
-        self.assertEqual(
-            len(content.sections[0]['questions']),
-            1
-        )
+    def set_read_yaml_mock_response(self, read_yaml_mock):
+        read_yaml_mock.side_effect = [
+            [
+                {"name": "section1", "questions": ["question1", "question2"]},
+            ],
+            {"name": "question1", "depends": [{"on": "lot", "being": "SaaS"}]},
+            {"name": "question2", "depends": [{"on": "lot", "being": "SaaS"}]}
+        ]
 
-    @mock.patch.object(builtins, 'open', side_effect=[
-        io.StringIO(u"""
-          -
-            name: First section
-            questions:
-              - firstQuestion
-          -
-            name: Second section
-            questions:
-              - secondQuestion
-        """),
-        io.StringIO(u"""
-          question: 'First question'
-          depends:
-              -
-                "on": lot
-                being: IaaS
-        """),
-        io.StringIO(u"""
-          question: 'Second question'
-          depends:
-              -
-                "on": lot
-                being: PaaS
-        """)
-    ])
-    def test_sharing_of_yaml_loader(self, mocked_open, mocked_is_file):
+    def test_question_loading(self, read_yaml_mock):
+        self.set_read_yaml_mock_response(read_yaml_mock)
 
-        yaml_loader = YAMLLoader()
-
-        will_only_have_iaas_questions = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            yaml_loader
-        )
-        will_only_have_paas_questions = ContentBuilder(
-            "manifest.yml",
-            "folder/",
-            yaml_loader
-        )
-        will_only_have_iaas_questions.filter({
-            "lot": "IaaS"
-        })
-        will_only_have_paas_questions.filter({
-            "lot": "PaaS"
-        })
+        yaml_loader = ContentLoader('anything.yml', 'content/')
 
         self.assertEqual(
-            len(will_only_have_iaas_questions.sections),
-            1
+            yaml_loader._questions,
+            {
+                'question1': {'depends': [{'being': 'SaaS', 'on': 'lot'}],
+                              'name': 'question1', 'id': 'question1'},
+                'question2': {'depends': [{'being': 'SaaS', 'on': 'lot'}],
+                              'name': 'question2', 'id': 'question2'}
+            }
         )
+
         self.assertEqual(
-            len(will_only_have_paas_questions.sections),
-            1
+            yaml_loader._sections,
+            [
+                {'name': 'section1',
+                 'questions': [
+                     {'depends': [{'being': 'SaaS', 'on': 'lot'}],
+                      'name': 'question1', 'id': 'question1'},
+                     {'depends': [{'being': 'SaaS', 'on': 'lot'}],
+                      'name': 'question2', 'id': 'question2'}],
+                 'id': 'section1'}
+            ]
         )
+
+    def test_get_question(self, read_yaml_mock):
+        self.set_read_yaml_mock_response(read_yaml_mock)
+
+        yaml_loader = ContentLoader('anything.yml', 'content/')
+
+        self.assertEqual(
+            yaml_loader.get_question('question1'),
+            {'depends': [{'being': 'SaaS', 'on': 'lot'}],
+             'name': 'question1', 'id': 'question1'},
+        )
+
+    def test_get_missing_question(self, read_yaml_mock):
+        self.set_read_yaml_mock_response(read_yaml_mock)
+
+        yaml_loader = ContentLoader('anything.yml', 'content/')
+
+        self.assertEqual(
+            yaml_loader.get_question('question111'),
+            {}
+        )
+
+    def test_get_question_returns_a_copy(self, read_yaml_mock):
+        self.set_read_yaml_mock_response(read_yaml_mock)
+
+        yaml_loader = ContentLoader('anything.yml', 'content/')
+
+        q1 = yaml_loader.get_question('question1')
+        q1["id"] = "modified"
+        q1["depends"] = []
+
+        self.assertNotEqual(
+            yaml_loader.get_question('question1'),
+            q1
+        )
+
+    def test_get_builder(self, read_yaml_mock):
+        self.set_read_yaml_mock_response(read_yaml_mock)
+
+        yaml_loader = ContentLoader('anything.yml', 'content/')
+
+        self.assertIsInstance(
+            yaml_loader.get_builder(),
+            ContentBuilder
+        )
+
+        self.assertEqual(
+            yaml_loader.get_builder().sections,
+            yaml_loader._sections
+        )
+
+    def test_multple_builders(self, read_yaml_mock):
+        self.set_read_yaml_mock_response(read_yaml_mock)
+
+        yaml_loader = ContentLoader('anything.yml', 'content/')
+
+        builder1 = yaml_loader.get_builder()
+        builder2 = yaml_loader.get_builder()
+
+        self.assertNotEqual(builder1, builder2)
