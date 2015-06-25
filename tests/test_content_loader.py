@@ -30,6 +30,11 @@ class TestContentBuilder(unittest.TestCase):
         sections.append('new')
         self.assertEqual(content.sections, [])
 
+    def test_content_builder_iteration(self):
+        content = ContentBuilder([1, 2, 3])
+
+        self.assertEqual(list(content), [1, 2, 3])
+
     def test_a_question_with_a_dependency(self):
         content = ContentBuilder([{
             "name": "First section",

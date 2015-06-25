@@ -8,6 +8,9 @@ class ContentBuilder(object):
     def __init__(self, sections):
         self.sections = list(sections)
 
+    def __iter__(self):
+        return self.sections.__iter__()
+
     def get_section(self, requested_section):
         for section in self.sections:
             if section["id"] == requested_section:
