@@ -110,7 +110,7 @@ class ContentLoader(object):
         question_content = read_yaml(
             self._directory + question + ".yml"
         )
-        question_content["id"] = question
+        question_content["id"] = self._make_question_id(question)
 
         return question_content
 
@@ -118,6 +118,11 @@ class ContentLoader(object):
         return inflection.underscore(
             re.sub("\s", "_", name)
         )
+
+    def _make_question_id(self, question):
+        if re.match('^serviceTypes(SCS|SaaS|PaaS|IaaS)', question):
+            return 'serviceTypes'
+        return question
 
 
 def read_yaml(yaml_file):
