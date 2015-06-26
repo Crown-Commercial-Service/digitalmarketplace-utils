@@ -77,13 +77,10 @@ class ContentBuilder(object):
 
 class ContentLoader(object):
     def __init__(self, manifest, content_directory):
-        self._cache = {}
-        self._directory = content_directory
-
         manifest_sections = read_yaml(manifest)
 
         self._questions = {
-            q: self._load_question(q)
+            q: _load_question(q, content_directory)
             for section in manifest_sections
             for q in section["questions"]
         }
@@ -99,30 +96,33 @@ class ContentLoader(object):
         return ContentBuilder(self._sections)
 
     def _populate_section(self, section):
-        section["id"] = self._make_id(section["name"])
+        section["id"] = _make_section_id(section["name"])
         section["questions"] = [
             self.get_question(q) for q in section["questions"]
         ]
 
         return section
 
-    def _load_question(self, question):
-        question_content = read_yaml(
-            self._directory + question + ".yml"
-        )
-        question_content["id"] = self._make_question_id(question)
 
-        return question_content
+def _load_question(question, directory):
+    question_content = read_yaml(
+        directory + question + ".yml"
+    )
+    question_content["id"] = _make_question_id(question)
 
-    def _make_id(self, name):
-        return inflection.underscore(
-            re.sub("\s", "_", name)
-        )
+    return question_content
 
-    def _make_question_id(self, question):
-        if re.match('^serviceTypes(SCS|SaaS|PaaS|IaaS)', question):
-            return 'serviceTypes'
-        return question
+
+def _make_section_id(name):
+    return inflection.underscore(
+        re.sub("\s", "_", name)
+    )
+
+
+def _make_question_id(question):
+    if re.match('^serviceTypes(SCS|SaaS|PaaS|IaaS)', question):
+        return 'serviceTypes'
+    return question
 
 
 def read_yaml(yaml_file):
