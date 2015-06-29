@@ -898,8 +898,8 @@ class TestDataApiClient(object):
                 'updated_by': 'user'
             },
             'services': {
-                    'supplierId': 2,
-                    'lot': 'IaaS'
+                'supplierId': 2,
+                'lot': 'IaaS'
             }
         }
 
