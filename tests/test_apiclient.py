@@ -304,22 +304,22 @@ class TestSearchApiClient(object):
     def test_search_services(self, search_client, rmock):
         rmock.get(
             'http://baseurl/g-cloud/services/search?q=foo&'
-            'filter_minimumContractPeriod=a,b&'
+            'filter_minimumContractPeriod=a&'
             'filter_something=a&filter_something=b',
             json={'services': "myresponse"},
             status_code=200)
         result = search_client.search_services(
             q='foo',
-            minimumContractPeriod=['a', 'b'],
+            minimumContractPeriod=['a'],
             something=['a', 'b'])
         assert result == {'services': "myresponse"}
 
     def test_search_services_with_blank_query(self, search_client, rmock):
         rmock.get(
-            'http://baseurl/g-cloud/services/search?',
+            'http://baseurl/g-cloud/services/search',
             json={'services': "myresponse"},
             status_code=200)
-        result = search_client.search_services(q='')
+        result = search_client.search_services()
         assert result == {'services': "myresponse"}
         assert rmock.last_request.query == ''
 
@@ -328,7 +328,7 @@ class TestSearchApiClient(object):
             'http://baseurl/g-cloud/services/search?page=10',
             json={'services': "myresponse"},
             status_code=200)
-        result = search_client.search_services(q='', page=10)
+        result = search_client.search_services(page=10)
         assert result == {'services': "myresponse"}
         assert rmock.last_request.query == 'page=10'
 
