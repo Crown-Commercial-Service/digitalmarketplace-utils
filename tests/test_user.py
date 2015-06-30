@@ -1,4 +1,4 @@
-from dmutils.user import user_has_role
+from dmutils.user import user_has_role, User
 
 
 def test_user_has_role():
@@ -15,3 +15,28 @@ def test_user_has_role_returns_false_on_none():
 
 def test_user_has_role_returns_false_on_non_matching_role():
     assert not user_has_role({'users': {'role': 'admin'}}, 'supplier')
+
+
+def test_User_from_json():
+    user = User.from_json({'users': {
+        'id': 123,
+        'emailAddress': 'test@example.com',
+    }})
+
+    assert user.id == 123
+    assert user.email_address == 'test@example.com'
+
+
+def test_User_from_json_with_supplier():
+    user = User.from_json({'users': {
+        'id': 123,
+        'emailAddress': 'test@example.com',
+        'supplier': {
+            'supplierId': 321,
+            'name': 'test supplier',
+        }
+    }})
+    assert user.id == 123
+    assert user.email_address == 'test@example.com'
+    assert user.supplier_id == 321
+    assert user.supplier_name == 'test supplier'
