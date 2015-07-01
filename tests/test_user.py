@@ -21,6 +21,7 @@ def test_User_from_json():
     user = User.from_json({'users': {
         'id': 123,
         'emailAddress': 'test@example.com',
+        'locked': False,
     }})
 
     assert user.id == 123
@@ -31,6 +32,7 @@ def test_User_from_json_with_supplier():
     user = User.from_json({'users': {
         'id': 123,
         'emailAddress': 'test@example.com',
+        'locked': False,
         'supplier': {
             'supplierId': 321,
             'name': 'test supplier',
