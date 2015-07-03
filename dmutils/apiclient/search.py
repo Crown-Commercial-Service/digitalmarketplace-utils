@@ -5,31 +5,6 @@ from .errors import HTTPError
 
 
 class SearchAPIClient(BaseAPIClient):
-    FIELDS = [
-        "lot",
-        "serviceName",
-        "serviceSummary",
-        "serviceBenefits",
-        "serviceFeatures",
-        "serviceTypes",
-        "supplierName",
-        "freeOption",
-        "trialOption",
-        "minimumContractPeriod",
-        "supportForThirdParties",
-        "selfServiceProvisioning",
-        "datacentresEUCode",
-        "dataBackupRecovery",
-        "dataExtractionRemoval",
-        "networksConnected",
-        "apiAccess",
-        "openStandardsSupported",
-        "openSource",
-        "persistentStorage",
-        "guaranteedResources",
-        "elasticCloud",
-    ]
-
     def init_app(self, app):
         self.base_url = app.config['DM_SEARCH_API_URL']
         self.auth_token = app.config['DM_SEARCH_API_AUTH_TOKEN']
@@ -38,15 +13,9 @@ class SearchAPIClient(BaseAPIClient):
     def _url(self, path):
         return "/g-cloud/services{}".format(path)
 
-    def index(self, service_id, service, supplier_name, framework_name):
+    def index(self, service_id, service):
         url = self._url("/{}".format(service_id))
-        data = self._convert_service(
-            service_id,
-            service,
-            supplier_name,
-            framework_name)
-
-        return self._put(url, data=data)
+        return self._put(url, data={'service': service})
 
     def delete(self, service_id):
         url = self._url("/{}".format(service_id))
@@ -71,18 +40,3 @@ class SearchAPIClient(BaseAPIClient):
 
         response = self._get(self._url("/search"), params=params)
         return response
-
-    def _convert_service(
-            self,
-            service_id,
-            service,
-            supplier_name,
-            framework_name):
-        data = {k: service[k] for k in self.FIELDS if k in service}
-        data['frameworkName'] = framework_name
-        data['supplierName'] = supplier_name
-        data['id'] = service_id
-
-        return {
-            "service": data
-        }
