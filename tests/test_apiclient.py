@@ -180,82 +180,13 @@ class TestSearchApiClient(object):
         assert result['status'] == "ok"
         assert rmock.called
 
-    def test_convert_service(self, search_client, service):
-        converted = search_client._convert_service(
-            service['id'], service, "Supplier Name", "Framework Name")
-
-        assert "service" in converted
-        assert "service" in converted
-        assert converted["service"]["id"] == "1234567890123456"
-        assert converted["service"]["lot"] == "IaaS"
-        assert converted["service"]["frameworkName"] == "Framework Name"
-        assert converted["service"]["serviceName"] == "My Iaas Service"
-        assert \
-            converted["service"]["serviceSummary"] == "IaaS Service Summary"
-        assert converted["service"]["serviceBenefits"] == [
-            "Free lollipop to every 10th customer",
-            "It's just lovely"
-        ]
-        assert converted["service"]["serviceFeatures"] == [
-            "[To be completed]",
-            "This is my second \"feture\""
-        ]
-        assert converted["service"]["serviceTypes"] == [
-            "Compute",
-            "Storage"
-        ]
-        assert converted["service"]["supplierName"] == "Supplier Name"
-        assert not converted["service"]["freeOption"]
-        assert converted["service"]["trialOption"]
-        assert converted["service"]["minimumContractPeriod"] == "Month"
-        assert not converted["service"]["supportForThirdParties"]
-        assert not converted["service"]["selfServiceProvisioning"]
-        assert not converted["service"]["datacentresEUCode"]
-        assert converted["service"]["dataBackupRecovery"]
-        assert not converted["service"]["dataExtractionRemoval"]
-        assert converted["service"]["networksConnected"] == [
-            "Public Services Network (PSN)",
-            "Government Secure intranet (GSi)"
-        ]
-        assert converted["service"]["apiAccess"]
-        assert converted["service"]["openStandardsSupported"]
-        assert not converted["service"]["openSource"]
-        assert converted["service"]["persistentStorage"]
-        assert not converted["service"]["guaranteedResources"]
-        assert converted["service"]["elasticCloud"]
-
-    def test_convert_service_with_minimum_fields_for_indexing(
-            self, search_client, service):
-        del service["serviceTypes"]
-        del service["serviceBenefits"]
-        del service["serviceFeatures"]
-
-        converted = search_client._convert_service(
-            service['id'], service, "Supplier Name", "Framework Name")
-
-        assert "service" in converted
-        assert converted["service"]["id"] == "1234567890123456"
-        assert converted["service"]["lot"] == "IaaS"
-        assert converted["service"]["frameworkName"] == "Framework Name"
-        assert converted["service"]["serviceName"] == "My Iaas Service"
-        assert \
-            converted["service"]["serviceSummary"] == "IaaS Service Summary"
-        assert "serviceBenefits" not in converted
-        assert "serviceFeatures" not in converted
-        assert "serviceTypes" not in converted
-        assert converted["service"]["supplierName"] == "Supplier Name"
-
     def test_post_to_index_with_type_and_service_id(
             self, search_client, rmock, service):
         rmock.put(
             'http://baseurl/g-cloud/services/12345',
             json={'message': 'acknowledged'},
             status_code=200)
-        result = search_client.index(
-            "12345",
-            service,
-            "Supplier name",
-            "Framework Name")
+        result = search_client.index("12345", service)
         assert result == {'message': 'acknowledged'}
 
     def test_delete_to_delete_method_service_id(
@@ -280,11 +211,7 @@ class TestSearchApiClient(object):
             'http://baseurl/g-cloud/services/12345',
             json={'message': 'acknowledged'},
             status_code=200)
-        result = search_client.index(
-            "12345",
-            service,
-            "Supplier name",
-            "Framework Name")
+        result = search_client.index("12345", service)
         assert result is None
         assert not rmock.called
 
@@ -295,11 +222,7 @@ class TestSearchApiClient(object):
                 'http://baseurl/g-cloud/services/12345',
                 json={'error': 'some error'},
                 status_code=400)
-            search_client.index(
-                "12345",
-                service,
-                "Supplier name",
-                "Framework Name")
+            search_client.index("12345", service)
 
     def test_search_services(self, search_client, rmock):
         rmock.get(
