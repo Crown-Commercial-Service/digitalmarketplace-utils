@@ -425,6 +425,15 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
+    def test_find_users_by_supplier_id(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/users?supplier_id=1234",
+            json=self.user(),
+            status_code=200)
+        user = data_client.find_users(1234)
+
+        assert user == self.user()
+
     def test_get_user_by_id(self, data_client, rmock):
         rmock.get(
             "http://baseurl/users/1234",
@@ -436,7 +445,7 @@ class TestDataApiClient(object):
 
     def test_get_user_by_email_address(self, data_client, rmock):
         rmock.get(
-            "http://baseurl/users?email=myemail",
+            "http://baseurl/users?email_address=myemail",
             json=self.user(),
             status_code=200)
         user = data_client.get_user(email_address="myemail")
