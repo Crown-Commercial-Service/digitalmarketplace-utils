@@ -130,7 +130,13 @@ class DataAPIClient(BaseAPIClient):
             raise ValueError("Either user_id or email_address must be set")
 
         try:
-            return self._get(url, params=params)
+            user = self._get(url, params=params)
+
+            if isinstance(user['users'], list):
+                user['users'] = user['users'][0]
+
+            return user
+
         except HTTPError as e:
             if e.status_code != 404:
                 raise
