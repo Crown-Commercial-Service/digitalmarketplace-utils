@@ -113,6 +113,9 @@ class DataAPIClient(BaseAPIClient):
                 "users": user,
             })
 
+    def find_users(self, supplier_id):
+        return self._get("/users?supplier_id={}".format(supplier_id))
+
     def get_user(self, user_id=None, email_address=None):
         if user_id is not None and email_address is not None:
             raise ValueError(
@@ -122,12 +125,18 @@ class DataAPIClient(BaseAPIClient):
             params = {}
         elif email_address is not None:
             url = "{}/users".format(self.base_url)
-            params = {"email": email_address}
+            params = {"email_address": email_address}
         else:
             raise ValueError("Either user_id or email_address must be set")
 
         try:
-            return self._get(url, params=params)
+            user = self._get(url, params=params)
+
+            if isinstance(user['users'], list):
+                user['users'] = user['users'][0]
+
+            return user
+
         except HTTPError as e:
             if e.status_code != 404:
                 raise
