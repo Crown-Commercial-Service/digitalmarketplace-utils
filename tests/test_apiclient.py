@@ -579,6 +579,48 @@ class TestDataApiClient(object):
                 status_code=status_code)
             assert not data_client.update_user_password(123, "newpassword")
 
+    def test_update_user_returns_false_on_non_200(
+            self, data_client, rmock):
+        for status_code in [400, 403, 404, 500]:
+            rmock.post(
+                "http://baseurl/users/123",
+                json={},
+                status_code=status_code)
+            assert not data_client.update_user(123, active=True)
+
+    def test_can_unlock_user(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        data_client.update_user(123, locked=False)
+        assert rmock.called
+        assert rmock.last_request.json() == {
+            "users": {"locked": False}
+        }
+
+    def test_can_activate_user(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        data_client.update_user(123, active=True)
+        assert rmock.called
+        assert rmock.last_request.json() == {
+            "users": {"active": True}
+        }
+
+    def test_can_deactivate_user(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        data_client.update_user(123, active=False)
+        assert rmock.called
+        assert rmock.last_request.json() == {
+            "users": {"active": False}
+        }
+
     @staticmethod
     def user():
         return {'users': {
