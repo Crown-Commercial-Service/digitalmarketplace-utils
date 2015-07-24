@@ -57,14 +57,9 @@ class DataAPIClient(BaseAPIClient):
         )
 
     def get_supplier(self, supplier_id):
-        try:
-            return self._get(
-                "/suppliers/{}".format(supplier_id)
-            )
-        except HTTPError as e:
-            if e.status_code != 404:
-                raise
-        return None
+        return self._get(
+            "/suppliers/{}".format(supplier_id)
+        )
 
     def create_supplier(self, supplier_id, supplier):
         return self._put(
@@ -179,33 +174,28 @@ class DataAPIClient(BaseAPIClient):
             return False
 
     def update_user(self, user_id, locked=None, active=None):
-        try:
-            fields = {}
-            if locked is not None:
-                fields.update({
-                    'locked': locked
-                })
+        fields = {}
+        if locked is not None:
+            fields.update({
+                'locked': locked
+            })
 
-            if active is not None:
-                fields.update({
-                    'active': active
-                })
+        if active is not None:
+            fields.update({
+                'active': active
+            })
 
-            params = {
-                "users": fields
-            }
+        params = {
+            "users": fields
+        }
 
-            user = self._post(
-                '/users/{}'.format(user_id),
-                data=params
-            )
+        user = self._post(
+            '/users/{}'.format(user_id),
+            data=params
+        )
 
-            logger.info("Updated user %s fields %s", user_id, params)
-            return user
-        except HTTPError as e:
-            logger.info("User update failed for user %s : %s",
-                        user_id, e.status_code)
-            return None
+        logger.info("Updated user %s fields %s", user_id, params)
+        return user
 
     # Services
 

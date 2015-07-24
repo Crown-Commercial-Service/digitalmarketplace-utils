@@ -579,14 +579,16 @@ class TestDataApiClient(object):
                 status_code=status_code)
             assert not data_client.update_user_password(123, "newpassword")
 
-    def test_update_user_returns_false_on_non_200(
-            self, data_client, rmock):
+    def test_update_user_returns_false_on_non_200(self, data_client, rmock):
         for status_code in [400, 403, 404, 500]:
             rmock.post(
-                "http://baseurl/users/123",
-                json={},
-                status_code=status_code)
-            assert not data_client.update_user(123, active=True)
+                    "http://baseurl/users/123",
+                    json={},
+                    status_code=status_code)
+            with pytest.raises(HTTPError) as e:
+                data_client.update_user(123)
+
+            assert e.value.status_code == status_code
 
     def test_can_unlock_user(self, data_client, rmock):
         rmock.post(
@@ -710,10 +712,10 @@ class TestDataApiClient(object):
             "http://baseurl/suppliers/123",
             status_code=404)
 
-        result = data_client.get_supplier(123)
-
-        assert not result
-        assert rmock.called
+        try:
+            data_client.get_supplier(123)
+        except HTTPError:
+            assert rmock.called
 
     def test_create_supplier(self, data_client, rmock):
         rmock.put(
