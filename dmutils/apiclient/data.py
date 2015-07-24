@@ -57,9 +57,14 @@ class DataAPIClient(BaseAPIClient):
         )
 
     def get_supplier(self, supplier_id):
-        return self._get(
-            "/suppliers/{}".format(supplier_id)
-        )
+        try:
+            return self._get(
+                "/suppliers/{}".format(supplier_id)
+            )
+        except HTTPError as e:
+            if e.status_code != 404:
+                raise
+        return None
 
     def create_supplier(self, supplier_id, supplier):
         return self._put(

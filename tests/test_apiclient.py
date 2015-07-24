@@ -705,6 +705,16 @@ class TestDataApiClient(object):
         assert result == {"services": "result"}
         assert rmock.called
 
+    def test_get_supplier_by_id_should_return_404(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123",
+            status_code=404)
+
+        result = data_client.get_supplier(123)
+
+        assert not result
+        assert rmock.called
+
     def test_create_supplier(self, data_client, rmock):
         rmock.put(
             "http://baseurl/suppliers/123",
