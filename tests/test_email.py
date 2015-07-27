@@ -1,11 +1,6 @@
-from datetime import datetime, timedelta
-
-from dmutils.email import token_created_before_password_last_changed, \
-    generate_token, decode_token
-from dmutils.formats import DATETIME_FORMAT
+from dmutils.email import generate_token, decode_token
 from itsdangerous import BadTimeSignature
 import pytest
-
 
 
 def test_can_generate_token():
