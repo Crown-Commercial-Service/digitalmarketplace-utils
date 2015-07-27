@@ -434,6 +434,23 @@ class TestDataApiClient(object):
 
         assert user == self.user()
 
+    def test_find_active_or_inactive_users_by_supplier_id(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/users?supplier_id=1234&active=true",
+            json=self.user(),
+            status_code=200)
+        user = data_client.find_users(1234, active=True)
+
+        assert user == self.user()
+
+        rmock.get(
+            "http://baseurl/users?supplier_id=1234&active=false",
+            json={},
+            status_code=200)
+        user = data_client.find_users(1234, active=False)
+
+        assert user == {}
+
     def test_get_user_by_id(self, data_client, rmock):
         rmock.get(
             "http://baseurl/users/1234",
