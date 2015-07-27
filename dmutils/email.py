@@ -5,22 +5,18 @@ from datetime import datetime
 from dmutils.formats import DATETIME_FORMAT
 
 
-def send_password_email(
+def send_email(
         user_id,
         email_address,
-        locked,
+        email_body,
         api_key,
         subject,
         from_email,
-        from_name,
-        secret_key,
-        salt):
+        from_name):
     try:
         mandrill_client = mandrill.Mandrill(api_key)
-        url = generate_reset_url(user_id, email_address, secret_key, salt)
-        body = render_template("emails/reset_password_email.html",
-                               url=url, locked=locked)
-        message = {'html': body,
+
+        message = {'html': email_body,
                    'subject': subject,
                    'from_email': from_email,
                    'from_name': from_name,
@@ -46,25 +42,20 @@ def send_password_email(
     current_app.logger.info("Sent password email: %s", result)
 
 
-def generate_reset_url(user_id, email_address, secret_key, salt):
+def generate_token(data, secret_key, salt):
     ts = URLSafeTimedSerializer(secret_key)
-    token = ts.dumps(
-        {
-            "user": user_id,
-            "email": email_address
-        },
-        salt=salt)
-    url = url_for('main.reset_password', token=token, _external=True)
-    current_app.logger.debug("Generated reset URL: %s", url)
-    return url
+    return ts.dumps(data, salt=salt)
 
 
-def decode_email(token, key, salt):
-    ts = URLSafeTimedSerializer(key)
-    decoded = ts.loads(token,
-                       salt=salt,
-                       max_age=86400, return_timestamp=True)
-    return decoded
+def decode_token(token, secret_key, salt):
+    ts = URLSafeTimedSerializer(secret_key)
+    decoded, timestamp = ts.loads(
+        token,
+        salt=salt,
+        max_age=86400,
+        return_timestamp=True
+    )
+    return decoded, timestamp
 
 
 def token_created_before_password_last_changed(token_timestamp, user):
