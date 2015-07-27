@@ -1,4 +1,4 @@
-from flask import url_for, current_app, render_template
+from flask import current_app
 import mandrill
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
@@ -56,10 +56,3 @@ def decode_token(token, secret_key, salt):
         return_timestamp=True
     )
     return decoded, timestamp
-
-
-def token_created_before_password_last_changed(token_timestamp, user):
-
-        password_last_changed = datetime.strptime(
-            user['users']['passwordChangedAt'], DATETIME_FORMAT)
-        return token_timestamp < password_last_changed
