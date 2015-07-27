@@ -57,6 +57,6 @@ class User():
             email_address=user['emailAddress'],
             supplier_id=supplier_id,
             supplier_name=supplier_name,
-            locked=user['locked'],
-            active=user['active']
+            locked=user.get('locked', False),
+            active=user.get('active', True),
         )
