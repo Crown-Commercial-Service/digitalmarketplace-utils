@@ -3,7 +3,7 @@ from datetime import datetime
 import flask_featureflags
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 
-__version__ = '3.5.0'
+__version__ = '3.5.1'
 
 
 def init_app(
@@ -48,19 +48,20 @@ def init_app(
         return response
 
     @application.template_filter('timeformat')
-    def timeformat(value):
-        if not isinstance(value, datetime):
-            value = datetime.strptime(value, formats.DATETIME_FORMAT)
-        return value.strftime(formats.DISPLAY_TIME_FORMAT)
+    def timeformat(value, default_value=None):
+        return format_helper(value, default_value, formats.DISPLAY_TIME_FORMAT)
 
     @application.template_filter('dateformat')
-    def dateformat(value):
-        if not isinstance(value, datetime):
-            value = datetime.strptime(value, formats.DATETIME_FORMAT)
-        return value.strftime(formats.DISPLAY_DATE_FORMAT)
+    def dateformat(value, default_value=None):
+        return format_helper(value, default_value, formats.DISPLAY_DATE_FORMAT)
 
     @application.template_filter('datetimeformat')
-    def datetimeformat(value):
+    def datetimeformat(value, default_value=None):
+        return format_helper(value, default_value, formats.DISPLAY_DATETIME_FORMAT)
+
+    def format_helper(value, default_value, format):
+        if not value:
+            return default_value
         if not isinstance(value, datetime):
             value = datetime.strptime(value, formats.DATETIME_FORMAT)
-        return value.strftime(formats.DISPLAY_DATETIME_FORMAT)
+        return value.strftime(format)
