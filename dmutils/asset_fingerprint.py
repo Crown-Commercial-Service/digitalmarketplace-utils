@@ -40,6 +40,6 @@ class AssetFingerprinter():
         ).hexdigest()
 
     def get_asset_file_contents(self, asset_file_path):
-        with open(asset_file_path, 'rb') as asset_file:
+        with open(asset_file_path, 'r') as asset_file:
             contents = asset_file.read()
         return contents
