@@ -7,20 +7,23 @@ def user_has_role(user, role):
 
 class User():
     def __init__(self, user_id, email_address, supplier_id, supplier_name,
-                 locked):
+                 locked, active):
         self.id = user_id
         self.email_address = email_address
         self.supplier_id = supplier_id
         self.supplier_name = supplier_name
         self.locked = locked
+        self.active = active
 
     @staticmethod
     def is_authenticated():
         return True
 
-    @staticmethod
-    def is_active():
-        return True
+    def is_active(self):
+        return self.active
+
+    def is_locked(self):
+        return self.locked
 
     @staticmethod
     def is_anonymous():
@@ -54,5 +57,6 @@ class User():
             email_address=user['emailAddress'],
             supplier_id=supplier_id,
             supplier_name=supplier_name,
-            locked=user['locked']
+            locked=user['locked'],
+            active=user['active']
         )

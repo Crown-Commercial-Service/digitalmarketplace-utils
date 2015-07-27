@@ -173,6 +173,30 @@ class DataAPIClient(BaseAPIClient):
                         user_id, e.status_code)
             return False
 
+    def update_user(self, user_id, locked=None, active=None):
+        fields = {}
+        if locked is not None:
+            fields.update({
+                'locked': locked
+            })
+
+        if active is not None:
+            fields.update({
+                'active': active
+            })
+
+        params = {
+            "users": fields
+        }
+
+        user = self._post(
+            '/users/{}'.format(user_id),
+            data=params
+        )
+
+        logger.info("Updated user %s fields %s", user_id, params)
+        return user
+
     # Services
 
     def find_draft_services(

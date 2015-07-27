@@ -22,10 +22,13 @@ def test_User_from_json():
         'id': 123,
         'emailAddress': 'test@example.com',
         'locked': False,
+        'active': True
     }})
 
     assert user.id == 123
     assert user.email_address == 'test@example.com'
+    assert not user.is_locked()
+    assert user.is_active()
 
 
 def test_User_from_json_with_supplier():
@@ -33,6 +36,7 @@ def test_User_from_json_with_supplier():
         'id': 123,
         'emailAddress': 'test@example.com',
         'locked': False,
+        'active': True,
         'supplier': {
             'supplierId': 321,
             'name': 'test supplier',
