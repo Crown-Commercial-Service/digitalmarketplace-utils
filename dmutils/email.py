@@ -1,8 +1,10 @@
 from flask import current_app
-import mandrill
+from mandrill import Mandrill, Error
 from itsdangerous import URLSafeTimedSerializer
-from datetime import datetime
-from dmutils.formats import DATETIME_FORMAT
+
+
+class MandrillException(Exception):
+    pass
 
 
 def send_email(
@@ -12,33 +14,45 @@ def send_email(
         api_key,
         subject,
         from_email,
-        from_name):
+        from_name,
+        tags):
     try:
-        mandrill_client = mandrill.Mandrill(api_key)
+        mandrill_client = Mandrill(api_key)
 
-        message = {'html': email_body,
-                   'subject': subject,
-                   'from_email': from_email,
-                   'from_name': from_name,
-                   'to': [{'email': email_address,
-                           'name': 'Recipient Name',
-                           'type': 'to'}],
-                   'important': False,
-                   'track_opens': None,
-                   'track_clicks': None,
-                   'auto_text': True,
-                   'tags': ['password-resets'],
-                   'headers': {'Reply-To': from_email},  # noqa
-                   'recipient_metadata': [
-                       {'rcpt': email_address,
-                        'values': {'user_id': user_id}}]
+        message = {
+            'html': email_body,
+            'subject': subject,
+            'from_email': from_email,
+            'from_name': from_name,
+            'to': [{
+                'email': email_address,
+                'name': 'Recipient Name',
+                'type': 'to'
+            }],
+            'important': False,
+            'track_opens': None,
+            'track_clicks': None,
+            'auto_text': True,
+            'tags': tags,
+            'headers': {'Reply-To': from_email},  # noqa
+            'recipient_metadata': [{
+                'rcpt': email_address,
+                'values': {
+                    'user_id': user_id
+                }
+            }]
         }
-        result = mandrill_client.messages.send(message=message, async=False,
-                                               ip_pool='Main Pool')
-    except mandrill.Error as e:
+
+        result = mandrill_client.messages.send(
+            message=message,
+            async=False,
+            ip_pool='Main Pool'
+        )
+    except Error as e:
         # Mandrill errors are thrown as exceptions
         current_app.logger.error("A mandrill error occurred: %s", e)
-        return
+        raise MandrillException(e.message)
+
     current_app.logger.info("Sent password email: %s", result)
 
 
