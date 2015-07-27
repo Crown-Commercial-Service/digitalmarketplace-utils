@@ -1,8 +1,9 @@
-from . import logging, config, proxy_fix
+from . import logging, config, proxy_fix, formats
+from datetime import datetime
 import flask_featureflags
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 
-__version__ = '3.4.0'
+__version__ = '3.5.0'
 
 
 def init_app(
@@ -45,3 +46,21 @@ def init_app(
     def add_header(response):
         response.headers['X-Frame-Options'] = 'DENY'
         return response
+
+    @application.template_filter('timeformat')
+    def timeformat(value):
+        if not isinstance(value, datetime):
+            value = datetime.strptime(value, formats.DATETIME_FORMAT)
+        return value.strftime(formats.DISPLAY_TIME_FORMAT)
+
+    @application.template_filter('dateformat')
+    def dateformat(value):
+        if not isinstance(value, datetime):
+            value = datetime.strptime(value, formats.DATETIME_FORMAT)
+        return value.strftime(formats.DISPLAY_DATE_FORMAT)
+
+    @application.template_filter('datetimeformat')
+    def datetimeformat(value):
+        if not isinstance(value, datetime):
+            value = datetime.strptime(value, formats.DATETIME_FORMAT)
+        return value.strftime(formats.DISPLAY_DATETIME_FORMAT)
