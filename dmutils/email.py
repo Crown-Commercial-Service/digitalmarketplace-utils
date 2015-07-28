@@ -8,7 +8,6 @@ class MandrillException(Exception):
 
 
 def send_email(
-        user_id,
         email_address,
         email_body,
         api_key,
@@ -36,10 +35,7 @@ def send_email(
             'tags': tags,
             'headers': {'Reply-To': from_email},  # noqa
             'recipient_metadata': [{
-                'rcpt': email_address,
-                'values': {
-                    'user_id': user_id
-                }
+                'rcpt': email_address
             }]
         }
 

@@ -42,15 +42,11 @@ def test_calls_send_email_with_correct_params(email_app, mandrill):
             'tags': ['password-resets'],
             'headers': {'Reply-To': "from_email"},  # noqa
             'recipient_metadata': [{
-                'rcpt': "email_address",
-                'values': {
-                    'user_id': 123
-                }
+                'rcpt': "email_address"
             }]
         }
 
         send_email(
-            123,
             "email_address",
             "body",
             "api_key",
@@ -75,7 +71,6 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
 
         try:
             send_email(
-                123,
                 "email_address",
                 "body",
                 "api_key",
