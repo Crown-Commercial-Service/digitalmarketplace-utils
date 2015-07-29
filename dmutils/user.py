@@ -7,9 +7,10 @@ def user_has_role(user, role):
 
 class User():
     def __init__(self, user_id, email_address, supplier_id, supplier_name,
-                 locked, active):
+                 locked, active, name):
         self.id = user_id
         self.email_address = email_address
+        self.name = name
         self.supplier_id = supplier_id
         self.supplier_name = supplier_name
         self.locked = locked
@@ -38,6 +39,7 @@ class User():
     def serialize(self):
         return {
             'id': self.id,
+            'name': self.name,
             'emailAddress': self.email_address,
             'supplierId': self.supplier_id,
             'supplierName': self.supplier_name,
@@ -59,4 +61,5 @@ class User():
             supplier_name=supplier_name,
             locked=user.get('locked', False),
             active=user.get('active', True),
+            name=user['name']
         )
