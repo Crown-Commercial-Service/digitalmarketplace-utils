@@ -15,18 +15,16 @@ class User():
         self.locked = locked
         self.active = active
 
-    @staticmethod
-    def is_authenticated():
-        return True
+    def is_authenticated(self):
+        return self.is_active()
 
     def is_active(self):
-        return self.active
+        return self.active and not self.locked
 
     def is_locked(self):
         return self.locked
 
-    @staticmethod
-    def is_anonymous():
+    def is_anonymous(self):
         return False
 
     def get_id(self):
