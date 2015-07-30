@@ -81,7 +81,7 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
 
             )
         except MandrillException as e:
-            assert e.message == "this is an error"
+            assert str(e) == "this is an error"
 
 
 def test_can_generate_token():

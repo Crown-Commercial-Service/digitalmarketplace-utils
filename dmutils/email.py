@@ -47,7 +47,7 @@ def send_email(
     except Error as e:
         # Mandrill errors are thrown as exceptions
         current_app.logger.error("A mandrill error occurred: %s", e)
-        raise MandrillException(e.message)
+        raise MandrillException(e)
 
     current_app.logger.info("Sent password email: %s", result)
 
