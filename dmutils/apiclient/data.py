@@ -252,6 +252,15 @@ class DataAPIClient(BaseAPIClient):
                 },
             })
 
+    def copy_draft_service(self, draft_id, user):
+        return self._post(
+            "/draft-services/{}/copy".format(draft_id),
+            data={
+                "update_details": {
+                    "updated_by": user
+                }
+            })
+
     def update_draft_service(self, draft_id, service, user):
         return self._post(
             "/draft-services/{}".format(draft_id),

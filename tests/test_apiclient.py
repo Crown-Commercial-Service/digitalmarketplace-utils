@@ -861,6 +861,23 @@ class TestDataApiClient(object):
             }
         }
 
+    def test_copy_draft_service(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/draft-services/2/copy",
+            json={"done": "copy"},
+            status_code=201,
+        )
+
+        result = data_client.copy_draft_service(2, 'user')
+
+        assert result == {"done": "copy"}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+            'update_details': {
+                'updated_by': 'user'
+            }
+        }
+
     def test_update_draft_service(self, data_client, rmock):
         rmock.post(
             "http://baseurl/draft-services/2",
