@@ -1,35 +1,10 @@
 # coding=utf-8
 
 import unittest
-import datetime
 
 import mock
 from dmutils.s3 import S3ResponseError
-from dmutils.validation import Validate, generate_file_name
-
-
-class TestGenerateFilename(unittest.TestCase):
-    def test_filename_format(self):
-        self.assertEquals(
-            'documents/2/1-pricing-document-123.pdf',
-            generate_file_name(
-                2, 1,
-                'pricingDocumentURL', 'test.pdf',
-                suffix='123'
-            ))
-
-    def test_default_suffix_is_datetime(self):
-        now = datetime.datetime(2015, 1, 2, 3, 4, 5, 6)
-
-        with mock.patch.object(datetime, 'datetime',
-                               mock.Mock(wraps=datetime.datetime)) as patched:
-            patched.utcnow.return_value = now
-            self.assertEquals(
-                'documents/2/1-pricing-document-2015-01-02-0304.pdf',
-                generate_file_name(
-                    2, 1,
-                    'pricingDocumentURL', 'test.pdf',
-                ))
+from dmutils.validation import Validate
 
 
 class TestValidate(unittest.TestCase):
@@ -43,7 +18,7 @@ class TestValidate(unittest.TestCase):
         self.uploader = mock.Mock()
 
         self.default_suffix_patch = mock.patch(
-            'dmutils.validation.default_file_suffix',
+            'dmutils.documents.default_file_suffix',
             return_value='2015-01-01-1200'
         ).start()
 
