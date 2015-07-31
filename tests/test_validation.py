@@ -12,6 +12,7 @@ class TestValidate(unittest.TestCase):
         self.service = {
             'id': 1,
             'supplierId': 2,
+            'frameworkSlug': 'g-cloud-6',
         }
         self.data = {}
         self.content = {}
@@ -264,12 +265,12 @@ class TestValidate(unittest.TestCase):
         self.assertEquals(self.validate.errors, {})
 
         self.uploader.save.assert_called_once_with(
-            'documents/2/1-pricing-document-2015-01-01-1200.pdf',
+            'g-cloud-6/2/1-pricing-document-2015-01-01-1200.pdf',
             self.data['pricingDocumentURL']
         )
 
         self.assertEquals(self.validate.clean_data, {
-            'pricingDocumentURL': 'https://assets.test.digitalmarketplace.service.gov.uk/documents/2/1-pricing-document-2015-01-01-1200.pdf',  # noqa
+            'pricingDocumentURL': 'https://assets.test.digitalmarketplace.service.gov.uk/g-cloud-6/2/1-pricing-document-2015-01-01-1200.pdf',  # noqa
         })
 
     def test_failed_file_upload(self):

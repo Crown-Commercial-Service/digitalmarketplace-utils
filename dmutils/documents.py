@@ -62,6 +62,7 @@ def upload_document(uploader, documents_url, service, field, file_contents):
 
     """
     file_path = generate_file_name(
+        service['frameworkSlug'],
         service['supplierId'],
         service['id'],
         field,
@@ -101,7 +102,7 @@ def file_is_open_document_format(file_object):
     ]
 
 
-def generate_file_name(supplier_id, service_id, field, filename, suffix=None):
+def generate_file_name(framework_slug, supplier_id, service_id, field, filename, suffix=None):
     if suffix is None:
         suffix = default_file_suffix()
 
@@ -112,7 +113,8 @@ def generate_file_name(supplier_id, service_id, field, filename, suffix=None):
         'pricingDocumentURL': 'pricing-document',
     }
 
-    return 'documents/{}/{}-{}-{}{}'.format(
+    return '{}/{}/{}-{}-{}{}'.format(
+        framework_slug,
         supplier_id,
         service_id,
         ID_TO_FILE_NAME_SUFFIX[field],

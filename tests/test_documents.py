@@ -18,9 +18,9 @@ from dmutils.documents import (
 class TestGenerateFilename(unittest.TestCase):
     def test_filename_format(self):
         self.assertEquals(
-            'documents/2/1-pricing-document-123.pdf',
+            'slug/2/1-pricing-document-123.pdf',
             generate_file_name(
-                2, 1,
+                'slug', 2, 1,
                 'pricingDocumentURL', 'test.pdf',
                 suffix='123'
             ))
@@ -28,9 +28,9 @@ class TestGenerateFilename(unittest.TestCase):
     def test_default_suffix_is_datetime(self):
         with freeze_time('2015-01-02 03:04:05'):
             self.assertEquals(
-                'documents/2/1-pricing-document-2015-01-02-0304.pdf',
+                'slug/2/1-pricing-document-2015-01-02-0304.pdf',
                 generate_file_name(
-                    2, 1,
+                    'slug', 2, 1,
                     'pricingDocumentURL', 'test.pdf',
                 ))
 
@@ -109,11 +109,11 @@ class TestUploadDocument(unittest.TestCase):
                 upload_document(
                     uploader,
                     'http://assets',
-                    {'id': "123", 'supplierId': 5},
+                    {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                     "pricingDocumentURL",
                     mock_file('file.pdf', 1)
                 ),
-                'http://assets/documents/5/123-pricing-document-2015-01-02-0405.pdf'
+                'http://assets/g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf'
             )
 
     def test_document_upload_s3_error(self):
@@ -123,7 +123,7 @@ class TestUploadDocument(unittest.TestCase):
             self.assertFalse(upload_document(
                 uploader,
                 'http://assets',
-                {'id': "123", 'supplierId': 5},
+                {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                 "pricingDocumentURL",
                 mock_file('file.pdf', 1)
             ))
