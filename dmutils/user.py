@@ -58,3 +58,13 @@ class User():
             locked=user['locked'],
             active=user['active']
         )
+
+    @staticmethod
+    def load_user(data_api_client, user_id):
+        """Load a user from the API and hydrate the User model"""
+        user_json = data_api_client.get_user(user_id=int(user_id))
+
+        if user_json:
+            user = User.from_json(user_json)
+            if user.is_active():
+                return user

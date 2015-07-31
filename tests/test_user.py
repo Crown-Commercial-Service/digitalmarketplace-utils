@@ -1,3 +1,4 @@
+import mock
 import pytest
 from dmutils.user import user_has_role, User
 
@@ -5,6 +6,22 @@ from dmutils.user import user_has_role, User
 @pytest.fixture
 def user():
     return User(123, 'test@example.com', 321, 'test supplier', False, True)
+
+
+@pytest.fixture
+def user_json():
+    return {
+        "users": {
+            "id": 123,
+            "emailAddress": "test@example.com",
+            "locked": False,
+            "active": True,
+            "supplier": {
+                "supplierId": 321,
+                "name": "test supplier",
+            }
+        }
+    }
 
 
 def test_user_has_role():
@@ -52,6 +69,46 @@ def test_User_from_json_with_supplier():
     assert user.email_address == 'test@example.com'
     assert user.supplier_id == 321
     assert user.supplier_name == 'test supplier'
+
+
+def test_User_load_user(user_json):
+    data_api_client = mock.Mock()
+    data_api_client.get_user.return_value = user_json
+
+    user = User.load_user(data_api_client, 123)
+
+    data_api_client.get_user.assert_called_once_with(user_id=123)
+    assert user is not None
+    assert user.id == 123
+
+
+def test_User_load_user_raises_ValueError_on_non_integer_user_id():
+    with pytest.raises(ValueError):
+        data_api_client = mock.Mock()
+        data_api_client.get_user.return_value = None
+
+        User.load_user(data_api_client, 'foo')
+
+    assert not data_api_client.get_user.called
+
+
+def test_User_load_user_returns_None_if_no_user_is_found():
+    data_api_client = mock.Mock()
+    data_api_client.get_user.return_value = None
+
+    loaded_user = User.load_user(data_api_client, 123)
+
+    assert loaded_user is None
+
+
+def test_User_load_user_returns_None_if_user_is_not_active(user_json):
+    user_json['users']['active'] = False
+    data_api_client = mock.Mock()
+    data_api_client.get_user.return_value = user_json
+
+    loaded_user = User.load_user(data_api_client, 123)
+
+    assert loaded_user is None
 
 
 def test_user_is_active(user):
