@@ -6,12 +6,6 @@ from dmutils.service_attribute import (
 
 class TestAttribute(unittest.TestCase):
 
-    def test_Attribute_works_if_the_key_is_in_service_data(self):
-        try:
-            attribute = Attribute('supportAvailability', 'text')
-        except KeyError:
-            self.fail("'supportAvailability' key should be in service data")
-
     def test_get_data_value_retrieves_correct_value(self):
         self.assertEqual(
             Attribute('24/7, 365 days a year', 'text').value,
