@@ -45,7 +45,7 @@ def validate_documents(files):
     return errors
 
 
-def upload_document(uploader, documents_url, service, field, file_contents):
+def upload_document(uploader, documents_url, service, field, file_contents, public=True):
     """Upload the document to S3 bucket and return the document URL
 
     :param uploader: S3 uploader object
@@ -56,6 +56,8 @@ def upload_document(uploader, documents_url, service, field, file_contents):
     :param field: name of the service field that the document URL is saved to,
                   used to generate the document name
     :param file_contents: attached file object
+    :param public: if True, set file permission to 'public-read'. Otherwise file
+                   is private.
 
     :return: generated document URL or ``False`` if document upload
              failed
@@ -69,8 +71,10 @@ def upload_document(uploader, documents_url, service, field, file_contents):
         file_contents.filename
     )
 
+    acl = 'public-read' if public else 'private'
+
     try:
-        uploader.save(file_path, file_contents)
+        uploader.save(file_path, file_contents, acl=acl)
     except S3ResponseError:
         return False
 

@@ -266,7 +266,8 @@ class TestValidate(unittest.TestCase):
 
         self.uploader.save.assert_called_once_with(
             'g-cloud-6/2/1-pricing-document-2015-01-01-1200.pdf',
-            self.data['pricingDocumentURL']
+            self.data['pricingDocumentURL'],
+            acl='public-read'
         )
 
         self.assertEquals(self.validate.clean_data, {

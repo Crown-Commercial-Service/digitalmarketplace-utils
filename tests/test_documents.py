@@ -116,6 +116,33 @@ class TestUploadDocument(unittest.TestCase):
                 'http://assets/g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf'
             )
 
+        uploader.save.assert_called_once_with(
+            'g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf',
+            mock.ANY,
+            acl='public-read'
+        )
+
+    def test_document_private_upload(self):
+        uploader = mock.Mock()
+        with freeze_time('2015-01-02 04:05:00'):
+            self.assertEquals(
+                upload_document(
+                    uploader,
+                    'http://assets',
+                    {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
+                    "pricingDocumentURL",
+                    mock_file('file.pdf', 1),
+                    public=False
+                ),
+                'http://assets/g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf'
+            )
+
+        uploader.save.assert_called_once_with(
+            'g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf',
+            mock.ANY,
+            acl='private'
+        )
+
     def test_document_upload_s3_error(self):
         uploader = mock.Mock()
         uploader.save.side_effect = S3ResponseError(403, 'Forbidden')
