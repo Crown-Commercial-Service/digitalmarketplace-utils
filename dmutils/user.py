@@ -16,18 +16,16 @@ class User():
         self.locked = locked
         self.active = active
 
-    @staticmethod
-    def is_authenticated():
-        return True
+    def is_authenticated(self):
+        return self.is_active()
 
     def is_active(self):
-        return self.active
+        return self.active and not self.locked
 
     def is_locked(self):
         return self.locked
 
-    @staticmethod
-    def is_anonymous():
+    def is_anonymous(self):
         return False
 
     def get_id(self):
@@ -63,3 +61,13 @@ class User():
             active=user.get('active', True),
             name=user['name']
         )
+
+    @staticmethod
+    def load_user(data_api_client, user_id):
+        """Load a user from the API and hydrate the User model"""
+        user_json = data_api_client.get_user(user_id=int(user_id))
+
+        if user_json:
+            user = User.from_json(user_json)
+            if user.is_active():
+                return user
