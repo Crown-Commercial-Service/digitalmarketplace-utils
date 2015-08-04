@@ -5,7 +5,7 @@ from dmutils.user import user_has_role, User
 
 @pytest.fixture
 def user():
-    return User(123, 'test@example.com', 321, 'test supplier', False, True)
+    return User(123, 'test@example.com', 321, 'test supplier', False, True, "Name")
 
 
 @pytest.fixture
@@ -14,6 +14,7 @@ def user_json():
         "users": {
             "id": 123,
             "emailAddress": "test@example.com",
+            "name": "name",
             "locked": False,
             "active": True,
             "supplier": {
