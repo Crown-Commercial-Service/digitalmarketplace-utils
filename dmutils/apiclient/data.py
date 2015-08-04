@@ -217,15 +217,10 @@ class DataAPIClient(BaseAPIClient):
             "/draft-services/{}".format(draft_id)
         )
 
-    def delete_draft_service(self, draft_id, user):
+    def delete_draft_service(self, draft_id, user_id):
         return self._delete(
-            "/draft-services/{}".format(draft_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
-                },
-            })
+            "/draft-services/{0}?user_id={1}".format(draft_id, user_id)
+        )
 
     def copy_draft_service_from_existing_service(self, service_id, user):
         return self._put(
