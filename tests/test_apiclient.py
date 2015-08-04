@@ -1048,7 +1048,6 @@ class TestDataAPIClientIterMethods(object):
         assert results[1]['id'] == 2
         assert results[2]['id'] == 3
 
-
     def test_find_users_iter(self, data_client, rmock):
         self._test_find_iter(
             data_client, rmock,
@@ -1120,7 +1119,7 @@ class TestDataAPIClientIterMethods(object):
         rmock.get(
             'http://baseurl/services',
             [{'json': {}, 'status_code': 503},
-             {'json': {'links':{}, 'services': [{'id': 1}]}, 'status_code': 200}])
+             {'json': {'links': {}, 'services': [{'id': 1}]}, 'status_code': 200}])
 
         result = data_client.find_services_iter()
         results = list(result)
