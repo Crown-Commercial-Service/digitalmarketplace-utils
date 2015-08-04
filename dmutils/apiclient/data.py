@@ -246,16 +246,19 @@ class DataAPIClient(BaseAPIClient):
                 }
             })
 
-    def update_draft_service(self, draft_id, service, user):
-        return self._post(
-            "/draft-services/{}".format(draft_id),
-            data={
-                "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
-                },
-                "services": service,
-            })
+    def update_draft_service(self, draft_id, service, user, page_questions=None):
+        data = {
+            "update_details": {
+                "updated_by": user,
+                "update_reason": "deprecated",
+            },
+            "services": service,
+        }
+
+        if page_questions is not None:
+            data['page_questions'] = page_questions
+
+        return self._post("/draft-services/{}".format(draft_id), data=data)
 
     def publish_draft_service(self, draft_id, user):
         return self._post(
