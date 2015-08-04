@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
 DISPLAY_DATE_FORMAT = '%d/%m/%Y'
@@ -40,3 +41,31 @@ def get_label_for_lot_param(lot_to_check):
     if lot_i_found:
         return lot_i_found[0]['label']
     return None
+
+
+def format_service_price(service):
+    """Format a price string from a service dictionary
+
+    :param service: a service dictionary as would be returned from the data API
+
+    :return: a formatted price string if the required
+             fields are set in the service dictionary.
+    """
+    if not service.get('priceMin'):
+        return ''
+    return format_price(
+        service.get('priceMin'),
+        service.get('priceMax'),
+        service.get('priceUnit'),
+        service.get('priceInterval'))
+
+
+def format_price(min_price, max_price, unit, interval):
+    """Format a price string"""
+    formatted_price = u'£' + min_price
+    if max_price:
+        formatted_price += u' to £' + max_price
+    formatted_price += ' per ' + unit.lower()
+    if interval:
+        formatted_price += ' per ' + interval.lower()
+    return formatted_price
