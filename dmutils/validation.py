@@ -1,15 +1,10 @@
 # coding=utf-8
 
-import datetime
-import os.path
 import six
 import re
 
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
 
+from . import documents
 from dmutils.s3 import S3ResponseError
 
 
@@ -79,45 +74,29 @@ class Validate(object):
             return not empty(question)
 
     def file_has_been_uploaded(self, question_id, question):
-        not_empty = len(question.read(1)) > 0
-        question.seek(0)
-        return not_empty
+        return documents.file_is_not_empty(question)
 
     def file_can_be_saved(self, question_id, question):
-
-        file_path = generate_file_name(
-            self.service['supplierId'],
-            self.service['id'],
-            question_id,
-            question.filename
-        )
-
-        try:
-            self.uploader.save(file_path, question)
-        except S3ResponseError:
-            return False
-
-        full_url = urlparse.urljoin(
+        full_url = documents.upload_document(
+            self.uploader,
             self.document_url,
-            file_path
+            self.service,
+            question_id,
+            question
         )
+
+        if not full_url:
+            return False
 
         self.clean_data[question_id] = full_url
 
         return True
 
     def file_is_less_than_5mb(self, question_id, question):
-        size_limit = 5400000
-        below_size_limit = len(question.read(size_limit)) < size_limit
-        question.seek(0)
-
-        return below_size_limit
+        return documents.file_is_less_than_5mb(question)
 
     def file_is_open_document_format(self, question_id, question):
-
-        return get_extension(question.filename) in [
-            ".pdf", ".pda", ".odt", ".ods", ".odp"
-        ]
+        return documents.file_is_open_document_format(question)
 
     def no_min_price_specified(self, question_id, question):
         min_price = question[0]
@@ -193,36 +172,6 @@ class Validate(object):
             return True
         else:
             return False
-
-
-def generate_file_name(supplier_id, service_id, question_id, filename,
-                       suffix=None):
-    if suffix is None:
-        suffix = default_file_suffix()
-
-    ID_TO_FILE_NAME_SUFFIX = {
-        'serviceDefinitionDocumentURL': 'service-definition-document',
-        'termsAndConditionsDocumentURL': 'terms-and-conditions',
-        'sfiaRateDocumentURL': 'sfia-rate-card',
-        'pricingDocumentURL': 'pricing-document',
-    }
-
-    return 'documents/{}/{}-{}-{}{}'.format(
-        supplier_id,
-        service_id,
-        ID_TO_FILE_NAME_SUFFIX[question_id],
-        suffix,
-        get_extension(filename)
-    )
-
-
-def default_file_suffix():
-    return datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M")
-
-
-def get_extension(filename):
-    file_name, file_extension = os.path.splitext(filename)
-    return file_extension.lower()
 
 
 def is_a_float(value):

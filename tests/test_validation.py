@@ -1,35 +1,10 @@
 # coding=utf-8
 
 import unittest
-import datetime
 
 import mock
 from dmutils.s3 import S3ResponseError
-from dmutils.validation import Validate, generate_file_name
-
-
-class TestGenerateFilename(unittest.TestCase):
-    def test_filename_format(self):
-        self.assertEquals(
-            'documents/2/1-pricing-document-123.pdf',
-            generate_file_name(
-                2, 1,
-                'pricingDocumentURL', 'test.pdf',
-                suffix='123'
-            ))
-
-    def test_default_suffix_is_datetime(self):
-        now = datetime.datetime(2015, 1, 2, 3, 4, 5, 6)
-
-        with mock.patch.object(datetime, 'datetime',
-                               mock.Mock(wraps=datetime.datetime)) as patched:
-            patched.utcnow.return_value = now
-            self.assertEquals(
-                'documents/2/1-pricing-document-2015-01-02-0304.pdf',
-                generate_file_name(
-                    2, 1,
-                    'pricingDocumentURL', 'test.pdf',
-                ))
+from dmutils.validation import Validate
 
 
 class TestValidate(unittest.TestCase):
@@ -37,13 +12,14 @@ class TestValidate(unittest.TestCase):
         self.service = {
             'id': 1,
             'supplierId': 2,
+            'frameworkSlug': 'g-cloud-6',
         }
         self.data = {}
         self.content = {}
         self.uploader = mock.Mock()
 
         self.default_suffix_patch = mock.patch(
-            'dmutils.validation.default_file_suffix',
+            'dmutils.documents.default_file_suffix',
             return_value='2015-01-01-1200'
         ).start()
 
@@ -289,12 +265,13 @@ class TestValidate(unittest.TestCase):
         self.assertEquals(self.validate.errors, {})
 
         self.uploader.save.assert_called_once_with(
-            'documents/2/1-pricing-document-2015-01-01-1200.pdf',
-            self.data['pricingDocumentURL']
+            'g-cloud-6/2/1-pricing-document-2015-01-01-1200.pdf',
+            self.data['pricingDocumentURL'],
+            acl='public-read'
         )
 
         self.assertEquals(self.validate.clean_data, {
-            'pricingDocumentURL': 'https://assets.test.digitalmarketplace.service.gov.uk/documents/2/1-pricing-document-2015-01-01-1200.pdf',  # noqa
+            'pricingDocumentURL': 'https://assets.test.digitalmarketplace.service.gov.uk/g-cloud-6/2/1-pricing-document-2015-01-01-1200.pdf',  # noqa
         })
 
     def test_failed_file_upload(self):
