@@ -28,7 +28,7 @@ class DataAPIClient(BaseAPIClient):
 
         return self._get(
             "/audit-events",
-            params
+            params=params
         )
 
     def acknowledge_audit_event(self, audit_event_id, user):
@@ -209,15 +209,15 @@ class DataAPIClient(BaseAPIClient):
     def find_draft_services(
             self, supplier_id, service_id=None, framework=None):
 
-        url = "/draft-services?supplier_id={}".format(supplier_id)
+        params = {
+            'supplier_id': supplier_id
+        }
+        if service_id is not None:
+            params['service_id'] = service_id
+        if framework is not None:
+            params['framework'] = framework
 
-        if service_id:
-            url = "{}&service_id={}".format(url, service_id)
-
-        if framework:
-            url = "{}&framework={}".format(url, framework)
-
-        return self._get(url)
+        return self._get('/draft-services', params=params)
 
     def get_draft_service(self, draft_id):
         return self._get(
