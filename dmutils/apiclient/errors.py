@@ -23,6 +23,19 @@ class APIError(Exception):
 
 
 class HTTPError(APIError):
+    @staticmethod
+    def create(e):
+        error = HTTPError(e.response)
+        if error.status_code == 503:
+            error = HTTP503Error(e.response)
+        return error
+
+
+class HTTP503Error(HTTPError):
+    """Specific instance of HTTPError for 503 errors
+
+    Used for detecting whether failed requests should be retried.
+    """
     pass
 
 

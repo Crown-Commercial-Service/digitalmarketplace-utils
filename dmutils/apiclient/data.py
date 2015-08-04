@@ -206,8 +206,7 @@ class DataAPIClient(BaseAPIClient):
 
     # Services
 
-    def find_draft_services(
-            self, supplier_id, service_id=None, framework=None):
+    def find_draft_services(self, supplier_id, service_id=None, framework=None):
 
         params = {
             'supplier_id': supplier_id

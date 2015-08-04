@@ -8,8 +8,9 @@ except ImportError:
 
 import requests
 from flask import has_request_context, request, current_app
+import backoff
 
-from .errors import APIError, HTTPError, InvalidResponse
+from .errors import APIError, HTTPError, HTTP503Error, InvalidResponse
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class BaseAPIClient(object):
                 headers=headers, json=data, params=params)
             response.raise_for_status()
         except requests.RequestException as e:
-            api_error = HTTPError(e.response)
+            api_error = HTTPError.create(e)
             logger.warning(
                 "API %s request on %s failed with %s '%s'",
                 method, url, api_error.status_code, api_error.message)
@@ -83,3 +84,42 @@ class BaseAPIClient(object):
                     "status": "error",
                     "message": "{}".format(e.message),
                 }
+
+    def __getattr__(self, name):
+        if name.startswith('find_') and name.endswith('_iter'):
+            return self._make_iter_method(name)
+        raise AttributeError()
+
+    def _make_iter_method(self, name):
+        method_name = name[:-5]
+        model_name = self._get_model_name(method_name)
+        method = getattr(self, method_name)
+
+        backoff_decorator = backoff.on_exception(backoff.expo,
+                                                 HTTP503Error,
+                                                 max_tries=5)
+
+        def iter_method(*args, **kwargs):
+            result = backoff_decorator(method)(*args, **kwargs)
+            print(result)
+
+            for model in result[model_name]:
+                yield model
+
+            while True:
+                if 'next' not in result['links']:
+                    return
+                result = backoff_decorator(self._get)(result['links']['next'])
+                for model in result[model_name]:
+                    yield model
+
+        return iter_method
+
+    def _get_model_name(self, method_name):
+        model_name = method_name[5:]
+        if model_name == 'audit_events':
+            return 'auditEvents'
+        elif model_name == 'draft_services':
+            return 'services'
+        else:
+            return model_name

@@ -1021,3 +1021,109 @@ class TestDataApiClient(object):
                 'updated_by': 'user'
             }
         }
+
+
+class TestDataAPIClientIterMethods(object):
+    def _test_find_iter(self, data_client, rmock, method_name, model_name, url_path):
+        rmock.get(
+            'http://baseurl/{}'.format(url_path),
+            json={
+                'links': {'next': 'http://baseurl/{}?page=2'.format(url_path)},
+                model_name: [{'id': 1}, {'id': 2}]
+            },
+            status_code=200)
+        rmock.get(
+            'http://baseurl/{}?page=2'.format(url_path),
+            json={
+                'links': {'prev': 'http://baseurl/{}'.format(url_path)},
+                model_name: [{'id': 3}]
+            },
+            status_code=200)
+
+        result = getattr(data_client, method_name)()
+        results = list(result)
+
+        assert len(results) == 3
+        assert results[0]['id'] == 1
+        assert results[1]['id'] == 2
+        assert results[2]['id'] == 3
+
+
+    def test_find_users_iter(self, data_client, rmock):
+        self._test_find_iter(
+            data_client, rmock,
+            method_name='find_users_iter',
+            model_name='users',
+            url_path='users')
+
+    def test_find_audit_events_iter(self, data_client, rmock):
+        self._test_find_iter(
+            data_client, rmock,
+            method_name='find_audit_events_iter',
+            model_name='auditEvents',
+            url_path='audit-events')
+
+    def test_find_suppliers_iter(self, data_client, rmock):
+        self._test_find_iter(
+            data_client, rmock,
+            method_name='find_suppliers_iter',
+            model_name='suppliers',
+            url_path='suppliers')
+
+    def test_find_draft_services_iter(self, data_client, rmock):
+        rmock.get(
+            'http://baseurl/draft-services?supplier_id=123',
+            json={
+                'links': {'next': 'http://baseurl/draft-services?supplier_id=123&page=2'},
+                'services': [{'id': 1}, {'id': 2}]
+            },
+            status_code=200)
+        rmock.get(
+            'http://baseurl/draft-services?supplier_id=123&page=2',
+            json={
+                'links': {'prev': 'http://baseurl/draft-services?supplier_id=123'},
+                'services': [{'id': 3}]
+            },
+            status_code=200)
+
+        result = data_client.find_draft_services_iter(123)
+        results = list(result)
+
+        assert len(results) == 3
+        assert results[0]['id'] == 1
+        assert results[1]['id'] == 2
+        assert results[2]['id'] == 3
+
+    def test_find_services_iter(self, data_client, rmock):
+        self._test_find_iter(
+            data_client, rmock,
+            method_name='find_services_iter',
+            model_name='services',
+            url_path='services')
+
+    def test_find_services_iter_additional_arguments(self, data_client, rmock):
+        rmock.get(
+            'http://baseurl/services?supplier_id=123',
+            json={
+                'links': {},
+                'services': [{'id': 1}, {'id': 2}]
+            },
+            status_code=200)
+
+        result = data_client.find_services_iter(123)
+        results = list(result)
+
+        assert len(results) == 2
+
+    @mock.patch('time.sleep')
+    def test_find_services_backoff_on_503(self, sleep, data_client, rmock):
+        rmock.get(
+            'http://baseurl/services',
+            [{'json': {}, 'status_code': 503},
+             {'json': {'links':{}, 'services': [{'id': 1}]}, 'status_code': 200}])
+
+        result = data_client.find_services_iter()
+        results = list(result)
+
+        assert sleep.called
+        assert len(results) == 1
