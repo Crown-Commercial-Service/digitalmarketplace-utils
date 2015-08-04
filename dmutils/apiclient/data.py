@@ -113,8 +113,15 @@ class DataAPIClient(BaseAPIClient):
                 "users": user,
             })
 
-    def find_users(self, supplier_id):
-        return self._get("/users?supplier_id={}".format(supplier_id))
+    def find_users(self, supplier_id=None, active=None, page=None):
+        params = {}
+        if supplier_id is not None:
+            params['supplier_id'] = supplier_id
+        if active is not None:
+            params['active'] = 'true' if active else 'false'
+        if page is not None:
+            params['page'] = page
+        return self._get("/users", params=params)
 
     def get_user(self, user_id=None, email_address=None):
         if user_id is not None and email_address is not None:
