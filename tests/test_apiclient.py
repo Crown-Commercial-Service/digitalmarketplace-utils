@@ -794,16 +794,13 @@ class TestDataApiClient(object):
         )
 
         result = data_client.delete_draft_service(
-            2, 'user'
+            2, 12345
         )
 
         assert result == {"done": "it"}
         assert rmock.called
-        assert rmock.request_history[0].json() == {
-            'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
-            }
-        }
+        assert rmock.request_history[0].method == 'DELETE'
+        assert rmock.request_history[0].url == 'http://baseurl/draft-services/2?user_id=12345'
 
     def test_copy_draft_service_from_existing_service(
             self, data_client, rmock):

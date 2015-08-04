@@ -30,8 +30,8 @@ class BaseAPIClient(object):
     def _post(self, url, data):
         return self._request("POST", url, data=data)
 
-    def _delete(self, url, data=None):
-        return self._request("DELETE", url, data=data)
+    def _delete(self, url):
+        return self._request("DELETE", url)
 
     def _request(self, method, url, data=None, params=None):
         if not self.enabled:
