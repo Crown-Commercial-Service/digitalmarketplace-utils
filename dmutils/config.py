@@ -33,3 +33,24 @@ def convert_to_boolean(value):
             return False
 
     return value
+
+
+def convert_to_number(value):
+    """Turns numeric looking things into floats or ints
+
+    Integery things should be integers
+    >>> for inty in ['0', '1', '2', '99999']:
+    ...   assert isinstance(convert_to_number(inty), int)
+
+    Floaty things should be floats
+    >>> for floaty in ['0.99', '1.1', '1000.0000001']:
+    ...   assert isinstance(convert_to_number(floaty), float)
+
+    Other things should be unchanged
+    >>> for value in [0, 'other', True, 123]:
+    ...   assert convert_to_number(value) == value
+    """
+    try:
+        return float(value) if "." in value else int(value)
+    except (TypeError, ValueError):
+        return value
