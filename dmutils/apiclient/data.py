@@ -121,10 +121,10 @@ class DataAPIClient(BaseAPIClient):
             raise ValueError(
                 "Cannot get user by both user_id and email_address")
         elif user_id is not None:
-            url = "{}/users/{}".format(self.base_url, user_id)
+            url = "/users/{}".format(user_id)
             params = {}
         elif email_address is not None:
-            url = "{}/users".format(self.base_url)
+            url = "/users"
             params = {"email_address": email_address}
         else:
             raise ValueError("Either user_id or email_address must be set")
@@ -300,9 +300,7 @@ class DataAPIClient(BaseAPIClient):
         if page is not None:
             params['page'] = page
 
-        return self._get(
-            self.base_url + "/services",
-            params=params)
+        return self._get("/services", params=params)
 
     def import_service(self, service_id, service, user, reason):
         return self._put(
