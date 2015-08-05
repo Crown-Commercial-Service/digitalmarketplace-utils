@@ -27,6 +27,21 @@ class S3(object):
         key.set_acl(acl)
         return key
 
+    def get_signed_url(self, path, expires_in=30):
+        """Create a signed S3 document URL
+
+        :param path: S3 object path within the bucket
+        :param expires_in: how long the generated URL is valid
+                           for, in seconds
+
+        :return: signed URL or ``None`` if object was not found
+
+        """
+
+        key = self.bucket.get_key(path)
+        if key:
+            return key.generate_url(expires_in)
+
     def _move_existing(self, existing_path, move_prefix=None):
         if move_prefix is None:
             move_prefix = default_move_prefix()
