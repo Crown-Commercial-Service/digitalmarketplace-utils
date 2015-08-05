@@ -21,6 +21,20 @@ class TestS3Uploader(unittest.TestCase):
         S3('test-bucket')
         self.s3_mock.get_bucket.assert_called_with('test-bucket')
 
+    def test_get_signed_url(self):
+        mock_bucket = FakeBucket(['documents/file.pdf'])
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        S3('test-bucket').get_signed_url('documents/file.pdf')
+        mock_bucket.s3_key_mock.generate_url.assert_called_with(30)
+
+    def test_get_signed_url_with_expires_at(self):
+        mock_bucket = FakeBucket(['documents/file.pdf'])
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        S3('test-bucket').get_signed_url('documents/file.pdf', 10)
+        mock_bucket.s3_key_mock.generate_url.assert_called_with(10)
+
     def test_save_file(self):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
