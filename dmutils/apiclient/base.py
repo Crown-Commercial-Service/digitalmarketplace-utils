@@ -16,6 +16,31 @@ from .errors import APIError, HTTPError, HTTP503Error, InvalidResponse
 logger = logging.getLogger(__name__)
 
 
+def make_iter_method(method_name, model_name, url_path):
+    """Make an iterator method from a find method
+
+    :param method_name: The name of the find method to decorate
+    :param model_name: The name of the model as it appears in the JSON response
+    :param url_path: The URL path for the API
+    """
+    backoff_decorator = backoff.on_exception(backoff.expo, HTTP503Error, max_tries=5)
+
+    def iter_method(self, *args, **kwargs):
+        method = getattr(self, method_name)
+        result = backoff_decorator(method)(*args, **kwargs)
+        for model in result[model_name]:
+            yield model
+
+        while True:
+            if 'next' not in result['links']:
+                return
+            result = backoff_decorator(self._get)(result['links']['next'])
+            for model in result[model_name]:
+                yield model
+
+    return iter_method
+
+
 class BaseAPIClient(object):
     def __init__(self, base_url=None, auth_token=None, enabled=True):
         self.base_url = base_url
@@ -84,42 +109,3 @@ class BaseAPIClient(object):
                     "status": "error",
                     "message": "{}".format(e.message),
                 }
-
-    def __getattr__(self, name):
-        if name.startswith('find_') and name.endswith('_iter'):
-            return self._make_iter_method(name)
-        raise AttributeError()
-
-    def _make_iter_method(self, name):
-        method_name = name[:-5]
-        model_name = self._get_model_name(method_name)
-        method = getattr(self, method_name)
-
-        backoff_decorator = backoff.on_exception(backoff.expo,
-                                                 HTTP503Error,
-                                                 max_tries=5)
-
-        def iter_method(*args, **kwargs):
-            result = backoff_decorator(method)(*args, **kwargs)
-            print(result)
-
-            for model in result[model_name]:
-                yield model
-
-            while True:
-                if 'next' not in result['links']:
-                    return
-                result = backoff_decorator(self._get)(result['links']['next'])
-                for model in result[model_name]:
-                    yield model
-
-        return iter_method
-
-    def _get_model_name(self, method_name):
-        model_name = method_name[5:]
-        if model_name == 'audit_events':
-            return 'auditEvents'
-        elif model_name == 'draft_services':
-            return 'services'
-        else:
-            return model_name

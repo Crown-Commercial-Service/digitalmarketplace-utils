@@ -1,4 +1,4 @@
-from .base import BaseAPIClient, logger
+from .base import BaseAPIClient, logger, make_iter_method
 from .errors import HTTPError
 
 
@@ -31,6 +31,8 @@ class DataAPIClient(BaseAPIClient):
             params=params
         )
 
+    find_audit_events_iter = make_iter_method('find_audit_events', 'auditEvents', 'audit-events')
+
     def acknowledge_audit_event(self, audit_event_id, user):
         return self._post(
             "/audit-events/{}/acknowledge".format(audit_event_id),
@@ -55,6 +57,8 @@ class DataAPIClient(BaseAPIClient):
             "/suppliers",
             params=params
         )
+
+    find_suppliers_iter = make_iter_method('find_suppliers', 'suppliers', 'suppliers')
 
     def get_supplier(self, supplier_id):
         return self._get(
@@ -122,6 +126,8 @@ class DataAPIClient(BaseAPIClient):
         if page is not None:
             params['page'] = page
         return self._get("/users", params=params)
+
+    find_users_iter = make_iter_method('find_users', 'users', 'users')
 
     def get_user(self, user_id=None, email_address=None):
         if user_id is not None and email_address is not None:
@@ -218,6 +224,8 @@ class DataAPIClient(BaseAPIClient):
 
         return self._get('/draft-services', params=params)
 
+    find_draft_services_iter = make_iter_method('find_draft_services', 'services', 'draft-services')
+
     def get_draft_service(self, draft_id):
         return self._get(
             "/draft-services/{}".format(draft_id)
@@ -310,6 +318,8 @@ class DataAPIClient(BaseAPIClient):
             params['page'] = page
 
         return self._get("/services", params=params)
+
+    find_services_iter = make_iter_method('find_services', 'services', 'services')
 
     def import_service(self, service_id, service, user, reason):
         return self._put(
