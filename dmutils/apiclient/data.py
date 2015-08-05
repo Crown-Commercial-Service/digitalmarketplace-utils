@@ -173,7 +173,12 @@ class DataAPIClient(BaseAPIClient):
                         user_id, e.status_code)
             return False
 
-    def update_user(self, user_id, locked=None, active=None):
+    def update_user(self,
+                    user_id,
+                    locked=None,
+                    active=None,
+                    role=None,
+                    supplier_id=None):
         fields = {}
         if locked is not None:
             fields.update({
@@ -183,6 +188,16 @@ class DataAPIClient(BaseAPIClient):
         if active is not None:
             fields.update({
                 'active': active
+            })
+
+        if role is not None:
+            fields.update({
+                'role': role
+            })
+
+        if supplier_id is not None:
+            fields.update({
+                'supplierId': supplier_id
             })
 
         params = {

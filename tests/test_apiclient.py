@@ -590,6 +590,42 @@ class TestDataApiClient(object):
 
             assert e.value.status_code == status_code
 
+    def test_can_change_user_role(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        data_client.update_user(123, role='supplier')
+        assert rmock.called
+        assert rmock.last_request.json() == {
+            "users": {"role": 'supplier'}
+        }
+
+    def test_can_add_user_supplier_id(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        data_client.update_user(123, supplier_id=123)
+        assert rmock.called
+        assert rmock.last_request.json() == {
+            "users": {"supplierId": 123}
+        }
+
+    def test_make_user_a_supplier(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        data_client.update_user(123, supplier_id=123, role='supplier')
+        assert rmock.called
+        assert rmock.last_request.json() == {
+            "users": {
+                "supplierId": 123,
+                "role": "supplier"
+            }
+        }
+
     def test_can_unlock_user(self, data_client, rmock):
         rmock.post(
             "http://baseurl/users/123",
