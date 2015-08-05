@@ -1,4 +1,4 @@
-from .base import BaseAPIClient, logger
+from .base import BaseAPIClient, logger, make_iter_method
 from .errors import HTTPError
 
 
@@ -28,8 +28,10 @@ class DataAPIClient(BaseAPIClient):
 
         return self._get(
             "/audit-events",
-            params
+            params=params
         )
+
+    find_audit_events_iter = make_iter_method('find_audit_events', 'auditEvents', 'audit-events')
 
     def acknowledge_audit_event(self, audit_event_id, user):
         return self._post(
@@ -55,6 +57,8 @@ class DataAPIClient(BaseAPIClient):
             "/suppliers",
             params=params
         )
+
+    find_suppliers_iter = make_iter_method('find_suppliers', 'suppliers', 'suppliers')
 
     def get_supplier(self, supplier_id):
         return self._get(
@@ -113,8 +117,15 @@ class DataAPIClient(BaseAPIClient):
                 "users": user,
             })
 
-    def find_users(self, supplier_id):
-        return self._get("/users?supplier_id={}".format(supplier_id))
+    def find_users(self, supplier_id=None, page=None):
+        params = {}
+        if supplier_id is not None:
+            params['supplier_id'] = supplier_id
+        if page is not None:
+            params['page'] = page
+        return self._get("/users", params=params)
+
+    find_users_iter = make_iter_method('find_users', 'users', 'users')
 
     def get_user(self, user_id=None, email_address=None):
         if user_id is not None and email_address is not None:
@@ -214,18 +225,19 @@ class DataAPIClient(BaseAPIClient):
 
     # Services
 
-    def find_draft_services(
-            self, supplier_id, service_id=None, framework=None):
+    def find_draft_services(self, supplier_id, service_id=None, framework=None):
 
-        url = "/draft-services?supplier_id={}".format(supplier_id)
+        params = {
+            'supplier_id': supplier_id
+        }
+        if service_id is not None:
+            params['service_id'] = service_id
+        if framework is not None:
+            params['framework'] = framework
 
-        if service_id:
-            url = "{}&service_id={}".format(url, service_id)
+        return self._get('/draft-services', params=params)
 
-        if framework:
-            url = "{}&framework={}".format(url, framework)
-
-        return self._get(url)
+    find_draft_services_iter = make_iter_method('find_draft_services', 'services', 'draft-services')
 
     def get_draft_service(self, draft_id):
         return self._get(
@@ -319,6 +331,8 @@ class DataAPIClient(BaseAPIClient):
             params['page'] = page
 
         return self._get("/services", params=params)
+
+    find_services_iter = make_iter_method('find_services', 'services', 'services')
 
     def import_service(self, service_id, service, user, reason):
         return self._put(

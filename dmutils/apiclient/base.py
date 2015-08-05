@@ -8,11 +8,37 @@ except ImportError:
 
 import requests
 from flask import has_request_context, request, current_app
+import backoff
 
-from .errors import APIError, HTTPError, InvalidResponse
+from .errors import APIError, HTTPError, HTTP503Error, InvalidResponse
 
 
 logger = logging.getLogger(__name__)
+
+
+def make_iter_method(method_name, model_name, url_path):
+    """Make an iterator method from a find method
+
+    :param method_name: The name of the find method to decorate
+    :param model_name: The name of the model as it appears in the JSON response
+    :param url_path: The URL path for the API
+    """
+    backoff_decorator = backoff.on_exception(backoff.expo, HTTP503Error, max_tries=5)
+
+    def iter_method(self, *args, **kwargs):
+        method = getattr(self, method_name)
+        result = backoff_decorator(method)(*args, **kwargs)
+        for model in result[model_name]:
+            yield model
+
+        while True:
+            if 'next' not in result['links']:
+                return
+            result = backoff_decorator(self._get)(result['links']['next'])
+            for model in result[model_name]:
+                yield model
+
+    return iter_method
 
 
 class BaseAPIClient(object):
@@ -52,7 +78,7 @@ class BaseAPIClient(object):
                 headers=headers, json=data, params=params)
             response.raise_for_status()
         except requests.RequestException as e:
-            api_error = HTTPError(e.response)
+            api_error = HTTPError.create(e)
             logger.warning(
                 "API %s request on %s failed with %s '%s'",
                 method, url, api_error.status_code, api_error.message)
