@@ -434,15 +434,6 @@ class TestDataApiClient(object):
 
         assert user == self.user()
 
-    def test_find_users_by_active(self, data_client, rmock):
-        rmock.get(
-            "http://baseurl/users?active=false",
-            json=self.user(),
-            status_code=200)
-        user = data_client.find_users(active=False)
-
-        assert user == self.user()
-
     def test_find_users_by_page(self, data_client, rmock):
         rmock.get(
             "http://baseurl/users?page=12",
