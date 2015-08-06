@@ -1,3 +1,4 @@
+import collections
 import yaml
 import inflection
 import re
@@ -16,7 +17,7 @@ class ContentBuilder(object):
         {'field': 'value', 'field2': 'value2'}
     """
     def __init__(self, sections):
-        self.sections = list(sections)
+        self.sections = [ContentSection(section) for section in sections]
 
     def __iter__(self):
         return self.sections.__iter__()
@@ -38,46 +39,9 @@ class ContentBuilder(object):
         See :func:`ContentBuilder.get_section_data` for more details.
         """
         all_data = {}
-        for section in self.sections:
-            all_data.update(self.get_section_data(section['id'], form_data))
+        for section in self:
+            all_data.update(section.get_data(form_data))
         return all_data
-
-    def get_section_data(self, section_id, form_data):
-        """Extract data for a section from a submitted form
-
-        :param section_id: The ID of the section
-        :param form_data: the submitted form data
-        :type form_data: :class:`werkzeug.ImmutableMultiDict`
-        :return: parsed and filtered data
-
-        This parses the provided form data against the expected fields for the
-        given section. Any fields provided in the form data that are not described
-        in the section are dropped. Any fields in the section that are not
-        in the form data are ignored. Fields in the form data are parsed according
-        to their type in the section data.
-        """
-        section_data = {}
-        for key in set(form_data) & set(self._get_section_fields(section_id)):
-            if self._is_list_type(key):
-                section_data[key] = form_data.getlist(key)
-            elif self._is_boolean_type(key):
-                section_data[key] = convert_to_boolean(form_data[key])
-            elif self._is_numeric_type(key):
-                section_data[key] = convert_to_number(form_data[key])
-            elif self._is_pricing_type(key):
-                section_data.update(expand_pricing_field(form_data.getlist(key)))
-            elif self._is_not_upload(key):
-                section_data[key] = form_data[key]
-
-            if self._has_assurance(key):
-                section_data[key] = {
-                    "value": section_data[key],
-                    "assurance": form_data.get(key + '--assurance'),
-                }
-        return section_data
-
-    def _get_section_fields(self, section_id):
-        return [q['id'] for q in self.get_section(section_id)['questions']]
 
     def get_next_section_id(self, section_id=None, only_editable=False):
         previous_section_is_current = section_id is None
@@ -122,7 +86,7 @@ class ContentBuilder(object):
         ]
 
         if len(filtered_questions):
-            section["questions"] = filtered_questions
+            section.section["questions"] = filtered_questions
             return section
         else:
             return None
@@ -138,12 +102,72 @@ class ContentBuilder(object):
         return True
 
     def get_question(self, question_id):
+        for section in self:
+            question = section.get_question(question_id)
+            if question:
+                return question
+
+
+class ContentSection(collections.Mapping):
+    def __init__(self, section):
+        if isinstance(section, ContentSection):
+            section = section.section
+        self.section = section
+
+    def __getitem__(self, key):
+        return self.section[key]
+
+    def __iter__(self):
+        return self.section.__iter__()
+
+    def __len__(self):
+        return len(self.section)
+
+    def copy(self):
+        return ContentSection(self.section.copy())
+
+    def get_data(self, form_data):
+        """Extract data for a section from a submitted form
+
+        :param form_data: the submitted form data
+        :type form_data: :class:`werkzeug.ImmutableMultiDict`
+        :return: parsed and filtered data
+
+        This parses the provided form data against the expected fields for this
+        section. Any fields provided in the form data that are not described
+        in the section are dropped. Any fields in the section that are not
+        in the form data are ignored. Fields in the form data are parsed according
+        to their type in the section data.
+        """
+        section_data = {}
+        for key in set(form_data) & set(self._get_fields()):
+            if self._is_list_type(key):
+                section_data[key] = form_data.getlist(key)
+            elif self._is_boolean_type(key):
+                section_data[key] = convert_to_boolean(form_data[key])
+            elif self._is_numeric_type(key):
+                section_data[key] = convert_to_number(form_data[key])
+            elif self._is_pricing_type(key):
+                section_data.update(expand_pricing_field(form_data.getlist(key)))
+            elif self._is_not_upload(key):
+                section_data[key] = form_data[key]
+
+            if self._has_assurance(key):
+                section_data[key] = {
+                    "value": section_data[key],
+                    "assurance": form_data.get(key + '--assurance'),
+                }
+        return section_data
+
+    def _get_fields(self):
+        return [q['id'] for q in self['questions']]
+
+    def get_question(self, question_id):
         """Return a question dictionary by question ID"""
         # TODO: investigate how this would work as get by form field name
-        for section in self.sections:
-            for question in section['questions']:
-                if question['id'] == question_id:
-                    return question
+        for question in self.section['questions']:
+            if question['id'] == question_id:
+                return question
 
     # Type checking
 
