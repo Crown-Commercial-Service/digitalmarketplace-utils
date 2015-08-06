@@ -753,14 +753,26 @@ class TestDataApiClient(object):
         except HTTPError:
             assert rmock.called
 
-    def test_create_supplier(self, data_client, rmock):
+    def test_import_supplier(self, data_client, rmock):
         rmock.put(
             "http://baseurl/suppliers/123",
             json={"suppliers": "result"},
             status_code=201,
         )
 
-        result = data_client.create_supplier(123, {"foo": "bar"})
+        result = data_client.import_supplier(123, {"foo": "bar"})
+
+        assert result == {"suppliers": "result"}
+        assert rmock.called
+
+    def test_create_supplier(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/suppliers",
+            json={"suppliers": "result"},
+            status_code=201,
+        )
+
+        result = data_client.create_supplier({"foo": "bar"})
 
         assert result == {"suppliers": "result"}
         assert rmock.called
