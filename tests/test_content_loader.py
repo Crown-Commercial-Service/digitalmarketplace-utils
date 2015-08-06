@@ -1,6 +1,8 @@
 # coding=utf-8
 
 import mock
+from werkzeug.datastructures import ImmutableMultiDict
+import pytest
 
 import io
 
@@ -35,6 +37,7 @@ class TestContentBuilder(object):
         content = ContentBuilder([{
             "name": "First section",
             "questions": [{
+                "id": "q1",
                 "question": 'First question',
                 "depends": [{
                     "on": "lot",
@@ -49,6 +52,7 @@ class TestContentBuilder(object):
         content = ContentBuilder([{
             "name": "First section",
             "questions": [{
+                "id": "q1",
                 "question": 'First question',
                 "depends": [{
                     "on": "lot",
@@ -63,6 +67,7 @@ class TestContentBuilder(object):
         content = ContentBuilder([{
             "name": "First section",
             "questions": [{
+                "id": "q1",
                 "question": 'First question',
             }]
         }]).filter({'lot': 'SaaS'})
@@ -73,6 +78,7 @@ class TestContentBuilder(object):
         content = ContentBuilder([{
             "name": "First section",
             "questions": [{
+                "id": "q1",
                 "question": 'First question',
                 "depends": [{
                     "on": "lot",
@@ -87,6 +93,7 @@ class TestContentBuilder(object):
         content = ContentBuilder([{
             "name": "First section",
             "questions": [{
+                "id": "q1",
                 "question": 'First question',
                 "depends": [{
                     "on": "lot",
@@ -103,6 +110,7 @@ class TestContentBuilder(object):
         content = ContentBuilder([{
             "name": "First section",
             "questions": [{
+                "id": "q1",
                 "question": 'First question',
                 "depends": [{
                     "on": "lot",
@@ -118,6 +126,7 @@ class TestContentBuilder(object):
             "name": "First section",
             "questions": [
                 {
+                    "id": "q1",
                     "question": 'First question',
                     "depends": [{
                         "on": "lot",
@@ -125,6 +134,7 @@ class TestContentBuilder(object):
                     }]
                 },
                 {
+                    "id": "q2",
                     "question": 'Second question',
                     "depends": [{
                         "on": "lot",
@@ -141,6 +151,7 @@ class TestContentBuilder(object):
             "name": "First section",
             "questions": [
                 {
+                    "id": "q1",
                     "question": 'First question',
                     "depends": [{
                         "on": "lot",
@@ -148,6 +159,7 @@ class TestContentBuilder(object):
                     }]
                 },
                 {
+                    "id": "q2",
                     "question": 'Second question',
                     "depends": [{
                         "on": "lot",
@@ -167,6 +179,7 @@ class TestContentBuilder(object):
             "name": "First section",
             "questions": [
                 {
+                    "id": "q1",
                     "question": 'First question',
                     "depends": [{
                         "on": "lot",
@@ -174,6 +187,7 @@ class TestContentBuilder(object):
                     }]
                 },
                 {
+                    "id": "q2",
                     "question": 'Second question',
                     "depends": [{
                         "on": "lot",
@@ -181,6 +195,7 @@ class TestContentBuilder(object):
                     }]
                 },
                 {
+                    "id": "q3",
                     "question": 'Third question',
                     "depends": [{
                         "on": "lot",
@@ -205,6 +220,7 @@ class TestContentBuilder(object):
             "name": "First section",
             "questions": [
                 {
+                    "id": "q1",
                     "question": 'First question',
                     "depends": [{
                         "on": "lot",
@@ -220,12 +236,13 @@ class TestContentBuilder(object):
         content = content.filter({"lot": "IaaS"})
         assert content.get_section("first_section") is None
 
-    def test_get_next_section(self):
+    def test_get_question(self):
         content = ContentBuilder([
             {
                 "id": "first_section",
                 "name": "First section",
                 "questions": [{
+                    "id": "q1",
                     "question": 'First question',
                     "depends": [{
                         "on": "lot",
@@ -237,6 +254,7 @@ class TestContentBuilder(object):
                 "id": "second_section",
                 "name": "Second section",
                 "questions": [{
+                    "id": "q2",
                     "question": 'First question',
                     "depends": [{
                         "on": "lot",
@@ -249,6 +267,53 @@ class TestContentBuilder(object):
                 "name": "Third section",
                 "editable": True,
                 "questions": [{
+                    "id": "q3",
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                }]
+            },
+        ])
+
+        assert content.get_question('q1').get('id') == 'q1'
+
+        content = content.filter({'lot': 'IaaS'})
+        assert content.get_question('q1') is None
+
+    def test_get_next_section(self):
+        content = ContentBuilder([
+            {
+                "id": "first_section",
+                "name": "First section",
+                "questions": [{
+                    "id": "q1",
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                }]
+            },
+            {
+                "id": "second_section",
+                "name": "Second section",
+                "questions": [{
+                    "id": "q2",
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SCS", "SaaS", "PaaS"]
+                    }]
+                }]
+            },
+            {
+                "id": "third_section",
+                "name": "Third section",
+                "editable": True,
+                "questions": [{
+                    "id": "q3",
                     "question": 'First question',
                     "depends": [{
                         "on": "lot",
@@ -266,6 +331,158 @@ class TestContentBuilder(object):
         assert content.get_next_editable_section_id() == "third_section"
         assert content.get_next_editable_section_id(
             "second_section") == "third_section"
+
+    def test_get_section_data(self):
+        content = ContentBuilder([
+            {
+                "id": "first_section",
+                "name": "First section",
+                "questions": [{
+                    "id": "q1",
+                    "question": "Boolean question",
+                    "type": "boolean",
+                }, {
+                    "id": "q2",
+                    "question": "Text question",
+                    "type": "text",
+                }, {
+                    "id": "q3",
+                    "question": "Radios question",
+                    "type": "radios",
+                }, {
+                    "id": "q4",
+                    "question": "List question",
+                    "type": "list",
+                }, {
+                    "id": "q5",
+                    "question": "Checkboxes question",
+                    "type": "checkboxes",
+                }, {
+                    "id": "q6",
+                    "question": "Service ID question",
+                    "type": "service_id",
+                    "assuranceApproach": "2answers-type1",
+                }, {
+                    "id": "q7",
+                    "question": "Pricing question",
+                    "type": "pricing",
+                }, {
+                    "id": "q8",
+                    "question": "Upload question",
+                    "type": "upload",
+                }, {
+                    "id": "q9",
+                    "question": "Percentage question",
+                    "type": "percentage",
+                }, {
+                    "id": "q10",
+                    "question": "Large text question",
+                    "type": "textbox_large",
+                }, {
+                    "id": "q11",
+                    "question": "Text question",
+                    "type": "text"
+                }]
+            }, {
+                "id": "second_section",
+                "name": "Second section",
+                "question": [{
+                    "id": "q12",
+                    "question": "Text question",
+                    "type": "text",
+                }]
+            }
+        ])
+
+        form = ImmutableMultiDict([
+            ('q1', 'true'),
+            ('q2', 'Some text stuff'),
+            ('q3', 'value'),
+            ('q3', 'Should be lost'),
+            ('q4', 'value 1'),
+            ('q4', 'value 2'),
+            ('q5', 'check 1'),
+            ('q5', 'check 2'),
+            ('q6', '71234567890'),
+            ('q6--assurance', 'yes I am'),
+            ('q7', '12.12'),
+            ('q7', '13.13'),
+            ('q7', 'Unit'),
+            ('q7', 'Hour'),
+            ('q8', 'blah blah'),
+            ('q9', '12.12'),
+            ('q10', 'Looooooooaaaaaaaaads of text'),
+            ('extra_field', 'Should be lost'),
+            ('q12', 'Should be lost'),
+        ])
+
+        data = content.get_section_data('first_section', form)
+
+        assert data == {
+            'q1': True,
+            'q2': 'Some text stuff',
+            'q3': 'value',
+            'q4': ['value 1', 'value 2'],
+            'q5': ['check 1', 'check 2'],
+            'q6': {'assurance': 'yes I am', 'value': '71234567890'},
+            'priceMin': '12.12',
+            'priceMax': '13.13',
+            'priceUnit': 'Unit',
+            'priceInterval': 'Hour',
+            'q9': 12.12,
+            'q10': 'Looooooooaaaaaaaaads of text',
+        }
+
+        # Failure modes
+        form = ImmutableMultiDict([
+            ('q1', 'not boolean')
+        ])
+        assert content.get_section_data('first_section', form)['q1'] == 'not boolean'
+
+        form = ImmutableMultiDict([
+            ('q9', 'not a number')
+        ])
+        assert content.get_section_data('first_section', form)['q9'] == 'not a number'
+
+        with pytest.raises(ValueError):
+            form = ImmutableMultiDict([
+                ('q7', '12.12'),
+            ])
+            content.get_section_data('first_section', form)
+
+    def test_get_all_data(self):
+        content = ContentBuilder([
+            {
+                "id": "first_section",
+                "name": "First section",
+                "questions": [{
+                    "id": "q1",
+                    "question": "Question one",
+                    "type": "text",
+                }]
+            },
+            {
+                "id": "second_section",
+                "name": "Second section",
+                "questions": [{
+                    "id": "q2",
+                    "question": "Question two",
+                    "type": "text",
+                }]
+            }
+        ])
+
+        form = ImmutableMultiDict([
+            ('q1', 'some text'),
+            ('q2', 'other text'),
+        ])
+
+        data = content.get_all_data(form)
+
+        assert data == {
+            'q1': 'some text',
+            'q2': 'other text',
+        }
 
 
 class TestReadYaml(object):
