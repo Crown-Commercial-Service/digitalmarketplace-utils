@@ -507,6 +507,32 @@ class TestContentSection(object):
 
         assert section.get_question('q1').get('id') == 'q1'
 
+    def test_get_field_names_with_pricing_question(self):
+        section = ContentSection.create({
+            "id": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "First question",
+                "type": "pricing"
+            }]
+        })
+
+        assert section.get_field_names() == ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
+
+    def test_get_field_names_with_no_pricing_question(self):
+        section = ContentSection.create({
+            "id": "second_section",
+            "name": "Second section",
+            "questions": [{
+                "id": "q2",
+                "question": "Second question",
+                "type": "text",
+            }]
+        })
+
+        assert section.get_field_names() == ['q2']
+
 
 class TestReadYaml(object):
     @mock.patch('os.path.isfile', return_value=True)
