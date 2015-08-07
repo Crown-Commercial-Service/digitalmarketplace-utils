@@ -114,7 +114,7 @@ class ContentSection(object):
     @classmethod
     def create(cls, section):
         if isinstance(section, ContentSection):
-            return section
+            return section.copy()
         else:
             return ContentSection(
                 id=section['id'],
