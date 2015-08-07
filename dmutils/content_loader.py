@@ -10,11 +10,13 @@ from .config import convert_to_boolean, convert_to_number
 class ContentBuilder(object):
     """An ordered set of sections each made up of one or more questions.
 
-    Usage::
+    Example::
+        # Get hold of a section
+        content = ContentBuilder(sections)
+        section = content.get_section(section_id)
 
-        >>> content = ContentBuilder(sections)
-        >>> content.get_section_data(section_id, form_data)
-        {'field': 'value', 'field2': 'value2'}
+        # Extract data from form data
+        section.get_data(form_data)
     """
     def __init__(self, sections):
         self.sections = [ContentSection(section) for section in sections]
@@ -36,7 +38,7 @@ class ContentBuilder(object):
         :type form_data: :class:`werkzeug.ImmutableMultiDict`
         :return: parsed and filtered data
 
-        See :func:`ContentBuilder.get_section_data` for more details.
+        See :func:`SectionContent.get_data` for more details.
         """
         all_data = {}
         for section in self:
