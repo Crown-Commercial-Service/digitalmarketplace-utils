@@ -49,7 +49,7 @@ def send_email(
         current_app.logger.error("A mandrill error occurred: %s", e)
         raise MandrillException(e)
 
-    current_app.logger.info("Sent password email: %s", result)
+    current_app.logger.info("Sent {} email: {}".format(tags, result))
 
 
 def generate_token(data, secret_key, salt):
