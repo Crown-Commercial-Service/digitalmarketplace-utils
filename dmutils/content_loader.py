@@ -228,10 +228,7 @@ class ContentLoader(object):
         ]
 
     def get_question(self, question):
-        q = self._questions.get(question, {}).copy()
-        if q:
-            q['id'] = question
-        return q
+        return self._questions.get(question, {}).copy()
 
     def get_builder(self):
         return ContentBuilder(self._sections)
