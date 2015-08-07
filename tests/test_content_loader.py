@@ -29,12 +29,20 @@ class TestContentBuilder(object):
         assert content.sections == []
 
     def test_content_builder_iteration(self):
-        content = ContentBuilder([{'id': 1}, {'id': 2}, {'id': 3}])
+        def section(id):
+            return {
+                'id': id,
+                'name': 'name',
+                'questions': []
+            }
 
-        assert list(content) == [{'id': 1}, {'id': 2}, {'id': 3}]
+        content = ContentBuilder([section(1), section(2), section(3)])
+
+        assert [section.id for section in content] == [1, 2, 3]
 
     def test_a_question_with_a_dependency(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -50,6 +58,7 @@ class TestContentBuilder(object):
 
     def test_missing_depends_key_filter(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -65,6 +74,7 @@ class TestContentBuilder(object):
 
     def test_question_without_dependencies(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -76,6 +86,7 @@ class TestContentBuilder(object):
 
     def test_a_question_with_a_dependency_that_doesnt_match(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -91,6 +102,7 @@ class TestContentBuilder(object):
 
     def test_a_question_which_depends_on_one_of_several_answers(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -108,6 +120,7 @@ class TestContentBuilder(object):
 
     def test_a_question_which_shouldnt_be_shown(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -123,6 +136,7 @@ class TestContentBuilder(object):
 
     def test_a_section_which_has_a_mixture_of_dependencies(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -148,6 +162,7 @@ class TestContentBuilder(object):
 
     def test_section_modification(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -176,6 +191,7 @@ class TestContentBuilder(object):
 
     def test_that_filtering_is_cumulative(self):
         content = ContentBuilder([{
+            "id": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -230,8 +246,7 @@ class TestContentBuilder(object):
             ]
         }])
 
-        assert content.get_section(
-            "first_section").get("id") == "first_section"
+        assert content.get_section("first_section").id == "first_section"
 
         content = content.filter({"lot": "IaaS"})
         assert content.get_section("first_section") is None
@@ -369,7 +384,7 @@ class TestContentBuilder(object):
 
 class TestContentSection(object):
     def test_get_data(self):
-        section = ContentSection({
+        section = ContentSection.create({
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -477,7 +492,7 @@ class TestContentSection(object):
             section.get_data(form)
 
     def test_get_question(self):
-        section = ContentSection({
+        section = ContentSection.create({
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -572,7 +587,11 @@ class TestContentLoader(object):
 
         assert isinstance(yaml_loader.get_builder(), ContentBuilder)
 
-        assert yaml_loader.get_builder().sections == yaml_loader._sections
+        assert [
+            section.id for section in yaml_loader.get_builder().sections
+        ] == [
+            section['id'] for section in yaml_loader._sections
+        ]
 
     def test_multple_builders(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)

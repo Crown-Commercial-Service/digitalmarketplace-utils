@@ -19,7 +19,7 @@ class ContentBuilder(object):
         section.get_data(form_data)
     """
     def __init__(self, sections):
-        self.sections = [ContentSection(section) for section in sections]
+        self.sections = [ContentSection.create(section) for section in sections]
 
     def __iter__(self):
         return self.sections.__iter__()
@@ -27,7 +27,7 @@ class ContentBuilder(object):
     def get_section(self, section_id):
         """Return a section by ID"""
         for section in self.sections:
-            if section["id"] == section_id:
+            if section.id == section_id:
                 return section
         return None
 
@@ -41,7 +41,7 @@ class ContentBuilder(object):
         See :func:`SectionContent.get_data` for more details.
         """
         all_data = {}
-        for section in self:
+        for section in self.sections:
             all_data.update(section.get_data(form_data))
         return all_data
 
@@ -50,13 +50,13 @@ class ContentBuilder(object):
 
         for section in self.sections:
             if only_editable:
-                if previous_section_is_current and section.get('editable'):
-                    return section["id"]
+                if previous_section_is_current and section.editable:
+                    return section.id
             else:
                 if previous_section_is_current:
-                    return section["id"]
+                    return section.id
 
-            if section["id"] == section_id:
+            if section.id == section_id:
                 previous_section_is_current = True
 
         return None
@@ -81,14 +81,14 @@ class ContentBuilder(object):
         section = section.copy()
 
         filtered_questions = [
-            question for question in section["questions"]
+            question for question in section.questions
             if self._question_should_be_shown(
                 question.get("depends"), service_data
             )
         ]
 
         if len(filtered_questions):
-            section.section["questions"] = filtered_questions
+            section.questions = filtered_questions
             return section
         else:
             return None
@@ -104,29 +104,39 @@ class ContentBuilder(object):
         return True
 
     def get_question(self, question_id):
-        for section in self:
+        for section in self.sections:
             question = section.get_question(question_id)
             if question:
                 return question
 
 
-class ContentSection(collections.Mapping):
-    def __init__(self, section):
+class ContentSection(object):
+    @classmethod
+    def create(cls, section):
         if isinstance(section, ContentSection):
-            section = section.section
-        self.section = section
+            return section
+        else:
+            return ContentSection(
+                id=section['id'],
+                name=section['name'],
+                editable=section.get('editable'),
+                questions=section['questions'])
+
+    def __init__(self, id, name, editable, questions):
+        self.id = id
+        self.name = name
+        self.editable = editable
+        self.questions = questions
 
     def __getitem__(self, key):
-        return self.section[key]
-
-    def __iter__(self):
-        return self.section.__iter__()
-
-    def __len__(self):
-        return len(self.section)
+        return getattr(self, key)
 
     def copy(self):
-        return ContentSection(self.section.copy())
+        return ContentSection(
+            id=self.id,
+            name=self.name,
+            editable=self.editable,
+            questions=self.questions.copy())
 
     def get_data(self, form_data):
         """Extract data for a section from a submitted form
@@ -162,12 +172,12 @@ class ContentSection(collections.Mapping):
         return section_data
 
     def _get_fields(self):
-        return [q['id'] for q in self['questions']]
+        return [q['id'] for q in self.questions]
 
     def get_question(self, question_id):
         """Return a question dictionary by question ID"""
         # TODO: investigate how this would work as get by form field name
-        for question in self.section['questions']:
+        for question in self.questions:
             if question['id'] == question_id:
                 return question
 
@@ -175,7 +185,8 @@ class ContentSection(collections.Mapping):
 
     def _is_type(self, key, *types):
         """Return True if a given key is one of the provided types"""
-        return self.get_question(key)['type'] in types
+        question = self.get_question(key)
+        return question and question.get('type') in types
 
     def _is_list_type(self, key):
         """Return True if a given key is a list type"""
