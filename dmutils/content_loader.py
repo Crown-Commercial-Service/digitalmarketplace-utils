@@ -136,7 +136,7 @@ class ContentSection(object):
             id=self.id,
             name=self.name,
             editable=self.editable,
-            questions=self.questions.copy())
+            questions=self.questions[:])
 
     def get_data(self, form_data):
         """Extract data for a section from a submitted form
