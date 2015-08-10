@@ -9,6 +9,7 @@ except ImportError:
 import requests
 from flask import has_request_context, request, current_app
 import backoff
+from monotonic import monotonic
 
 from .errors import APIError, HTTPError, HTTP503Error, InvalidResponse
 
@@ -72,6 +73,7 @@ class BaseAPIClient(object):
         }
         headers = self._add_request_id_header(headers)
 
+        start_time = monotonic()
         try:
             response = requests.request(
                 method, url,
@@ -83,6 +85,10 @@ class BaseAPIClient(object):
                 "API %s request on %s failed with %s '%s'",
                 method, url, api_error.status_code, api_error.message)
             raise api_error
+        finally:
+            elapsed_time = monotonic() - start_time
+            logger.info(
+                "API %s request on %s finished in %s", method, url, elapsed_time)
         try:
             return response.json()
         except ValueError as e:
