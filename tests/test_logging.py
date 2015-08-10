@@ -75,6 +75,11 @@ def test_formatter_request_id(app_with_logging):
         assert RequestIdFilter().request_id == 'generated'
 
 
+def test_formatter_request_id_in_non_logging_app(app):
+    with app.test_request_context('/', headers={'DM-Request-Id': 'generated'}):
+        assert RequestIdFilter().request_id == 'no-request-id'
+
+
 def test_init_app_adds_stream_handler_in_debug(app):
     app.config['DEBUG'] = True
     init_app(app)

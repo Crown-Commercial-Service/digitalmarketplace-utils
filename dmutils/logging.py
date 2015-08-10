@@ -97,10 +97,10 @@ class AppNameFilter(logging.Filter):
 class RequestIdFilter(logging.Filter):
     @property
     def request_id(self):
-        if not has_request_context():
-            return 'no-request-id'
-        else:
+        if has_request_context() and hasattr(request, 'request_id'):
             return request.request_id
+        else:
+            return 'no-request-id'
 
     def filter(self, record):
         record.request_id = self.request_id
