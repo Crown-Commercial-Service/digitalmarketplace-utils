@@ -65,9 +65,15 @@ class DataAPIClient(BaseAPIClient):
             "/suppliers/{}".format(supplier_id)
         )
 
-    def create_supplier(self, supplier_id, supplier):
+    def import_supplier(self, supplier_id, supplier):
         return self._put(
             "/suppliers/{}".format(supplier_id),
+            data={"suppliers": supplier},
+        )
+
+    def create_supplier(self, supplier):
+        return self._post(
+            "/suppliers",
             data={"suppliers": supplier},
         )
 
