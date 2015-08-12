@@ -1080,6 +1080,27 @@ class TestDataApiClient(object):
             }
         }
 
+    def test_create_audit_event(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events",
+            json={"auditEvents": "result"},
+            status_code=200)
+
+        result = data_client.create_audit_event(
+            "thing_happened", "a user", {"key": "value"}, "suppliers", "123")
+
+        assert rmock.called
+        assert result == {'auditEvents': 'result'}
+        assert rmock.request_history[0].json() == {
+            "auditEvents": {
+                "type": "thing_happened",
+                "user": "a user",
+                "data": {"key": "value"},
+                "objectType": "suppliers",
+                "objectId": "123",
+            }
+        }
+
 
 class TestDataAPIClientIterMethods(object):
     def _test_find_iter(self, data_client, rmock, method_name, model_name, url_path):

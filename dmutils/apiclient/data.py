@@ -48,6 +48,21 @@ class DataAPIClient(BaseAPIClient):
                 }
             })
 
+    def create_audit_event(self, audit_type, user, data, object_type=None, object_id=None):
+        payload = {
+            "type": audit_type,
+            "user": user,
+            "data": data,
+        }
+        if object_type is not None:
+            payload['objectType'] = object_type
+        if object_id is not None:
+            payload['objectId'] = object_id
+
+        return self._post(
+            '/audit-events',
+            data={'auditEvents': payload})
+
     # Suppliers
 
     def find_suppliers(self, prefix=None, page=None, framework=None):
