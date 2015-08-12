@@ -8,6 +8,7 @@ class AuditTypes(Enum):
     supplier_update = "supplier_update"
     create_draft_service = "create_draft_service"
     update_draft_service = "update_draft_service"
+    complete_draft_service = "complete_draft_service"
     publish_draft_service = "publish_draft_service"
     delete_draft_service = "delete_draft_service"
     update_service = "update_service"
