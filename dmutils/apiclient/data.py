@@ -293,6 +293,15 @@ class DataAPIClient(BaseAPIClient):
 
         return self._post("/draft-services/{}".format(draft_id), data=data)
 
+    def complete_draft_service(self, draft_id, user):
+        return self._post(
+            "/draft-services/{}/complete".format(draft_id),
+            data={
+                "update_details": {
+                    "updated_by": user
+                }
+            })
+
     def publish_draft_service(self, draft_id, user):
         return self._post(
             "/draft-services/{}/publish".format(draft_id),
