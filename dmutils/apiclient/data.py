@@ -14,7 +14,9 @@ class DataAPIClient(BaseAPIClient):
             audit_type=None,
             audit_date=None,
             page=None,
-            acknowledged=None):
+            acknowledged=None,
+            object_type=None,
+            object_id=None):
 
         params = {}
         if audit_type:
@@ -25,6 +27,10 @@ class DataAPIClient(BaseAPIClient):
             params['audit-date'] = audit_date
         if acknowledged is not None:
             params['acknowledged'] = acknowledged
+        if object_type is not None:
+            params['object-type'] = object_type
+        if object_id is not None:
+            params['object-id'] = object_id
 
         return self._get(
             "/audit-events",
@@ -41,6 +47,21 @@ class DataAPIClient(BaseAPIClient):
                     "updated_by": user
                 }
             })
+
+    def create_audit_event(self, audit_type, user, data, object_type=None, object_id=None):
+        payload = {
+            "type": audit_type,
+            "user": user,
+            "data": data,
+        }
+        if object_type is not None:
+            payload['objectType'] = object_type
+        if object_id is not None:
+            payload['objectId'] = object_id
+
+        return self._post(
+            '/audit-events',
+            data={'auditEvents': payload})
 
     # Suppliers
 

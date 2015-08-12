@@ -1029,7 +1029,7 @@ class TestDataApiClient(object):
 
     def test_find_audit_events_with_all_params(self, data_client, rmock):
         rmock.get(
-            "http://baseurl/audit-events?page=123&audit-type=sometype&audit-date=2010-01-01&acknowledged=all",  # noqa
+            "http://baseurl/audit-events?page=123&audit-type=sometype&audit-date=2010-01-01&acknowledged=all&object-type=foo&object-id=123",  # noqa
             json={"audit-event": "result"},
             status_code=200,
         )
@@ -1038,7 +1038,9 @@ class TestDataApiClient(object):
             page=123,
             audit_type='sometype',
             acknowledged='all',
-            audit_date='2010-01-01')
+            audit_date='2010-01-01',
+            object_type='foo',
+            object_id=123)
 
         assert result == {"audit-event": "result"}
         assert rmock.called
@@ -1075,6 +1077,27 @@ class TestDataApiClient(object):
         assert rmock.request_history[0].json() == {
             'update_details': {
                 'updated_by': 'user'
+            }
+        }
+
+    def test_create_audit_event(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events",
+            json={"auditEvents": "result"},
+            status_code=200)
+
+        result = data_client.create_audit_event(
+            "thing_happened", "a user", {"key": "value"}, "suppliers", "123")
+
+        assert rmock.called
+        assert result == {'auditEvents': 'result'}
+        assert rmock.request_history[0].json() == {
+            "auditEvents": {
+                "type": "thing_happened",
+                "user": "a user",
+                "data": {"key": "value"},
+                "objectType": "suppliers",
+                "objectId": "123",
             }
         }
 
