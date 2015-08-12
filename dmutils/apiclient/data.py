@@ -14,7 +14,9 @@ class DataAPIClient(BaseAPIClient):
             audit_type=None,
             audit_date=None,
             page=None,
-            acknowledged=None):
+            acknowledged=None,
+            object_type=None,
+            object_id=None):
 
         params = {}
         if audit_type:
@@ -25,6 +27,10 @@ class DataAPIClient(BaseAPIClient):
             params['audit-date'] = audit_date
         if acknowledged is not None:
             params['acknowledged'] = acknowledged
+        if object_type is not None:
+            params['object-type'] = object_type
+        if object_id is not None:
+            params['object-id'] = object_id
 
         return self._get(
             "/audit-events",
