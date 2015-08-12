@@ -18,6 +18,7 @@ class AuditTypes(Enum):
     create_user = "create_user"
     update_user = "update_user"
     answer_selection_questions = "answer_selection_questions"
+    register_framework_interest = "register_framework_interest"
 
     @staticmethod
     def is_valid_audit_type(test_audit_type):
