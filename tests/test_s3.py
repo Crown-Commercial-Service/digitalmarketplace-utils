@@ -1,4 +1,5 @@
 import unittest
+import os
 import datetime
 
 import mock
@@ -34,6 +35,47 @@ class TestS3Uploader(unittest.TestCase):
 
         S3('test-bucket').get_signed_url('documents/file.pdf', 10)
         mock_bucket.s3_key_mock.generate_url.assert_called_with(10)
+
+    def test_list_files(self):
+        mock_bucket = mock.Mock()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        fake_key = FakeKey('dir/file 1.odt')
+        mock_bucket.list.return_value = [fake_key]
+        expected = [fake_key.fake_format_key(filename='file 1', ext='odt')]
+
+        self.assertEqual(S3('test-bucket').list(), expected)
+
+    def test_list_files_removes_directories(self):
+        mock_bucket = mock.Mock()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        fake_key_directory = FakeKey('dir/', size=0)
+        fake_key_file = FakeKey('dir/file 1.odt')
+        mock_bucket.list.return_value = [
+            fake_key_directory,
+            fake_key_file
+        ]
+        expected = [fake_key_file.fake_format_key(filename='file 1', ext='odt')]
+
+        self.assertEqual(S3('test-bucket').list(), expected)
+
+    def test_list_files_order_by_last_modified(self):
+        mock_bucket = mock.Mock()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        fake_key_later = FakeKey('dir/file 1.odt')
+        fake_key_earlier = FakeKey('dir/file 2.odt', last_modified='2014-08-17T14:00:00.000Z')
+        mock_bucket.list.return_value = [
+            fake_key_later,
+            fake_key_earlier
+        ]
+        expected = [
+            fake_key_earlier.fake_format_key(filename='file 2', ext='odt'),
+            fake_key_later.fake_format_key(filename='file 1', ext='odt')
+        ]
+
+        self.assertEqual(S3('test-bucket').list(), expected)
 
     def test_save_file(self):
         mock_bucket = FakeBucket()
@@ -143,3 +185,19 @@ class FakeBucket(object):
 
     def copy_key(self, new_key, *args, **kwargs):
         self.keys.add(new_key)
+
+
+class FakeKey(object):
+    def __init__(self, name, last_modified=None, size=None):
+        self.name = name
+        self.last_modified = last_modified or '2015-08-17T14:00:00.000Z'
+        self.size = size if size is not None else 1
+
+    def fake_format_key(self, filename, ext):
+        return {
+            'path': self.name,
+            'ext': ext,
+            'filename': filename,
+            'last_modified': self.last_modified,
+            'size': self.size
+        }
