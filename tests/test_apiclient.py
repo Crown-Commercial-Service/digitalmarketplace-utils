@@ -12,6 +12,7 @@ from dmutils.apiclient import SearchAPIClient, DataAPIClient
 from dmutils.apiclient import APIError, HTTPError, InvalidResponse
 from dmutils.apiclient.errors import REQUEST_ERROR_STATUS_CODE
 from dmutils.apiclient.errors import REQUEST_ERROR_MESSAGE
+from dmutils.audit import AuditTypes
 
 
 @pytest.yield_fixture
@@ -1026,28 +1027,40 @@ class TestDataApiClient(object):
         assert result == {"audit-event": "result"}
         assert rmock.called
 
-    def test_find_audit_events_with_page_and_type(self, data_client, rmock):
+    def test_find_audit_events_with_audit_type(self, data_client, rmock):
         rmock.get(
-            "http://baseurl/audit-events?page=123&audit-type=sometype",
+            "http://baseurl/audit-events?audit-type=contact_update",
             json={"audit-event": "result"},
             status_code=200,
         )
 
-        result = data_client.find_audit_events(page=123, audit_type='sometype')
+        result = data_client.find_audit_events(audit_type=AuditTypes.contact_update)
+
+        assert result == {"audit-event": "result"}
+        assert rmock.called
+
+    def test_find_audit_events_with_page_and_type(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/audit-events?page=123&audit-type=contact_update",
+            json={"audit-event": "result"},
+            status_code=200,
+        )
+
+        result = data_client.find_audit_events(page=123, audit_type=AuditTypes.contact_update)
 
         assert result == {"audit-event": "result"}
         assert rmock.called
 
     def test_find_audit_events_with_all_params(self, data_client, rmock):
         rmock.get(
-            "http://baseurl/audit-events?page=123&audit-type=sometype&audit-date=2010-01-01&acknowledged=all&object-type=foo&object-id=123",  # noqa
+            "http://baseurl/audit-events?page=123&audit-type=contact_update&audit-date=2010-01-01&acknowledged=all&object-type=foo&object-id=123",  # noqa
             json={"audit-event": "result"},
             status_code=200,
         )
 
         result = data_client.find_audit_events(
             page=123,
-            audit_type='sometype',
+            audit_type=AuditTypes.contact_update,
             acknowledged='all',
             audit_date='2010-01-01',
             object_type='foo',
@@ -1058,19 +1071,27 @@ class TestDataApiClient(object):
 
     def test_find_audit_events_with_no_none_params(self, data_client, rmock):
         rmock.get(
-            "http://baseurl/audit-events?page=123&audit-type=sometype&acknowledged=all",  # noqa
+            "http://baseurl/audit-events?page=123&audit-type=contact_update&acknowledged=all",  # noqa
             json={"audit-event": "result"},
             status_code=200,
         )
 
         result = data_client.find_audit_events(
             page=123,
-            audit_type='sometype',
+            audit_type=AuditTypes.contact_update,
             acknowledged='all',
             audit_date=None)
 
         assert result == {"audit-event": "result"}
         assert rmock.called
+
+    def test_find_audit_events_with_invalid_audit_type(self, data_client, rmock):
+        with pytest.raises(TypeError):
+            data_client.find_audit_events(
+                page=123,
+                audit_type="invalid",
+                acknowledged='all',
+                audit_date=None)
 
     def test_acknowledge_audit_event(self, data_client, rmock):
         rmock.post(
@@ -1098,19 +1119,29 @@ class TestDataApiClient(object):
             status_code=200)
 
         result = data_client.create_audit_event(
-            "thing_happened", "a user", {"key": "value"}, "suppliers", "123")
+            AuditTypes.contact_update, "a user", {"key": "value"}, "suppliers", "123")
 
         assert rmock.called
         assert result == {'auditEvents': 'result'}
         assert rmock.request_history[0].json() == {
             "auditEvents": {
-                "type": "thing_happened",
+                "type": "contact_update",
                 "user": "a user",
                 "data": {"key": "value"},
                 "objectType": "suppliers",
                 "objectId": "123",
             }
         }
+
+    def test_create_audit_event_with_invalid_audit_type(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events",
+            json={"auditEvents": "result"},
+            status_code=200)
+
+        with pytest.raises(TypeError):
+            data_client.create_audit_event(
+                "thing_happened", "a user", {"key": "value"}, "suppliers", "123")
 
 
 class TestDataAPIClientIterMethods(object):
