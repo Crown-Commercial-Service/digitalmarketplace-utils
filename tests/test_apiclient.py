@@ -1199,6 +1199,26 @@ class TestDataApiClient(object):
             data_client.create_audit_event(
                 "thing_happened", "a user", {"key": "value"}, "suppliers", "123")
 
+    def test_get_framework_stats(self, data_client, rmock):
+        rmock.get(
+            'http://baseurl/frameworks/g-cloud-11/stats',
+            json={'drafts': 1},
+            status_code=200)
+
+        result = data_client.get_framework_stats('g-cloud-11')
+
+        assert result == {'drafts': 1}
+        assert rmock.called
+
+    def test_get_framework_stats_raises_on_error(self, data_client, rmock):
+        with pytest.raises(APIError):
+            rmock.get(
+                'http://baseurl/frameworks/g-cloud-11/stats',
+                json={'drafts': 1},
+                status_code=400)
+
+            data_client.get_framework_stats('g-cloud-11')
+
 
 class TestDataAPIClientIterMethods(object):
     def _test_find_iter(self, data_client, rmock, method_name, model_name, url_path):
