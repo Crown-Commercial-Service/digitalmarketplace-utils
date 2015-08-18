@@ -20,6 +20,8 @@ class AuditTypes(Enum):
     answer_selection_questions = "answer_selection_questions"
     register_framework_interest = "register_framework_interest"
     invite_user = "invite_user"
+    send_clarification_question = "send_clarification_question"
+    view_clarification_questions = "view_clarification_questions"
 
     @staticmethod
     def is_valid_audit_type(test_audit_type):
