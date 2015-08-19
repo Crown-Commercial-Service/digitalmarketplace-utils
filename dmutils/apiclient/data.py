@@ -1,3 +1,4 @@
+from ..audit import AuditTypes
 from .base import BaseAPIClient, logger, make_iter_method
 from .errors import HTTPError
 
@@ -20,7 +21,9 @@ class DataAPIClient(BaseAPIClient):
 
         params = {}
         if audit_type:
-            params["audit-type"] = audit_type
+            if not isinstance(audit_type, AuditTypes):
+                raise TypeError("Must be an AuditTypes")
+            params["audit-type"] = audit_type.value
         if page is not None:
             params['page'] = page
         if audit_date is not None:
@@ -49,8 +52,10 @@ class DataAPIClient(BaseAPIClient):
             })
 
     def create_audit_event(self, audit_type, user, data, object_type=None, object_id=None):
+        if not isinstance(audit_type, AuditTypes):
+            raise TypeError("Must be an AuditTypes")
         payload = {
-            "type": audit_type,
+            "type": audit_type.value,
             "user": user,
             "data": data,
         }
