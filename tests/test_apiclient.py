@@ -1116,7 +1116,7 @@ class TestDataApiClient(object):
         rmock.post(
             "http://baseurl/audit-events",
             json={"auditEvents": "result"},
-            status_code=200)
+            status_code=201)
 
         result = data_client.create_audit_event(
             AuditTypes.contact_update, "a user", {"key": "value"}, "suppliers", "123")
@@ -1130,6 +1130,62 @@ class TestDataApiClient(object):
                 "data": {"key": "value"},
                 "objectType": "suppliers",
                 "objectId": "123",
+            }
+        }
+
+    def test_create_audit_event_with_no_user(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events",
+            json={'auditEvents': 'result'},
+            status_code=201)
+
+        result = data_client.create_audit_event(
+            AuditTypes.contact_update, None, {'key': 'value'}, 'suppliers', '123')
+
+        assert rmock.called
+        assert result == {'auditEvents': 'result'}
+        assert rmock.request_history[0].json() == {
+            "auditEvents": {
+                "type": "contact_update",
+                "data": {"key": "value"},
+                "objectType": "suppliers",
+                "objectId": "123",
+            }
+        }
+
+    def test_create_audit_event_with_no_object(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events",
+            json={'auditEvents': 'result'},
+            status_code=201)
+
+        result = data_client.create_audit_event(
+            AuditTypes.contact_update, 'user', {'key': 'value'})
+
+        assert rmock.called
+        assert result == {'auditEvents': 'result'}
+        assert rmock.request_history[0].json() == {
+            "auditEvents": {
+                "type": "contact_update",
+                "user": "user",
+                "data": {"key": "value"},
+            }
+        }
+
+    def test_create_audit_with_no_data_defaults_to_empty_object(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/audit-events",
+            json={'auditEvents': 'result'},
+            status_code=201)
+
+        result = data_client.create_audit_event(AuditTypes.contact_update)
+
+        assert rmock.called
+        assert result == {'auditEvents': 'result'}
+        assert rmock.request_history[0].json() == {
+            "auditEvents": {
+                "type": "contact_update",
+                "data": {},
             }
         }
 

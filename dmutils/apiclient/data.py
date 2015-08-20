@@ -51,14 +51,17 @@ class DataAPIClient(BaseAPIClient):
                 }
             })
 
-    def create_audit_event(self, audit_type, user, data, object_type=None, object_id=None):
+    def create_audit_event(self, audit_type, user=None, data=None, object_type=None, object_id=None):
         if not isinstance(audit_type, AuditTypes):
             raise TypeError("Must be an AuditTypes")
+        if data is None:
+            data = {}
         payload = {
             "type": audit_type.value,
-            "user": user,
             "data": data,
         }
+        if user is not None:
+            payload['user'] = user
         if object_type is not None:
             payload['objectType'] = object_type
         if object_id is not None:
