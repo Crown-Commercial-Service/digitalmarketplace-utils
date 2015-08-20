@@ -42,6 +42,40 @@ class S3(object):
         if key:
             return key.generate_url(expires_in)
 
+    def list(self, prefix='', delimiter=''):
+        """
+        return a list of file keys (ordered by last_modified date) from an s3 bucket
+
+        Prefix & Delimiter: http://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
+        :param prefix:      filter by files whose names begin with the prefix
+        :param delimiter:   filter out files whose names contain the delimiter
+        :return: list
+        """
+        # http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.bucket.Bucket.list
+        list_of_keys = self.bucket.list(prefix, delimiter)
+        return [
+            self._format_key(key)
+            for key in sorted(list_of_keys, key=lambda key: key.last_modified)
+            if not (key.size == 0 and key.name[-1] == '/')
+        ]
+
+    def _format_key(self, key):
+        """
+        transform a boto s3 Key object into a (simpler) dict
+
+        :param key: http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.key.Key
+        :return:    dict
+        """
+        filename, ext = os.path.splitext(os.path.basename(key.name))
+
+        return {
+            'path': key.name,
+            'filename': filename,
+            'ext': ext[1:],
+            'last_modified': key.last_modified,
+            'size': key.size
+        }
+
     def _move_existing(self, existing_path, move_prefix=None):
         if move_prefix is None:
             move_prefix = default_move_prefix()
