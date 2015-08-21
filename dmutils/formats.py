@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
-DISPLAY_DATE_FORMAT = '%d/%m/%Y'
+DISPLAY_DATE_FORMAT = '%A %d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
-DISPLAY_DATETIME_FORMAT = '%A, %d %B %Y at %H:%M'
+DISPLAY_DATETIME_FORMAT = '%A %d %B %Y at %H:%M'
 
 LOTS = [
     {
