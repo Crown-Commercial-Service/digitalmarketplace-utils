@@ -5,7 +5,7 @@ from dmutils.user import user_has_role, User
 
 @pytest.fixture
 def user():
-    return User(123, 'test@example.com', 321, 'test supplier', False, True, "Name")
+    return User(123, 'test@example.com', 321, 'test supplier', False, True, "Name", 'supplier')
 
 
 @pytest.fixture
@@ -15,6 +15,7 @@ def user_json():
             "id": 123,
             "emailAddress": "test@example.com",
             "name": "name",
+            "role": "supplier",
             "locked": False,
             "active": True,
             "supplier": {
@@ -47,11 +48,13 @@ def test_User_from_json():
         'emailAddress': 'test@example.com',
         'locked': False,
         'active': True,
-        'name': 'Name'
+        'name': 'Name',
+        'role': 'admin',
     }})
 
     assert user.id == 123
     assert user.name == 'Name'
+    assert user.role == 'admin'
     assert user.email_address == 'test@example.com'
     assert not user.is_locked()
     assert user.is_active()
@@ -61,6 +64,7 @@ def test_User_from_json_with_supplier():
     user = User.from_json({'users': {
         'id': 123,
         'name': 'Name',
+        'role': 'supplier',
         'emailAddress': 'test@example.com',
         'locked': False,
         'active': True,
@@ -71,9 +75,16 @@ def test_User_from_json_with_supplier():
     }})
     assert user.id == 123
     assert user.name == 'Name'
+    assert user.role == 'supplier'
     assert user.email_address == 'test@example.com'
     assert user.supplier_id == 321
     assert user.supplier_name == 'test supplier'
+
+
+def test_User_has_role(user_json):
+    user = User.from_json(user_json)
+    assert user.has_role('supplier')
+    assert not user.has_role('admin')
 
 
 def test_User_load_user(user_json):
