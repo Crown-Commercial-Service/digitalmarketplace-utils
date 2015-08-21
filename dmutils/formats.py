@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
 DISPLAY_DATE_FORMAT = '%A %d %B %Y'
@@ -27,6 +29,26 @@ LOTS = [
         'label': u'Specialist Cloud Services',
     },
 ]
+
+
+def timeformat(value, default_value=None):
+    return _format_date(value, default_value, DISPLAY_TIME_FORMAT)
+
+
+def dateformat(value, default_value=None):
+    return _format_date(value, default_value, DISPLAY_DATE_FORMAT)
+
+
+def datetimeformat(value, default_value=None):
+    return _format_date(value, default_value, DISPLAY_DATETIME_FORMAT)
+
+
+def _format_date(value, default_value, fmt):
+    if not value:
+        return default_value
+    if not isinstance(value, datetime):
+        value = datetime.strptime(value, DATETIME_FORMAT)
+    return value.strftime(fmt)
 
 
 def lot_to_lot_case(lot_to_check):

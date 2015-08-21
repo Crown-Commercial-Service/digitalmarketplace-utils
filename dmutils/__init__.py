@@ -47,21 +47,7 @@ def init_app(
         response.headers['X-Frame-Options'] = 'DENY'
         return response
 
-    @application.template_filter('timeformat')
-    def timeformat(value, default_value=None):
-        return format_helper(value, default_value, formats.DISPLAY_TIME_FORMAT)
+    application.template_filter(formats.timeformat)
+    application.template_filter(formats.dateformat)
+    application.template_filter(formats.datetimeformat)
 
-    @application.template_filter('dateformat')
-    def dateformat(value, default_value=None):
-        return format_helper(value, default_value, formats.DISPLAY_DATE_FORMAT)
-
-    @application.template_filter('datetimeformat')
-    def datetimeformat(value, default_value=None):
-        return format_helper(value, default_value, formats.DISPLAY_DATETIME_FORMAT)
-
-    def format_helper(value, default_value, format):
-        if not value:
-            return default_value
-        if not isinstance(value, datetime):
-            value = datetime.strptime(value, formats.DATETIME_FORMAT)
-        return value.strftime(format)
