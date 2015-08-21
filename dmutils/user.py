@@ -29,6 +29,9 @@ class User():
     def is_anonymous(self):
         return False
 
+    def has_role(self, role):
+        return self.role == role
+
     def get_id(self):
         try:
             return unicode(self.id)  # python 2
