@@ -50,4 +50,3 @@ def init_app(
     application.template_filter(formats.timeformat)
     application.template_filter(formats.dateformat)
     application.template_filter(formats.datetimeformat)
-

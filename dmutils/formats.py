@@ -46,6 +46,7 @@ def datetimeformat(value, default_value=None):
 
 EUROPE_LONDON = pytz.timezone("Europe/London")
 
+
 def _format_date(value, default_value, fmt):
     if not value:
         return default_value
