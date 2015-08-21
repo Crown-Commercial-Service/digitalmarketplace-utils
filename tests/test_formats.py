@@ -91,11 +91,11 @@ def test_format_price_errors():
 
 def test_timeformat():
     cases = [
-        (datetime(2012, 12, 12, 12, 12, 12, 12), "12:12:12"),
-        ("2012-12-12T12:12:12.0Z", "12:12:12"),
-        (datetime(2012, 8, 12, 12, 12, 12, 12), "13:12:12"),
+        (datetime(2012, 11, 10, 9, 8, 7, 6), "09:08:07"),
+        ("2012-11-10T09:08:07.0Z", "09:08:07"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6), "10:08:07"),
         ("2012-08-12T12:12:12.0Z", "13:12:12"),
-        (datetime(2012, 8, 12, 12, 12, 12, 12, tzinfo=pytz.utc), "13:12:12"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "10:08:07"),
     ]
 
     def check_timeformat(dt, formatted_time):
@@ -107,11 +107,11 @@ def test_timeformat():
 
 def test_dateformat():
     cases = [
-        (datetime(2012, 12, 12, 12, 12, 12, 12), "Wednesday 12 December 2012"),
-        ("2012-12-12T12:12:12.0Z", "Wednesday 12 December 2012"),
-        (datetime(2012, 8, 12, 12, 12, 12, 12), "Sunday 12 August 2012"),
-        ("2012-08-12T12:12:12.0Z", "Sunday 12 August 2012"),
-        (datetime(2012, 8, 12, 12, 12, 12, 12, tzinfo=pytz.utc), "Sunday 12 August 2012"),
+        (datetime(2012, 11, 10, 9, 8, 7, 6), "Saturday 10 November 2012"),
+        ("2012-11-10T09:08:07.0Z", "Saturday 10 November 2012"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6), "Friday 10 August 2012"),
+        ("2012-08-10T09:08:07.0Z", "Friday 10 August 2012"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "Friday 10 August 2012"),
     ]
 
     def check_dateformat(dt, formatted_date):
@@ -123,11 +123,11 @@ def test_dateformat():
 
 def test_datetimeformat():
     cases = [
-        (datetime(2012, 12, 12, 12, 12, 12, 12), "Wednesday 12 December 2012 at 12:12"),
-        ("2012-12-12T12:12:12.0Z", "Wednesday 12 December 2012 at 12:12"),
-        (datetime(2012, 8, 12, 12, 12, 12, 12), "Sunday 12 August 2012 at 13:12"),
-        ("2012-08-12T12:12:12.0Z", "Sunday 12 August 2012 at 13:12"),
-        (datetime(2012, 8, 12, 12, 12, 12, 12, tzinfo=pytz.utc), "Sunday 12 August 2012 at 13:12"),
+        (datetime(2012, 11, 10, 9, 8, 7, 6), "Saturday 10 November 2012 at 09:08"),
+        ("2012-11-10T09:08:07.0Z", "Saturday 10 November 2012 at 09:08"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6), "Friday 10 August 2012 at 10:08"),
+        ("2012-08-10T09:08:07.0Z", "Friday 10 August 2012 at 10:08"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "Friday 10 August 2012 at 10:08"),
     ]
 
     def check_datetimeformat(dt, formatted_datetime):
