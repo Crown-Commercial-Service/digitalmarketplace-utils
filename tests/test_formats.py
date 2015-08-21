@@ -4,6 +4,7 @@ from dmutils.formats import (
     format_price, format_service_price,
     timeformat, dateformat, datetimeformat
 )
+import pytz
 from datetime import datetime
 import pytest
 
@@ -92,6 +93,9 @@ def test_timeformat():
     cases = [
         (datetime(2012, 12, 12, 12, 12, 12, 12), "12:12:12"),
         ("2012-12-12T12:12:12.0Z", "12:12:12"),
+        (datetime(2012, 8, 12, 12, 12, 12, 12), "13:12:12"),
+        ("2012-08-12T12:12:12.0Z", "13:12:12"),
+        (datetime(2012, 8, 12, 12, 12, 12, 12, tzinfo=pytz.utc), "13:12:12"),
     ]
 
     def check_timeformat(dt, formatted_time):
@@ -105,6 +109,9 @@ def test_dateformat():
     cases = [
         (datetime(2012, 12, 12, 12, 12, 12, 12), "Wednesday 12 December 2012"),
         ("2012-12-12T12:12:12.0Z", "Wednesday 12 December 2012"),
+        (datetime(2012, 8, 12, 12, 12, 12, 12), "Sunday 12 August 2012"),
+        ("2012-08-12T12:12:12.0Z", "Sunday 12 August 2012"),
+        (datetime(2012, 8, 12, 12, 12, 12, 12, tzinfo=pytz.utc), "Sunday 12 August 2012"),
     ]
 
     def check_dateformat(dt, formatted_date):
@@ -118,6 +125,9 @@ def test_datetimeformat():
     cases = [
         (datetime(2012, 12, 12, 12, 12, 12, 12), "Wednesday 12 December 2012 at 12:12"),
         ("2012-12-12T12:12:12.0Z", "Wednesday 12 December 2012 at 12:12"),
+        (datetime(2012, 8, 12, 12, 12, 12, 12), "Sunday 12 August 2012 at 13:12"),
+        ("2012-08-12T12:12:12.0Z", "Sunday 12 August 2012 at 13:12"),
+        (datetime(2012, 8, 12, 12, 12, 12, 12, tzinfo=pytz.utc), "Sunday 12 August 2012 at 13:12"),
     ]
 
     def check_datetimeformat(dt, formatted_datetime):
