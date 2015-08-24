@@ -3,7 +3,7 @@ from datetime import datetime
 import flask_featureflags
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 
-__version__ = '6.2.1'
+__version__ = '6.2.2'
 
 
 def init_app(
@@ -47,6 +47,6 @@ def init_app(
         response.headers['X-Frame-Options'] = 'DENY'
         return response
 
-    application.template_filter(formats.timeformat)
-    application.template_filter(formats.dateformat)
-    application.template_filter(formats.datetimeformat)
+    application.add_template_filter(formats.timeformat)
+    application.add_template_filter(formats.dateformat)
+    application.add_template_filter(formats.datetimeformat)
