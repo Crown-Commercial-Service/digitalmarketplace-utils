@@ -134,13 +134,14 @@ class DataAPIClient(BaseAPIClient):
                 supplier_id, framework_slug))
 
     def answer_selection_questions(self, supplier_id, framework_slug,
-                                   answers, user):
+                                   answers, status, user):
         return self._put(
             "/suppliers/{}/selection-answers/{}".format(
                 supplier_id, framework_slug),
             data={
                 "updated_by": user,
                 "selectionAnswers": {
+                    "status": status,
                     "questionAnswers": answers
                 }
             })
