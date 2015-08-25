@@ -11,6 +11,7 @@ from flask import has_request_context, request, current_app
 import backoff
 from monotonic import monotonic
 
+from .. import __version__
 from .errors import APIError, HTTPError, HTTP503Error, InvalidResponse
 
 
@@ -70,6 +71,7 @@ class BaseAPIClient(object):
         headers = {
             "Content-type": "application/json",
             "Authorization": "Bearer {}".format(self.auth_token),
+            "User-agent": "DM-API-Client/{}".format(__version__),
         }
         headers = self._add_request_id_header(headers)
 
