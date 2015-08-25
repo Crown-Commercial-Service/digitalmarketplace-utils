@@ -192,6 +192,31 @@ class ContentSection(object):
                 }
         return section_data
 
+    def unformat_data(self, data):
+        """Unpack assurance information to be used in a form
+
+        :param data: the service data as returned from the data API
+        :type data: dict
+        :return: service data with unpacked assurance
+
+        Unpack fields from service JSON that have assurance information. In the
+        data API response the field would be::
+
+            {"field": {"assurance": "some assurance", "value": "some value"}}
+
+        This then gets unpacked into two fields::
+
+            {"field": "some value", "field--assurance": "some assurance"}
+        """
+        result = {}
+        for key in data:
+            if self._has_assurance(key):
+                result[key + '--assurance'] = data[key]['assurance']
+                result[key] = data[key]['value']
+            else:
+                result[key] = data[key]
+        return result
+
     def _get_fields(self):
         return [q['id'] for q in self.questions]
 
@@ -231,7 +256,8 @@ class ContentSection(object):
 
     def _has_assurance(self, key):
         """Return True if a question has an assurance component"""
-        return self.get_question(key).get('assuranceApproach', False)
+        question = self.get_question(key)
+        return bool(question) and question.get('assuranceApproach', False)
 
 
 class ContentLoader(object):

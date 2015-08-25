@@ -491,6 +491,91 @@ class TestContentSection(object):
             ])
             section.get_data(form)
 
+    def test_unformat_data(self):
+        section = ContentSection.create({
+            "id": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "Boolean question",
+                "type": "boolean",
+            }, {
+                "id": "q2",
+                "question": "Text question",
+                "type": "text",
+            }, {
+                "id": "q3",
+                "question": "Radios question",
+                "type": "radios",
+            }, {
+                "id": "q4",
+                "question": "List question",
+                "type": "list",
+            }, {
+                "id": "q5",
+                "question": "Checkboxes question",
+                "type": "checkboxes",
+            }, {
+                "id": "q6",
+                "question": "Service ID question",
+                "type": "service_id",
+                "assuranceApproach": "2answers-type1",
+            }, {
+                "id": "q7",
+                "question": "Pricing question",
+                "type": "pricing",
+            }, {
+                "id": "q8",
+                "question": "Upload question",
+                "type": "upload",
+            }, {
+                "id": "q9",
+                "question": "Percentage question",
+                "type": "percentage",
+            }, {
+                "id": "q10",
+                "question": "Large text question",
+                "type": "textbox_large",
+            }, {
+                "id": "q11",
+                "question": "Text question",
+                "type": "text"
+            }]
+        })
+
+        data = {
+            'q1': True,
+            'q2': 'Some text stuff',
+            'q3': 'value',
+            'q4': ['value 1', 'value 2'],
+            'q5': ['check 1', 'check 2'],
+            'q6': {'assurance': 'yes I am', 'value': '71234567890'},
+            'priceMin': '12.12',
+            'priceMax': '13.13',
+            'priceUnit': 'Unit',
+            'priceInterval': 'Hour',
+            'q9': 12.12,
+            'q10': 'Looooooooaaaaaaaaads of text',
+        }
+
+        form = section.unformat_data(data)
+
+        assert form == {
+            'q1': True,
+            'q2': 'Some text stuff',
+            'q3': 'value',
+            'q4': ['value 1', 'value 2'],
+            'q5': ['check 1', 'check 2'],
+            'q6': '71234567890',
+            'q6--assurance': 'yes I am',
+            'priceMin': '12.12',
+            'priceMax': '13.13',
+            'priceUnit': 'Unit',
+            'priceInterval': 'Hour',
+            'q9': 12.12,
+            'q10': 'Looooooooaaaaaaaaads of text',
+        }
+
     def test_get_question(self):
         section = ContentSection.create({
             "id": "first_section",
