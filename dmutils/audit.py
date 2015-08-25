@@ -22,6 +22,7 @@ class AuditTypes(Enum):
     invite_user = "invite_user"
     send_clarification_question = "send_clarification_question"
     view_clarification_questions = "view_clarification_questions"
+    snapshot_framework_stats = "snapshot_framework_stats"
 
     @staticmethod
     def is_valid_audit_type(test_audit_type):
