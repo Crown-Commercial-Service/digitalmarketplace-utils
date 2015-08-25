@@ -155,6 +155,17 @@ class TestBaseApiClient(object):
         assert e.value.message == "No JSON object could be decoded"
         assert e.value.status_code == 200
 
+    def test_user_agent_is_set(self, base_client, rmock):
+        rmock.request(
+            "GET",
+            "http://baseurl/",
+            json={},
+            status_code=200)
+
+        base_client._request('GET', '/')
+
+        assert rmock.last_request.headers.get("User-Agent").startswith("DM-API-Client/")
+
 
 class TestSearchApiClient(object):
     def test_init_app_sets_attributes(self, search_client):
