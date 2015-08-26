@@ -2,7 +2,7 @@
 from dmutils.formats import (
     get_label_for_lot_param, lot_to_lot_case,
     format_price, format_service_price,
-    timeformat, dateformat, datetimeformat
+    timeformat, dayformat, dateformat, datetimeformat
 )
 import pytz
 from datetime import datetime
@@ -103,6 +103,22 @@ def test_timeformat():
 
     for dt, formatted_time in cases:
         yield check_timeformat, dt, formatted_time
+
+
+def test_dayformat():
+    cases = [
+        (datetime(2012, 11, 10, 9, 8, 7, 6), "10 November"),
+        ("2012-11-10T09:08:07.0Z", "10 November"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6), "10 August"),
+        ("2012-08-10T09:08:07.0Z", "10 August"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "10 August"),
+    ]
+
+    def check_dayformat(dt, formatted_date):
+        assert dayformat(dt) == formatted_date
+
+    for dt, formatted_date in cases:
+        yield check_dayformat, dt, formatted_date
 
 
 def test_dateformat():
