@@ -4,6 +4,7 @@ import pytz
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
+DISPLAY_DAY_FORMAT = '%d %B'
 DISPLAY_DATE_FORMAT = '%A %d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
 DISPLAY_DATETIME_FORMAT = '%A %d %B %Y at %H:%M'
@@ -34,6 +35,10 @@ LOTS = [
 
 def timeformat(value, default_value=None):
     return _format_date(value, default_value, DISPLAY_TIME_FORMAT)
+
+
+def dayformat(value, default_value=None):
+    return _format_date(value, default_value, DISPLAY_DAY_FORMAT)
 
 
 def dateformat(value, default_value=None):
