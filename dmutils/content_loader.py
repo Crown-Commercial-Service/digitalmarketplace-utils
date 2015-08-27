@@ -297,7 +297,6 @@ def expand_pricing_field(pricing):
         raise ValueError("The pricing field did not have enough elements: {}".format(pricing))
     return {
         field_name: pricing[i] for i, field_name in enumerate(PRICE_FIELDS)
-        if len(pricing[i]) > 0
     }
 
 
