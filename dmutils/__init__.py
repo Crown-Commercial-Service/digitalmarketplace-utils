@@ -48,5 +48,6 @@ def init_app(
         return response
 
     application.add_template_filter(formats.timeformat)
+    application.add_template_filter(formats.dayformat)
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)
