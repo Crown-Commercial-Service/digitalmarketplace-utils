@@ -2,10 +2,13 @@ from __future__ import absolute_import
 import logging
 import uuid
 import sys
+from itertools import product
 
 from flask import request, current_app
 from flask.wrappers import Request
 from flask.ctx import has_request_context
+
+from pythonjsonlogger.jsonlogger import JsonFormatter as BaseJSONFormatter
 
 LOG_FORMAT = '%(asctime)s %(app_name)s %(name)s %(levelname)s ' \
              '%(request_id)s "%(message)s" [in %(pathname)s:%(lineno)d]'
@@ -36,10 +39,10 @@ def init_app(app):
 
     del app.logger.handlers[:]
 
-    handler = get_handler(app)
+    handlers = get_handlers(app)
     loglevel = logging.getLevelName(app.config['DM_LOG_LEVEL'])
     loggers = [app.logger, logging.getLogger('dmutils')]
-    for logger in loggers:
+    for logger, handler in product(loggers, handlers):
         logger.addHandler(handler)
         logger.setLevel(loglevel)
 
@@ -66,22 +69,31 @@ class CustomRequest(Request):
             return str(uuid.uuid4())
 
 
-def configure_handler(handler, app):
+def configure_handler(handler, app, formatter):
     handler.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
-    handler.setFormatter(logging.Formatter(LOG_FORMAT, TIME_FORMAT))
+    handler.setFormatter(formatter)
     handler.addFilter(AppNameFilter(app.config['DM_APP_NAME']))
     handler.addFilter(RequestIdFilter())
 
     return handler
 
 
-def get_handler(app):
-    handler = None
+def get_handlers(app):
+    handlers = []
+    standard_formatter = logging.Formatter(LOG_FORMAT, TIME_FORMAT)
+    json_formatter = JSONFormatter(LOG_FORMAT, TIME_FORMAT)
+
     if app.debug:
         handler = logging.StreamHandler(sys.stderr)
+        handlers.append(configure_handler(handler, app, standard_formatter))
     else:
         handler = logging.FileHandler(app.config['DM_LOG_PATH'])
-    return configure_handler(handler, app)
+        handlers.append(configure_handler(handler, app, standard_formatter))
+
+        handler = logging.FileHandler(app.config['DM_LOG_PATH'] + '.json')
+        handlers.append(configure_handler(handler, app, json_formatter))
+
+    return handlers
 
 
 class AppNameFilter(logging.Filter):
@@ -106,3 +118,16 @@ class RequestIdFilter(logging.Filter):
         record.request_id = self.request_id
 
         return record
+
+
+class JSONFormatter(BaseJSONFormatter):
+    def process_log_record(self, log_record):
+        rename_map = {
+            "asctime": "time",
+            "request_id": "requestId",
+            "app_name": "application",
+        }
+        for key, newkey in rename_map.items():
+            log_record[newkey] = log_record.pop(key)
+        log_record['logType'] = "application"
+        return log_record

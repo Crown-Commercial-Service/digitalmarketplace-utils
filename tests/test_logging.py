@@ -5,7 +5,7 @@ import logging
 from werkzeug.test import EnvironBuilder
 import mock
 
-from dmutils.logging import init_app, RequestIdFilter, CustomRequest
+from dmutils.logging import init_app, RequestIdFilter, CustomRequest, JSONFormatter
 
 
 def test_get_request_id_from_request_id_header():
@@ -88,11 +88,14 @@ def test_init_app_adds_stream_handler_in_debug(app):
     assert isinstance(app.logger.handlers[0], logging.StreamHandler)
 
 
-def test_init_app_adds_file_handler_in_non_debug(app):
+def test_init_app_adds_file_handlers_in_non_debug(app):
     with tempfile.NamedTemporaryFile() as f:
         app.config['DEBUG'] = False
         app.config['DM_LOG_PATH'] = f.name
         init_app(app)
 
-        assert len(app.logger.handlers) == 1
+        assert len(app.logger.handlers) == 2
         assert isinstance(app.logger.handlers[0], logging.FileHandler)
+        assert isinstance(app.logger.handlers[0].formatter, logging.Formatter)
+        assert isinstance(app.logger.handlers[1], logging.FileHandler)
+        assert isinstance(app.logger.handlers[1].formatter, JSONFormatter)
