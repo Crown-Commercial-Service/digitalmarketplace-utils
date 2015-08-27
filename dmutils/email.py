@@ -57,12 +57,12 @@ def generate_token(data, secret_key, salt):
     return ts.dumps(data, salt=salt)
 
 
-def decode_token(token, secret_key, salt):
+def decode_token(token, secret_key, salt, max_age=86400):
     ts = URLSafeTimedSerializer(secret_key)
     decoded, timestamp = ts.loads(
         token,
         salt=salt,
-        max_age=86400,
+        max_age=max_age,
         return_timestamp=True
     )
     return decoded, timestamp
