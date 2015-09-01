@@ -1,4 +1,5 @@
 import hashlib
+import codecs
 
 
 class AssetFingerprinter():
@@ -40,6 +41,6 @@ class AssetFingerprinter():
         ).hexdigest()
 
     def get_asset_file_contents(self, asset_file_path):
-        with open(asset_file_path, 'r') as asset_file:
+        with codecs.open(asset_file_path, encoding='utf-8') as asset_file:
             contents = asset_file.read()
         return contents
