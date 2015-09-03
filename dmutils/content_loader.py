@@ -190,6 +190,17 @@ class ContentSection(object):
                     "value": section_data[key],
                     "assurance": form_data.get(key + '--assurance'),
                 }
+
+        # Check for assurance answers in the form data with no associated question
+        for key in set(form_data):
+            if key.endswith('--assurance'):
+                root_key = key[:-11]
+                if root_key in set(self._get_fields()) and root_key not in section_data:
+                    section_data[root_key] = {
+                        "value": "",
+                        "assurance": form_data.get(key),
+                    }
+
         return section_data
 
     def unformat_data(self, data):
