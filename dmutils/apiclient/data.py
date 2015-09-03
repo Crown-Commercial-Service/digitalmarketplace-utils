@@ -15,6 +15,7 @@ class DataAPIClient(BaseAPIClient):
             audit_type=None,
             audit_date=None,
             page=None,
+            per_page=None,
             acknowledged=None,
             object_type=None,
             object_id=None):
@@ -26,6 +27,8 @@ class DataAPIClient(BaseAPIClient):
             params["audit-type"] = audit_type.value
         if page is not None:
             params['page'] = page
+        if per_page is not None:
+            params['per_page'] = per_page
         if audit_date is not None:
             params['audit-date'] = audit_date
         if acknowledged is not None:

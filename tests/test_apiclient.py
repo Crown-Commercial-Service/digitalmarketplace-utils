@@ -1062,6 +1062,17 @@ class TestDataApiClient(object):
         assert result == {"audit-event": "result"}
         assert rmock.called
 
+    def test_find_audit_events_with_custom_page_size(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/audit-events?per_page=999",
+            json={"audit-event": "result"},
+            status_code=200)
+
+        result = data_client.find_audit_events(per_page=999)
+
+        assert result == {"audit-event": "result"}
+        assert rmock.called
+
     def test_find_audit_events_with_all_params(self, data_client, rmock):
         rmock.get(
             "http://baseurl/audit-events?page=123&audit-type=contact_update&audit-date=2010-01-01&acknowledged=all&object-type=foo&object-id=123",  # noqa
