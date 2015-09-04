@@ -491,6 +491,16 @@ class TestContentSection(object):
             ])
             section.get_data(form)
 
+        # Test 'orphaned' assurance is returned
+        form = ImmutableMultiDict([
+            ('q6--assurance', 'yes I am'),
+        ])
+        data = section.get_data(form)
+        print("DATA: {}".format(data))
+        assert data == {
+            'q6': {'assurance': 'yes I am'},
+        }
+
     def test_unformat_data(self):
         section = ContentSection.create({
             "id": "first_section",
