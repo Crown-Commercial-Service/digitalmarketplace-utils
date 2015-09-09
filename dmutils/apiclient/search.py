@@ -11,14 +11,14 @@ class SearchAPIClient(BaseAPIClient):
         self.enabled = app.config['ES_ENABLED']
 
     def _url(self, path):
-        return "/g-cloud/services{}".format(path)
+        return u"/g-cloud/services{}".format(path)
 
     def index(self, service_id, service):
-        url = self._url("/{}".format(service_id))
+        url = self._url(u"/{}".format(service_id))
         return self._put(url, data={'service': service})
 
     def delete(self, service_id):
-        url = self._url("/{}".format(service_id))
+        url = self._url(u"/{}".format(service_id))
 
         try:
             return self._delete(url)
@@ -36,7 +36,7 @@ class SearchAPIClient(BaseAPIClient):
             params['page'] = page
 
         for filter_name, filter_values in six.iteritems(filters):
-            params['filter_{}'.format(filter_name)] = filter_values
+            params[u'filter_{}'.format(filter_name)] = filter_values
 
         response = self._get(self._url("/search"), params=params)
         return response
