@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ..audit import AuditTypes
 from .base import BaseAPIClient, logger, make_iter_method
 from .errors import HTTPError
@@ -47,7 +48,7 @@ class DataAPIClient(BaseAPIClient):
 
     def acknowledge_audit_event(self, audit_event_id, user):
         return self._post(
-            u"/audit-events/{}/acknowledge".format(audit_event_id),
+            "/audit-events/{}/acknowledge".format(audit_event_id),
             data={
                 "update_details": {
                     "updated_by": user
@@ -96,12 +97,12 @@ class DataAPIClient(BaseAPIClient):
 
     def get_supplier(self, supplier_id):
         return self._get(
-            u"/suppliers/{}".format(supplier_id)
+            "/suppliers/{}".format(supplier_id)
         )
 
     def import_supplier(self, supplier_id, supplier):
         return self._put(
-            u"/suppliers/{}".format(supplier_id),
+            "/suppliers/{}".format(supplier_id),
             data={"suppliers": supplier},
         )
 
@@ -113,7 +114,7 @@ class DataAPIClient(BaseAPIClient):
 
     def update_supplier(self, supplier_id, supplier, user):
         return self._post(
-            u"/suppliers/{}".format(supplier_id),
+            "/suppliers/{}".format(supplier_id),
             data={
                 "suppliers": supplier,
                 "updated_by": user,
@@ -123,7 +124,7 @@ class DataAPIClient(BaseAPIClient):
     def update_contact_information(self, supplier_id, contact_id,
                                    contact, user):
         return self._post(
-            u"/suppliers/{}/contact-information/{}".format(
+            "/suppliers/{}/contact-information/{}".format(
                 supplier_id, contact_id),
             data={
                 "contactInformation": contact,
@@ -133,13 +134,13 @@ class DataAPIClient(BaseAPIClient):
 
     def get_selection_answers(self, supplier_id, framework_slug):
         return self._get(
-            u"/suppliers/{}/selection-answers/{}".format(
+            "/suppliers/{}/selection-answers/{}".format(
                 supplier_id, framework_slug))
 
     def answer_selection_questions(self, supplier_id, framework_slug,
                                    answers, user):
         return self._put(
-            u"/suppliers/{}/selection-answers/{}".format(
+            "/suppliers/{}/selection-answers/{}".format(
                 supplier_id, framework_slug),
             data={
                 "updated_by": user,
@@ -172,7 +173,7 @@ class DataAPIClient(BaseAPIClient):
             raise ValueError(
                 "Cannot get user by both user_id and email_address")
         elif user_id is not None:
-            url = u"/users/{}".format(user_id)
+            url = "/users/{}".format(user_id)
             params = {}
         elif email_address is not None:
             url = "/users"
@@ -213,7 +214,7 @@ class DataAPIClient(BaseAPIClient):
     def update_user_password(self, user_id, new_password):
         try:
             self._post(
-                u'/users/{}'.format(user_id),
+                '/users/{}'.format(user_id),
                 data={"users": {"password": new_password}}
             )
 
@@ -256,7 +257,7 @@ class DataAPIClient(BaseAPIClient):
         }
 
         user = self._post(
-            u'/users/{}'.format(user_id),
+            '/users/{}'.format(user_id),
             data=params
         )
 
@@ -281,12 +282,12 @@ class DataAPIClient(BaseAPIClient):
 
     def get_draft_service(self, draft_id):
         return self._get(
-            u"/draft-services/{}".format(draft_id)
+            "/draft-services/{}".format(draft_id)
         )
 
     def delete_draft_service(self, draft_id, user):
         return self._delete(
-            u"/draft-services/{}".format(draft_id),
+            "/draft-services/{}".format(draft_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -296,7 +297,7 @@ class DataAPIClient(BaseAPIClient):
 
     def copy_draft_service_from_existing_service(self, service_id, user):
         return self._put(
-            u"/draft-services/copy-from/{}".format(service_id),
+            "/draft-services/copy-from/{}".format(service_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -306,7 +307,7 @@ class DataAPIClient(BaseAPIClient):
 
     def copy_draft_service(self, draft_id, user):
         return self._post(
-            u"/draft-services/{}/copy".format(draft_id),
+            "/draft-services/{}/copy".format(draft_id),
             data={
                 "update_details": {
                     "updated_by": user
@@ -325,11 +326,11 @@ class DataAPIClient(BaseAPIClient):
         if page_questions is not None:
             data['page_questions'] = page_questions
 
-        return self._post(u"/draft-services/{}".format(draft_id), data=data)
+        return self._post("/draft-services/{}".format(draft_id), data=data)
 
     def complete_draft_service(self, draft_id, user):
         return self._post(
-            u"/draft-services/{}/complete".format(draft_id),
+            "/draft-services/{}/complete".format(draft_id),
             data={
                 "update_details": {
                     "updated_by": user
@@ -338,7 +339,7 @@ class DataAPIClient(BaseAPIClient):
 
     def publish_draft_service(self, draft_id, user):
         return self._post(
-            u"/draft-services/{}/publish".format(draft_id),
+            "/draft-services/{}/publish".format(draft_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -348,7 +349,7 @@ class DataAPIClient(BaseAPIClient):
 
     def create_new_draft_service(self, framework_slug, supplier_id, user, lot):
         return self._post(
-            u"/draft-services/{}/create".format(framework_slug),
+            "/draft-services/{}/create".format(framework_slug),
             data={
                 "update_details": {
                     "updated_by": user
@@ -361,12 +362,12 @@ class DataAPIClient(BaseAPIClient):
             })
 
     def get_archived_service(self, archived_service_id):
-        return self._get(u"/archived-services/{}".format(archived_service_id))
+        return self._get("/archived-services/{}".format(archived_service_id))
 
     def get_service(self, service_id):
         try:
             return self._get(
-                u"/services/{}".format(service_id))
+                "/services/{}".format(service_id))
         except HTTPError as e:
             if e.status_code != 404:
                 raise
@@ -385,7 +386,7 @@ class DataAPIClient(BaseAPIClient):
 
     def import_service(self, service_id, service, user, reason):
         return self._put(
-            u"/services/{}".format(service_id),
+            "/services/{}".format(service_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -396,7 +397,7 @@ class DataAPIClient(BaseAPIClient):
 
     def update_service(self, service_id, service, user, reason):
         return self._post(
-            u"/services/{}".format(service_id),
+            "/services/{}".format(service_id),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -407,7 +408,7 @@ class DataAPIClient(BaseAPIClient):
 
     def update_service_status(self, service_id, status, user, reason):
         return self._post(
-            u"/services/{}/status/{}".format(service_id, status),
+            "/services/{}/status/{}".format(service_id, status),
             data={
                 "update_details": {
                     "updated_by": user,
@@ -417,4 +418,4 @@ class DataAPIClient(BaseAPIClient):
 
     def get_framework_stats(self, framework_slug):
         return self._get(
-            u"/frameworks/{}/stats".format(framework_slug))
+            "/frameworks/{}/stats".format(framework_slug))
