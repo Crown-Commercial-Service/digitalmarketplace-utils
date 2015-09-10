@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import logging
 import uuid
 import sys
+import re
 from itertools import product
 
 from flask import request, current_app
@@ -13,6 +14,8 @@ from pythonjsonlogger.jsonlogger import JsonFormatter as BaseJSONFormatter
 LOG_FORMAT = '%(asctime)s %(app_name)s %(name)s %(levelname)s ' \
              '%(request_id)s "%(message)s" [in %(pathname)s:%(lineno)d]'
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+
+logger = logging.getLogger(__name__)
 
 
 def init_app(app):
@@ -80,7 +83,7 @@ def configure_handler(handler, app, formatter):
 
 def get_handlers(app):
     handlers = []
-    standard_formatter = logging.Formatter(LOG_FORMAT, TIME_FORMAT)
+    standard_formatter = CustomLogFormatter(LOG_FORMAT, TIME_FORMAT)
     json_formatter = JSONFormatter(LOG_FORMAT, TIME_FORMAT)
 
     if app.debug:
@@ -120,6 +123,25 @@ class RequestIdFilter(logging.Filter):
         return record
 
 
+class CustomLogFormatter(logging.Formatter):
+    """Accepts a format string for the message and formats it with the extra fields"""
+
+    FORMAT_STRING_FIELDS_PATTERN = re.compile(r'\((.+?)\)', re.IGNORECASE)
+
+    def add_fields(self, record):
+        for field in self.FORMAT_STRING_FIELDS_PATTERN.findall(self._fmt):
+            record.__dict__[field] = record.__dict__.get(field)
+        return record
+
+    def format(self, record):
+        record = self.add_fields(record)
+        try:
+            record.msg = record.msg.format(**record.__dict__)
+        except KeyError:
+            logger.error("failed to format log message")
+        return super(CustomLogFormatter, self).format(record)
+
+
 class JSONFormatter(BaseJSONFormatter):
     def process_log_record(self, log_record):
         rename_map = {
@@ -130,4 +152,8 @@ class JSONFormatter(BaseJSONFormatter):
         for key, newkey in rename_map.items():
             log_record[newkey] = log_record.pop(key)
         log_record['logType'] = "application"
+        try:
+            log_record['message'] = log_record['message'].format(**log_record)
+        except KeyError:
+            logger.error("failed to format log message")
         return log_record
