@@ -419,3 +419,8 @@ class DataAPIClient(BaseAPIClient):
     def get_framework_stats(self, framework_slug):
         return self._get(
             "/frameworks/{}/stats".format(framework_slug))
+
+    def get_framework_status(self, framework_slug):
+        return self._get(
+            "/frameworks/{}/status".format(framework_slug)
+        )
