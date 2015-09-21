@@ -164,7 +164,7 @@ class TestJSONFormatter(object):
         raw_result = self.dmbuffer.getvalue()
         result = json.loads(raw_result)
 
-        assert result['message'] == "failed to format log message"
+        assert result['message'].startswith("failed to format log message")
 
 
 class TestCustomLogFormatter(object):
@@ -203,4 +203,4 @@ class TestCustomLogFormatter(object):
         self.logger.info("hello {barry}")
         result = self.dmbuffer.getvalue()
 
-        assert '"failed to format log message"' in result
+        assert 'failed to format log message' in result
