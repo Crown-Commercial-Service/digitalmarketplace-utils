@@ -25,7 +25,8 @@ def email_app(app):
 def test_calls_send_email_with_correct_params(email_app, mandrill):
     with email_app.app_context():
 
-        mandrill.messages.send.return_value = True
+        mandrill.messages.send.return_value = [
+            {'_id': '123', 'email': '123'}]
 
         expected_call = {
             'html': "body",

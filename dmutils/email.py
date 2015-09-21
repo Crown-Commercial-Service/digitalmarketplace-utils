@@ -48,10 +48,14 @@ def send_email(
         )
     except Error as e:
         # Mandrill errors are thrown as exceptions
-        current_app.logger.error("A mandrill error occurred: %s", e)
+        current_app.logger.error("A mandrill error occurred: {error}",
+                                 extra={'error': e})
         raise MandrillException(e)
 
-    current_app.logger.info("Sent {} email: {}".format(tags, result))
+    current_app.logger.info("Sent {tags} response: id={id}, email={email_hash}",
+                            extra={'tags': tags,
+                                   'id': result[0]['_id'],
+                                   'email_hash': hash_email(result[0]['email'])})
 
 
 def generate_token(data, secret_key, salt):
