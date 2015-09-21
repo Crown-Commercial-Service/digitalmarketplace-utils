@@ -1,3 +1,5 @@
+import hashlib
+import base64
 from flask import current_app
 from mandrill import Mandrill, Error
 from itsdangerous import URLSafeTimedSerializer
@@ -66,3 +68,10 @@ def decode_token(token, secret_key, salt, max_age_in_seconds=86400):
         return_timestamp=True
     )
     return decoded, timestamp
+
+
+def hash_email(email):
+    m = hashlib.sha256()
+    m.update(email.encode('utf-8'))
+
+    return base64.urlsafe_b64encode(m.digest())

@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 from dmutils.email import generate_token, decode_token, \
-    send_email, MandrillException
+    send_email, MandrillException, hash_email
 from itsdangerous import BadTimeSignature
 import pytest
 import mock
+import six
 from dmutils.config import init_app
 from mandrill import Error
 
@@ -120,3 +122,13 @@ def test_cant_decode_token_with_wrong_key():
     with pytest.raises(BadTimeSignature) as error:
         decode_token(token, "failed", "1234567890")
     assert "does not match" in str(error.value)
+
+
+def test_hash_email():
+    tests = [
+        (u'test@example.com', six.b('lz3-Rj7IV4X1-Vr1ujkG7tstkxwk5pgkqJ6mXbpOgTs=')),
+        (u'☃@example.com', six.b('jGgXle8WEBTTIFhP25dF8Ck-FxQSCZ_N0iWYBWve4Ps=')),
+    ]
+
+    for test, expected in tests:
+        assert hash_email(test) == expected
