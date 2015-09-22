@@ -1,3 +1,5 @@
+import hashlib
+import base64
 from flask import current_app
 from mandrill import Mandrill, Error
 from itsdangerous import URLSafeTimedSerializer
@@ -46,10 +48,14 @@ def send_email(
         )
     except Error as e:
         # Mandrill errors are thrown as exceptions
-        current_app.logger.error("A mandrill error occurred: %s", e)
+        current_app.logger.error("A mandrill error occurred: {error}",
+                                 extra={'error': e})
         raise MandrillException(e)
 
-    current_app.logger.info("Sent {} email: {}".format(tags, result))
+    current_app.logger.info("Sent {tags} response: id={id}, email={email_hash}",
+                            extra={'tags': tags,
+                                   'id': result[0]['_id'],
+                                   'email_hash': hash_email(result[0]['email'])})
 
 
 def generate_token(data, secret_key, salt):
@@ -66,3 +72,10 @@ def decode_token(token, secret_key, salt, max_age_in_seconds=86400):
         return_timestamp=True
     )
     return decoded, timestamp
+
+
+def hash_email(email):
+    m = hashlib.sha256()
+    m.update(email.encode('utf-8'))
+
+    return base64.urlsafe_b64encode(m.digest())
