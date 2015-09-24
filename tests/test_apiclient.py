@@ -406,7 +406,7 @@ class TestDataApiClient(object):
         )
 
         result = data_client.import_service(
-            123, {"foo": "bar"}, "person", "reason")
+            123, {"foo": "bar"}, "person")
 
         assert result == {"services": "result"}
         assert rmock.called
@@ -419,7 +419,7 @@ class TestDataApiClient(object):
         )
 
         result = data_client.update_service(
-            123, {"foo": "bar"}, "person", "reason")
+            123, {"foo": "bar"}, "person")
 
         assert result == {"services": "result"}
         assert rmock.called
@@ -432,7 +432,7 @@ class TestDataApiClient(object):
         )
 
         result = data_client.update_service_status(
-            123, "published", "person", "reason")
+            123, "published", "person")
 
         assert result == {"services": "result"}
         assert rmock.called
@@ -619,6 +619,7 @@ class TestDataApiClient(object):
         data_client.update_user(123, role='supplier')
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "no logged-in user"},
             "users": {"role": 'supplier'}
         }
 
@@ -630,6 +631,7 @@ class TestDataApiClient(object):
         data_client.update_user(123, supplier_id=123)
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "no logged-in user"},
             "users": {"supplierId": 123}
         }
 
@@ -641,6 +643,7 @@ class TestDataApiClient(object):
         data_client.update_user(123, supplier_id=123, role='supplier')
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "no logged-in user"},
             "users": {
                 "supplierId": 123,
                 "role": "supplier"
@@ -655,6 +658,7 @@ class TestDataApiClient(object):
         data_client.update_user(123, locked=False)
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "no logged-in user"},
             "users": {"locked": False}
         }
 
@@ -666,6 +670,7 @@ class TestDataApiClient(object):
         data_client.update_user(123, active=True)
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "no logged-in user"},
             "users": {"active": True}
         }
 
@@ -677,6 +682,7 @@ class TestDataApiClient(object):
         data_client.update_user(123, active=False)
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "no logged-in user"},
             "users": {"active": False}
         }
 
@@ -881,7 +887,7 @@ class TestDataApiClient(object):
         assert rmock.called
         assert rmock.request_history[0].json() == {
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             }
         }
 
@@ -901,7 +907,7 @@ class TestDataApiClient(object):
         assert rmock.called
         assert rmock.request_history[0].json() == {
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             }
         }
 
@@ -957,7 +963,7 @@ class TestDataApiClient(object):
                 "field": "value"
             },
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             },
         }
 
@@ -979,7 +985,7 @@ class TestDataApiClient(object):
                 "field": "value"
             },
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             },
             'page_questions': ['question1', 'question2']
         }
@@ -999,7 +1005,7 @@ class TestDataApiClient(object):
         assert rmock.called
         assert rmock.request_history[0].json() == {
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             }
         }
 
