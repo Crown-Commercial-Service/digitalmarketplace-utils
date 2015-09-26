@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from flask_login import current_user
 from ..audit import AuditTypes
 from .base import BaseAPIClient, logger, make_iter_method
 from .errors import HTTPError
@@ -231,7 +230,8 @@ class DataAPIClient(BaseAPIClient):
                     locked=None,
                     active=None,
                     role=None,
-                    supplier_id=None):
+                    supplier_id=None,
+                    updater="no logged-in user"):
         fields = {}
         if locked is not None:
             fields.update({
@@ -252,11 +252,6 @@ class DataAPIClient(BaseAPIClient):
             fields.update({
                 'supplierId': supplier_id
             })
-
-        if current_user:
-            updater = current_user.email_address
-        else:
-            updater = "no logged-in user"
 
         params = {
             "users": fields,
