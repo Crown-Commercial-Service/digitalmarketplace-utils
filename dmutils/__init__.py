@@ -1,4 +1,4 @@
-from . import logging, config, proxy_fix, formats
+from . import logging, config, proxy_fix, formats, request_id
 from datetime import datetime
 import flask_featureflags
 from flask_featureflags.contrib.inline import InlineFeatureFlag
@@ -25,6 +25,7 @@ def init_app(
     config.init_app(application)
     logging.init_app(application)
     proxy_fix.init_app(application)
+    request_id.init_app(application)
 
     if bootstrap:
         bootstrap.init_app(application)
