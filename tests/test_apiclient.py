@@ -406,7 +406,7 @@ class TestDataApiClient(object):
         )
 
         result = data_client.import_service(
-            123, {"foo": "bar"}, "person", "reason")
+            123, {"foo": "bar"}, "person")
 
         assert result == {"services": "result"}
         assert rmock.called
@@ -419,7 +419,7 @@ class TestDataApiClient(object):
         )
 
         result = data_client.update_service(
-            123, {"foo": "bar"}, "person", "reason")
+            123, {"foo": "bar"}, "person")
 
         assert result == {"services": "result"}
         assert rmock.called
@@ -432,7 +432,7 @@ class TestDataApiClient(object):
         )
 
         result = data_client.update_service_status(
-            123, "published", "person", "reason")
+            123, "published", "person")
 
         assert result == {"services": "result"}
         assert rmock.called
@@ -603,9 +603,9 @@ class TestDataApiClient(object):
     def test_update_user_returns_false_on_non_200(self, data_client, rmock):
         for status_code in [400, 403, 404, 500]:
             rmock.post(
-                    "http://baseurl/users/123",
-                    json={},
-                    status_code=status_code)
+                "http://baseurl/users/123",
+                json={},
+                status_code=status_code)
             with pytest.raises(HTTPError) as e:
                 data_client.update_user(123)
 
@@ -616,9 +616,10 @@ class TestDataApiClient(object):
             "http://baseurl/users/123",
             json={},
             status_code=200)
-        data_client.update_user(123, role='supplier')
+        data_client.update_user(123, role='supplier', updater="test@example.com")
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "test@example.com"},
             "users": {"role": 'supplier'}
         }
 
@@ -627,9 +628,10 @@ class TestDataApiClient(object):
             "http://baseurl/users/123",
             json={},
             status_code=200)
-        data_client.update_user(123, supplier_id=123)
+        data_client.update_user(123, supplier_id=123, updater="test@example.com")
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "test@example.com"},
             "users": {"supplierId": 123}
         }
 
@@ -638,9 +640,10 @@ class TestDataApiClient(object):
             "http://baseurl/users/123",
             json={},
             status_code=200)
-        data_client.update_user(123, supplier_id=123, role='supplier')
+        data_client.update_user(123, supplier_id=123, role='supplier', updater="test@example.com")
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "test@example.com"},
             "users": {
                 "supplierId": 123,
                 "role": "supplier"
@@ -652,9 +655,10 @@ class TestDataApiClient(object):
             "http://baseurl/users/123",
             json={},
             status_code=200)
-        data_client.update_user(123, locked=False)
+        data_client.update_user(123, locked=False, updater="test@example.com")
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "test@example.com"},
             "users": {"locked": False}
         }
 
@@ -663,9 +667,10 @@ class TestDataApiClient(object):
             "http://baseurl/users/123",
             json={},
             status_code=200)
-        data_client.update_user(123, active=True)
+        data_client.update_user(123, active=True, updater="test@example.com")
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "test@example.com"},
             "users": {"active": True}
         }
 
@@ -674,9 +679,10 @@ class TestDataApiClient(object):
             "http://baseurl/users/123",
             json={},
             status_code=200)
-        data_client.update_user(123, active=False)
+        data_client.update_user(123, active=False, updater="test@example.com")
         assert rmock.called
         assert rmock.last_request.json() == {
+            "update_details": {"updated_by": "test@example.com"},
             "users": {"active": False}
         }
 
@@ -881,7 +887,7 @@ class TestDataApiClient(object):
         assert rmock.called
         assert rmock.request_history[0].json() == {
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             }
         }
 
@@ -901,7 +907,7 @@ class TestDataApiClient(object):
         assert rmock.called
         assert rmock.request_history[0].json() == {
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             }
         }
 
@@ -957,7 +963,7 @@ class TestDataApiClient(object):
                 "field": "value"
             },
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             },
         }
 
@@ -979,7 +985,7 @@ class TestDataApiClient(object):
                 "field": "value"
             },
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             },
             'page_questions': ['question1', 'question2']
         }
@@ -999,7 +1005,7 @@ class TestDataApiClient(object):
         assert rmock.called
         assert rmock.request_history[0].json() == {
             'update_details': {
-                'update_reason': 'deprecated', 'updated_by': 'user'
+                'updated_by': 'user'
             }
         }
 

@@ -230,7 +230,8 @@ class DataAPIClient(BaseAPIClient):
                     locked=None,
                     active=None,
                     role=None,
-                    supplier_id=None):
+                    supplier_id=None,
+                    updater="no logged-in user"):
         fields = {}
         if locked is not None:
             fields.update({
@@ -253,7 +254,10 @@ class DataAPIClient(BaseAPIClient):
             })
 
         params = {
-            "users": fields
+            "users": fields,
+            "update_details": {
+                "updated_by": updater
+            }
         }
 
         user = self._post(
@@ -290,8 +294,7 @@ class DataAPIClient(BaseAPIClient):
             "/draft-services/{}".format(draft_id),
             data={
                 "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
+                    "updated_by": user
                 },
             })
 
@@ -300,8 +303,7 @@ class DataAPIClient(BaseAPIClient):
             "/draft-services/copy-from/{}".format(service_id),
             data={
                 "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
+                    "updated_by": user
                 },
             })
 
@@ -317,8 +319,7 @@ class DataAPIClient(BaseAPIClient):
     def update_draft_service(self, draft_id, service, user, page_questions=None):
         data = {
             "update_details": {
-                "updated_by": user,
-                "update_reason": "deprecated",
+                "updated_by": user
             },
             "services": service,
         }
@@ -342,8 +343,7 @@ class DataAPIClient(BaseAPIClient):
             "/draft-services/{}/publish".format(draft_id),
             data={
                 "update_details": {
-                    "updated_by": user,
-                    "update_reason": "deprecated",
+                    "updated_by": user
                 },
             })
 
@@ -384,35 +384,32 @@ class DataAPIClient(BaseAPIClient):
 
     find_services_iter = make_iter_method('find_services', 'services', 'services')
 
-    def import_service(self, service_id, service, user, reason):
+    def import_service(self, service_id, service, user):
         return self._put(
             "/services/{}".format(service_id),
             data={
                 "update_details": {
-                    "updated_by": user,
-                    "update_reason": reason,
+                    "updated_by": user
                 },
                 "services": service,
             })
 
-    def update_service(self, service_id, service, user, reason):
+    def update_service(self, service_id, service, user):
         return self._post(
             "/services/{}".format(service_id),
             data={
                 "update_details": {
-                    "updated_by": user,
-                    "update_reason": reason,
+                    "updated_by": user
                 },
                 "services": service,
             })
 
-    def update_service_status(self, service_id, status, user, reason):
+    def update_service_status(self, service_id, status, user):
         return self._post(
             "/services/{}/status/{}".format(service_id, status),
             data={
                 "update_details": {
-                    "updated_by": user,
-                    "update_reason": reason,
+                    "updated_by": user
                 },
             })
 
