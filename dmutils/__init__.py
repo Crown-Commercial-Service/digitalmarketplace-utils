@@ -47,7 +47,4 @@ def init_app(
         response.headers['X-Frame-Options'] = 'DENY'
         return response
 
-    application.add_template_filter(formats.timeformat)
-    application.add_template_filter(formats.shortdateformat)
-    application.add_template_filter(formats.dateformat)
-    application.add_template_filter(formats.datetimeformat)
+    formats.init_app(application)

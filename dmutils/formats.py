@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 import pytz
+import re
+
+
+def init_app(application):
+    application.add_template_filter(timeformat)
+    application.add_template_filter(shortdateformat)
+    application.add_template_filter(dateformat)
+    application.add_template_filter(datetimeformat)
+    application.add_template_filter(chunk_service_id)
+
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
@@ -102,3 +112,11 @@ def format_price(min_price, max_price, unit, interval):
     if interval:
         formatted_price += ' per ' + interval.lower()
     return formatted_price
+
+
+def chunk_service_id(service_id):
+    service_id = str(service_id)
+    if re.search(r'[a-zA-Z]', service_id):
+        return [service_id]
+    else:
+        return re.findall(r'....', service_id)

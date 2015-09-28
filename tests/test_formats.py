@@ -2,7 +2,8 @@
 from dmutils.formats import (
     get_label_for_lot_param, lot_to_lot_case,
     format_price, format_service_price,
-    timeformat, shortdateformat, dateformat, datetimeformat
+    timeformat, shortdateformat, dateformat, datetimeformat,
+    chunk_service_id
 )
 import pytz
 from datetime import datetime
@@ -151,3 +152,17 @@ def test_datetimeformat():
 
     for dt, formatted_datetime in cases:
         yield check_datetimeformat, dt, formatted_datetime
+
+
+def test_chunk_service_id():
+    cases = [
+        (12345678, ['1234', '5678']),
+        ('12345678', ['1234', '5678']),
+        ('A1234567', ['A1234567']),
+    ]
+
+    def check_chunked_service_id(service_id, chunked_service_id):
+        assert chunk_service_id(service_id) == chunked_service_id
+
+    for service_id, chunked_service_id in cases:
+        yield check_chunked_service_id, service_id, chunked_service_id
