@@ -211,11 +211,16 @@ class DataAPIClient(BaseAPIClient):
                 raise
         return None
 
-    def update_user_password(self, user_id, new_password):
+    def update_user_password(self, user_id, new_password, updater="no logged-in user"):
         try:
             self._post(
                 '/users/{}'.format(user_id),
-                data={"users": {"password": new_password}}
+                data={
+                    "users": {"password": new_password},
+                    "update_details": {
+                        "updated_by": updater
+                    }
+                }
             )
 
             logger.info("Updated password for user %s", user_id)

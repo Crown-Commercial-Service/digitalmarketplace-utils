@@ -588,7 +588,27 @@ class TestDataApiClient(object):
             status_code=200)
         assert data_client.update_user_password(123, "newpassword")
         assert rmock.last_request.json() == {
-            "users": {"password": "newpassword"}
+            "users": {
+                "password": "newpassword"
+            },
+            "update_details": {
+                "updated_by": "no logged-in user"
+            }
+        }
+
+    def test_update_user_password_by_logged_in_user(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/users/123",
+            json={},
+            status_code=200)
+        assert data_client.update_user_password(123, "newpassword", "test@example.com")
+        assert rmock.last_request.json() == {
+            "users": {
+                "password": "newpassword"
+            },
+            "update_details": {
+                "updated_by": "test@example.com"
+            }
         }
 
     def test_update_user_password_returns_false_on_non_200(
