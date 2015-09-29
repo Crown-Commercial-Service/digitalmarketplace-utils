@@ -83,14 +83,27 @@ class BaseAPIClient(object):
             response.raise_for_status()
         except requests.RequestException as e:
             api_error = HTTPError.create(e)
+            elapsed_time = monotonic() - start_time
             logger.warning(
-                "API %s request on %s failed with %s '%s'",
-                method, url, api_error.status_code, api_error.message)
+                "API {api_method} request on {api_url} failed with {api_status} '{api_error}'",
+                extra={
+                    'api_method': method,
+                    'api_url': url,
+                    'api_status': api_error.status_code,
+                    'api_error': api_error.message,
+                    'api_time': elapsed_time
+                })
             raise api_error
-        finally:
+        else:
             elapsed_time = monotonic() - start_time
             logger.info(
-                "API %s request on %s finished in %s", method, url, elapsed_time)
+                "API {api_method} request on {api_url} finished in {api_time}",
+                extra={
+                    'api_method': method,
+                    'api_url': url,
+                    'api_status': response.status_code,
+                    'api_time': elapsed_time
+                })
         try:
             return response.json()
         except ValueError as e:
