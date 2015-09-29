@@ -7,68 +7,9 @@ except ImportError:
     from io import StringIO
 import json
 
-from werkzeug.test import EnvironBuilder
-import mock
-
-from dmutils.logging import init_app, RequestIdFilter, CustomRequest, JSONFormatter, CustomLogFormatter
+from dmutils import request_id
+from dmutils.logging import init_app, RequestIdFilter, JSONFormatter, CustomLogFormatter
 from dmutils.logging import LOG_FORMAT, TIME_FORMAT
-
-
-def test_get_request_id_from_request_id_header():
-    builder = EnvironBuilder()
-    builder.headers['DM-REQUEST-ID'] = 'from-header'
-    builder.headers['DOWNSTREAM-REQUEST-ID'] = 'from-downstream'
-    request = CustomRequest(builder.get_environ())
-
-    request_id = request._get_request_id('DM-REQUEST-ID',
-                                         'DOWNSTREAM-REQUEST-ID')
-
-    assert request_id == 'from-header'
-
-
-def test_get_request_id_from_downstream_header():
-    builder = EnvironBuilder()
-    builder.headers['DOWNSTREAM-REQUEST-ID'] = 'from-downstream'
-    request = CustomRequest(builder.get_environ())
-
-    request_id = request._get_request_id('DM-REQUEST-ID',
-                                         'DOWNSTREAM-REQUEST-ID')
-
-    assert request_id == 'from-downstream'
-
-
-@mock.patch('dmutils.logging.uuid.uuid4')
-def test_get_request_id_with_no_downstream_header_configured(uuid4_mock):
-    builder = EnvironBuilder()
-    builder.headers[''] = 'from-downstream'
-    request = CustomRequest(builder.get_environ())
-    uuid4_mock.return_value = 'generated'
-
-    request_id = request._get_request_id('DM-REQUEST-ID', '')
-
-    uuid4_mock.assert_called_once()
-    assert request_id == 'generated'
-
-
-@mock.patch('dmutils.logging.uuid.uuid4')
-def test_get_request_id_generates_id(uuid4_mock):
-    builder = EnvironBuilder()
-    request = CustomRequest(builder.get_environ())
-    uuid4_mock.return_value = 'generated'
-
-    request_id = request._get_request_id('DM-REQUEST-ID',
-                                         'DOWNSTREAM-REQUEST-ID')
-
-    uuid4_mock.assert_called_once()
-    assert request_id == 'generated'
-
-
-def test_request_id_is_set_on_response(app_with_logging):
-    client = app_with_logging.test_client()
-
-    with app_with_logging.app_context():
-        response = client.get('/', headers={'DM-REQUEST-ID': 'generated'})
-        assert response.headers['DM-Request-ID'] == 'generated'
 
 
 def test_request_id_filter_not_in_app_context():
@@ -77,6 +18,7 @@ def test_request_id_filter_not_in_app_context():
 
 def test_formatter_request_id(app_with_logging):
     headers = {'DM-Request-Id': 'generated'}
+    request_id.init_app(app_with_logging)  # set CustomRequest class
     with app_with_logging.test_request_context('/', headers=headers):
         assert RequestIdFilter().request_id == 'generated'
 
