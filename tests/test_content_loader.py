@@ -628,6 +628,123 @@ class TestContentSection(object):
 
         assert section.get_field_names() == ['q2']
 
+    def test_has_changes_to_save_no_changes(self):
+        section = ContentSection.create({
+            "id": "second_section",
+            "name": "Second section",
+            "questions": [{
+                "id": "q2",
+                "question": "Second question",
+                "type": "text",
+            }]
+        })
+        assert not section.has_changes_to_save({'q2': 'foo'}, {'q2': 'foo'})
+
+    def test_hash_changes_to_save_field_different(self):
+        section = ContentSection.create({
+            "id": "second_section",
+            "name": "Second section",
+            "questions": [{
+                "id": "q2",
+                "question": "Second question",
+                "type": "text",
+            }]
+        })
+        assert section.has_changes_to_save({'q2': 'foo'}, {'q2': 'blah'})
+
+    def test_has_changes_to_save_field_not_set_on_service(self):
+        section = ContentSection.create({
+            "id": "second_section",
+            "name": "Second section",
+            "questions": [{
+                "id": "q2",
+                "question": "Second question",
+                "type": "text",
+            }]
+        })
+        assert section.has_changes_to_save({}, {})
+
+    def test_get_error_message(self):
+        section = ContentSection.create({
+            "id": "second_section",
+            "name": "Second section",
+            "questions": [{
+                "id": "q2",
+                "question": "Second question",
+                "type": "text",
+                "validations": [
+                    {'name': 'the_error', 'message': 'This is the error message'},
+                ],
+            }]
+        })
+
+        assert section.get_error_message('q2', 'the_error') == "This is the error message"
+
+    def test_get_error_message_returns_default(self):
+        section = ContentSection.create({
+            "id": "second_section",
+            "name": "Second section",
+            "questions": [{
+                "id": "q2",
+                "question": "Second question",
+                "type": "text",
+                "validations": [
+                    {'name': 'the_error', 'message': 'This is the error message'},
+                ],
+            }]
+        })
+
+        assert section.get_error_message('q2', 'other_error') == "There was a problem with the answer to this question"
+
+    def test_get_error_messages(self):
+        section = ContentSection.create({
+            "id": "second_section",
+            "name": "Second section",
+            "questions": [{
+                "id": "q2",
+                "question": "Second question",
+                "type": "text",
+                "validations": [
+                    {'name': 'the_error', 'message': 'This is the error message'},
+                ],
+            }, {
+                "id": "serviceTypeSCS",
+                "question": "Third question",
+                "type": "text",
+                "validations": [
+                    {'name': 'the_error', 'message': 'This is the error message'},
+                ],
+            }, {
+                "id": "priceString",
+                "question": "Price question",
+                "type": "price",
+                "validations": [
+                    {"name": "no_min_price_specified", "message": "No min price"},
+                ]
+            }, {
+                "id": "q3",
+                "question": "With assurance",
+                "type": "text",
+                "validations": [
+                    {"name": "assurance_required", "message": "There there, it'll be ok."},
+                ]
+            }]
+        })
+
+        errors = {
+            "q2": "the_error",
+            "serviceTypes": "the_error",
+            "priceMin": "answer_required",
+            "q3": "assurance_required",
+        }
+
+        result = section.get_error_messages(errors, 'SCS')
+
+        assert result['priceString']['message'] == "No min price"
+        assert result['q2']['message'] == "This is the error message"
+        assert result['q3--assurance']['message'] == "There there, it'll be ok."
+        assert result['serviceTypeSCS']['message'] == "This is the error message"
+
 
 class TestReadYaml(object):
     @mock.patch('os.path.isfile', return_value=True)
