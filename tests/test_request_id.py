@@ -60,7 +60,7 @@ def test_request_id_is_set_on_response(app):
 
     with app.app_context():
         response = client.get('/', headers={'DM-REQUEST-ID': 'generated'})
-        assert response.headers['DM-Request-ID'] == 'generated'
+        assert response.headers['DM-Request-ID'] == 'generated'.encode('utf-8')
 
 
 def test_request_id_is_set_on_error_response(app):
@@ -74,4 +74,4 @@ def test_request_id_is_set_on_error_response(app):
     with app.app_context():
         response = client.get('/', headers={'DM-REQUEST-ID': 'generated'})
         assert response.status_code == 500
-        assert response.headers['DM-Request-ID'] == 'generated'
+        assert response.headers['DM-Request-ID'] == 'generated'.encode('utf-8')

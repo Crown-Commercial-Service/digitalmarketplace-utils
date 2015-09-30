@@ -34,7 +34,7 @@ class ResponseHeaderMiddleware(object):
             if self.request_id_header not in dict(headers).keys():
                 headers = headers + [(
                     self.request_id_header,
-                    request.request_id
+                    request.request_id.encode('utf-8')
                 )]
 
             return start_response(status, headers, exc_info)
