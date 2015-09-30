@@ -202,6 +202,77 @@ class ContentSection(object):
 
         return section_data
 
+    def has_changes_to_save(self, service, update_data):
+        """Test whether an update includes changes to save
+
+        :param service: the service that is to be updated
+        :param update_data: the update that is going to be applied
+        :return: whether there are changes that need saving
+
+        If there are any keys in the update data that have different values
+        the service data then a save is required.
+
+        If there any questions in this section that are not yet present in
+        the service data then a save is required (to generate the appropriate
+        validation error from the API).
+        """
+        return any([
+            any(service.get(key) != update_data[key] for key in update_data),
+            any(question['id'] not in service for question in self.questions)
+        ])
+
+    def get_error_messages(self, errors, lot):
+        """Convert API error keys into error messages
+
+        :param errors: error dictionary as returned by the data API
+        :param lot: the lot of the service
+        :return: error dictionary with human readable error messages
+        """
+        errors_map = {}
+        for question_id, message_key in errors.items():
+            field_name = question_id
+            if question_id == 'serviceTypes':
+                field_name = question_id = 'serviceType{}'.format(lot)
+            elif question_id in PRICE_FIELDS:
+                message_key = self._rewrite_pricing_error_key(question_id, message_key)
+                field_name = question_id = 'priceString'
+            elif message_key == 'assurance_required':
+                field_name = '{}--assurance'.format(question_id)
+
+            validation_message = self.get_error_message(question_id, message_key)
+
+            errors_map[field_name] = {
+                'input_name': field_name,
+                'question': self.get_question(question_id)['question'],
+                'message': validation_message,
+            }
+        return errors_map
+
+    def get_error_message(self, question_id, message_key):
+        """Return a single error message
+
+        :param question_id:
+        :param message_key: error message key as returned by the data API
+        """
+        for validation in self.get_question(question_id)['validations']:
+            if validation['name'] == message_key:
+                return validation['message']
+        return 'There was a problem with the answer to this question'
+
+    def _rewrite_pricing_error_key(self, question_id, message_key):
+        """Return a rewritten error message_key for a pricing error"""
+        if message_key == 'answer_required':
+            if question_id == 'priceMin':
+                return 'no_min_price_specified'
+            elif question_id == 'priceUnit':
+                return 'no_unit_specified'
+        elif message_key == 'not_money_format':
+            if question_id == 'priceMin':
+                return 'min_price_not_a_number'
+            elif question_id == 'priceMax':
+                return 'max_price_not_a_number'
+        return message_key
+
     def unformat_data(self, data):
         """Unpack assurance information to be used in a form
 

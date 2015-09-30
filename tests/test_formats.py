@@ -66,6 +66,7 @@ def test_format_price():
         (('12', '13', 'Unit', None), u'£12 to £13 per unit'),
         (('12', '13', 'Unit', 'Second'), u'£12 to £13 per unit per second'),
         (('12', None, 'Unit', 'Second'), u'£12 per unit per second'),
+        ((12, 13, 'Unit', None), u'£12 to £13 per unit'),
     ]
 
     def check_price_formatting(args, formatted_price):
