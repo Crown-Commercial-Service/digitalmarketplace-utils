@@ -182,6 +182,21 @@ class TestSearchApiClient(object):
         assert search_client.auth_token == "example-token"
         assert not search_client.enabled
 
+    def test_client_with_index_name(self, rmock, service):
+        client = SearchAPIClient(
+            'http://baseurl', 'auth-token', True,
+            index_name='not-g-cloud'
+        )
+
+        rmock.put(
+            'http://baseurl/not-g-cloud/services/12345',
+            json={'message': 'acknowledged'},
+            status_code=200)
+
+        result = client.index("12345", service)
+        assert rmock.called
+        assert result == {'message': 'acknowledged'}
+
     def test_get_status(self, data_client, rmock):
         rmock.get(
             "http://baseurl/_status",

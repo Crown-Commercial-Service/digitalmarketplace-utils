@@ -5,13 +5,17 @@ from .errors import HTTPError
 
 
 class SearchAPIClient(BaseAPIClient):
+    def __init__(self, *args, **kwargs):
+        self.index_name = kwargs.pop('index_name', 'g-cloud')
+        super(SearchAPIClient, self).__init__(*args, **kwargs)
+
     def init_app(self, app):
         self.base_url = app.config['DM_SEARCH_API_URL']
         self.auth_token = app.config['DM_SEARCH_API_AUTH_TOKEN']
         self.enabled = app.config['ES_ENABLED']
 
     def _url(self, path):
-        return u"/g-cloud/services{}".format(path)
+        return u"/{}/services{}".format(self.index_name, path)
 
     def index(self, service_id, service):
         url = self._url(u"/{}".format(service_id))
