@@ -173,7 +173,7 @@ class ContentSection(object):
         to their type in the section data.
         """
         section_data = {}
-        for key in set(form_data) & set(self._get_fields()):
+        for key in set(form_data) & set(self.get_question_ids()):
             if self._is_list_type(key):
                 section_data[key] = form_data.getlist(key)
             elif self._is_boolean_type(key):
@@ -195,7 +195,7 @@ class ContentSection(object):
         for key in set(form_data):
             if key.endswith('--assurance'):
                 root_key = key[:-11]
-                if root_key in set(self._get_fields()) and root_key not in section_data:
+                if root_key in set(self.get_question_ids()) and root_key not in section_data:
                     section_data[root_key] = {
                         "assurance": form_data.get(key),
                     }
@@ -297,9 +297,6 @@ class ContentSection(object):
             else:
                 result[key] = data[key]
         return result
-
-    def _get_fields(self):
-        return [q['id'] for q in self.questions]
 
     def get_question(self, question_id):
         """Return a question dictionary by question ID"""
