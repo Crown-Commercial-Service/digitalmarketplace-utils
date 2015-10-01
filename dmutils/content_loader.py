@@ -156,8 +156,11 @@ class ContentSection(object):
     def _has_pricing_type(self):
         return any(self._is_pricing_type(q) for q in self.get_question_ids())
 
-    def get_question_ids(self):
-        return [question['id'] for question in self.questions]
+    def get_question_ids(self, type=None):
+        return [
+            question['id'] for question in self.questions
+            if type is None or question.get('type') == type
+        ]
 
     def get_data(self, form_data):
         """Extract data for a section from a submitted form
