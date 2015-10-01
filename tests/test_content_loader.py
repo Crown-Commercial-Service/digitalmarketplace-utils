@@ -383,6 +383,38 @@ class TestContentBuilder(object):
 
 
 class TestContentSection(object):
+    def test_get_question_ids(self):
+        section = ContentSection.create({
+            "id": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "Boolean question",
+                "type": "boolean",
+            }, {
+                "id": "q2",
+                "question": "Text question",
+                "type": "text",
+            }]
+        })
+        assert section.get_question_ids() == ['q1', 'q2']
+
+    def test_get_question_ids_filtered_by_type(self):
+        section = ContentSection.create({
+            "id": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "Boolean question",
+                "type": "boolean",
+            }, {
+                "id": "q2",
+                "question": "Text question",
+                "type": "text",
+            }]
+        })
+        assert section.get_question_ids('boolean') == ['q1']
+
     def test_get_data(self):
         section = ContentSection.create({
             "id": "first_section",

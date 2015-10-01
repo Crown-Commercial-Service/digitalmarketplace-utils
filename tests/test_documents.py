@@ -5,13 +5,14 @@ from freezegun import freeze_time
 
 from dmutils.s3 import S3ResponseError
 
+from dmutils.content_loader import ContentSection
 from dmutils.documents import (
     generate_file_name,
     file_is_not_empty, filter_empty_files,
     file_is_less_than_5mb,
     file_is_open_document_format,
     validate_documents,
-    upload_document
+    upload_document, upload_service_documents
 )
 
 
@@ -154,6 +155,70 @@ class TestUploadDocument(unittest.TestCase):
                 "pricingDocumentURL",
                 mock_file('file.pdf', 1)
             ))
+
+
+class TestUploadServiceDocuments(object):
+    def setup(self):
+        self.section = ContentSection.create({
+            "id": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "pricingDocumentURL",
+                "question": "pricing document",
+                "type": "upload",
+            }, {
+                "id": "q2",
+                "question": "Text question",
+                "type": "text",
+            }]
+        })
+        self.service = {
+            'frameworkSlug': 'g-cloud-7',
+            'supplierId': '12345',
+            'id': '654321',
+        }
+        self.uploader = mock.Mock()
+        self.documents_url = 'http://localhost'
+
+    def test_upload_service_documents(self):
+        request_files = {'pricingDocumentURL': mock_file('q1.pdf', 100)}
+
+        files, errors = upload_service_documents(
+            self.uploader, self.documents_url, self.service,
+            request_files, self.section)
+
+        assert 'pricingDocumentURL' in files
+        assert len(errors) == 0
+
+    def test_empty_files_are_filtered(self):
+        request_files = {'pricingDocumentURL': mock_file('q1.pdf', 0)}
+
+        files, errors = upload_service_documents(
+            self.uploader, self.documents_url, self.service,
+            request_files, self.section)
+
+        assert len(files) == 0
+        assert len(errors) == 0
+
+    def test_only_files_in_section_are_uploaded(self):
+        request_files = {'serviceDefinitionDocumentURL': mock_file('q1.pdf', 100)}
+
+        files, errors = upload_service_documents(
+            self.uploader, self.documents_url, self.service,
+            request_files, self.section)
+
+        assert len(files) == 0
+        assert len(errors) == 0
+
+    def test_upload_with_validation_errors(self):
+        request_files = {'pricingDocumentURL': mock_file('q1.bad', 100)}
+
+        files, errors = upload_service_documents(
+            self.uploader, self.documents_url, self.service,
+            request_files, self.section)
+
+        assert files is None
+        assert 'pricingDocumentURL' in errors
 
 
 def mock_file(filename, length, name=None):
