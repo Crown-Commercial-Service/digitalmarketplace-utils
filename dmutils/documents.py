@@ -86,6 +86,30 @@ def upload_document(uploader, documents_url, service, field, file_contents, publ
     return full_url
 
 
+def upload_service_documents(uploader, documents_url, service, request_files, section):
+    files = {field: request_files[field] for field in section.get_question_ids(type="upload")
+             if field in request_files}
+    files = filter_empty_files(files)
+    errors = validate_documents(files)
+
+    if errors:
+        return None, errors
+
+    if len(files) == 0:
+        return {}, {}
+
+    for field, contents in files.items():
+        url = upload_document(
+            uploader, documents_url, service, field, contents)
+
+        if not url:
+            errors[field] = 'file_can_be_saved'
+        else:
+            files[field] = url
+
+    return files, errors
+
+
 def file_is_not_empty(file_contents):
     not_empty = len(file_contents.read(1)) > 0
     file_contents.seek(0)
