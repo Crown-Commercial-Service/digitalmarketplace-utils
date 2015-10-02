@@ -197,16 +197,45 @@ class TestSearchApiClient(object):
         assert rmock.called
         assert result == {'message': 'acknowledged'}
 
-    def test_get_status(self, data_client, rmock):
+    def test_get_status(self, search_client, rmock):
         rmock.get(
             "http://baseurl/_status",
             json={"status": "ok"},
             status_code=200)
 
-        result = data_client.get_status()
+        result = search_client.get_status()
 
         assert result['status'] == "ok"
         assert rmock.called
+
+    def test_create_index(self, search_client, rmock):
+        rmock.put(
+            "http://baseurl/new-index",
+            json={"status": "ok"},
+            status_code=200)
+
+        result = search_client.create_index('new-index')
+
+        assert rmock.called
+        assert result['status'] == "ok"
+        assert rmock.last_request.json() == {
+            "type": "index"
+        }
+
+    def test_set_alias(self, search_client, rmock):
+        rmock.put(
+            "http://baseurl/new-alias",
+            json={"status": "ok"},
+            status_code=200)
+
+        result = search_client.set_alias('new-alias', 'target')
+
+        assert rmock.called
+        assert result['status'] == "ok"
+        assert rmock.last_request.json() == {
+            "type": "alias",
+            "target": 'target'
+        }
 
     def test_post_to_index_with_type_and_service_id(
             self, search_client, rmock, service):

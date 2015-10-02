@@ -17,6 +17,18 @@ class SearchAPIClient(BaseAPIClient):
     def _url(self, path):
         return u"/{}/services{}".format(self.index_name, path)
 
+    def create_index(self, index_name):
+        return self._put(
+            '/{}'.format(index_name),
+            data={'type': 'index'}
+        )
+
+    def set_alias(self, alias_name, target_index):
+        return self._put(
+            '/{}'.format(alias_name),
+            data={'type': 'alias', 'target': target_index}
+        )
+
     def index(self, service_id, service):
         url = self._url(u"/{}".format(service_id))
         return self._put(url, data={'service': service})
