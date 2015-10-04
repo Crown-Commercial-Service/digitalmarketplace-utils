@@ -183,9 +183,28 @@ class TestUploadServiceDocuments(object):
     def test_upload_service_documents(self):
         request_files = {'pricingDocumentURL': mock_file('q1.pdf', 100)}
 
-        files, errors = upload_service_documents(
-            self.uploader, self.documents_url, self.service,
-            request_files, self.section)
+        with freeze_time('2015-10-04 14:36:05'):
+            files, errors = upload_service_documents(
+                self.uploader, self.documents_url, self.service,
+                request_files, self.section)
+
+        self.uploader.save.assert_called_with(
+            'g-cloud-7/12345/654321-pricing-document-2015-10-04-1436.pdf', mock.ANY, acl='public-read')
+
+        assert 'pricingDocumentURL' in files
+        assert len(errors) == 0
+
+    def test_upload_private_service_documents(self):
+        request_files = {'pricingDocumentURL': mock_file('q1.pdf', 100)}
+
+        with freeze_time('2015-10-04 14:36:05'):
+            files, errors = upload_service_documents(
+                self.uploader, self.documents_url, self.service,
+                request_files, self.section,
+                public=False)
+
+        self.uploader.save.assert_called_with(
+            'g-cloud-7/12345/654321-pricing-document-2015-10-04-1436.pdf', mock.ANY, acl='private')
 
         assert 'pricingDocumentURL' in files
         assert len(errors) == 0
