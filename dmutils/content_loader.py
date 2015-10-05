@@ -1,8 +1,8 @@
-import collections
 import yaml
 import inflection
 import re
 import os
+from werkzeug.datastructures import ImmutableMultiDict
 
 from .config import convert_to_boolean, convert_to_number
 
@@ -175,6 +175,9 @@ class ContentSection(object):
         in the form data are ignored. Fields in the form data are parsed according
         to their type in the section data.
         """
+        # strip trailing and leading whitespace from form values
+        form_data = ImmutableMultiDict(_strip_values(form_data.to_dict(flat=False)))
+
         section_data = {}
         for key in set(form_data) & set(self.get_question_ids()):
             if self._is_list_type(key):
@@ -407,3 +410,44 @@ def read_yaml(yaml_file):
         return {}
     with open(yaml_file, "r") as file:
         return yaml.load(file)
+
+
+def _strip_values(val):
+    """
+    Recursively strip whitespace values.
+
+    >> { ' key1 ': ' val1 ', 'key2': [' val21 ', ' val22 ' ] }
+    << { ' key1 ': 'val1', 'key2': ['val21', 'val22' ] }
+
+    :param val: a string or simple data structure with values to strip
+    :return: input with stripped value(s)
+    """
+
+    def _strip_str(s):
+        if hasattr(s, 'decode'):
+            s = s.decode('utf-8')
+        if hasattr(s, 'strip'):
+            s = s.strip()
+
+        return s
+
+    def _strip_list(l):
+        return [_strip_values(v) for v in l]
+
+    def _strip_tuple(t):
+        return _strip_list(t)
+
+    def _strip_dict(d):
+        return {k: _strip_values(v) for k, v in d.items()}
+
+    strip_func = {
+        '_strip_str': _strip_str,
+        '_strip_list': _strip_list,
+        '_strip_tuple': _strip_tuple,
+        '_strip_dict': _strip_dict
+    }
+
+    try:
+        return strip_func['_strip_{}'.format(type(val).__name__)](val)
+    except KeyError:
+        return val
