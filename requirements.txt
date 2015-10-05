@@ -12,3 +12,4 @@ enum34==1.0.4
 mandrill==1.0.57
 monotonic==0.3
 pytz==2015.4
+Flask-WTF==0.12
