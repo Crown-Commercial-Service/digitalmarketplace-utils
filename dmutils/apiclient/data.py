@@ -132,22 +132,19 @@ class DataAPIClient(BaseAPIClient):
             },
         )
 
-    def get_selection_answers(self, supplier_id, framework_slug):
+    def get_supplier_declaration(self, supplier_id, framework_slug):
         return self._get(
-            "/suppliers/{}/selection-answers/{}".format(
-                supplier_id, framework_slug))
+            "/suppliers/{}/frameworks/{}/declaration".format(supplier_id, framework_slug)
+        )
 
-    def answer_selection_questions(self, supplier_id, framework_slug,
-                                   answers, user):
+    def set_supplier_declaration(self, supplier_id, framework_slug, declaration, user):
         return self._put(
-            "/suppliers/{}/selection-answers/{}".format(
-                supplier_id, framework_slug),
+            "/suppliers/{}/frameworks/{}/declaration".format(supplier_id, framework_slug),
             data={
                 "updated_by": user,
-                "selectionAnswers": {
-                    "questionAnswers": answers
-                }
-            })
+                "declaration": declaration
+            }
+        )
 
     # Users
 
