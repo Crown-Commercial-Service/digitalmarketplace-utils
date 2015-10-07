@@ -21,6 +21,9 @@ class APIError(Exception):
         except AttributeError:
             return REQUEST_ERROR_STATUS_CODE
 
+    def __str__(self):
+        return "{} (status: {})".format(self.message, self.status_code)
+
 
 class HTTPError(APIError):
     @staticmethod
