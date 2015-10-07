@@ -6,7 +6,7 @@ import pytest
 
 import io
 
-from dmutils.content_loader import ContentLoader, ContentSection, ContentBuilder, read_yaml, _strip_values
+from dmutils.content_loader import ContentLoader, ContentSection, ContentBuilder, read_yaml
 
 from sys import version_info
 if version_info.major == 2:
@@ -883,67 +883,3 @@ class TestContentLoader(object):
         builder2 = yaml_loader.get_builder()
 
         assert builder1 != builder2
-
-
-class TestStripWhiteSpace(object):
-
-    class Paul(object):
-        def __init__(self):
-            self.name = ' Paul '
-
-    def test_strip_string(self):
-        assert _strip_values(' test\t ') == 'test'
-
-    def test_strip_list(self):
-        assert _strip_values([' test\n ', ' me ']) == ['test', 'me']
-
-    def test_strip_tuple(self):
-        assert _strip_values((' test ', ' me ')) == ['test', 'me']
-
-    def test_strip_dict(self):
-        assert _strip_values({' test ': ' me '}) == {' test ': 'me'}
-
-    def test_strip_object(self):
-        paul = self.Paul()
-        assert _strip_values(paul) == paul
-
-    def test_strip_int(self):
-        assert _strip_values(1) == 1
-
-    def test_strip_multi_dict(self):
-        val = {
-            'fruits ': [
-                ' banana ',
-                'apricot    ',
-                # em space after gala
-                {'apples ': [' spartan', 'gala ', '  honeycrisp ']},
-                # non-breaking space after 'pear'
-                ' pear ',
-                ' goji berry  '
-                ],
-            'teams ': [
-                (' hockey', ' Maple Leafs '),
-                (' basketball ', ' Raptors '),
-                (' baseball ', ' Blue Jays '),
-            ],
-            'numbers': [1, '  2 ', 3.4, ' 5.55 '],
-            'empty': [{}, [], '', 0, None, False]
-        }
-        stripped_val = {
-            'fruits ': [
-                'banana',
-                'apricot',
-                {'apples ': ['spartan', 'gala', 'honeycrisp']},
-                'pear',
-                'goji berry'
-                ],
-            'teams ': [
-                ['hockey', 'Maple Leafs'],
-                ['basketball', 'Raptors'],
-                ['baseball', 'Blue Jays'],
-            ],
-            'numbers': [1, '2', 3.4, '5.55'],
-            'empty': [{}, [], '', 0, None, False]
-        }
-
-        assert _strip_values(val) == stripped_val
