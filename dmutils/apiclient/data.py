@@ -222,12 +222,8 @@ class DataAPIClient(BaseAPIClient):
                     }
                 }
             )
-
-            logger.info("Updated password for user %s", user_id)
             return True
         except HTTPError as e:
-            logger.info("Password update failed for user %s: %s",
-                        user_id, e.status_code)
             return False
 
     def update_user(self,
@@ -270,7 +266,8 @@ class DataAPIClient(BaseAPIClient):
             data=params
         )
 
-        logger.info("Updated user %s fields %s", user_id, params)
+        logger.info("Updated user {user_id} fields {params}",
+                    extra={"user_id": user_id, "params": params})
         return user
 
     # Services

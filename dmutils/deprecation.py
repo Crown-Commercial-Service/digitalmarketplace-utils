@@ -13,12 +13,13 @@ def deprecated(dies_at):
     def decorator(view):
         @wraps(view)
         def func(*args, **kwargs):
-            message = "Calling deprecated view '%s'. Dies in %s."
+            message = "Calling deprecated view '{view_name}'. Dies in {time_left}."
             time_left = dies_at - datetime.utcnow()
+            extra = {'view_name': view.__name__, 'time_left': time_left}
             if time_left < timedelta(days=7):
-                current_app.logger.error(message, view.__name__, time_left)
+                current_app.logger.error(message, extra=extra)
             else:
-                current_app.logger.warning(message, view.__name__, time_left)
+                current_app.logger.warning(message, extra=extra)
             response = view(*args, **kwargs)
             response.headers['DM-Deprecated'] = "Dies in {}".format(time_left)
             return response

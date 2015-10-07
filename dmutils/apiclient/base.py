@@ -67,7 +67,11 @@ class BaseAPIClient(object):
 
         url = urlparse.urljoin(self.base_url, url)
 
-        logger.debug("API request %s %s", method, url)
+        logger.debug("API request {method} {url}",
+                     extra={
+                        'method': method,
+                        'url': url
+                     })
         headers = {
             "Content-type": "application/json",
             "Authorization": "Bearer {}".format(self.auth_token),

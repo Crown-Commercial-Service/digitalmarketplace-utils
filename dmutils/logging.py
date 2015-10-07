@@ -23,10 +23,12 @@ def init_app(app):
 
     @app.after_request
     def after_request(response):
-        current_app.logger.info('%s %s %s',
-                                request.method,
-                                request.url,
-                                response.status_code)
+        current_app.logger.info('{method} {url} {status}',
+                                extra={
+                                    'method': request.method,
+                                    'url': request.url,
+                                    'status': response.status_code
+                                })
         return response
 
     logging.getLogger().addHandler(logging.NullHandler())
