@@ -1,8 +1,8 @@
-import collections
 import yaml
 import inflection
 import re
 import os
+from werkzeug.datastructures import ImmutableMultiDict
 
 from .config import convert_to_boolean, convert_to_number
 
@@ -175,6 +175,9 @@ class ContentSection(object):
         in the form data are ignored. Fields in the form data are parsed according
         to their type in the section data.
         """
+        # strip trailing and leading whitespace from form values
+        form_data = ImmutableMultiDict((k, v.strip()) for k, v in form_data.items(multi=True))
+
         section_data = {}
         for key in set(form_data) & set(self.get_question_ids()):
             if self._is_list_type(key):

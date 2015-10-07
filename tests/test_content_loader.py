@@ -366,12 +366,22 @@ class TestContentBuilder(object):
                     "question": "Question two",
                     "type": "text",
                 }]
+            },
+            {
+                "id": "third_section",
+                "name": "Third section",
+                "questions": [{
+                    "id": "q3",
+                    "question": "Question three",
+                    "type": "text",
+                }]
             }
         ])
 
         form = ImmutableMultiDict([
             ('q1', 'some text'),
             ('q2', 'other text'),
+            ('q3', '  lots of      whitespace     \t\n'),
         ])
 
         data = content.get_all_data(form)
@@ -379,6 +389,7 @@ class TestContentBuilder(object):
         assert data == {
             'q1': 'some text',
             'q2': 'other text',
+            'q3': 'lots of      whitespace',
         }
 
 
