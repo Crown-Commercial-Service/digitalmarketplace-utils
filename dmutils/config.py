@@ -6,9 +6,21 @@ from flask._compat import string_types
 def init_app(app):
     for key, value in app.config.items():
         if key in os.environ:
-            app.config[key] = convert_to_boolean(os.environ[key])
+            if isinstance(value, bool):
+                app.config[key] = _convert_to_boolean_or_fail(key, os.environ[key])
+            elif isinstance(value, int):
+                app.config[key] = _convert_to_int_or_fail(key, os.environ[key])
+            else:
+                app.config[key] = os.environ[key]
     app.config['DM_ENVIRONMENT'] = os.environ.get('DM_ENVIRONMENT',
                                                   'development')
+
+
+def _convert_to_boolean_or_fail(key, value):
+    result = convert_to_boolean(value)
+    if not isinstance(result, bool):
+        raise ValueError("{} must be boolean".format(key))
+    return result
 
 
 def convert_to_boolean(value):
@@ -33,6 +45,13 @@ def convert_to_boolean(value):
             return False
 
     return value
+
+
+def _convert_to_int_or_fail(key, value):
+    result = convert_to_number(value)
+    if not isinstance(result, int):
+        raise ValueError("{} must be an integer".format(key))
+    return result
 
 
 def convert_to_number(value):
