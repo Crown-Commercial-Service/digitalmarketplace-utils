@@ -4,18 +4,18 @@ from .base import BaseAPIClient
 from .errors import HTTPError
 
 
-class SearchAPIClient(BaseAPIClient):
-    def __init__(self, *args, **kwargs):
-        self.index_name = kwargs.pop('index_name', 'g-cloud')
-        super(SearchAPIClient, self).__init__(*args, **kwargs)
+# TODO remove default value once apps pass the index value to SearchAPIClient method calls
+DEFAULT_SEARCH_INDEX = 'g-cloud'
 
+
+class SearchAPIClient(BaseAPIClient):
     def init_app(self, app):
         self.base_url = app.config['DM_SEARCH_API_URL']
         self.auth_token = app.config['DM_SEARCH_API_AUTH_TOKEN']
         self.enabled = app.config['ES_ENABLED']
 
-    def _url(self, path):
-        return u"/{}/services{}".format(self.index_name, path)
+    def _url(self, index, path):
+        return u"/{}/services/{}".format(index, path)
 
     def create_index(self, index_name):
         return self._put(
@@ -29,12 +29,12 @@ class SearchAPIClient(BaseAPIClient):
             data={'type': 'alias', 'target': target_index}
         )
 
-    def index(self, service_id, service):
-        url = self._url(u"/{}".format(service_id))
+    def index(self, service_id, service, index=DEFAULT_SEARCH_INDEX):
+        url = self._url(index, service_id)
         return self._put(url, data={'service': service})
 
-    def delete(self, service_id):
-        url = self._url(u"/{}".format(service_id))
+    def delete(self, service_id, index=DEFAULT_SEARCH_INDEX):
+        url = self._url(index, service_id)
 
         try:
             return self._delete(url)
@@ -43,7 +43,7 @@ class SearchAPIClient(BaseAPIClient):
                 raise
         return None
 
-    def search_services(self, q=None, page=None, **filters):
+    def search_services(self, q=None, page=None, index=DEFAULT_SEARCH_INDEX, **filters):
         params = {}
         if q is not None:
             params['q'] = q
@@ -54,5 +54,5 @@ class SearchAPIClient(BaseAPIClient):
         for filter_name, filter_values in six.iteritems(filters):
             params[u'filter_{}'.format(filter_name)] = filter_values
 
-        response = self._get(self._url("/search"), params=params)
+        response = self._get(self._url(index, "search"), params=params)
         return response

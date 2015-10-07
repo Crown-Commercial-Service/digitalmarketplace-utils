@@ -182,21 +182,6 @@ class TestSearchApiClient(object):
         assert search_client.auth_token == "example-token"
         assert not search_client.enabled
 
-    def test_client_with_index_name(self, rmock, service):
-        client = SearchAPIClient(
-            'http://baseurl', 'auth-token', True,
-            index_name='not-g-cloud'
-        )
-
-        rmock.put(
-            'http://baseurl/not-g-cloud/services/12345',
-            json={'message': 'acknowledged'},
-            status_code=200)
-
-        result = client.index("12345", service)
-        assert rmock.called
-        assert result == {'message': 'acknowledged'}
-
     def test_get_status(self, search_client, rmock):
         rmock.get(
             "http://baseurl/_status",
@@ -246,6 +231,15 @@ class TestSearchApiClient(object):
         result = search_client.index("12345", service)
         assert result == {'message': 'acknowledged'}
 
+    def test_post_to_given_index(
+            self, search_client, rmock, service):
+        rmock.put(
+            'http://baseurl/new-index/services/12345',
+            json={'message': 'acknowledged'},
+            status_code=200)
+        result = search_client.index("12345", service, index='new-index')
+        assert result == {'message': 'acknowledged'}
+
     def test_delete_to_delete_method_service_id(
             self, search_client, rmock):
         rmock.delete(
@@ -260,6 +254,15 @@ class TestSearchApiClient(object):
             status_code=200)
         result = search_client.delete("12345")
         assert result['services']['found'] is True
+
+    def test_delete_from_given_index(
+            self, search_client, rmock, service):
+        rmock.delete(
+            'http://baseurl/new-index/services/12345',
+            json={'message': 'acknowledged'},
+            status_code=200)
+        result = search_client.delete("12345", index='new-index')
+        assert result == {'message': 'acknowledged'}
 
     def test_should_not_call_search_api_is_es_disabled(
             self, search_client, rmock, service):
@@ -292,6 +295,21 @@ class TestSearchApiClient(object):
             q='foo',
             minimumContractPeriod=['a'],
             something=['a', 'b'])
+        assert result == {'services': "myresponse"}
+
+    def test_search_given_index(self, search_client, rmock):
+        rmock.get(
+            'http://baseurl/new-index/services/search?q=foo&filter_minimumContractPeriod=a',
+            json={'services': "myresponse"},
+            status_code=200
+        )
+
+        result = search_client.search_services(
+            q='foo',
+            minimumContractPeriod=['a'],
+            index='new-index',
+        )
+
         assert result == {'services': "myresponse"}
 
     def test_search_services_with_blank_query(self, search_client, rmock):
