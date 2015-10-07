@@ -32,6 +32,9 @@ class User():
     def has_role(self, role):
         return self.role == role
 
+    def has_any_role(self, *roles):
+        return any(self.has_role(role) for role in roles)
+
     def get_id(self):
         try:
             return unicode(self.id)  # python 2
