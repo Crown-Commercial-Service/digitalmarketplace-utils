@@ -931,6 +931,31 @@ class TestDataApiClient(object):
             'contactInformation': {'foo': 'bar'}, 'updated_by': 'supplier'
         }
 
+    def test_get_supplier_declaration(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123/frameworks/g-cloud-7/declaration",
+            json={"declaration": {"question": "answer"}},
+            status_code=200)
+
+        result = data_client.get_supplier_declaration(123, 'g-cloud-7')
+
+        assert result == {'declaration': {'question': 'answer'}}
+        assert rmock.called
+
+    def test_set_supplier_declaration(self, data_client, rmock):
+        rmock.put(
+            "http://baseurl/suppliers/123/frameworks/g-cloud-7/declaration",
+            json={"declaration": {"question": "answer"}},
+            status_code=200)
+
+        result = data_client.set_supplier_declaration(123, 'g-cloud-7', {"question": "answer"}, "user")
+
+        assert result == {'declaration': {'question': 'answer'}}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+            'updated_by': 'user',
+            'declaration': {'question': 'answer'}}
+
     def test_find_draft_services(self, data_client, rmock):
         rmock.get(
             "http://baseurl/draft-services?supplier_id=2",
