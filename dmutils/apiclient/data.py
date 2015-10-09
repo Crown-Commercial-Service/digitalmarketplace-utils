@@ -412,6 +412,14 @@ class DataAPIClient(BaseAPIClient):
                 },
             })
 
+    def find_frameworks(self):
+        return self._get("/frameworks")
+
+    find_frameworks_iter = make_iter_method('find_frameworks', 'frameworks', 'frameworks')
+
+    def get_framework(self, slug):
+        return self._get("/frameworks/{}".format(slug))
+
     def get_framework_stats(self, framework_slug):
         return self._get(
             "/frameworks/{}/stats".format(framework_slug))
