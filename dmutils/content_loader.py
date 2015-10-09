@@ -2,6 +2,8 @@ import yaml
 import inflection
 import re
 import os
+from collections import defaultdict
+from functools import partial
 from werkzeug.datastructures import ImmutableMultiDict
 
 from .config import convert_to_boolean, convert_to_number
@@ -344,32 +346,72 @@ class ContentSection(object):
         return bool(question) and question.get('assuranceApproach', False)
 
 
+class ContentNotFoundError(Exception):
+    pass
+
+
 class ContentLoader(object):
-    def __init__(self, manifest, content_directory):
-        manifest_sections = read_yaml(manifest)
+    """
+    Usage:
+    >>> loader = ContentLoader('path/to/digitalmarketplace-frameworks')
+    >>> # pre-load manifests
+    >>> loader.load_manifest('framework-1', 'manifest-1', 'question-set-1')
+    >>> loader.load_manifest('framework-1', 'manifest-2', 'question-set-1')
+    >>> loader.load_manifest('framework-1', 'manifest-3', 'question-set-2')
+    >>> loader.load_manifest('framework-2', 'manifest-1', 'question-set-1')
+    >>> # get a builder
+    >>> loader.get_builder(framework_slug, 'manifest-1')
+    """
+    def __init__(self, content_path):
+        self.content_path = content_path
+        self._content = defaultdict(dict)
+        # A defaultdict that defaults to a defaultdict of dicts
+        self._questions = defaultdict(partial(defaultdict, dict))
 
-        self._questions = {
-            q: _load_question(q, content_directory)
-            for section in manifest_sections
-            for q in section["questions"]
-        }
+    def get_builder(self, framework_slug, manifest):
+        try:
+            return ContentBuilder(self._content[framework_slug][manifest])
+        except KeyError:
+            raise ContentNotFoundError("Content not found for {} and {}".format(framework_slug, manifest))
 
-        self._sections = [
-            self._populate_section(s) for s in manifest_sections
+    def load_manifest(self, framework_slug, manifest, question_set):
+        if manifest not in self._content[framework_slug]:
+            try:
+                manifest_path = self._manifest_path(framework_slug, manifest)
+                manifest_sections = read_yaml(manifest_path)
+            except IOError:
+                raise ContentNotFoundError("No manifest at {}".format(manifest_path))
+
+            self._content[framework_slug][manifest] = [
+                self._populate_section(framework_slug, question_set, section) for section in manifest_sections
+            ]
+
+        return self._content[framework_slug][manifest]
+
+    def get_question(self, framework_slug, question_set, question):
+        if question not in self._questions[framework_slug][question_set]:
+            try:
+                questions_path = self._questions_path(framework_slug, question_set)
+                self._questions[framework_slug][question_set][question] = _load_question(question, questions_path)
+            except IOError:
+                raise ContentNotFoundError("No question at {}".format(questions_path))
+
+        return self._questions[framework_slug][question_set][question].copy()
+
+    def _root_path(self, framework_slug):
+        return os.path.join(self.content_path, 'frameworks', framework_slug)
+
+    def _questions_path(self, framework_slug, question_set):
+        return os.path.join(self._root_path(framework_slug), 'questions', question_set)
+
+    def _manifest_path(self, framework_slug, manifest):
+        return os.path.join(self._root_path(framework_slug), 'manifests', '{}.yml'.format(manifest))
+
+    def _populate_section(self, framework_slug, question_set, section):
+        section['id'] = _make_section_id(section['name'])
+        section['questions'] = [
+            self.get_question(framework_slug, question_set, question) for question in section['questions']
         ]
-
-    def get_question(self, question):
-        return self._questions.get(question, {}).copy()
-
-    def get_builder(self):
-        return ContentBuilder(self._sections)
-
-    def _populate_section(self, section):
-        section["id"] = _make_section_id(section["name"])
-        section["questions"] = [
-            self.get_question(q) for q in section["questions"]
-        ]
-
         return section
 
 # TODO: move this into question definition with questions represented by multiple fields
@@ -386,9 +428,10 @@ def expand_pricing_field(pricing):
 
 def _load_question(question, directory):
     question_content = read_yaml(
-        directory + question + ".yml"
+        os.path.join(directory, '{}.yml'.format(question))
     )
-    question_content["id"] = _make_question_id(question)
+    if question_content:
+        question_content["id"] = _make_question_id(question)
 
     return question_content
 
@@ -406,7 +449,5 @@ def _make_question_id(question):
 
 
 def read_yaml(yaml_file):
-    if not os.path.isfile(yaml_file):
-        return {}
     with open(yaml_file, "r") as file:
         return yaml.load(file)

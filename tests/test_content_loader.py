@@ -6,7 +6,7 @@ import pytest
 
 import io
 
-from dmutils.content_loader import ContentLoader, ContentSection, ContentBuilder, read_yaml
+from dmutils.content_loader import ContentLoader, ContentSection, ContentBuilder, read_yaml, ContentNotFoundError
 
 from sys import version_info
 if version_info.major == 2:
@@ -790,40 +790,48 @@ class TestContentSection(object):
 
 
 class TestReadYaml(object):
-    @mock.patch('os.path.isfile', return_value=True)
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
-    def test_loading_existant_file(self, mocked_is_file, mocked_open):
+    def test_loading_existant_file(self, mocked_open):
         assert read_yaml('anything.yml') == {'foo': 'bar'}
 
-    @mock.patch('os.path.isfile', return_value=False)
-    def test_file_not_found(self, mocked_is_file):
-        assert read_yaml('something.yml') == {}
+    @mock.patch.object(builtins, 'open', side_effect=IOError)
+    def test_file_not_found(self, mocked_open):
+        with pytest.raises(IOError):
+            assert read_yaml('something.yml')
 
 
 @mock.patch('dmutils.content_loader.read_yaml')
 class TestContentLoader(object):
     def set_read_yaml_mock_response(self, read_yaml_mock):
         read_yaml_mock.side_effect = [
-            [
-                {"name": "section1", "questions": ["question1", "question2"]},
-            ],
-            {"name": "question1", "depends": [{"on": "lot", "being": "SaaS"}]},
-            {"name": "question2", "depends": [{"on": "lot", "being": "SaaS"}]}
+            self.manifest1(),
+            self.question1(),
+            self.question2(),
         ]
 
-    def test_question_loading(self, read_yaml_mock):
+    def manifest1(self):
+        return [{"name": "section1", "questions": ["question1", "question2"]}]
+
+    def manifest2(self):
+        return [{"name": "section1", "questions": ["question2", "question3"]}]
+
+    def question1(self):
+        return {"name": "question1", "depends": [{"on": "lot", "being": "SaaS"}]}
+
+    def question2(self):
+        return {"name": "question2", "depends": [{"on": "lot", "being": "SaaS"}]}
+
+    def question3(self):
+        return {"name": "question3", "depends": [{"on": "lot", "being": "SaaS"}]}
+
+    def test_manifest_loading(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)
 
-        yaml_loader = ContentLoader('anything.yml', 'content/')
+        yaml_loader = ContentLoader('content/')
 
-        assert yaml_loader._questions == {
-            'question1': {'depends': [{'being': 'SaaS', 'on': 'lot'}],
-                          'name': 'question1', 'id': 'question1'},
-            'question2': {'depends': [{'being': 'SaaS', 'on': 'lot'}],
-                          'name': 'question2', 'id': 'question2'}
-        }
+        sections = yaml_loader.load_manifest('framework-slug', 'my-manifest', 'question-set')
 
-        assert yaml_loader._sections == [
+        assert sections == [
             {'name': 'section1',
                 'questions': [
                     {'depends': [{'being': 'SaaS', 'on': 'lot'}],
@@ -832,54 +840,115 @@ class TestContentLoader(object):
                      'name': 'question2', 'id': 'question2'}],
                 'id': 'section1'}
         ]
+        read_yaml_mock.assert_has_calls([
+            mock.call('content/frameworks/framework-slug/manifests/my-manifest.yml'),
+            mock.call('content/frameworks/framework-slug/questions/question-set/question1.yml'),
+            mock.call('content/frameworks/framework-slug/questions/question-set/question2.yml'),
+        ])
+
+    def test_manifest_loading_fails_if_manifest_cannot_be_read(self, read_yaml_mock):
+        read_yaml_mock.side_effect = IOError
+
+        yaml_loader = ContentLoader('content/')
+
+        with pytest.raises(ContentNotFoundError):
+            yaml_loader.load_manifest('framework-slug', 'my-manifest', 'question-set')
+
+    def test_manifest_loading_fails_if_question_cannot_be_read(self, read_yaml_mock):
+        read_yaml_mock.side_effect = [
+            self.manifest1(),
+            IOError
+        ]
+
+        yaml_loader = ContentLoader('content')
+
+        with pytest.raises(ContentNotFoundError):
+            yaml_loader.load_manifest('framework-slug', 'my-manifest', 'question-set')
 
     def test_get_question(self, read_yaml_mock):
-        self.set_read_yaml_mock_response(read_yaml_mock)
+        read_yaml_mock.return_value = self.question1()
 
-        yaml_loader = ContentLoader('anything.yml', 'content/')
+        yaml_loader = ContentLoader('content/')
 
-        assert yaml_loader.get_question('question1') == {
+        assert yaml_loader.get_question('framework-slug', 'question-set', 'question1') == {
             'depends': [{'being': 'SaaS', 'on': 'lot'}],
             'name': 'question1', 'id': 'question1'
         }
+        read_yaml_mock.assert_called_with(
+            'content/frameworks/framework-slug/questions/question-set/question1.yml')
 
-    def test_get_missing_question(self, read_yaml_mock):
-        self.set_read_yaml_mock_response(read_yaml_mock)
+    def test_get_question_fails_if_question_cannot_be_read(self, read_yaml_mock):
+        read_yaml_mock.side_effect = IOError
 
-        yaml_loader = ContentLoader('anything.yml', 'content/')
+        yaml_loader = ContentLoader('content/')
 
-        assert yaml_loader.get_question('question111') == {}
+        with pytest.raises(ContentNotFoundError):
+            yaml_loader.get_question('framework-slug', 'question-set', 'question111')
+
+    def test_get_same_question_id_from_same_question_set_only_loads_once(self, read_yaml_mock):
+        read_yaml_mock.side_effect = [
+            self.question1(),
+        ]
+
+        yaml_loader = ContentLoader('content/')
+        yaml_loader.get_question('framework-slug', 'question-set-1', 'question1')
+        yaml_loader.get_question('framework-slug', 'question-set-1', 'question1')
+
+        read_yaml_mock.assert_has_calls([
+            mock.call('content/frameworks/framework-slug/questions/question-set-1/question1.yml'),
+        ])
+
+    def test_get_same_question_id_from_different_question_sets(self, read_yaml_mock):
+        read_yaml_mock.side_effect = [
+            self.question1(),
+            self.question1(),
+        ]
+
+        yaml_loader = ContentLoader('content/')
+        yaml_loader.get_question('framework-slug', 'question-set-1', 'question1')
+        yaml_loader.get_question('framework-slug', 'question-set-2', 'question1')
+
+        read_yaml_mock.assert_has_calls([
+            mock.call('content/frameworks/framework-slug/questions/question-set-1/question1.yml'),
+            mock.call('content/frameworks/framework-slug/questions/question-set-2/question1.yml'),
+        ])
 
     def test_get_question_returns_a_copy(self, read_yaml_mock):
-        self.set_read_yaml_mock_response(read_yaml_mock)
+        read_yaml_mock.return_value = self.question1()
 
-        yaml_loader = ContentLoader('anything.yml', 'content/')
+        yaml_loader = ContentLoader('content/')
 
-        q1 = yaml_loader.get_question('question1')
+        q1 = yaml_loader.get_question('framework-slug', 'question-set', 'question1')
         q1["id"] = "modified"
         q1["depends"] = []
 
-        assert yaml_loader.get_question('question1') != q1
+        assert yaml_loader.get_question('framework-slug', 'question-set', 'question1') != q1
 
     def test_get_builder(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)
 
-        yaml_loader = ContentLoader('anything.yml', 'content/')
+        yaml_loader = ContentLoader('content/')
+        yaml_loader.load_manifest('framework-slug', 'manifest', 'question-set')
 
-        assert isinstance(yaml_loader.get_builder(), ContentBuilder)
+        builder = yaml_loader.get_builder('framework-slug', 'manifest')
+        assert isinstance(builder, ContentBuilder)
 
         assert [
-            section.id for section in yaml_loader.get_builder().sections
-        ] == [
-            section['id'] for section in yaml_loader._sections
-        ]
+            section.id for section in builder.sections
+        ] == ['section1']
 
     def test_multple_builders(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)
 
-        yaml_loader = ContentLoader('anything.yml', 'content/')
+        yaml_loader = ContentLoader('content/')
+        yaml_loader.load_manifest('framework-slug', 'manifest', 'question-set')
 
-        builder1 = yaml_loader.get_builder()
-        builder2 = yaml_loader.get_builder()
+        builder1 = yaml_loader.get_builder('framework-slug', 'manifest')
+        builder2 = yaml_loader.get_builder('framework-slug', 'manifest')
 
         assert builder1 != builder2
+
+    def test_get_builder_fails_if_manifest_has_not_been_loaded(self, read_yaml_mock):
+        with pytest.raises(ContentNotFoundError):
+            yaml_loader = ContentLoader('content/')
+            yaml_loader.get_builder('framework-slug', 'manifest')
