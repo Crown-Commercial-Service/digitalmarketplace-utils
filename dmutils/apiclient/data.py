@@ -372,12 +372,13 @@ class DataAPIClient(BaseAPIClient):
                 raise
         return None
 
-    def find_services(self, supplier_id=None, page=None):
-        params = {}
-        if supplier_id is not None:
-            params['supplier_id'] = supplier_id
-        if page is not None:
-            params['page'] = page
+    def find_services(self, supplier_id=None, framework=None, status=None, page=None):
+        params = {
+            'supplier_id': supplier_id,
+            'framework': framework,
+            'status': status,
+            'page': page,
+        }
 
         return self._get("/services", params=params)
 
