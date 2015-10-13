@@ -370,6 +370,8 @@ class ContentLoader(object):
 
     def get_builder(self, framework_slug, manifest):
         try:
+            if framework_slug not in self._content:
+                raise KeyError
             return ContentBuilder(self._content[framework_slug][manifest])
         except KeyError:
             raise ContentNotFoundError("Content not found for {} and {}".format(framework_slug, manifest))
@@ -388,8 +390,16 @@ class ContentLoader(object):
 
         return self._content[framework_slug][manifest]
 
+    def _has_question(self, framework_slug, question_set, question):
+        if framework_slug not in self._questions:
+            return False
+        if question_set not in self._questions[framework_slug]:
+            return False
+
+        return question in self._questions[framework_slug][question_set]
+
     def get_question(self, framework_slug, question_set, question):
-        if question not in self._questions[framework_slug][question_set]:
+        if not self._has_question(framework_slug, question_set, question):
             try:
                 questions_path = self._questions_path(framework_slug, question_set)
                 self._questions[framework_slug][question_set][question] = _load_question(question, questions_path)
