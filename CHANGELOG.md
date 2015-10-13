@@ -33,8 +33,8 @@ declaration_content = ContentLoader(
 New
 ```python
 content_loader = ContentLoader('app/content')
-content_loader.load_manifest('g-cloud-6', 'edit_service', 'services')
-content_loader.load_manifest('g-cloud-7', 'edit_submission', 'services')
+content_loader.load_manifest('g-cloud-6', 'services', 'edit_service')
+content_loader.load_manifest('g-cloud-7', 'services', 'edit_submission')
 content_loader.load_manifest('g-cloud-7', 'declaration', 'declaration')
 ```
 

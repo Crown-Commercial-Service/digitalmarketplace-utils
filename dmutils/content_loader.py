@@ -376,7 +376,7 @@ class ContentLoader(object):
         except KeyError:
             raise ContentNotFoundError("Content not found for {} and {}".format(framework_slug, manifest))
 
-    def load_manifest(self, framework_slug, manifest, question_set):
+    def load_manifest(self, framework_slug, question_set, manifest):
         if manifest not in self._content[framework_slug]:
             try:
                 manifest_path = self._manifest_path(framework_slug, manifest)

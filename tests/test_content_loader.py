@@ -829,7 +829,7 @@ class TestContentLoader(object):
 
         yaml_loader = ContentLoader('content/')
 
-        sections = yaml_loader.load_manifest('framework-slug', 'my-manifest', 'question-set')
+        sections = yaml_loader.load_manifest('framework-slug', 'question-set', 'my-manifest')
 
         assert sections == [
             {'name': 'section1',
@@ -852,7 +852,7 @@ class TestContentLoader(object):
         yaml_loader = ContentLoader('content/')
 
         with pytest.raises(ContentNotFoundError):
-            yaml_loader.load_manifest('framework-slug', 'my-manifest', 'question-set')
+            yaml_loader.load_manifest('framework-slug', 'question-set', 'my-manifest')
 
     def test_manifest_loading_fails_if_question_cannot_be_read(self, read_yaml_mock):
         read_yaml_mock.side_effect = [
@@ -863,7 +863,7 @@ class TestContentLoader(object):
         yaml_loader = ContentLoader('content')
 
         with pytest.raises(ContentNotFoundError):
-            yaml_loader.load_manifest('framework-slug', 'my-manifest', 'question-set')
+            yaml_loader.load_manifest('framework-slug', 'question-set', 'my-manifest')
 
     def test_get_question(self, read_yaml_mock):
         read_yaml_mock.return_value = self.question1()
@@ -928,7 +928,7 @@ class TestContentLoader(object):
         self.set_read_yaml_mock_response(read_yaml_mock)
 
         yaml_loader = ContentLoader('content/')
-        yaml_loader.load_manifest('framework-slug', 'manifest', 'question-set')
+        yaml_loader.load_manifest('framework-slug', 'question-set', 'manifest')
 
         builder = yaml_loader.get_builder('framework-slug', 'manifest')
         assert isinstance(builder, ContentBuilder)
@@ -941,7 +941,7 @@ class TestContentLoader(object):
         self.set_read_yaml_mock_response(read_yaml_mock)
 
         yaml_loader = ContentLoader('content/')
-        yaml_loader.load_manifest('framework-slug', 'manifest', 'question-set')
+        yaml_loader.load_manifest('framework-slug', 'question-set', 'manifest')
 
         builder1 = yaml_loader.get_builder('framework-slug', 'manifest')
         builder2 = yaml_loader.get_builder('framework-slug', 'manifest')
