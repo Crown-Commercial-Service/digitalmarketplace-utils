@@ -88,7 +88,8 @@ class BaseAPIClient(object):
         except requests.RequestException as e:
             api_error = HTTPError.create(e)
             elapsed_time = monotonic() - start_time
-            logger.warning(
+            logger.log(
+                logging.INFO if api_error.status_code == 404 else logging.WARNING,
                 "API {api_method} request on {api_url} failed with {api_status} '{api_error}'",
                 extra={
                     'api_method': method,
