@@ -111,6 +111,14 @@ class ContentBuilder(object):
             if question:
                 return question
 
+    def get_question_number(self, question_id):
+        index = 0
+        for section in self.sections:
+            for question in section.questions:
+                index += 1
+                if question['id'] == question_id:
+                    return index
+
 
 class ContentSection(object):
     @classmethod

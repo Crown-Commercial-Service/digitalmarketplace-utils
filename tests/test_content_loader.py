@@ -392,6 +392,42 @@ class TestContentBuilder(object):
             'q3': 'lots of      whitespace',
         }
 
+    def test_question_numbering(self):
+        content = ContentBuilder([
+            {
+                "id": "first_section",
+                "name": "First section",
+                "questions": [
+                    {
+                        "id": "q1",
+                        "question": "Question one",
+                        "type": "text",
+                    },
+                    {
+                        "id": "q2",
+                        "question": "Question one",
+                        "type": "text",
+                    }
+                ]
+            },
+            {
+                "id": "second_section",
+                "name": "Second section",
+                "questions": [
+                    {
+                        "id": "q3",
+                        "question": "Question three",
+                        "type": "text",
+                    }
+                ]
+            }
+        ])
+
+        assert content.get_question_number("q1") == 1
+        assert content.get_question_number("q2") == 2
+        assert content.get_question_number("q3") == 3
+        assert content.get_question_number("qX") == None
+
 
 class TestContentSection(object):
     def test_get_question_ids(self):
