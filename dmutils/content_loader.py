@@ -404,7 +404,7 @@ class ContentLoader(object):
                 questions_path = self._questions_path(framework_slug, question_set)
                 self._questions[framework_slug][question_set][question] = _load_question(question, questions_path)
             except IOError:
-                raise ContentNotFoundError("No question at {}".format(questions_path))
+                raise ContentNotFoundError("No question {} at {}".format(question, questions_path))
 
         return self._questions[framework_slug][question_set][question].copy()
 
