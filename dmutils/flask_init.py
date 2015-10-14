@@ -47,3 +47,11 @@ def init_app(
     application.add_template_filter(formats.shortdateformat)
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)
+
+
+def init_manager(manager):
+    @manager.command
+    def list_routes():
+        """List URLs of all application routes."""
+        for rule in sorted(application.url_map.iter_rules(), key=lambda r: r.rule):
+            print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
