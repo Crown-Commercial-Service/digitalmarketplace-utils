@@ -1,4 +1,5 @@
 from flask_featureflags.contrib.inline import InlineFeatureFlag
+from . import config, logging, proxy_fix, request_id, formats
 
 
 def init_app(
@@ -49,9 +50,9 @@ def init_app(
     application.add_template_filter(formats.datetimeformat)
 
 
-def init_manager(manager):
+def init_manager(application, manager):
     @manager.command
     def list_routes():
         """List URLs of all application routes."""
-        for rule in sorted(application.url_map.iter_rules(), key=lambda r: r.rule):
+        for rule in sorted(manager.app.url_map.iter_rules(), key=lambda r: r.rule):
             print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
