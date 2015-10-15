@@ -392,6 +392,83 @@ class TestContentBuilder(object):
             'q3': 'lots of      whitespace',
         }
 
+    def test_question_numbering(self):
+        content = ContentBuilder([
+            {
+                "id": "first_section",
+                "name": "First section",
+                "questions": [
+                    {
+                        "id": "q1",
+                        "question": "Question one",
+                        "type": "text",
+                    },
+                    {
+                        "id": "q2",
+                        "question": "Question one",
+                        "type": "text",
+                    }
+                ]
+            },
+            {
+                "id": "second_section",
+                "name": "Second section",
+                "questions": [
+                    {
+                        "id": "q3",
+                        "question": "Question three",
+                        "type": "text",
+                    }
+                ]
+            }
+        ])
+
+        assert content.get_question("q1")['number'] == 1
+        assert content.get_question("q2")['number'] == 2
+        assert content.get_question("q3")['number'] == 3
+
+    def test_question_numbers_respect_filtering(self):
+        content = ContentBuilder([
+            {
+                "id": "first_section",
+                "name": "First section",
+                "questions": [{
+                    "id": "q1",
+                    "question": 'First question',
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["SaaS"]
+                    }]
+                }]
+            },
+            {
+                "id": "second_section",
+                "name": "Second section",
+                "questions": [
+                    {
+                        "id": "q2",
+                        "question": 'Second question',
+                        "depends": [{
+                            "on": "lot",
+                            "being": ["SCS"]
+                        }]
+                    },
+                    {
+                        "id": "q3",
+                        "question": 'Third question',
+                        "depends": [{
+                            "on": "lot",
+                            "being": ["SCS"]
+                        }]
+                    },
+                ]
+            }
+        ]).filter({"lot": "SCS"})
+
+        assert content.sections[0].questions[0]['id'] == 'q2'
+        assert content.get_question('q2')['number'] == 1
+        assert content.sections[0].questions[0]['number'] == 1
+
 
 class TestContentSection(object):
     def test_get_question_ids(self):

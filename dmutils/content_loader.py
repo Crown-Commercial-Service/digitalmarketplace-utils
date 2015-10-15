@@ -22,6 +22,11 @@ class ContentBuilder(object):
     """
     def __init__(self, sections):
         self.sections = [ContentSection.create(section) for section in sections]
+        question_index = 0
+        for section in self.sections:
+            for question in section.questions:
+                question_index += 1
+                question['number'] = question_index
 
     def __iter__(self):
         return self.sections.__iter__()

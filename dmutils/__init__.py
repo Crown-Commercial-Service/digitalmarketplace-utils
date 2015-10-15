@@ -3,7 +3,7 @@ from datetime import datetime
 import flask_featureflags
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 
-__version__ = '10.0.1'
+__version__ = '10.1.0'
 
 
 def init_app(
