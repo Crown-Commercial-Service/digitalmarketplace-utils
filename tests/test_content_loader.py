@@ -865,6 +865,18 @@ class TestContentSection(object):
         assert result['q3--assurance']['message'] == "There there, it'll be ok."
         assert result['serviceTypeSCS']['message'] == "This is the error message"
 
+    def test_section_description(self):
+        section = ContentSection.create({
+            "id": "first_section",
+            "name": "First section",
+            "questions": [],
+            "description": "This is the first section"
+        })
+        assert section.description == "This is the first section"
+
+        copy_of_section = section.copy()
+        assert copy_of_section.description == "This is the first section"
+
 
 class TestReadYaml(object):
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))

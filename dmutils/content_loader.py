@@ -127,13 +127,15 @@ class ContentSection(object):
                 id=section['id'],
                 name=section['name'],
                 editable=section.get('editable'),
-                questions=section['questions'])
+                questions=section['questions'],
+                description=section.get('description'))
 
-    def __init__(self, id, name, editable, questions):
+    def __init__(self, id, name, editable, questions, description=None):
         self.id = id
         self.name = name
         self.editable = editable
         self.questions = questions
+        self.description = description
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -143,7 +145,8 @@ class ContentSection(object):
             id=self.id,
             name=self.name,
             editable=self.editable,
-            questions=self.questions[:])
+            questions=self.questions[:],
+            description=self.description)
 
     def get_field_names(self):
         """Return a list of field names that this section returns
