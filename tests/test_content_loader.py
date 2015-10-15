@@ -423,45 +423,9 @@ class TestContentBuilder(object):
             }
         ])
 
-        assert content.get_question_number("q1") == 1
-        assert content.get_question_number("q2") == 2
-        assert content.get_question_number("q3") == 3
-        assert content.get_question_number("qX") == None
-
-    def test_questions_get_numbers(self):
-        content = ContentBuilder([
-            {
-                "id": "first_section",
-                "name": "First section",
-                "questions": [
-                    {
-                        "id": "q1",
-                        "question": "Question one",
-                        "type": "text",
-                    },
-                    {
-                        "id": "q2",
-                        "question": "Question one",
-                        "type": "text",
-                    }
-                ]
-            },
-            {
-                "id": "second_section",
-                "name": "Second section",
-                "questions": [
-                    {
-                        "id": "q3",
-                        "question": "Question three",
-                        "type": "text",
-                    }
-                ]
-            }
-        ])
-
-        assert content.sections[0].questions[0]['number'] == 1
-        assert content.sections[0].questions[1]['number'] == 2
-        assert content.sections[1].questions[0]['number'] == 3
+        assert content.get_question("q1")['number'] == 1
+        assert content.get_question("q2")['number'] == 2
+        assert content.get_question("q3")['number'] == 3
 
     def test_question_numbers_respect_filtering(self):
         content = ContentBuilder([
@@ -501,10 +465,8 @@ class TestContentBuilder(object):
             }
         ]).filter({"lot": "SCS"})
 
-        assert content.get_question_number('q1') == None
-        assert content.get_question_number('q2') == 1
-
         assert content.sections[0].questions[0]['id'] == 'q2'
+        assert content.get_question('q2')['number'] == 1
         assert content.sections[0].questions[0]['number'] == 1
 
 

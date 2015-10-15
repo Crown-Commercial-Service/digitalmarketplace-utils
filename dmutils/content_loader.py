@@ -22,9 +22,11 @@ class ContentBuilder(object):
     """
     def __init__(self, sections):
         self.sections = [ContentSection.create(section) for section in sections]
+        question_index = 0
         for section in self.sections:
             for question in section.questions:
-                self._add_question_number(question)
+                question_index += 1
+                question['number'] = question_index
 
     def __iter__(self):
         return self.sections.__iter__()
@@ -86,7 +88,7 @@ class ContentBuilder(object):
         section = section.copy()
 
         filtered_questions = [
-            self._add_question_number(question) for question in section.questions
+            question for question in section.questions
             if self._question_should_be_shown(
                 question.get("depends"), service_data
             )
@@ -113,19 +115,6 @@ class ContentBuilder(object):
             question = section.get_question(question_id)
             if question:
                 return question
-
-    def get_question_number(self, question_id):
-        index = 0
-        for section in self.sections:
-            for question in section.questions:
-                index += 1
-                if question['id'] == question_id:
-                    return index
-        return None
-
-    def _add_question_number(self, question):
-        question['number'] = self.get_question_number(question['id'])
-        return question
 
 
 class ContentSection(object):
