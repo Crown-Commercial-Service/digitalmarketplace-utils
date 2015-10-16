@@ -1013,6 +1013,69 @@ class TestContentLoader(object):
 
         assert yaml_loader.get_question('framework-slug', 'question-set', 'question1') != q1
 
+    def test_message_key_format(self, mock_read_yaml):
+        messages = ContentLoader('content/')
+
+        assert messages._message_key(
+            'coming', 'submitted'
+        ) == 'coming-submitted'
+
+        assert messages._message_key(
+            'coming', None
+        ) == 'coming'
+
+        # frameworks must have a state
+        with pytest.raises(TypeError):
+            messages._message_key()
+
+    def test_get_message(self, mock_read_yaml):
+
+        mock_read_yaml.return_value = {
+            'coming': {
+                'heading': 'G-Cloud 7 is coming',
+                'message': 'Get ready'
+            }
+        }
+        messages = ContentLoader('content/')
+
+        assert messages.get_message('g-cloud-7', 'index', 'coming') == {
+            'heading': 'G-Cloud 7 is coming',
+            'message': 'Get ready'
+        }
+        mock_read_yaml.assert_called_with('content/frameworks/g-cloud-7/messages/index.yml')
+
+    def test_get_message_with_supplier_status(self, mock_read_yaml):
+
+        mock_read_yaml.return_value = {
+            'open-registered_interest': {
+                'heading': 'G-Cloud 8 is open',
+                'message': 'You have registered interest'
+            }
+        }
+        messages = ContentLoader('content/')
+
+        assert messages.get_message('g-cloud-8', 'index', 'open', 'registered_interest') == {
+            'heading': 'G-Cloud 8 is open',
+            'message': 'You have registered interest'
+        }
+        mock_read_yaml.assert_called_with('content/frameworks/g-cloud-8/messages/index.yml')
+
+    def test_caching_of_messages(self, mock_read_yaml):
+
+        messages = ContentLoader('content/')
+        messages.get_message('g-cloud-7', 'index', 'coming')
+        messages.get_message('g-cloud-7', 'index', 'coming')
+
+        mock_read_yaml.assert_called_once_with('content/frameworks/g-cloud-7/messages/index.yml')
+
+    def test_non_existant_file_raises(self, mock_read_yaml):
+
+        mock_read_yaml.side_effect = IOError
+        messages = ContentLoader('content/')
+
+        with pytest.raises(ContentNotFoundError):
+            messages.get_message('g-cloud-7', 'index', 'not_a_state')
+
     def test_get_builder(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)
 

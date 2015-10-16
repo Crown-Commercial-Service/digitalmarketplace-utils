@@ -369,10 +369,13 @@ class ContentLoader(object):
     >>> loader.load_manifest('framework-2', 'manifest-1', 'question-set-1')
     >>> # get a builder
     >>> loader.get_builder(framework_slug, 'manifest-1')
+    >>> # get a message
+    >>> loader.get_message(framework_slug, 'homepage_sidebar', 'in_review')
     """
     def __init__(self, content_path):
         self.content_path = content_path
         self._content = defaultdict(dict)
+        self._messages = defaultdict(dict)
         # A defaultdict that defaults to a defaultdict of dicts
         self._questions = defaultdict(partial(defaultdict, dict))
 
@@ -416,6 +419,21 @@ class ContentLoader(object):
 
         return self._questions[framework_slug][question_set][question].copy()
 
+    def get_message(
+        self, framework_slug, block, framework_status, supplier_status=None
+    ):
+        if block not in self._messages[framework_slug]:
+            try:
+                self._messages[framework_slug][block] = read_yaml(
+                    self._message_path(framework_slug, block)
+                )
+            except IOError:
+                raise ContentNotFoundError("No message file at {}".format(self._message_path(framework_slug, block)))
+
+        return self._messages[framework_slug][block].get(
+            self._message_key(framework_status, supplier_status), None
+        )
+
     def _root_path(self, framework_slug):
         return os.path.join(self.content_path, 'frameworks', framework_slug)
 
@@ -425,12 +443,24 @@ class ContentLoader(object):
     def _manifest_path(self, framework_slug, manifest):
         return os.path.join(self._root_path(framework_slug), 'manifests', '{}.yml'.format(manifest))
 
+    def _message_path(self, framework_slug, message):
+        return os.path.join(self._root_path(framework_slug), 'messages', '{}.yml'.format(message))
+
     def _populate_section(self, framework_slug, question_set, section):
         section['id'] = _make_section_id(section['name'])
         section['questions'] = [
             self.get_question(framework_slug, question_set, question) for question in section['questions']
         ]
         return section
+
+    def _message_key(
+        self, framework_status, supplier_status
+    ):
+        return '{}{}'.format(
+            framework_status,
+            '-{}'.format(supplier_status) if supplier_status else ''
+        )
+
 
 # TODO: move this into question definition with questions represented by multiple fields
 PRICE_FIELDS = ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
