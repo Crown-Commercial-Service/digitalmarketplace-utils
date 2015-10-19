@@ -367,10 +367,15 @@ class ContentLoader(object):
     >>> loader.load_manifest('framework-1', 'manifest-2', 'question-set-1')
     >>> loader.load_manifest('framework-1', 'manifest-3', 'question-set-2')
     >>> loader.load_manifest('framework-2', 'manifest-1', 'question-set-1')
+    >>>
+    >>> # preload messages
+    >>> loader.load_messages('framework-1', ['homepage_sidebar', 'dashboard'])
+    >>>
     >>> # get a builder
-    >>> loader.get_builder(framework_slug, 'manifest-1')
+    >>> loader.get_builder('framework-1', 'manifest-1')
+    >>>
     >>> # get a message
-    >>> loader.get_message(framework_slug, 'homepage_sidebar', 'in_review')
+    >>> loader.get_message('framework-1', 'homepage_sidebar', 'in_review')
     """
     def __init__(self, content_path):
         self.content_path = content_path
@@ -422,17 +427,25 @@ class ContentLoader(object):
     def get_message(
         self, framework_slug, block, framework_status, supplier_status=None
     ):
-        if block not in self._messages[framework_slug]:
-            try:
-                self._messages[framework_slug][block] = read_yaml(
-                    self._message_path(framework_slug, block)
-                )
-            except IOError:
-                raise ContentNotFoundError("No message file at {}".format(self._message_path(framework_slug, block)))
+        self.load_messages(framework_slug, [block])
 
         return self._messages[framework_slug][block].get(
             self._message_key(framework_status, supplier_status), None
         )
+
+    def load_messages(
+        self, framework_slug, blocks
+    ):
+        for block in blocks:
+            if block not in self._messages[framework_slug]:
+                try:
+                    self._messages[framework_slug][block] = read_yaml(
+                        self._message_path(framework_slug, block)
+                    )
+                except IOError:
+                    raise ContentNotFoundError(
+                        "No message file at {}".format(self._message_path(framework_slug, block))
+                    )
 
     def _root_path(self, framework_slug):
         return os.path.join(self.content_path, 'frameworks', framework_slug)

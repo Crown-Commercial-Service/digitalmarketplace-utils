@@ -1063,18 +1063,19 @@ class TestContentLoader(object):
     def test_caching_of_messages(self, mock_read_yaml):
 
         messages = ContentLoader('content/')
+        messages.load_messages('g-cloud-7', ['index'])
         messages.get_message('g-cloud-7', 'index', 'coming')
         messages.get_message('g-cloud-7', 'index', 'coming')
 
         mock_read_yaml.assert_called_once_with('content/frameworks/g-cloud-7/messages/index.yml')
 
-    def test_non_existant_file_raises(self, mock_read_yaml):
+    def test_load_message_raises(self, mock_read_yaml):
 
         mock_read_yaml.side_effect = IOError
         messages = ContentLoader('content/')
 
         with pytest.raises(ContentNotFoundError):
-            messages.get_message('g-cloud-7', 'index', 'not_a_state')
+            messages.load_messages('not-a-framework', ['index'])
 
     def test_get_builder(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)
