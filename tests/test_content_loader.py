@@ -1037,12 +1037,34 @@ class TestContentLoader(object):
             }
         }
         messages = ContentLoader('content/')
+        messages.load_messages('g-cloud-7', ['index'])
 
         assert messages.get_message('g-cloud-7', 'index', 'coming') == {
             'heading': 'G-Cloud 7 is coming',
             'message': 'Get ready'
         }
         mock_read_yaml.assert_called_with('content/frameworks/g-cloud-7/messages/index.yml')
+
+    def test_load_message_argument_types(self, mock_read_yaml):
+
+        mock_read_yaml.return_value = {}
+        messages = ContentLoader('content/')
+
+        with pytest.raises(TypeError):
+            messages.load_messages('g-cloud-7', 'index')  # blocks argument must be a list
+
+    def test_get_message_non_existant_state(self, mock_read_yaml):
+
+        mock_read_yaml.return_value = {
+            'coming': {
+                'heading': 'G-Cloud 7 is coming',
+                'message': 'This message won’t be looked for'
+            }
+        }
+        messages = ContentLoader('content/')
+        messages.load_messages('g-cloud-7', ['index'])
+
+        assert messages.get_message('g-cloud-7', 'index', 'open') == None
 
     def test_get_message_with_supplier_status(self, mock_read_yaml):
 
@@ -1053,12 +1075,23 @@ class TestContentLoader(object):
             }
         }
         messages = ContentLoader('content/')
+        messages.load_messages('g-cloud-8', ['index'])
 
         assert messages.get_message('g-cloud-8', 'index', 'open', 'registered_interest') == {
             'heading': 'G-Cloud 8 is open',
             'message': 'You have registered interest'
         }
         mock_read_yaml.assert_called_with('content/frameworks/g-cloud-8/messages/index.yml')
+
+    def test_get_message_must_preload(self, mock_read_yaml):
+
+        mock_read_yaml.return_value = {}
+        messages = ContentLoader('content/')
+        messages.load_messages('g-cloud-8', ['index'])
+
+        with pytest.raises(ContentNotFoundError):
+            messages.get_message('g-cloud-8', 'dashboard', 'open')
+            mock_read_yaml.assert_not_called()
 
     def test_caching_of_messages(self, mock_read_yaml):
 
