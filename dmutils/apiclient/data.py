@@ -142,7 +142,9 @@ class DataAPIClient(BaseAPIClient):
             "/suppliers/{}/frameworks/{}/interest".format(
                 supplier_id, framework_slug),
             data={
-                "updated_by": user,
+                "update_details": {
+                    "updated_by": user
+                }
             },
         )
 

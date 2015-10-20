@@ -952,7 +952,7 @@ class TestDataApiClient(object):
 
         assert result == {"frameworkInterest": {"supplierId": 123, "frameworkId": 19}}
         assert rmock.called
-        assert rmock.request_history[0].json() == {'updated_by': 'g-15-user'}
+        assert rmock.request_history[0].json() == {'update_details': {'updated_by': 'g-15-user'}}
 
     def test_get_supplier_declaration(self, data_client, rmock):
         rmock.get(
