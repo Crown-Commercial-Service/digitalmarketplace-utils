@@ -132,6 +132,22 @@ class DataAPIClient(BaseAPIClient):
             },
         )
 
+    def get_framework_interest(self, supplier_id):
+        return self._get(
+            "/suppliers/{}/frameworks/interest".format(supplier_id)
+        )
+
+    def register_framework_interest(self, supplier_id, framework_slug, user):
+        return self._post(
+            "/suppliers/{}/frameworks/{}/interest".format(
+                supplier_id, framework_slug),
+            data={
+                "update_details": {
+                    "updated_by": user
+                }
+            },
+        )
+
     def get_supplier_declaration(self, supplier_id, framework_slug):
         return self._get(
             "/suppliers/{}/frameworks/{}/declaration".format(supplier_id, framework_slug)
@@ -420,6 +436,11 @@ class DataAPIClient(BaseAPIClient):
 
     def get_framework(self, slug):
         return self._get("/frameworks/{}".format(slug))
+
+    def get_interested_suppliers(self, framework_slug):
+        return self._get(
+            "/frameworks/{}/interest".format(framework_slug)
+        )
 
     def get_framework_stats(self, framework_slug):
         return self._get(

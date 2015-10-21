@@ -931,6 +931,29 @@ class TestDataApiClient(object):
             'contactInformation': {'foo': 'bar'}, 'updated_by': 'supplier'
         }
 
+    def test_get_framework_interest(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123/frameworks/interest",
+            json={"frameworks": ['g-cloud-15', 'dos-23']},
+            status_code=200)
+
+        result = data_client.get_framework_interest(123)
+
+        assert result == {"frameworks": ['g-cloud-15', 'dos-23']}
+        assert rmock.called
+
+    def test_register_framework_interest(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/suppliers/123/frameworks/g-cloud-15/interest",
+            json={"frameworkInterest": {"supplierId": 123, "frameworkId": 19}},
+            status_code=200)
+
+        result = data_client.register_framework_interest(123, 'g-cloud-15', "g-15-user")
+
+        assert result == {"frameworkInterest": {"supplierId": 123, "frameworkId": 19}}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {'update_details': {'updated_by': 'g-15-user'}}
+
     def test_get_supplier_declaration(self, data_client, rmock):
         rmock.get(
             "http://baseurl/suppliers/123/frameworks/g-cloud-7/declaration",
@@ -1335,6 +1358,17 @@ class TestDataApiClient(object):
         with pytest.raises(TypeError):
             data_client.create_audit_event(
                 "thing_happened", "a user", {"key": "value"}, "suppliers", "123")
+
+    def test_get_interested_suppliers(self, data_client, rmock):
+        rmock.get(
+            'http://baseurl/frameworks/g-cloud-11/interest',
+            json={'suppliers': [1, 2]},
+            status_code=200)
+
+        result = data_client.get_interested_suppliers('g-cloud-11')
+
+        assert result == {'suppliers': [1, 2]}
+        assert rmock.called
 
     def test_get_framework_stats(self, data_client, rmock):
         rmock.get(

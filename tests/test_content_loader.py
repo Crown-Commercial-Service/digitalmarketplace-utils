@@ -1064,7 +1064,7 @@ class TestContentLoader(object):
         messages = ContentLoader('content/')
         messages.load_messages('g-cloud-7', ['index'])
 
-        assert messages.get_message('g-cloud-7', 'index', 'open') == None
+        assert messages.get_message('g-cloud-7', 'index', 'open') is None
 
     def test_get_message_with_supplier_status(self, mock_read_yaml):
 

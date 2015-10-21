@@ -69,8 +69,8 @@ class BaseAPIClient(object):
 
         logger.debug("API request {method} {url}",
                      extra={
-                        'method': method,
-                        'url': url
+                         'method': method,
+                         'url': url
                      })
         headers = {
             "Content-type": "application/json",
