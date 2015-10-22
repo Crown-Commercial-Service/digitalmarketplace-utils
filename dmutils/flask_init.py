@@ -1,6 +1,8 @@
+import os
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 from . import config, logging, proxy_fix, request_id, formats, filters
 from flask import Markup
+from flask.ext.script import Server
 
 
 def init_app(
@@ -55,7 +57,26 @@ def init_app(
     application.add_template_filter(formats.datetimeformat)
 
 
-def init_manager(application, manager):
+def get_extra_files(paths):
+    for path in paths:
+        for dirname, dirs, files in os.walk(path):
+            for filename in files:
+                filename = os.path.join(dirname, filename)
+                if os.path.isfile(filename):
+                    yield filename
+
+
+def init_manager(manager, port, extra_directories=()):
+
+    extra_files = list(get_extra_files(extra_directories))
+
+    print("Watching {} extra files".format(len(extra_files)))
+
+    manager.add_command(
+        "runserver",
+        Server(port=port, extra_files=extra_files)
+    )
+
     @manager.command
     def list_routes():
         """List URLs of all application routes."""
