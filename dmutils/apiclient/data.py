@@ -138,8 +138,8 @@ class DataAPIClient(BaseAPIClient):
         )
 
     def register_framework_interest(self, supplier_id, framework_slug, user):
-        return self._post(
-            "/suppliers/{}/frameworks/{}/interest".format(
+        return self._put(
+            "/suppliers/{}/frameworks/{}".format(
                 supplier_id, framework_slug),
             data={
                 "update_details": {
@@ -149,9 +149,10 @@ class DataAPIClient(BaseAPIClient):
         )
 
     def get_supplier_declaration(self, supplier_id, framework_slug):
-        return self._get(
-            "/suppliers/{}/frameworks/{}/declaration".format(supplier_id, framework_slug)
+        response = self._get(
+            "/suppliers/{}/frameworks/{}".format(supplier_id, framework_slug)
         )
+        return {'declaration': response['frameworkInterest']['declaration']}
 
     def set_supplier_declaration(self, supplier_id, framework_slug, declaration, user):
         return self._put(
@@ -160,6 +161,35 @@ class DataAPIClient(BaseAPIClient):
                 "updated_by": user,
                 "declaration": declaration
             }
+        )
+
+    def get_supplier_framework_info(self, supplier_id, framework_slug):
+        return self._get(
+            "/suppliers/{}/frameworks/{}".format(supplier_id, framework_slug)
+        )
+
+    def set_framework_result(self, supplier_id, framework_slug, is_on_framework, user):
+        return self._post(
+            "/suppliers/{}/frameworks/{}".format(
+                supplier_id, framework_slug),
+            data={
+                "update": {"onFramework": is_on_framework},
+                "update_details": {
+                    "updated_by": user
+                }
+            },
+        )
+
+    def register_framework_agreement_returned(self, supplier_id, framework_slug, user):
+        return self._post(
+            "/suppliers/{}/frameworks/{}".format(
+                supplier_id, framework_slug),
+            data={
+                "update": {"agreementReturned": True},
+                "update_details": {
+                    "updated_by": user
+                }
+            },
         )
 
     # Users
