@@ -2,7 +2,7 @@ import os
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 from . import config, logging, proxy_fix, request_id, formats, filters
 from flask import Markup
-from flask.ext.script import Server
+from flask.ext.script import Manager, Server
 
 
 def init_app(
@@ -66,7 +66,9 @@ def get_extra_files(paths):
                     yield filename
 
 
-def init_manager(manager, port, extra_directories=()):
+def init_manager(application, port, extra_directories=()):
+
+    manager = Manager(application)
 
     extra_files = list(get_extra_files(extra_directories))
 
