@@ -1143,13 +1143,13 @@ class TestDataApiClient(object):
 
     def test_create_new_draft_service(self, data_client, rmock):
         rmock.post(
-            "http://baseurl/draft-services/g-cloud-7/create",
+            "http://baseurl/draft-services",
             json={"done": "it"},
             status_code=201,
         )
 
         result = data_client.create_new_draft_service(
-            'g-cloud-7', 2, 'user', 'IaaS'
+            'g-cloud-7', 2, 'user', 'iaas'
         )
 
         assert result == {"done": "it"}
@@ -1159,8 +1159,9 @@ class TestDataApiClient(object):
                 'updated_by': 'user'
             },
             'services': {
+                'frameworkSlug': 'g-cloud-7',
                 'supplierId': 2,
-                'lot': 'IaaS'
+                'lot': 'iaas'
             }
         }
 

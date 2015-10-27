@@ -364,12 +364,13 @@ class DataAPIClient(BaseAPIClient):
 
     def create_new_draft_service(self, framework_slug, supplier_id, user, lot):
         return self._post(
-            "/draft-services/{}/create".format(framework_slug),
+            "/draft-services",
             data={
                 "update_details": {
                     "updated_by": user
                 },
                 "services": {
+                    "frameworkSlug": framework_slug,
                     "supplierId": supplier_id,
                     "lot": lot
                 }
