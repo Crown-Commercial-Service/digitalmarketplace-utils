@@ -943,8 +943,8 @@ class TestDataApiClient(object):
         assert rmock.called
 
     def test_register_framework_interest(self, data_client, rmock):
-        rmock.post(
-            "http://baseurl/suppliers/123/frameworks/g-cloud-15/interest",
+        rmock.put(
+            "http://baseurl/suppliers/123/frameworks/g-cloud-15",
             json={"frameworkInterest": {"supplierId": 123, "frameworkId": 19}},
             status_code=200)
 
@@ -956,8 +956,8 @@ class TestDataApiClient(object):
 
     def test_get_supplier_declaration(self, data_client, rmock):
         rmock.get(
-            "http://baseurl/suppliers/123/frameworks/g-cloud-7/declaration",
-            json={"declaration": {"question": "answer"}},
+            "http://baseurl/suppliers/123/frameworks/g-cloud-7",
+            json={"frameworkInterest": {"declaration": {"question": "answer"}}},
             status_code=200)
 
         result = data_client.get_supplier_declaration(123, 'g-cloud-7')
@@ -978,6 +978,43 @@ class TestDataApiClient(object):
         assert rmock.request_history[0].json() == {
             'updated_by': 'user',
             'declaration': {'question': 'answer'}}
+
+    def test_get_supplier_framework_info(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123/frameworks/g-cloud-7",
+            json={"frameworkInterest": {"supplierId": 123, "frameworkId": 2, "onFramework": False}},
+            status_code=200)
+        result = data_client.get_supplier_framework_info(123, 'g-cloud-7')
+        assert result == {"frameworkInterest": {"supplierId": 123, "frameworkId": 2, "onFramework": False}}
+        assert rmock.called
+
+    def test_set_framework_result(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/suppliers/123/frameworks/g-cloud-7",
+            json={"frameworkInterest": {"onFramework": True}},
+            status_code=200)
+
+        result = data_client.set_framework_result(123, 'g-cloud-7', True, "user")
+        assert result == {"frameworkInterest": {"onFramework": True}}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+            'update': {'onFramework': True},
+            'update_details': {'updated_by': 'user'}
+        }
+
+    def test_register_framework_agreement_returned(self, data_client, rmock):
+        rmock.post(
+            "http://baseurl/suppliers/123/frameworks/g-cloud-7",
+            json={"frameworkInterest": {"agreementReturned": True}},
+            status_code=200)
+
+        result = data_client.register_framework_agreement_returned(123, 'g-cloud-7', "user")
+        assert result == {"frameworkInterest": {"agreementReturned": True}}
+        assert rmock.called
+        assert rmock.request_history[0].json() == {
+            'update': {'agreementReturned': True},
+            'update_details': {'updated_by': 'user'}
+        }
 
     def test_find_draft_services(self, data_client, rmock):
         rmock.get(
