@@ -12,7 +12,7 @@ PR: [#195](https://github.com/alphagov/digitalmarketplace-utils/pull/195)
 
 ### Example app change
 
-#### In application's `__init__.py`
+#### In application's `application.py`
 
 Old
 ```python
