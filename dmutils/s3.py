@@ -27,6 +27,9 @@ class S3(object):
         key.set_acl(acl)
         return key
 
+    def path_exists(self, path):
+        return bool(self.bucket.get_key(path))
+
     def get_signed_url(self, path, expires_in=30):
         """Create a signed S3 document URL
 

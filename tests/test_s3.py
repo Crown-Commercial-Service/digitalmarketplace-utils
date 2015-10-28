@@ -22,6 +22,18 @@ class TestS3Uploader(unittest.TestCase):
         S3('test-bucket')
         self.s3_mock.get_bucket.assert_called_with('test-bucket')
 
+    def test_path_exists(self):
+        mock_bucket = FakeBucket()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        assert S3('test-bucket').path_exists('foo') is False
+
+    def test_path_exists_nonexistent_path(self):
+        mock_bucket = FakeBucket(['foo'])
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        assert S3('test-bucket').path_exists('foo') is True
+
     def test_get_signed_url(self):
         mock_bucket = FakeBucket(['documents/file.pdf'])
         self.s3_mock.get_bucket.return_value = mock_bucket
