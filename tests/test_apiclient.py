@@ -998,7 +998,7 @@ class TestDataApiClient(object):
         assert result == {"frameworkInterest": {"onFramework": True}}
         assert rmock.called
         assert rmock.request_history[0].json() == {
-            'update': {'onFramework': True},
+            'frameworkInterest': {'onFramework': True},
             'update_details': {'updated_by': 'user'}
         }
 
@@ -1012,7 +1012,7 @@ class TestDataApiClient(object):
         assert result == {"frameworkInterest": {"agreementReturned": True}}
         assert rmock.called
         assert rmock.request_history[0].json() == {
-            'update': {'agreementReturned': True},
+            'frameworkInterest': {'agreementReturned': True},
             'update_details': {'updated_by': 'user'}
         }
 
