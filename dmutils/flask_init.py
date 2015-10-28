@@ -84,3 +84,5 @@ def init_manager(application, port, extra_directories=()):
         """List URLs of all application routes."""
         for rule in sorted(manager.app.url_map.iter_rules(), key=lambda r: r.rule):
             print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
+
+    return manager

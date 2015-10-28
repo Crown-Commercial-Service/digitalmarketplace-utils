@@ -2,6 +2,33 @@
 
 Records breaking changes from major version bumps
 
+## 11.0.0
+
+PR: [#195](https://github.com/alphagov/digitalmarketplace-utils/pull/195)
+
+### What changed
+
+1. Moved the creation of the `manager` instance into `init_manager`.
+
+### Example app change
+
+#### In application's `application.py`
+
+Old
+```python
+from flask.ext.script import Manager
+
+manager = Manager(application)
+init_manager(manager, 5003, ['./app/content/frameworks'])
+```
+
+New
+```python
+from dmutils.flask_init import init_manager
+
+manager = init_manager(application, 5003, ['./app/content/frameworks'])
+```
+
 ## 10.0.0
 
 PR: [#182](https://github.com/alphagov/digitalmarketplace-utils/pull/182)
