@@ -173,7 +173,7 @@ class DataAPIClient(BaseAPIClient):
             "/suppliers/{}/frameworks/{}".format(
                 supplier_id, framework_slug),
             data={
-                "update": {"onFramework": is_on_framework},
+                "frameworkInterest": {"onFramework": is_on_framework},
                 "update_details": {
                     "updated_by": user
                 }
@@ -185,7 +185,7 @@ class DataAPIClient(BaseAPIClient):
             "/suppliers/{}/frameworks/{}".format(
                 supplier_id, framework_slug),
             data={
-                "update": {"agreementReturned": True},
+                "frameworkInterest": {"agreementReturned": True},
                 "update_details": {
                     "updated_by": user
                 }
