@@ -24,6 +24,7 @@ class AuditTypes(Enum):
     view_clarification_questions = "view_clarification_questions"
     send_g7_application_question = "send_g7_application_question"
     snapshot_framework_stats = "snapshot_framework_stats"
+    framework_update = "framework_update"
 
     @staticmethod
     def is_valid_audit_type(test_audit_type):
