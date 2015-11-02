@@ -1186,19 +1186,21 @@ class TestDataApiClient(object):
         )
 
         result = data_client.create_new_draft_service(
-            'g-cloud-7', 2, 'user', 'iaas'
+            'g-cloud-7', 'iaas', 2, {'serviceName': 'name'}, 'user',
         )
 
         assert result == {"done": "it"}
         assert rmock.called
         assert rmock.request_history[0].json() == {
+            'page_questions': [],
             'update_details': {
                 'updated_by': 'user'
             },
             'services': {
                 'frameworkSlug': 'g-cloud-7',
                 'supplierId': 2,
-                'lot': 'iaas'
+                'lot': 'iaas',
+                'serviceName': 'name',
             }
         }
 

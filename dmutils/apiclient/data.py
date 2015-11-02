@@ -392,19 +392,23 @@ class DataAPIClient(BaseAPIClient):
                 },
             })
 
-    def create_new_draft_service(self, framework_slug, supplier_id, user, lot):
+    def create_new_draft_service(self, framework_slug, lot, supplier_id, data, user, page_questions=None):
+        service_data = data.copy()
+        service_data.update({
+            "frameworkSlug": framework_slug,
+            "lot": lot,
+            "supplierId": supplier_id,
+        })
+
         return self._post(
             "/draft-services",
             data={
                 "update_details": {
                     "updated_by": user
                 },
-                "services": {
-                    "frameworkSlug": framework_slug,
-                    "supplierId": supplier_id,
-                    "lot": lot
-                }
 
+                "services": service_data,
+                "page_questions": page_questions or [],
             })
 
     def get_archived_service(self, archived_service_id):
