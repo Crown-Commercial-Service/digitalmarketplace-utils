@@ -1428,26 +1428,6 @@ class TestDataApiClient(object):
 
             data_client.get_framework_stats('g-cloud-11')
 
-    def test_get_framework_status(self, data_client, rmock):
-        rmock.get(
-            'http://baseurl/frameworks/g-cloud-11/status',
-            json={'status': 'pending'},
-            status_code=200)
-
-        result = data_client.get_framework_status('g-cloud-11')
-
-        assert result == {'status': 'pending'}
-        assert rmock.called
-
-    def test_get_framework_status_raises_on_error(self, data_client, rmock):
-        with pytest.raises(APIError):
-            rmock.get(
-                'http://baseurl/frameworks/g-cloud-11/status',
-                json={'error': 'It broke'},
-                status_code=400)
-
-            data_client.get_framework_status('g-cloud-11')
-
 
 class TestDataAPIClientIterMethods(object):
     def _test_find_iter(self, data_client, rmock, method_name, model_name, url_path):
