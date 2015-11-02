@@ -1,6 +1,7 @@
 import unittest
 
 import mock
+import pytest
 from freezegun import freeze_time
 
 from dmutils.s3 import S3ResponseError
@@ -12,7 +13,8 @@ from dmutils.documents import (
     file_is_less_than_5mb,
     file_is_open_document_format,
     validate_documents,
-    upload_document, upload_service_documents
+    upload_document, upload_service_documents,
+    get_signed_url, get_agreement_document_path
 )
 
 
@@ -238,6 +240,26 @@ class TestUploadServiceDocuments(object):
 
         assert files is None
         assert 'pricingDocumentURL' in errors
+
+
+@pytest.mark.parametrize('base_url,expected', [
+    ('http://other', 'http://other/foo?after'),
+    (None, 'http://example/foo?after'),
+    ('https://other', 'https://other/foo?after'),
+    ('https://other:1234', 'https://other:1234/foo?after'),
+    ('https://other/again', 'https://other/foo?after'),
+])
+def test_get_signed_url(base_url, expected):
+    mock_bucket = mock.Mock()
+    mock_bucket.get_signed_url.return_value = "http://example/foo?after"
+
+    url = get_signed_url(mock_bucket, 'foo', base_url)
+
+    assert url == expected
+
+
+def test_get_agreement_document_path():
+    assert get_agreement_document_path('g-cloud-7', 1234, 'foo.pdf') == 'g-cloud-7/agreements/1234/1234-foo.pdf'
 
 
 def mock_file(filename, length, name=None):
