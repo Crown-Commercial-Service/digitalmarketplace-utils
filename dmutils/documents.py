@@ -159,3 +159,13 @@ def default_file_suffix():
 def get_extension(filename):
     file_name, file_extension = os.path.splitext(filename)
     return file_extension.lower()
+
+
+def get_signed_url(bucket, path, base_url):
+    url = bucket.get_signed_url(path)
+    if url is not None:
+        if base_url is not None:
+            url = urlparse.urlparse(url)
+            base_url = urlparse.urlparse(base_url)
+            url = url._replace(netloc=base_url.netloc, scheme=base_url.scheme).geturl()
+        return url
