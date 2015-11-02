@@ -163,6 +163,11 @@ class DataAPIClient(BaseAPIClient):
             }
         )
 
+    def get_supplier_frameworks(self, supplier_id):
+        return self._get(
+            "/suppliers/{}/frameworks".format(supplier_id)
+        )
+
     def get_supplier_framework_info(self, supplier_id, framework_slug):
         return self._get(
             "/suppliers/{}/frameworks/{}".format(supplier_id, framework_slug)
