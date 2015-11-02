@@ -2,6 +2,36 @@
 
 Records breaking changes from major version bumps
 
+## 12.0.0
+
+PR: [#202](https://github.com/alphagov/digitalmarketplace-utils/pull/202)
+
+### What changed
+
+1. Two new parameters were added to `dmutils.apiclient.DataAPIClient.create_new_draft_service`:
+   `data` and `page_questions`
+2. Parameter order for `dmutils.apiclient.DataAPIClient.create_new_draft_service` was changed to:
+   `create_new_draft_service(self, framework_slug, lot, supplier_id, data, user, page_questions=None)`
+3. `dmutils.apiclient.DataAPIClient.get_framework_status` method was removed, use `.get_framework`
+   instead
+
+### Example app change
+
+Old
+```python
+draft_service = data_api_client.create_new_draft_service(
+    framework_slug, supplier_id, user, lot
+)
+```
+
+New
+```python
+draft_service = data_api_client.create_new_draft_service(
+    framework_slug, lot, supplier_id, {},
+    user, page_questions=None
+)
+```
+
 ## 11.0.0
 
 PR: [#195](https://github.com/alphagov/digitalmarketplace-utils/pull/195)
