@@ -169,3 +169,7 @@ def get_signed_url(bucket, path, base_url):
             base_url = urlparse.urlparse(base_url)
             url = url._replace(netloc=base_url.netloc, scheme=base_url.scheme).geturl()
         return url
+
+
+def get_agreement_document_path(framework_slug, supplier_id, document_name):
+    return '{0}/agreements/{1}/{1}-{2}'.format(framework_slug, supplier_id, document_name)
