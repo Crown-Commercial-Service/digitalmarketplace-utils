@@ -979,6 +979,17 @@ class TestDataApiClient(object):
             'updated_by': 'user',
             'declaration': {'question': 'answer'}}
 
+    def test_get_supplier_frameworks(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/suppliers/123/frameworks",
+            json={"frameworkInterest": [{"declaration": {"status": "started"}}]},
+            status_code=200)
+
+        result = data_client.get_supplier_frameworks(123)
+
+        assert result == {"frameworkInterest": [{"declaration": {"status": "started"}}]}
+        assert rmock.called
+
     def test_get_supplier_framework_info(self, data_client, rmock):
         rmock.get(
             "http://baseurl/suppliers/123/frameworks/g-cloud-7",
