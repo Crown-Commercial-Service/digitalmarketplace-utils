@@ -2,6 +2,25 @@
 
 Records breaking changes from major version bumps
 
+## 13.0.0
+
+PR: [#203](https://github.com/alphagov/digitalmarketplace-utils/pull/203)
+
+### What changed
+
+The method `get_agreement_document_path` in `documents.py` now has supplier name as an additional parameter.
+
+### Example app change
+Old
+```
+path = get_agreement_document_path(framework_slug, supplier_id, document_name)
+```
+
+New
+```
+path = get_agreement_document_path(framework_slug, supplier_id, supplier_name, document_name)
+```
+
 ## 12.0.0
 
 PR: [#202](https://github.com/alphagov/digitalmarketplace-utils/pull/202)

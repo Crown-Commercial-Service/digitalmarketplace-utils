@@ -14,8 +14,8 @@ from dmutils.documents import (
     file_is_open_document_format,
     validate_documents,
     upload_document, upload_service_documents,
-    get_signed_url, get_agreement_document_path
-)
+    get_signed_url, get_agreement_document_path,
+    sanitise_supplier_name)
 
 
 class TestGenerateFilename(unittest.TestCase):
@@ -259,7 +259,16 @@ def test_get_signed_url(base_url, expected):
 
 
 def test_get_agreement_document_path():
-    assert get_agreement_document_path('g-cloud-7', 1234, 'foo.pdf') == 'g-cloud-7/agreements/1234/1234-foo.pdf'
+    assert get_agreement_document_path('g-cloud-7', 1234, 'supplier name', 'foo.pdf') == \
+        'g-cloud-7/agreements/1234/supplier_name-1234-foo.pdf'
+
+
+def test_sanitise_supplier_name():
+    assert sanitise_supplier_name('Kev\'s Butties') == 'Kevs_Butties'
+    assert sanitise_supplier_name('   Supplier A   ') == 'Supplier_A'
+    assert sanitise_supplier_name('Kev & Sons. | Ltd') == 'Kev_and_Sons_Ltd'
+    assert sanitise_supplier_name('\ / : * ? \' " < > |') == '_'
+    assert sanitise_supplier_name('kev@the*agency') == 'kevtheagency'
 
 
 def mock_file(filename, length, name=None):

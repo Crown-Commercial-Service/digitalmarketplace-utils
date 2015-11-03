@@ -3,4 +3,4 @@ from .flask_init import init_app, init_manager
 
 import flask_featureflags
 
-__version__ = '12.0.0'
+__version__ = '13.0.0'

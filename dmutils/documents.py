@@ -9,6 +9,10 @@ except ImportError:
 from .s3 import S3ResponseError
 
 
+BAD_SUPPLIER_NAME_CHARACTERS = ['#', '%', '&', '{', '}', '\\', '<', '>', '*', '?', '/', '$',
+                                '!', "'", '"', ':', '@', '+', '`', '|', '=', ',', '.']
+
+
 def filter_empty_files(files):
     """Remove any empty files from the list.
 
@@ -171,5 +175,19 @@ def get_signed_url(bucket, path, base_url):
         return url
 
 
-def get_agreement_document_path(framework_slug, supplier_id, document_name):
-    return '{0}/agreements/{1}/{1}-{2}'.format(framework_slug, supplier_id, document_name)
+def get_agreement_document_path(framework_slug, supplier_id, supplier_name, document_name):
+    return '{0}/agreements/{1}/{2}-{1}-{3}'.format(
+        framework_slug,
+        supplier_id,
+        sanitise_supplier_name(supplier_name),
+        document_name
+    )
+
+
+def sanitise_supplier_name(supplier_name):
+    sanitised_supplier_name = supplier_name.strip().replace(' ', '_').replace('&', 'and')
+    for bad_char in BAD_SUPPLIER_NAME_CHARACTERS:
+        sanitised_supplier_name = sanitised_supplier_name.replace(bad_char, '')
+    while '__' in sanitised_supplier_name:
+        sanitised_supplier_name = sanitised_supplier_name.replace('__', '_')
+    return sanitised_supplier_name
