@@ -179,12 +179,12 @@ def get_agreement_document_path(framework_slug, supplier_id, supplier_name, docu
     return '{0}/agreements/{1}/{2}-{1}-{3}'.format(
         framework_slug,
         supplier_id,
-        _sanitise_supplier_name(supplier_name),
+        sanitise_supplier_name(supplier_name),
         document_name
     )
 
 
-def _sanitise_supplier_name(supplier_name):
+def sanitise_supplier_name(supplier_name):
     sanitised_supplier_name = supplier_name.strip().replace(' ', '_').replace('&', 'and')
     for bad_char in BAD_SUPPLIER_NAME_CHARACTERS:
         sanitised_supplier_name = sanitised_supplier_name.replace(bad_char, '')
