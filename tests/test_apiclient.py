@@ -1040,7 +1040,7 @@ class TestDataApiClient(object):
 
     def test_find_framework_suppliers_with_agreement_returned(self, data_client, rmock):
         rmock.get(
-            'http://baseurl/frameworks/g-cloud-7/suppliers?agreement_returned=true',
+            'http://baseurl/frameworks/g-cloud-7/suppliers?agreement_returned=True',
             json={'supplierFrameworks': [{"agreementReturned": False}, {"agreementReturned": True}]},
             status_code=200)
 
