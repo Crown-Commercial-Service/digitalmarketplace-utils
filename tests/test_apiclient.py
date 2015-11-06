@@ -1027,6 +1027,28 @@ class TestDataApiClient(object):
             'update_details': {'updated_by': 'user'}
         }
 
+    def test_find_framework_suppliers(self, data_client, rmock):
+        rmock.get(
+            'http://baseurl/frameworks/g-cloud-7/suppliers',
+            json={'supplierFrameworks': [{"agreementReturned": False}, {"agreementReturned": True}]},
+            status_code=200)
+
+        result = data_client.find_framework_suppliers('g-cloud-7')
+
+        assert result == {'supplierFrameworks': [{"agreementReturned": False}, {"agreementReturned": True}]}
+        assert rmock.called
+
+    def test_find_framework_suppliers_with_agreement_returned(self, data_client, rmock):
+        rmock.get(
+            'http://baseurl/frameworks/g-cloud-7/suppliers?agreement_returned=true',
+            json={'supplierFrameworks': [{"agreementReturned": False}, {"agreementReturned": True}]},
+            status_code=200)
+
+        result = data_client.find_framework_suppliers('g-cloud-7', True)
+
+        assert result == {'supplierFrameworks': [{"agreementReturned": False}, {"agreementReturned": True}]}
+        assert rmock.called
+
     def test_find_draft_services(self, data_client, rmock):
         rmock.get(
             "http://baseurl/draft-services?supplier_id=2",
