@@ -197,6 +197,15 @@ class DataAPIClient(BaseAPIClient):
             },
         )
 
+    def find_framework_suppliers(self, framework_slug, agreement_returned=None):
+        params = {}
+        if agreement_returned is not None:
+            params['agreement_returned'] = bool(agreement_returned)
+        return self._get(
+            '/frameworks/{}/suppliers'.format(framework_slug),
+            params=params
+        )
+
     # Users
 
     def create_user(self, user):
