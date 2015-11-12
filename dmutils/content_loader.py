@@ -9,6 +9,10 @@ from werkzeug.datastructures import ImmutableMultiDict
 from .config import convert_to_boolean, convert_to_number
 
 
+class ContentNotFoundError(Exception):
+    pass
+
+
 class ContentBuilder(object):
     """An ordered set of sections each made up of one or more questions.
 
@@ -354,19 +358,16 @@ class ContentSection(object):
         return bool(question) and question.get('assuranceApproach', False)
 
 
-class ContentNotFoundError(Exception):
-    pass
-
-
 class ContentLoader(object):
-    """
+    """Load the frameworks content files
+
     Usage:
     >>> loader = ContentLoader('path/to/digitalmarketplace-frameworks')
     >>> # pre-load manifests
-    >>> loader.load_manifest('framework-1', 'manifest-1', 'question-set-1')
-    >>> loader.load_manifest('framework-1', 'manifest-2', 'question-set-1')
-    >>> loader.load_manifest('framework-1', 'manifest-3', 'question-set-2')
-    >>> loader.load_manifest('framework-2', 'manifest-1', 'question-set-1')
+    >>> loader.load_manifest('framework-1', 'question-set-1', 'manifest-1')
+    >>> loader.load_manifest('framework-1', 'question-set-1', 'manifest-2')
+    >>> loader.load_manifest('framework-1', 'question-set-2', 'manifest-3')
+    >>> loader.load_manifest('framework-2', 'question-set-1', 'manifest-1')
     >>>
     >>> # preload messages
     >>> loader.load_messages('framework-1', ['homepage_sidebar', 'dashboard'])
@@ -376,6 +377,7 @@ class ContentLoader(object):
     >>>
     >>> # get a message
     >>> loader.get_message('framework-1', 'homepage_sidebar', 'in_review')
+
     """
     def __init__(self, content_path):
         self.content_path = content_path
@@ -424,9 +426,7 @@ class ContentLoader(object):
 
         return self._questions[framework_slug][question_set][question].copy()
 
-    def get_message(
-        self, framework_slug, block, framework_status, supplier_status=None
-    ):
+    def get_message(self, framework_slug, block, framework_status, supplier_status=None):
         if block not in self._messages[framework_slug]:
             raise ContentNotFoundError(
                 "Message file at {} not loaded".format(self._message_path(framework_slug, block))
@@ -436,9 +436,7 @@ class ContentLoader(object):
             self._message_key(framework_status, supplier_status), None
         )
 
-    def load_messages(
-        self, framework_slug, blocks
-    ):
+    def load_messages(self, framework_slug, blocks):
         if not isinstance(blocks, list):
             raise TypeError('Content blocks must be a list')
 
@@ -471,9 +469,7 @@ class ContentLoader(object):
         ]
         return section
 
-    def _message_key(
-        self, framework_status, supplier_status
-    ):
+    def _message_key(self, framework_status, supplier_status):
         return '{}{}'.format(
             framework_status,
             '-{}'.format(supplier_status) if supplier_status else ''
