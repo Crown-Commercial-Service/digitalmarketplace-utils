@@ -13,12 +13,12 @@ class ContentNotFoundError(Exception):
     pass
 
 
-class ContentBuilder(object):
+class ContentManifest(object):
     """An ordered set of sections each made up of one or more questions.
 
     Example::
         # Get hold of a section
-        content = ContentBuilder(sections)
+        content = ContentManifest(sections)
         section = content.get_section(section_id)
 
         # Extract data from form data
@@ -76,7 +76,7 @@ class ContentBuilder(object):
         return self.get_next_section_id(section_id, True)
 
     def filter(self, service_data):
-        """Return a new :class:`ContentBuilder` filtered by service data
+        """Return a new :class:`ContentManifest` filtered by service data
 
         Only includes the questions that should be shown for the provided
         service data. This is calculated by resolving the dependencies
@@ -86,7 +86,7 @@ class ContentBuilder(object):
             for section in self.sections
         ])
 
-        return ContentBuilder(sections)
+        return ContentManifest(sections)
 
     def _get_section_filtered_by(self, section, service_data):
         section = section.copy()
@@ -390,7 +390,7 @@ class ContentLoader(object):
         try:
             if framework_slug not in self._content:
                 raise KeyError
-            return ContentBuilder(self._content[framework_slug][manifest])
+            return ContentManifest(self._content[framework_slug][manifest])
         except KeyError:
             raise ContentNotFoundError("Content not found for {} and {}".format(framework_slug, manifest))
 

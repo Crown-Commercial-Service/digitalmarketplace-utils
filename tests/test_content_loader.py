@@ -6,7 +6,7 @@ import pytest
 
 import io
 
-from dmutils.content_loader import ContentLoader, ContentSection, ContentBuilder, read_yaml, ContentNotFoundError
+from dmutils.content_loader import ContentLoader, ContentSection, ContentManifest, read_yaml, ContentNotFoundError
 
 from sys import version_info
 if version_info.major == 2:
@@ -15,15 +15,15 @@ else:
     import builtins
 
 
-class TestContentBuilder(object):
+class TestContentManifest(object):
     def test_content_builder_init(self):
-        content = ContentBuilder([])
+        content = ContentManifest([])
 
         assert content.sections == []
 
     def test_content_builder_init_copies_section_list(self):
         sections = []
-        content = ContentBuilder(sections)
+        content = ContentManifest(sections)
 
         sections.append('new')
         assert content.sections == []
@@ -36,12 +36,12 @@ class TestContentBuilder(object):
                 'questions': []
             }
 
-        content = ContentBuilder([section(1), section(2), section(3)])
+        content = ContentManifest([section(1), section(2), section(3)])
 
         assert [section.id for section in content] == [1, 2, 3]
 
     def test_a_question_with_a_dependency(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -57,7 +57,7 @@ class TestContentBuilder(object):
         assert len(content.sections) == 1
 
     def test_missing_depends_key_filter(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -73,7 +73,7 @@ class TestContentBuilder(object):
         assert len(content.sections) == 0
 
     def test_question_without_dependencies(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -85,7 +85,7 @@ class TestContentBuilder(object):
         assert len(content.sections) == 1
 
     def test_a_question_with_a_dependency_that_doesnt_match(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -101,7 +101,7 @@ class TestContentBuilder(object):
         assert len(content.sections) == 0
 
     def test_a_question_which_depends_on_one_of_several_answers(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -119,7 +119,7 @@ class TestContentBuilder(object):
         assert len(content.filter({"lot": "SCS"}).sections) == 1
 
     def test_a_question_which_shouldnt_be_shown(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [{
@@ -135,7 +135,7 @@ class TestContentBuilder(object):
         assert len(content.filter({"lot": "IaaS"}).sections) == 0
 
     def test_a_section_which_has_a_mixture_of_dependencies(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [
@@ -161,7 +161,7 @@ class TestContentBuilder(object):
         assert len(content.sections) == 1
 
     def test_section_modification(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [
@@ -190,7 +190,7 @@ class TestContentBuilder(object):
         assert len(content2.sections[0]["questions"]) == 1
 
     def test_that_filtering_is_cumulative(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [
@@ -231,7 +231,7 @@ class TestContentBuilder(object):
         assert len(content.sections) == 0
 
     def test_get_section(self):
-        content = ContentBuilder([{
+        content = ContentManifest([{
             "id": "first_section",
             "name": "First section",
             "questions": [
@@ -252,7 +252,7 @@ class TestContentBuilder(object):
         assert content.get_section("first_section") is None
 
     def test_get_question(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
                 "id": "first_section",
                 "name": "First section",
@@ -298,7 +298,7 @@ class TestContentBuilder(object):
         assert content.get_question('q1') is None
 
     def test_get_next_section(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
                 "id": "first_section",
                 "name": "First section",
@@ -348,7 +348,7 @@ class TestContentBuilder(object):
             "second_section") == "third_section"
 
     def test_get_all_data(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
                 "id": "first_section",
                 "name": "First section",
@@ -393,7 +393,7 @@ class TestContentBuilder(object):
         }
 
     def test_question_numbering(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
                 "id": "first_section",
                 "name": "First section",
@@ -428,7 +428,7 @@ class TestContentBuilder(object):
         assert content.get_question("q3")['number'] == 3
 
     def test_question_numbers_respect_filtering(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
                 "id": "first_section",
                 "name": "First section",
@@ -1117,7 +1117,7 @@ class TestContentLoader(object):
         yaml_loader.load_manifest('framework-slug', 'question-set', 'manifest')
 
         builder = yaml_loader.get_builder('framework-slug', 'manifest')
-        assert isinstance(builder, ContentBuilder)
+        assert isinstance(builder, ContentManifest)
 
         assert [
             section.id for section in builder.sections
