@@ -31,7 +31,7 @@ class TestContentManifest(object):
     def test_content_builder_iteration(self):
         def section(id):
             return {
-                'id': id,
+                'slug': id,
                 'name': 'name',
                 'questions': []
             }
@@ -42,7 +42,7 @@ class TestContentManifest(object):
 
     def test_a_question_with_a_dependency(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -58,7 +58,7 @@ class TestContentManifest(object):
 
     def test_missing_depends_key_filter(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -74,7 +74,7 @@ class TestContentManifest(object):
 
     def test_question_without_dependencies(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -86,7 +86,7 @@ class TestContentManifest(object):
 
     def test_a_question_with_a_dependency_that_doesnt_match(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -102,7 +102,7 @@ class TestContentManifest(object):
 
     def test_a_question_which_depends_on_one_of_several_answers(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -120,7 +120,7 @@ class TestContentManifest(object):
 
     def test_a_question_which_shouldnt_be_shown(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -136,7 +136,7 @@ class TestContentManifest(object):
 
     def test_a_section_which_has_a_mixture_of_dependencies(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -162,7 +162,7 @@ class TestContentManifest(object):
 
     def test_section_modification(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -191,7 +191,7 @@ class TestContentManifest(object):
 
     def test_that_filtering_is_cumulative(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -232,7 +232,7 @@ class TestContentManifest(object):
 
     def test_get_section(self):
         content = ContentManifest([{
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -254,7 +254,7 @@ class TestContentManifest(object):
     def test_get_question(self):
         content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -266,7 +266,7 @@ class TestContentManifest(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [{
                     "id": "q2",
@@ -278,7 +278,7 @@ class TestContentManifest(object):
                 }]
             },
             {
-                "id": "third_section",
+                "slug": "third_section",
                 "name": "Third section",
                 "editable": True,
                 "questions": [{
@@ -300,7 +300,7 @@ class TestContentManifest(object):
     def test_get_next_section(self):
         content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -312,7 +312,7 @@ class TestContentManifest(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [{
                     "id": "q2",
@@ -324,7 +324,7 @@ class TestContentManifest(object):
                 }]
             },
             {
-                "id": "third_section",
+                "slug": "third_section",
                 "name": "Third section",
                 "editable": True,
                 "questions": [{
@@ -350,7 +350,7 @@ class TestContentManifest(object):
     def test_get_all_data(self):
         content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -359,7 +359,7 @@ class TestContentManifest(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [{
                     "id": "q2",
@@ -368,7 +368,7 @@ class TestContentManifest(object):
                 }]
             },
             {
-                "id": "third_section",
+                "slug": "third_section",
                 "name": "Third section",
                 "questions": [{
                     "id": "q3",
@@ -395,7 +395,7 @@ class TestContentManifest(object):
     def test_question_numbering(self):
         content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [
                     {
@@ -411,7 +411,7 @@ class TestContentManifest(object):
                 ]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [
                     {
@@ -430,7 +430,7 @@ class TestContentManifest(object):
     def test_question_numbers_respect_filtering(self):
         content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -442,7 +442,7 @@ class TestContentManifest(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [
                     {
@@ -473,7 +473,7 @@ class TestContentManifest(object):
 class TestContentSection(object):
     def test_get_question_ids(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -489,7 +489,7 @@ class TestContentSection(object):
 
     def test_get_question_ids_filtered_by_type(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -505,7 +505,7 @@ class TestContentSection(object):
 
     def test_get_data(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -623,7 +623,7 @@ class TestContentSection(object):
 
     def test_unformat_data(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -708,7 +708,7 @@ class TestContentSection(object):
 
     def test_get_question(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -724,7 +724,7 @@ class TestContentSection(object):
 
     def test_get_field_names_with_pricing_question(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -737,7 +737,7 @@ class TestContentSection(object):
 
     def test_get_field_names_with_no_pricing_question(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -750,7 +750,7 @@ class TestContentSection(object):
 
     def test_has_changes_to_save_no_changes(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -762,7 +762,7 @@ class TestContentSection(object):
 
     def test_hash_changes_to_save_field_different(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -774,7 +774,7 @@ class TestContentSection(object):
 
     def test_has_changes_to_save_field_not_set_on_service(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -786,7 +786,7 @@ class TestContentSection(object):
 
     def test_get_error_message(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -802,7 +802,7 @@ class TestContentSection(object):
 
     def test_get_error_message_returns_default(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -818,7 +818,7 @@ class TestContentSection(object):
 
     def test_get_error_messages(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -867,7 +867,7 @@ class TestContentSection(object):
 
     def test_section_description(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [],
             "description": "This is the first section"
@@ -927,7 +927,7 @@ class TestContentLoader(object):
                      'name': 'question1', 'id': 'question1'},
                     {'depends': [{'being': 'SaaS', 'on': 'lot'}],
                      'name': 'question2', 'id': 'question2'}],
-                'id': 'section1'}
+                'slug': 'section1'}
         ]
         read_yaml_mock.assert_has_calls([
             mock.call('content/frameworks/framework-slug/manifests/my-manifest.yml'),

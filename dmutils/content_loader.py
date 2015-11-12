@@ -128,7 +128,7 @@ class ContentSection(object):
             return section.copy()
         else:
             return ContentSection(
-                id=section['id'],
+                id=section['slug'],
                 name=section['name'],
                 editable=section.get('editable'),
                 questions=section['questions'],
@@ -390,9 +390,11 @@ class ContentLoader(object):
         try:
             if framework_slug not in self._content:
                 raise KeyError
-            return ContentManifest(self._content[framework_slug][manifest])
+            manifest = self._content[framework_slug][manifest]
         except KeyError:
             raise ContentNotFoundError("Content not found for {} and {}".format(framework_slug, manifest))
+
+        return ContentManifest(manifest)
 
     def load_manifest(self, framework_slug, question_set, manifest):
         if manifest not in self._content[framework_slug]:
@@ -403,7 +405,7 @@ class ContentLoader(object):
                 raise ContentNotFoundError("No manifest at {}".format(manifest_path))
 
             self._content[framework_slug][manifest] = [
-                self._populate_section(framework_slug, question_set, section) for section in manifest_sections
+                self._load_nested_questions(framework_slug, question_set, section) for section in manifest_sections
             ]
 
         return self._content[framework_slug][manifest]
@@ -420,7 +422,10 @@ class ContentLoader(object):
         if not self._has_question(framework_slug, question_set, question):
             try:
                 questions_path = self._questions_path(framework_slug, question_set)
-                self._questions[framework_slug][question_set][question] = _load_question(question, questions_path)
+                self._questions[framework_slug][question_set][question] = self._load_nested_questions(
+                    framework_slug, question_set,
+                    _load_question(question, questions_path)
+                )
             except IOError:
                 raise ContentNotFoundError("No question {} at {}".format(question, questions_path))
 
@@ -462,12 +467,15 @@ class ContentLoader(object):
     def _message_path(self, framework_slug, message):
         return os.path.join(self._root_path(framework_slug), 'messages', '{}.yml'.format(message))
 
-    def _populate_section(self, framework_slug, question_set, section):
-        section['id'] = _make_section_id(section['name'])
-        section['questions'] = [
-            self.get_question(framework_slug, question_set, question) for question in section['questions']
-        ]
-        return section
+    def _load_nested_questions(self, framework_slug, question_set, section_or_question):
+        if 'questions' in section_or_question:
+            section_or_question['questions'] = [
+                self.get_question(framework_slug, question_set, question)
+                for question in section_or_question['questions']
+            ]
+            section_or_question['slug'] = _make_slug(section_or_question['name'])
+
+        return section_or_question
 
     def _message_key(self, framework_status, supplier_status):
         return '{}{}'.format(
@@ -492,16 +500,16 @@ def _load_question(question, directory):
     question_content = read_yaml(
         os.path.join(directory, '{}.yml'.format(question))
     )
-    if question_content:
-        question_content["id"] = _make_question_id(question)
+
+    question_content["id"] = _make_question_id(question)
 
     return question_content
 
 
-def _make_section_id(name):
+def _make_slug(name):
     return inflection.underscore(
         re.sub(r"\s", "_", name)
-    )
+    ).replace('_', '-')
 
 
 def _make_question_id(question):
