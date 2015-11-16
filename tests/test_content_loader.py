@@ -487,6 +487,28 @@ class TestContentSection(object):
         })
         assert section.get_question_ids() == ['q1', 'q2']
 
+    def test_get_multiquestion_ids(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "question": "Boolean question",
+                "type": "Boolean question",
+                "questions": [
+                    {
+                        "id": "q2",
+                        "type": "text"
+                    },
+                    {
+                        "id": "q3",
+                        "type": "text"
+                    }
+                ]
+            }]
+        })
+        assert section.get_question_ids() == ['q2', 'q3']
+
     def test_get_question_ids_filtered_by_type(self):
         section = ContentSection.create({
             "slug": "first_section",
