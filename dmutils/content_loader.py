@@ -172,8 +172,7 @@ class ContentSection(object):
 
     def get_question_ids(self, type=None):
         return [
-            question['id'] for question in self.questions
-            if type is None or question.get('type') == type
+            field for question in self.questions for field in question.fields(type)
         ]
 
     def get_data(self, form_data):
@@ -360,8 +359,20 @@ class ContentSection(object):
 
 class ContentQuestion(object):
     def __init__(self, data, number=None):
+        self.id = data['id']
+        self.type = data.get('type')
+        if 'questions' in data:
+            self.questions = [ContentQuestion(question) for question in data['questions']]
+        else:
+            self.questions = None
         self.number = number
         self.data = data
+
+    def fields(self, type=None):
+        if self.questions:
+            return [question['id'] for question in self.questions if type in [question.type, None]]
+        else:
+            return [self.id] if type in [self.type, None] else []
 
     def get(self, key, default=None):
         try:
