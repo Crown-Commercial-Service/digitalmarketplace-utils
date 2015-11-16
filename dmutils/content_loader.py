@@ -159,20 +159,14 @@ class ContentSection(object):
         by :func:`ContentSection.get_data`. This only affects the pricing question
         that gets expanded into the the pricing fields.
         """
-        question_ids = self.get_question_ids()
-        if self._has_pricing_type():
-            question_ids = [
-                q for q in question_ids if not self._is_pricing_type(q)
-            ] + PRICE_FIELDS
 
-        return question_ids
-
-    def _has_pricing_type(self):
-        return any(self._is_pricing_type(q) for q in self.get_question_ids())
+        return [
+            field for question in self.questions for field in question.fields
+        ]
 
     def get_question_ids(self, type=None):
         return [
-            field for question in self.questions for field in question.fields(type)
+            field for question in self.questions for field in question.get_question_ids(type)
         ]
 
     def get_data(self, form_data):
@@ -192,32 +186,8 @@ class ContentSection(object):
         form_data = ImmutableMultiDict((k, v.strip()) for k, v in form_data.items(multi=True))
 
         section_data = {}
-        for key in set(form_data) & set(self.get_question_ids()):
-            if self._is_list_type(key):
-                section_data[key] = form_data.getlist(key)
-            elif self._is_boolean_type(key):
-                section_data[key] = convert_to_boolean(form_data[key])
-            elif self._is_numeric_type(key):
-                section_data[key] = convert_to_number(form_data[key])
-            elif self._is_pricing_type(key):
-                section_data.update(expand_pricing_field(form_data.getlist(key)))
-            elif self._is_not_upload(key):
-                section_data[key] = form_data[key]
-
-            if self._has_assurance(key):
-                section_data[key] = {
-                    "value": section_data[key],
-                    "assurance": form_data.get(key + '--assurance'),
-                }
-
-        # Check for assurance answers in the form data with no associated question
-        for key in set(form_data):
-            if key.endswith('--assurance'):
-                root_key = key[:-11]
-                if root_key in set(self.get_question_ids()) and root_key not in section_data:
-                    section_data[root_key] = {
-                        "assurance": form_data.get(key),
-                    }
+        for question in self.questions:
+            section_data.update(question.get_data(form_data))
 
         return section_data
 
@@ -327,31 +297,6 @@ class ContentSection(object):
 
     # Type checking
 
-    def _is_type(self, key, *types):
-        """Return True if a given key is one of the provided types"""
-        question = self.get_question(key)
-        return question and question.get('type') in types
-
-    def _is_list_type(self, key):
-        """Return True if a given key is a list type"""
-        return key == 'serviceTypes' or self._is_type(key, 'list', 'checkboxes')
-
-    def _is_not_upload(self, key):
-        """Return True if a given key is not a file upload"""
-        return not self._is_type(key, 'upload')
-
-    def _is_boolean_type(self, key):
-        """Return True if a given key is a boolean type"""
-        return self._is_type(key, 'boolean')
-
-    def _is_numeric_type(self, key):
-        """Return True if a given key is a numeric type"""
-        return self._is_type(key, 'percentage')
-
-    def _is_pricing_type(self, key):
-        """Return True if a given key is a pricing type"""
-        return self._is_type(key, 'pricing')
-
     def _has_assurance(self, key):
         """Return True if a question has an assurance component"""
         question = self.get_question(key)
@@ -378,7 +323,51 @@ class ContentQuestion(object):
                 None
             )
 
-    def fields(self, type=None):
+    def get_data(self, form_data):
+        if self.id in form_data and self.type == 'pricing':
+            return expand_pricing_field(form_data.getlist(self.id))
+        elif self.questions:
+            questions_data = {}
+            for question in self.questions:
+                questions_data.update(question.get_data(form_data))
+            return questions_data
+        else:
+            return self._get_single_question_data(form_data)
+
+    def _get_single_question_data(self, form_data):
+        if self.id not in form_data:
+            if self.get('assuranceApproach') and '{}--assurance'.format(self.id) in form_data:
+                return {self.id: {'assurance': form_data.get('{}--assurance'.format(self.id))}}
+            else:
+                return {}
+
+        if self.id == 'serviceTypes' or self.type in ['list', 'checkboxes']:
+            value = form_data.getlist(self.id)
+        elif self.type == 'boolean':
+            value = convert_to_boolean(form_data[self.id])
+        elif self.type == 'percentage':
+            value = convert_to_number(form_data[self.id])
+        elif self.type != 'upload':
+            value = form_data[self.id]
+        else:
+            return {}
+
+        if self.get('assuranceApproach'):
+            value = {
+                "value": value,
+                "assurance": form_data.get(self.id + '--assurance'),
+            }
+
+        return {self.id: value}
+
+    @property
+    def fields(self):
+        if self.type == 'pricing':
+            return PRICE_FIELDS
+        else:
+            return self.get_question_ids()
+
+    def get_question_ids(self, type=None):
         if self.questions:
             return [question['id'] for question in self.questions if type in [question.type, None]]
         else:
