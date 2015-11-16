@@ -146,7 +146,7 @@ def generate_file_name(framework_slug, supplier_id, service_id, field, filename,
         'pricingDocumentURL': 'pricing-document',
     }
 
-    return '{}/{}/{}-{}-{}{}'.format(
+    return '{}/documents/{}/{}-{}-{}{}'.format(
         framework_slug,
         supplier_id,
         service_id,
