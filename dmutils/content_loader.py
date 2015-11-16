@@ -30,7 +30,7 @@ class ContentManifest(object):
         for section in self.sections:
             for question in section.questions:
                 question_index += 1
-                question['number'] = question_index
+                question.number = question_index
 
     def __iter__(self):
         return self.sections.__iter__()
@@ -131,7 +131,7 @@ class ContentSection(object):
                 id=section['slug'],
                 name=section['name'],
                 editable=section.get('editable'),
-                questions=section['questions'],
+                questions=[ContentQuestion(question) for question in section['questions']],
                 description=section.get('description'))
 
     def __init__(self, id, name, editable, questions, description=None):
@@ -356,6 +356,24 @@ class ContentSection(object):
         """Return True if a question has an assurance component"""
         question = self.get_question(key)
         return bool(question) and question.get('assuranceApproach', False)
+
+
+class ContentQuestion(object):
+    def __init__(self, data, number=None):
+        self.number = number
+        self.data = data
+
+    def get(self, key, default=None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
+
+    def __getitem__(self, key):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            return self.data[key]
 
 
 class ContentLoader(object):
