@@ -114,9 +114,9 @@ class ContentManifest(object):
                 return False
         return True
 
-    def get_question(self, question_id):
+    def get_question(self, field_name):
         for section in self.sections:
-            question = section.get_question(question_id)
+            question = section.get_question(field_name)
             if question:
                 return question
 
@@ -317,12 +317,13 @@ class ContentSection(object):
                 result[key] = data[key]
         return result
 
-    def get_question(self, question_id):
+    def get_question(self, field_name):
         """Return a question dictionary by question ID"""
-        # TODO: investigate how this would work as get by form field name
+
         for question in self.questions:
-            if question['id'] == question_id:
-                return question
+            field_question = question.get_question(field_name)
+            if field_question:
+                return field_question
 
     # Type checking
 
@@ -367,6 +368,15 @@ class ContentQuestion(object):
             self.questions = None
         self.number = number
         self.data = data
+
+    def get_question(self, field_name):
+        if self.id == field_name:
+            return self
+        elif self.questions:
+            return next(
+                (question for question in self.questions if question.id == field_name),
+                None
+            )
 
     def fields(self, type=None):
         if self.questions:
