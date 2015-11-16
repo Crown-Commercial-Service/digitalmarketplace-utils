@@ -966,6 +966,23 @@ class TestContentLoader(object):
         read_yaml_mock.assert_called_with(
             'content/frameworks/framework-slug/questions/question-set/question1.yml')
 
+    def test_get_question_loads_nested_questions(self, read_yaml_mock):
+        read_yaml_mock.side_effect = [
+            {"name": "question1", "type": "multiquestion", "questions": ["question10", "question20"]},
+            {"name": "question10", "type": "text"},
+            {"name": "question20", "type": "checkboxes"},
+        ]
+
+        yaml_loader = ContentLoader('content/')
+
+        assert yaml_loader.get_question('framework-slug', 'question-set', 'question1')
+
+        read_yaml_mock.assert_has_calls([
+            mock.call('content/frameworks/framework-slug/questions/question-set/question1.yml'),
+            mock.call('content/frameworks/framework-slug/questions/question-set/question10.yml'),
+            mock.call('content/frameworks/framework-slug/questions/question-set/question20.yml'),
+        ])
+
     def test_get_question_fails_if_question_cannot_be_read(self, read_yaml_mock):
         read_yaml_mock.side_effect = IOError
 
