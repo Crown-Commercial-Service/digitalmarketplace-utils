@@ -530,6 +530,12 @@ class TestContentSection(object):
             "slug": "first_section",
             "name": "First section",
             "questions": [{
+                "id": "q0",
+                "questions": [
+                    {"id": "q01", "type": "text"},
+                    {"id": "q02", "type": "radios"}
+                ]
+            }, {
                 "id": "q1",
                 "question": "Boolean question",
                 "type": "boolean",
@@ -579,6 +585,7 @@ class TestContentSection(object):
 
         form = ImmutableMultiDict([
             ('q1', 'true'),
+            ('q01', 'some nested question'),
             ('q2', 'Some text stuff'),
             ('q3', 'value'),
             ('q3', 'Should be lost'),
@@ -602,6 +609,7 @@ class TestContentSection(object):
         data = section.get_data(form)
 
         assert data == {
+            'q01': 'some nested question',
             'q1': True,
             'q2': 'Some text stuff',
             'q3': 'value',
@@ -648,6 +656,12 @@ class TestContentSection(object):
             "slug": "first_section",
             "name": "First section",
             "questions": [{
+                "id": "q0",
+                "questions": [
+                    {"id": "q01", "type": "text"},
+                    {"id": "q02", "type": "radios"}
+                ]
+            }, {
                 "id": "q1",
                 "question": "Boolean question",
                 "type": "boolean",
@@ -696,6 +710,7 @@ class TestContentSection(object):
         })
 
         data = {
+            'q01': 'q01 value',
             'q1': True,
             'q2': 'Some text stuff',
             'q3': 'value',
@@ -713,6 +728,7 @@ class TestContentSection(object):
         form = section.unformat_data(data)
 
         assert form == {
+            'q01': 'q01 value',
             'q1': True,
             'q2': 'Some text stuff',
             'q3': 'value',
