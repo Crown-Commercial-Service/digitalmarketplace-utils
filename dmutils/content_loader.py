@@ -177,6 +177,19 @@ class ContentSection(object):
 
         return summary_section
 
+    def get_question_as_section(self, question_slug):
+        question = self.get_question_by_slug(question_slug)
+        if not question:
+            return None
+        return ContentSection(
+            id=question['slug'],
+            name=question['question'],
+            editable=self.edit_questions,
+            edit_questions=False,
+            questions=question.questions,
+            description=question.get('description')
+        )
+
     def get_field_names(self):
         """Return a list of field names that this section returns
 
@@ -319,6 +332,11 @@ class ContentSection(object):
             field_question = question.get_question(field_name)
             if field_question:
                 return field_question
+
+    def get_question_by_slug(self, question_slug):
+        for question in self.questions:
+            if question['slug'] == question_slug:
+                return question
 
     # Type checking
 
