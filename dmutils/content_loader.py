@@ -35,6 +35,22 @@ class ContentManifest(object):
     def __iter__(self):
         return self.sections.__iter__()
 
+    def summary(self, service_data):
+        """Create a manifest instance for service summary display
+
+        Return a new :class:`ContentManifest` instance with all
+        questions replaced with :class:`ContentQuestionSummary`.
+
+        :class:`ContentQuestionSummary` instances in addition to
+        question data contain a reference to the service data
+        dictionary and so have additional properties used by the
+        summary tables.
+
+        """
+        return ContentManifest(
+            [section.summary(service_data) for section in self.sections]
+        )
+
     def get_section(self, section_id):
         """Return a section by ID"""
         for section in self.sections:
@@ -151,6 +167,12 @@ class ContentSection(object):
             editable=self.editable,
             questions=self.questions[:],
             description=self.description)
+
+    def summary(self, service_data):
+        summary_section = self.copy()
+        summary_section.questions = [question.summary(service_data) for question in summary_section.questions]
+
+        return summary_section
 
     def get_field_names(self):
         """Return a list of field names that this section returns
@@ -314,6 +336,11 @@ class ContentQuestion(object):
         self.number = number
         self.data = data
 
+    def summary(self, service_data):
+        return ContentQuestionSummary(
+            self, service_data
+        )
+
     def get_question(self, field_name):
         if self.id == field_name:
             return self
@@ -384,6 +411,30 @@ class ContentQuestion(object):
             return getattr(self, key)
         except AttributeError:
             return self.data[key]
+
+
+class ContentQuestionSummary(ContentQuestion):
+    def __init__(self, question, service_data):
+        super(ContentQuestionSummary, self).__init__(question.data, question.number)
+        self.service_data = service_data
+        if self.questions:
+            self.questions = [ContentQuestionSummary(q, service_data) for q in self.questions]
+
+    @property
+    def label(self):
+        return self['question']
+
+    @property
+    def value(self):
+        return self.service_data.get(self.id)
+
+    @property
+    def answer_required(self):
+        if self.value in ['', [], None]:
+            if not self.get('optional'):
+                return True
+        else:
+            return False
 
 
 class ContentLoader(object):
