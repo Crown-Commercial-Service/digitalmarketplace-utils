@@ -429,10 +429,14 @@ class ContentQuestionSummary(ContentQuestion):
 
     @property
     def value(self):
-        return self.service_data.get(self.id)
+        if self.questions:
+            return self.questions
+        return self.service_data.get(self.id, '')
 
     @property
     def answer_required(self):
+        if self.questions:
+            return any(question.answer_required for question in self.questions)
         if self.value in ['', [], None]:
             if not self.get('optional'):
                 return True
