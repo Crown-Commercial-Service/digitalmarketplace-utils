@@ -147,13 +147,15 @@ class ContentSection(object):
                 id=section['slug'],
                 name=section['name'],
                 editable=section.get('editable'),
+                edit_questions=section.get('edit_questions'),
                 questions=[ContentQuestion(question) for question in section['questions']],
                 description=section.get('description'))
 
-    def __init__(self, id, name, editable, questions, description=None):
+    def __init__(self, id, name, editable, edit_questions, questions, description=None):
         self.id = id
         self.name = name
         self.editable = editable
+        self.edit_questions = edit_questions
         self.questions = questions
         self.description = description
 
@@ -165,6 +167,7 @@ class ContentSection(object):
             id=self.id,
             name=self.name,
             editable=self.editable,
+            edit_questions=self.edit_questions,
             questions=self.questions[:],
             description=self.description)
 
