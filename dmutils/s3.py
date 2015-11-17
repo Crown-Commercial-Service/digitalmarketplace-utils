@@ -1,10 +1,17 @@
+from __future__ import absolute_import
 import os
 import boto
 import boto.exception
 import datetime
 import mimetypes
+import logging
 
 from boto.exception import S3ResponseError  # noqa
+
+
+logger = logging.getLogger(__name__)
+
+FILE_SIZE_LIMIT = 5400000  # approximately 5Mb
 
 
 class S3(object):
@@ -20,11 +27,20 @@ class S3(object):
         self._move_existing(path, move_prefix)
 
         key = self.bucket.new_key(path)
+        filesize = get_file_size_up_to_maximum(file)
         key.set_contents_from_file(
             file,
             headers={'Content-Type': self._get_mimetype(key.name)}
         )
         key.set_acl(acl)
+        logger.info(
+            "Uploaded file {filepath} of size {filesize} with acl {fileacl}",
+            extra={
+                "filepath": path,
+                "filesize": filesize,
+                "fileacl": acl,
+            })
+
         return key
 
     def path_exists(self, path):
@@ -94,6 +110,13 @@ class S3(object):
     def _get_mimetype(self, filename):
         mimetype, _ = mimetypes.guess_type(filename)
         return mimetype
+
+
+def get_file_size_up_to_maximum(file_contents):
+    size = len(file_contents.read(FILE_SIZE_LIMIT))
+    file_contents.seek(0)
+
+    return size
 
 
 def default_move_prefix():

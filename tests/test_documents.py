@@ -4,12 +4,13 @@ import mock
 import pytest
 from freezegun import freeze_time
 
+from .helpers import mock_file
 from dmutils.s3 import S3ResponseError
 
 from dmutils.content_loader import ContentSection
 from dmutils.documents import (
     generate_file_name,
-    file_is_not_empty, filter_empty_files,
+    file_is_not_empty, file_is_empty, filter_empty_files,
     file_is_less_than_5mb,
     file_is_open_document_format,
     validate_documents,
@@ -40,10 +41,14 @@ class TestGenerateFilename(unittest.TestCase):
 
 class TestValidateDocuments(unittest.TestCase):
     def test_file_is_not_empty(self):
-        self.assertTrue(file_is_not_empty(mock_file('file1', 1)))
+        non_empty_file = mock_file('file1', 1)
+        assert file_is_not_empty(non_empty_file)
+        assert not file_is_empty(non_empty_file)
 
     def test_file_is_empty(self):
-        self.assertFalse(file_is_not_empty(mock_file('file1', 0)))
+        empty_file = mock_file('file1', 0)
+        assert not file_is_not_empty(empty_file)
+        assert file_is_empty(empty_file)
 
     def test_filter_empty_files(self):
         file1 = mock_file('file1', 1)
@@ -269,12 +274,3 @@ def test_sanitise_supplier_name():
     assert sanitise_supplier_name('Kev & Sons. | Ltd') == 'Kev_and_Sons_Ltd'
     assert sanitise_supplier_name('\ / : * ? \' " < > |') == '_'
     assert sanitise_supplier_name('kev@the*agency') == 'kevtheagency'
-
-
-def mock_file(filename, length, name=None):
-    mock_file = mock.MagicMock()
-    mock_file.read.return_value = '*' * length
-    mock_file.filename = filename
-    mock_file.name = name
-
-    return mock_file

@@ -6,7 +6,7 @@ try:
 except ImportError:
     import urllib.parse as urlparse
 
-from .s3 import S3ResponseError
+from .s3 import S3ResponseError, get_file_size_up_to_maximum, FILE_SIZE_LIMIT
 
 
 BAD_SUPPLIER_NAME_CHARACTERS = ['#', '%', '&', '{', '}', '\\', '<', '>', '*', '?', '/', '$',
@@ -116,17 +116,17 @@ def upload_service_documents(uploader, documents_url, service, request_files, se
 
 
 def file_is_not_empty(file_contents):
-    not_empty = len(file_contents.read(1)) > 0
+    return not file_is_empty(file_contents)
+
+
+def file_is_empty(file_contents):
+    empty = len(file_contents.read(1)) == 0
     file_contents.seek(0)
-    return not_empty
+    return empty
 
 
 def file_is_less_than_5mb(file_contents):
-    size_limit = 5400000
-    below_size_limit = len(file_contents.read(size_limit)) < size_limit
-    file_contents.seek(0)
-
-    return below_size_limit
+    return get_file_size_up_to_maximum(file_contents) < FILE_SIZE_LIMIT
 
 
 def file_is_open_document_format(file_object):
