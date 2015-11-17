@@ -21,7 +21,7 @@ from dmutils.documents import (
 class TestGenerateFilename(unittest.TestCase):
     def test_filename_format(self):
         self.assertEquals(
-            'slug/2/1-pricing-document-123.pdf',
+            'slug/documents/2/1-pricing-document-123.pdf',
             generate_file_name(
                 'slug', 2, 1,
                 'pricingDocumentURL', 'test.pdf',
@@ -31,7 +31,7 @@ class TestGenerateFilename(unittest.TestCase):
     def test_default_suffix_is_datetime(self):
         with freeze_time('2015-01-02 03:04:05'):
             self.assertEquals(
-                'slug/2/1-pricing-document-2015-01-02-0304.pdf',
+                'slug/documents/2/1-pricing-document-2015-01-02-0304.pdf',
                 generate_file_name(
                     'slug', 2, 1,
                     'pricingDocumentURL', 'test.pdf',
@@ -116,11 +116,11 @@ class TestUploadDocument(unittest.TestCase):
                     "pricingDocumentURL",
                     mock_file('file.pdf', 1)
                 ),
-                'http://assets/g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf'
+                'http://assets/g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf'
             )
 
         uploader.save.assert_called_once_with(
-            'g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf',
+            'g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf',
             mock.ANY,
             acl='public-read'
         )
@@ -137,11 +137,11 @@ class TestUploadDocument(unittest.TestCase):
                     mock_file('file.pdf', 1),
                     public=False
                 ),
-                'http://assets/g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf'
+                'http://assets/g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf'
             )
 
         uploader.save.assert_called_once_with(
-            'g-cloud-6/5/123-pricing-document-2015-01-02-0405.pdf',
+            'g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf',
             mock.ANY,
             acl='private'
         )
@@ -191,7 +191,7 @@ class TestUploadServiceDocuments(object):
                 request_files, self.section)
 
         self.uploader.save.assert_called_with(
-            'g-cloud-7/12345/654321-pricing-document-2015-10-04-1436.pdf', mock.ANY, acl='public-read')
+            'g-cloud-7/documents/12345/654321-pricing-document-2015-10-04-1436.pdf', mock.ANY, acl='public-read')
 
         assert 'pricingDocumentURL' in files
         assert len(errors) == 0
@@ -206,7 +206,7 @@ class TestUploadServiceDocuments(object):
                 public=False)
 
         self.uploader.save.assert_called_with(
-            'g-cloud-7/12345/654321-pricing-document-2015-10-04-1436.pdf', mock.ANY, acl='private')
+            'g-cloud-7/documents/12345/654321-pricing-document-2015-10-04-1436.pdf', mock.ANY, acl='private')
 
         assert 'pricingDocumentURL' in files
         assert len(errors) == 0

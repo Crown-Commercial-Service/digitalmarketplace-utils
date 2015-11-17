@@ -265,13 +265,13 @@ class TestValidate(unittest.TestCase):
         self.assertEquals(self.validate.errors, {})
 
         self.uploader.save.assert_called_once_with(
-            'g-cloud-6/2/1-pricing-document-2015-01-01-1200.pdf',
+            'g-cloud-6/documents/2/1-pricing-document-2015-01-01-1200.pdf',
             self.data['pricingDocumentURL'],
             acl='public-read'
         )
 
         self.assertEquals(self.validate.clean_data, {
-            'pricingDocumentURL': 'https://assets.test.digitalmarketplace.service.gov.uk/g-cloud-6/2/1-pricing-document-2015-01-01-1200.pdf',  # noqa
+            'pricingDocumentURL': 'https://assets.test.digitalmarketplace.service.gov.uk/g-cloud-6/documents/2/1-pricing-document-2015-01-01-1200.pdf',  # noqa
         })
 
     def test_failed_file_upload(self):
