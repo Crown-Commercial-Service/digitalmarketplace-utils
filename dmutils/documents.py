@@ -116,9 +116,13 @@ def upload_service_documents(uploader, documents_url, service, request_files, se
 
 
 def file_is_not_empty(file_contents):
-    not_empty = len(file_contents.read(1)) > 0
+    return not file_is_empty(file_contents)
+
+
+def file_is_empty(file_contents):
+    empty = len(file_contents.read(1)) == 0
     file_contents.seek(0)
-    return not_empty
+    return empty
 
 
 def file_is_less_than_5mb(file_contents):
