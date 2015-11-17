@@ -3,7 +3,8 @@ import os
 import datetime
 
 import mock
-from dmutils.s3 import S3
+from .helpers import mock_file
+from dmutils.s3 import S3, get_file_size_up_to_maximum
 
 
 class TestS3Uploader(unittest.TestCase):
@@ -93,14 +94,14 @@ class TestS3Uploader(unittest.TestCase):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('folder/test-file.pdf', mock.Mock())
+        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
         self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
 
     def test_save_sets_content_type_and_acl(self):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('folder/test-file.pdf', mock.Mock())
+        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
         self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
 
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
@@ -111,7 +112,7 @@ class TestS3Uploader(unittest.TestCase):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('/folder/test-file.pdf', mock.Mock())
+        S3('test-bucket').save('/folder/test-file.pdf', mock_file('blah', 123))
         self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
 
     def test_default_move_prefix_is_datetime(self):
@@ -123,7 +124,7 @@ class TestS3Uploader(unittest.TestCase):
                                mock.Mock(wraps=datetime.datetime)) as patched:
             patched.utcnow.return_value = now
             S3('test-bucket').save(
-                'folder/test-file.pdf', mock.Mock(),
+                'folder/test-file.pdf', mock_file('blah', 123),
             )
 
             self.assertEqual(mock_bucket.keys, set([
@@ -136,7 +137,7 @@ class TestS3Uploader(unittest.TestCase):
         self.s3_mock.get_bucket.return_value = mock_bucket
 
         S3('test-bucket').save(
-            'folder/test-file.pdf', mock.Mock(),
+            'folder/test-file.pdf', mock_file('blah', 123),
             move_prefix='OLD'
         )
 
@@ -213,3 +214,11 @@ class FakeKey(object):
             'last_modified': self.last_modified,
             'size': self.size
         }
+
+
+def test_get_file_size_just_below_maximum():
+    assert get_file_size_up_to_maximum(mock_file('', 5399999)) == 5399999
+
+
+def test_get_file_size_just_above_maximum():
+    assert get_file_size_up_to_maximum(mock_file('', 5400001)) == 5400001

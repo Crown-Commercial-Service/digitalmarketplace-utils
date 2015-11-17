@@ -4,6 +4,7 @@ import mock
 import pytest
 from freezegun import freeze_time
 
+from .helpers import mock_file
 from dmutils.s3 import S3ResponseError
 
 from dmutils.content_loader import ContentSection
@@ -269,12 +270,3 @@ def test_sanitise_supplier_name():
     assert sanitise_supplier_name('Kev & Sons. | Ltd') == 'Kev_and_Sons_Ltd'
     assert sanitise_supplier_name('\ / : * ? \' " < > |') == '_'
     assert sanitise_supplier_name('kev@the*agency') == 'kevtheagency'
-
-
-def mock_file(filename, length, name=None):
-    mock_file = mock.MagicMock()
-    mock_file.read.return_value = '*' * length
-    mock_file.filename = filename
-    mock_file.name = name
-
-    return mock_file
