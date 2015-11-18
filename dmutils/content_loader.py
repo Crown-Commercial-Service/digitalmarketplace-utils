@@ -184,7 +184,7 @@ class ContentSection(object):
             return None
         return ContentSection(
             slug=question.slug,
-            name=question.question,
+            name=question.label,
             editable=self.edit_questions,
             edit_questions=False,
             questions=question.questions,
@@ -409,6 +409,10 @@ class ContentQuestion(object):
         return {self.id: value}
 
     @property
+    def label(self):
+        return self.get('name') or self.question
+
+    @property
     def fields(self):
         if self.type == 'pricing':
             return PRICE_FIELDS
@@ -449,10 +453,6 @@ class ContentQuestionSummary(ContentQuestion):
         self.questions = question.questions
         if self.questions:
             self.questions = [q.summary(service_data) for q in self.questions]
-
-    @property
-    def label(self):
-        return self['question']
 
     @property
     def value(self):
