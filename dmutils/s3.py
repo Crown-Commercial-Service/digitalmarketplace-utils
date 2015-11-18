@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import os
+import re
 import boto
 import boto.exception
 import datetime
@@ -12,6 +13,9 @@ from boto.exception import S3ResponseError  # noqa
 logger = logging.getLogger(__name__)
 
 FILE_SIZE_LIMIT = 5400000  # approximately 5Mb
+BUCKET_SHORT_NAME_PATTERN = re.compile(
+    r'^digitalmarketplace-([^\-]+)-([^\-]+)-(\2)$'
+)
 
 
 class S3(object):
@@ -20,6 +24,15 @@ class S3(object):
 
         self.bucket_name = bucket_name
         self.bucket = conn.get_bucket(bucket_name)
+
+    @property
+    def bucket_short_name(self):
+        match = BUCKET_SHORT_NAME_PATTERN.match(self.bucket_name)
+
+        if not match:
+            raise ValueError("Cannot parse bucket name: {}".format(self.bucket_name))
+
+        return match.group(1)
 
     def save(self, path, file, acl='public-read', move_prefix=None):
         path = path.lstrip('/')

@@ -67,8 +67,11 @@ def upload_document(uploader, documents_url, service, field, file_contents, publ
              failed
 
     """
+    assert uploader.bucket_short_name in ['documents', 'submissions']
+
     file_path = generate_file_name(
         service['frameworkSlug'],
+        uploader.bucket_short_name,
         service['supplierId'],
         service['id'],
         field,
@@ -91,6 +94,8 @@ def upload_document(uploader, documents_url, service, field, file_contents, publ
 
 
 def upload_service_documents(uploader, documents_url, service, request_files, section, public=True):
+    assert uploader.bucket_short_name in ['documents', 'submissions']
+
     files = {field: request_files[field] for field in section.get_question_ids(type="upload")
              if field in request_files}
     files = filter_empty_files(files)
@@ -135,7 +140,7 @@ def file_is_open_document_format(file_object):
     ]
 
 
-def generate_file_name(framework_slug, supplier_id, service_id, field, filename, suffix=None):
+def generate_file_name(framework_slug, bucket_short_name, supplier_id, service_id, field, filename, suffix=None):
     if suffix is None:
         suffix = default_file_suffix()
 
@@ -146,8 +151,9 @@ def generate_file_name(framework_slug, supplier_id, service_id, field, filename,
         'pricingDocumentURL': 'pricing-document',
     }
 
-    return '{}/documents/{}/{}-{}-{}{}'.format(
+    return '{}/{}/{}/{}-{}-{}{}'.format(
         framework_slug,
+        bucket_short_name,
         supplier_id,
         service_id,
         ID_TO_FILE_NAME_SUFFIX[field],
