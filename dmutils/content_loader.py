@@ -144,15 +144,16 @@ class ContentSection(object):
             return section.copy()
         else:
             return ContentSection(
-                id=section['slug'],
+                slug=section['slug'],
                 name=section['name'],
                 editable=section.get('editable'),
                 edit_questions=section.get('edit_questions'),
                 questions=[ContentQuestion(question) for question in section['questions']],
                 description=section.get('description'))
 
-    def __init__(self, id, name, editable, edit_questions, questions, description=None):
-        self.id = id
+    def __init__(self, slug, name, editable, edit_questions, questions, description=None):
+        self.id = slug  # TODO deprecated, use `.slug` instead
+        self.slug = slug
         self.name = name
         self.editable = editable
         self.edit_questions = edit_questions
@@ -164,7 +165,7 @@ class ContentSection(object):
 
     def copy(self):
         return ContentSection(
-            id=self.id,
+            slug=self.slug,
             name=self.name,
             editable=self.editable,
             edit_questions=self.edit_questions,
@@ -182,7 +183,7 @@ class ContentSection(object):
         if not question:
             return None
         return ContentSection(
-            id=question['slug'],
+            slug=question['slug'],
             name=question['question'],
             editable=self.edit_questions,
             edit_questions=False,
