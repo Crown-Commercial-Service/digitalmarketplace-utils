@@ -509,6 +509,47 @@ class TestContentSection(object):
         })
         assert section.get_question_ids() == ['q2', 'q3']
 
+    def test_get_question_as_section(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "edit_questions": False,
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "slug": "q0-slug",
+                "question": "Q0",
+                "type": "multiquestion",
+                "questions": [
+                    {
+                        "id": "q2",
+                        "type": "text"
+                    },
+                    {
+                        "id": "q3",
+                        "type": "text"
+                    }
+                ]
+            }]
+        })
+
+        question_section = section.get_question_as_section('q0-slug')
+        assert question_section.name == "Q0"
+        assert question_section.editable == section.edit_questions
+        assert question_section.get_question_ids() == ['q2', 'q3']
+
+    def test_get_question_as_section_missing_question(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "question": "Q0",
+            }]
+        })
+
+        question_section = section.get_question_as_section('q0-slug')
+        assert question_section is None
+
     def test_get_question_ids_filtered_by_type(self):
         section = ContentSection.create({
             "slug": "first_section",
