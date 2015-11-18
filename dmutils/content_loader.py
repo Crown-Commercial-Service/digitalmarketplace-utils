@@ -183,8 +183,8 @@ class ContentSection(object):
         if not question:
             return None
         return ContentSection(
-            slug=question['slug'],
-            name=question['question'],
+            slug=question.slug,
+            name=question.question,
             editable=self.edit_questions,
             edit_questions=False,
             questions=question.questions,
@@ -246,7 +246,7 @@ class ContentSection(object):
         """
         return any([
             any(service.get(key) != update_data[key] for key in update_data),
-            any(question['id'] not in service for question in self.questions)
+            any(question.id not in service for question in self.questions)
         ])
 
     def get_error_messages(self, errors, lot):
@@ -336,7 +336,7 @@ class ContentSection(object):
 
     def get_question_by_slug(self, question_slug):
         for question in self.questions:
-            if question['slug'] == question_slug:
+            if question.get('slug') == question_slug:
                 return question
 
     # Type checking
@@ -349,14 +349,13 @@ class ContentSection(object):
 
 class ContentQuestion(object):
     def __init__(self, data, number=None):
-        self.id = data['id']
-        self.type = data.get('type')
+        self.number = number
+        self._data = data.copy()
+
         if 'questions' in data:
             self.questions = [ContentQuestion(question) for question in data['questions']]
         else:
             self.questions = None
-        self.number = number
-        self.data = data
 
     def summary(self, service_data):
         return ContentQuestionSummary(
@@ -418,29 +417,38 @@ class ContentQuestion(object):
 
     def get_question_ids(self, type=None):
         if self.questions:
-            return [question['id'] for question in self.questions if type in [question.type, None]]
+            return [question.id for question in self.questions if type in [question.type, None]]
         else:
             return [self.id] if type in [self.type, None] else []
 
     def get(self, key, default=None):
         try:
-            return self.__getitem__(key)
-        except KeyError:
-            return default
-
-    def __getitem__(self, key):
-        try:
             return getattr(self, key)
         except AttributeError:
-            return self.data[key]
+            return default
+
+    def __getattr__(self, key):
+        try:
+            return self._data[key]
+        except KeyError:
+            raise AttributeError(key)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __repr__(self):
+        return '<ContentQuestion: number={0.number}, data={0._data}>'.format(self)
 
 
 class ContentQuestionSummary(ContentQuestion):
     def __init__(self, question, service_data):
-        super(ContentQuestionSummary, self).__init__(question.data, question.number)
-        self.service_data = service_data
+        self.number = question.number
+        self._data = question._data
+        self._service_data = service_data
+
+        self.questions = question.questions
         if self.questions:
-            self.questions = [ContentQuestionSummary(q, service_data) for q in self.questions]
+            self.questions = [q.summary(service_data) for q in self.questions]
 
     @property
     def label(self):
@@ -450,7 +458,7 @@ class ContentQuestionSummary(ContentQuestion):
     def value(self):
         if self.questions:
             return self.questions
-        return self.service_data.get(self.id, '')
+        return self._service_data.get(self.id, '')
 
     @property
     def answer_required(self):
