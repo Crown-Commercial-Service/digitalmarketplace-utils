@@ -2,6 +2,7 @@ Digital Marketplace utils
 =========================
 
 [![Coverage Status](https://coveralls.io/repos/alphagov/digitalmarketplace-utils/badge.svg?branch=multiquestion-questions&service=github)](https://coveralls.io/github/alphagov/digitalmarketplace-utils?branch=multiquestion-questions)
+[![Requirements Status](https://requires.io/github/alphagov/digitalmarketplace-utils/requirements.svg?branch=multiquestion-questions)](https://requires.io/github/alphagov/digitalmarketplace-utils/requirements/?branch=multiquestion-questions)
 
 ## What's in here?
 
