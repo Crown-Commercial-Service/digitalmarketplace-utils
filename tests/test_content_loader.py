@@ -38,7 +38,7 @@ class TestContentManifest(object):
 
         content = ContentManifest([section(1), section(2), section(3)])
 
-        assert [section.id for section in content] == [1, 2, 3]
+        assert [s.id for s in content] == [1, 2, 3]
 
     def test_a_question_with_a_dependency(self):
         content = ContentManifest([{
@@ -250,6 +250,38 @@ class TestContentManifest(object):
 
         content = content.filter({"lot": "IaaS"})
         assert content.get_section("first_section") is None
+
+    def test_summary(self):
+        content = ContentManifest([{
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [
+                {
+                    "id": "q1",
+                    "question": 'First question',
+                    "questions": [
+                        {"id": "q2", "type": "text"},
+                        {"id": "q3", "type": "text"}
+                    ]
+                },
+                {"id": "q4", "type": "text", "optional": True},
+                {"id": "q5", "type": "text", "optional": False},
+                {"id": "q6", "type": "text", "optional": False},
+            ]
+        }])
+
+        summary = content.summary({'q2': 'some value', 'q6': 'another value'})
+        assert summary.get_question('q1').value == [
+            summary.get_question('q2'), summary.get_question('q3')
+        ]
+        assert summary.get_question('q1').answer_required
+        assert summary.get_question('q2').value == 'some value'
+        assert not summary.get_question('q2').answer_required
+        assert summary.get_question('q3').answer_required
+        assert summary.get_question('q4').value == ''
+        assert not summary.get_question('q4').answer_required
+        assert summary.get_question('q5').answer_required
+        assert not summary.get_question('q6').answer_required
 
     def test_get_question(self):
         content = ContentManifest([
