@@ -3,6 +3,7 @@ Digital Marketplace utils
 
 ## What's in here?
 
+* Digital Marketplace API clients
 * Formatting utilities for Digital Marketplace
 * Digital Marketplace logging for Flask using JSON Logging
 * Utility functions/libraries for Amazon S3, Mailchimp/Mandrill, Cloudwatch
