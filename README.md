@@ -1,6 +1,15 @@
 Digital Marketplace utils
 =========================
 
+## What's in here?
+
+* Digital Marketplace API clients
+* Formatting utilities for Digital Marketplace
+* Digital Marketplace logging for Flask using JSON Logging
+* Utility functions/libraries for Amazon S3, Mailchimp/Mandrill, Cloudwatch
+* Helper code for Flask configuration
+* A formed version of Flask Feature Flags
+
 ## Using FeatureFlags
 
 Hide not-ready-to-ship features until they're ready.
