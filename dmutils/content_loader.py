@@ -488,8 +488,8 @@ class ContentLoader(object):
     >>> # preload messages
     >>> loader.load_messages('framework-1', ['homepage_sidebar', 'dashboard'])
     >>>
-    >>> # get a builder
-    >>> loader.get_builder('framework-1', 'manifest-1')
+    >>> # get a manifest
+    >>> loader.get_manifest('framework-1', 'manifest-1')
     >>>
     >>> # get a message
     >>> loader.get_message('framework-1', 'homepage_sidebar', 'in_review')
@@ -502,7 +502,7 @@ class ContentLoader(object):
         # A defaultdict that defaults to a defaultdict of dicts
         self._questions = defaultdict(partial(defaultdict, dict))
 
-    def get_builder(self, framework_slug, manifest):
+    def get_manifest(self, framework_slug, manifest):
         try:
             if framework_slug not in self._content:
                 raise KeyError
@@ -511,6 +511,8 @@ class ContentLoader(object):
             raise ContentNotFoundError("Content not found for {} and {}".format(framework_slug, manifest))
 
         return ContentManifest(manifest)
+
+    get_builder = get_manifest  # TODO remove once apps have switched to .get_manifest
 
     def load_manifest(self, framework_slug, question_set, manifest):
         if manifest not in self._content[framework_slug]:

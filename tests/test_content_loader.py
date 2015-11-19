@@ -1238,13 +1238,13 @@ class TestContentLoader(object):
         with pytest.raises(ContentNotFoundError):
             messages.load_messages('not-a-framework', ['index'])
 
-    def test_get_builder(self, read_yaml_mock):
+    def test_get_manifest(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)
 
         yaml_loader = ContentLoader('content/')
         yaml_loader.load_manifest('framework-slug', 'question-set', 'manifest')
 
-        builder = yaml_loader.get_builder('framework-slug', 'manifest')
+        builder = yaml_loader.get_manifest('framework-slug', 'manifest')
         assert isinstance(builder, ContentManifest)
 
         assert [
@@ -1257,12 +1257,12 @@ class TestContentLoader(object):
         yaml_loader = ContentLoader('content/')
         yaml_loader.load_manifest('framework-slug', 'question-set', 'manifest')
 
-        builder1 = yaml_loader.get_builder('framework-slug', 'manifest')
-        builder2 = yaml_loader.get_builder('framework-slug', 'manifest')
+        builder1 = yaml_loader.get_manifest('framework-slug', 'manifest')
+        builder2 = yaml_loader.get_manifest('framework-slug', 'manifest')
 
         assert builder1 != builder2
 
-    def test_get_builder_fails_if_manifest_has_not_been_loaded(self, read_yaml_mock):
+    def test_get_manifest_fails_if_manifest_has_not_been_loaded(self, read_yaml_mock):
         with pytest.raises(ContentNotFoundError):
             yaml_loader = ContentLoader('content/')
-            yaml_loader.get_builder('framework-slug', 'manifest')
+            yaml_loader.get_manifest('framework-slug', 'manifest')
