@@ -353,7 +353,10 @@ class ContentQuestion(object):
         self._data = data.copy()
 
         if 'questions' in data:
-            self.questions = [ContentQuestion(question) for question in data['questions']]
+            self.questions = [
+                question if isinstance(question, ContentQuestion) else ContentQuestion(question)
+                for question in data['questions']
+            ]
         else:
             self.questions = None
 
