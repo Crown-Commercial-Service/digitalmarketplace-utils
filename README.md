@@ -1,6 +1,8 @@
 Digital Marketplace utils
 =========================
 
+[![Coverage Status](https://coveralls.io/repos/alphagov/digitalmarketplace-utils/badge.svg?branch=multiquestion-questions&service=github)](https://coveralls.io/github/alphagov/digitalmarketplace-utils?branch=multiquestion-questions)
+
 ## What's in here?
 
 * Digital Marketplace API clients
