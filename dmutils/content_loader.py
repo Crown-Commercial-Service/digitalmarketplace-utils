@@ -9,12 +9,16 @@ from werkzeug.datastructures import ImmutableMultiDict
 from .config import convert_to_boolean, convert_to_number
 
 
-class ContentBuilder(object):
+class ContentNotFoundError(Exception):
+    pass
+
+
+class ContentManifest(object):
     """An ordered set of sections each made up of one or more questions.
 
     Example::
         # Get hold of a section
-        content = ContentBuilder(sections)
+        content = ContentManifest(sections)
         section = content.get_section(section_id)
 
         # Extract data from form data
@@ -26,10 +30,26 @@ class ContentBuilder(object):
         for section in self.sections:
             for question in section.questions:
                 question_index += 1
-                question['number'] = question_index
+                question.number = question_index
 
     def __iter__(self):
         return self.sections.__iter__()
+
+    def summary(self, service_data):
+        """Create a manifest instance for service summary display
+
+        Return a new :class:`ContentManifest` instance with all
+        questions replaced with :class:`ContentQuestionSummary`.
+
+        :class:`ContentQuestionSummary` instances in addition to
+        question data contain a reference to the service data
+        dictionary and so have additional properties used by the
+        summary tables.
+
+        """
+        return ContentManifest(
+            [section.summary(service_data) for section in self.sections]
+        )
 
     def get_section(self, section_id):
         """Return a section by ID"""
@@ -72,7 +92,7 @@ class ContentBuilder(object):
         return self.get_next_section_id(section_id, True)
 
     def filter(self, service_data):
-        """Return a new :class:`ContentBuilder` filtered by service data
+        """Return a new :class:`ContentManifest` filtered by service data
 
         Only includes the questions that should be shown for the provided
         service data. This is calculated by resolving the dependencies
@@ -82,7 +102,7 @@ class ContentBuilder(object):
             for section in self.sections
         ])
 
-        return ContentBuilder(sections)
+        return ContentManifest(sections)
 
     def _get_section_filtered_by(self, section, service_data):
         section = section.copy()
@@ -110,9 +130,9 @@ class ContentBuilder(object):
                 return False
         return True
 
-    def get_question(self, question_id):
+    def get_question(self, field_name):
         for section in self.sections:
-            question = section.get_question(question_id)
+            question = section.get_question(field_name)
             if question:
                 return question
 
@@ -124,16 +144,19 @@ class ContentSection(object):
             return section.copy()
         else:
             return ContentSection(
-                id=section['id'],
+                slug=section['slug'],
                 name=section['name'],
                 editable=section.get('editable'),
-                questions=section['questions'],
+                edit_questions=section.get('edit_questions'),
+                questions=[ContentQuestion(question) for question in section['questions']],
                 description=section.get('description'))
 
-    def __init__(self, id, name, editable, questions, description=None):
-        self.id = id
+    def __init__(self, slug, name, editable, edit_questions, questions, description=None):
+        self.id = slug  # TODO deprecated, use `.slug` instead
+        self.slug = slug
         self.name = name
         self.editable = editable
+        self.edit_questions = edit_questions
         self.questions = questions
         self.description = description
 
@@ -142,11 +165,31 @@ class ContentSection(object):
 
     def copy(self):
         return ContentSection(
-            id=self.id,
+            slug=self.slug,
             name=self.name,
             editable=self.editable,
+            edit_questions=self.edit_questions,
             questions=self.questions[:],
             description=self.description)
+
+    def summary(self, service_data):
+        summary_section = self.copy()
+        summary_section.questions = [question.summary(service_data) for question in summary_section.questions]
+
+        return summary_section
+
+    def get_question_as_section(self, question_slug):
+        question = self.get_question_by_slug(question_slug)
+        if not question:
+            return None
+        return ContentSection(
+            slug=question.slug,
+            name=question.label,
+            editable=self.edit_questions,
+            edit_questions=False,
+            questions=question.questions,
+            description=question.get('description')
+        )
 
     def get_field_names(self):
         """Return a list of field names that this section returns
@@ -155,21 +198,14 @@ class ContentSection(object):
         by :func:`ContentSection.get_data`. This only affects the pricing question
         that gets expanded into the the pricing fields.
         """
-        question_ids = self.get_question_ids()
-        if self._has_pricing_type():
-            question_ids = [
-                q for q in question_ids if not self._is_pricing_type(q)
-            ] + PRICE_FIELDS
 
-        return question_ids
-
-    def _has_pricing_type(self):
-        return any(self._is_pricing_type(q) for q in self.get_question_ids())
+        return [
+            field for question in self.questions for field in question.fields
+        ]
 
     def get_question_ids(self, type=None):
         return [
-            question['id'] for question in self.questions
-            if type is None or question.get('type') == type
+            field for question in self.questions for field in question.get_question_ids(type)
         ]
 
     def get_data(self, form_data):
@@ -189,32 +225,8 @@ class ContentSection(object):
         form_data = ImmutableMultiDict((k, v.strip()) for k, v in form_data.items(multi=True))
 
         section_data = {}
-        for key in set(form_data) & set(self.get_question_ids()):
-            if self._is_list_type(key):
-                section_data[key] = form_data.getlist(key)
-            elif self._is_boolean_type(key):
-                section_data[key] = convert_to_boolean(form_data[key])
-            elif self._is_numeric_type(key):
-                section_data[key] = convert_to_number(form_data[key])
-            elif self._is_pricing_type(key):
-                section_data.update(expand_pricing_field(form_data.getlist(key)))
-            elif self._is_not_upload(key):
-                section_data[key] = form_data[key]
-
-            if self._has_assurance(key):
-                section_data[key] = {
-                    "value": section_data[key],
-                    "assurance": form_data.get(key + '--assurance'),
-                }
-
-        # Check for assurance answers in the form data with no associated question
-        for key in set(form_data):
-            if key.endswith('--assurance'):
-                root_key = key[:-11]
-                if root_key in set(self.get_question_ids()) and root_key not in section_data:
-                    section_data[root_key] = {
-                        "assurance": form_data.get(key),
-                    }
+        for question in self.questions:
+            section_data.update(question.get_data(form_data))
 
         return section_data
 
@@ -234,7 +246,7 @@ class ContentSection(object):
         """
         return any([
             any(service.get(key) != update_data[key] for key in update_data),
-            any(question['id'] not in service for question in self.questions)
+            any(question.id not in service for question in self.questions)
         ])
 
     def get_error_messages(self, errors, lot):
@@ -314,39 +326,20 @@ class ContentSection(object):
                 result[key] = data[key]
         return result
 
-    def get_question(self, question_id):
+    def get_question(self, field_name):
         """Return a question dictionary by question ID"""
-        # TODO: investigate how this would work as get by form field name
+
         for question in self.questions:
-            if question['id'] == question_id:
+            field_question = question.get_question(field_name)
+            if field_question:
+                return field_question
+
+    def get_question_by_slug(self, question_slug):
+        for question in self.questions:
+            if question.get('slug') == question_slug:
                 return question
 
     # Type checking
-
-    def _is_type(self, key, *types):
-        """Return True if a given key is one of the provided types"""
-        question = self.get_question(key)
-        return question and question.get('type') in types
-
-    def _is_list_type(self, key):
-        """Return True if a given key is a list type"""
-        return key == 'serviceTypes' or self._is_type(key, 'list', 'checkboxes')
-
-    def _is_not_upload(self, key):
-        """Return True if a given key is not a file upload"""
-        return not self._is_type(key, 'upload')
-
-    def _is_boolean_type(self, key):
-        """Return True if a given key is a boolean type"""
-        return self._is_type(key, 'boolean')
-
-    def _is_numeric_type(self, key):
-        """Return True if a given key is a numeric type"""
-        return self._is_type(key, 'percentage')
-
-    def _is_pricing_type(self, key):
-        """Return True if a given key is a pricing type"""
-        return self._is_type(key, 'pricing')
 
     def _has_assurance(self, key):
         """Return True if a question has an assurance component"""
@@ -354,28 +347,153 @@ class ContentSection(object):
         return bool(question) and question.get('assuranceApproach', False)
 
 
-class ContentNotFoundError(Exception):
-    pass
+class ContentQuestion(object):
+    def __init__(self, data, number=None):
+        self.number = number
+        self._data = data.copy()
+
+        if 'questions' in data:
+            self.questions = [
+                question if isinstance(question, ContentQuestion) else ContentQuestion(question)
+                for question in data['questions']
+            ]
+        else:
+            self.questions = None
+
+    def summary(self, service_data):
+        return ContentQuestionSummary(
+            self, service_data
+        )
+
+    def get_question(self, field_name):
+        if self.id == field_name:
+            return self
+        elif self.questions:
+            return next(
+                (question for question in self.questions if question.id == field_name),
+                None
+            )
+
+    def get_data(self, form_data):
+        if self.id in form_data and self.type == 'pricing':
+            return expand_pricing_field(form_data.getlist(self.id))
+        elif self.questions:
+            questions_data = {}
+            for question in self.questions:
+                questions_data.update(question.get_data(form_data))
+            return questions_data
+        else:
+            return self._get_single_question_data(form_data)
+
+    def _get_single_question_data(self, form_data):
+        if self.id not in form_data:
+            if self.get('assuranceApproach') and '{}--assurance'.format(self.id) in form_data:
+                return {self.id: {'assurance': form_data.get('{}--assurance'.format(self.id))}}
+            else:
+                return {}
+
+        if self.id == 'serviceTypes' or self.type in ['list', 'checkboxes']:
+            value = form_data.getlist(self.id)
+        elif self.type == 'boolean':
+            value = convert_to_boolean(form_data[self.id])
+        elif self.type == 'percentage':
+            value = convert_to_number(form_data[self.id])
+        elif self.type != 'upload':
+            value = form_data[self.id]
+        else:
+            return {}
+
+        if self.get('assuranceApproach'):
+            value = {
+                "value": value,
+                "assurance": form_data.get(self.id + '--assurance'),
+            }
+
+        return {self.id: value}
+
+    @property
+    def label(self):
+        return self.get('name') or self.question
+
+    @property
+    def fields(self):
+        if self.type == 'pricing':
+            return PRICE_FIELDS
+        else:
+            return self.get_question_ids()
+
+    def get_question_ids(self, type=None):
+        if self.questions:
+            return [question.id for question in self.questions if type in [question.type, None]]
+        else:
+            return [self.id] if type in [self.type, None] else []
+
+    def get(self, key, default=None):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            return default
+
+    def __getattr__(self, key):
+        try:
+            return self._data[key]
+        except KeyError:
+            raise AttributeError(key)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __repr__(self):
+        return '<ContentQuestion: number={0.number}, data={0._data}>'.format(self)
+
+
+class ContentQuestionSummary(ContentQuestion):
+    def __init__(self, question, service_data):
+        self.number = question.number
+        self._data = question._data
+        self._service_data = service_data
+
+        self.questions = question.questions
+        if self.questions:
+            self.questions = [q.summary(service_data) for q in self.questions]
+
+    @property
+    def value(self):
+        if self.questions:
+            return self.questions
+        return self._service_data.get(self.id, '')
+
+    @property
+    def answer_required(self):
+        if self.questions:
+            return any(question.answer_required for question in self.questions)
+        if self.value in ['', [], None]:
+            if not self.get('optional'):
+                return True
+        else:
+            return False
 
 
 class ContentLoader(object):
-    """
+    """Load the frameworks content files
+
     Usage:
     >>> loader = ContentLoader('path/to/digitalmarketplace-frameworks')
     >>> # pre-load manifests
-    >>> loader.load_manifest('framework-1', 'manifest-1', 'question-set-1')
-    >>> loader.load_manifest('framework-1', 'manifest-2', 'question-set-1')
-    >>> loader.load_manifest('framework-1', 'manifest-3', 'question-set-2')
-    >>> loader.load_manifest('framework-2', 'manifest-1', 'question-set-1')
+    >>> loader.load_manifest('framework-1', 'question-set-1', 'manifest-1')
+    >>> loader.load_manifest('framework-1', 'question-set-1', 'manifest-2')
+    >>> loader.load_manifest('framework-1', 'question-set-2', 'manifest-3')
+    >>> loader.load_manifest('framework-2', 'question-set-1', 'manifest-1')
     >>>
     >>> # preload messages
     >>> loader.load_messages('framework-1', ['homepage_sidebar', 'dashboard'])
     >>>
-    >>> # get a builder
-    >>> loader.get_builder('framework-1', 'manifest-1')
+    >>> # get a manifest
+    >>> loader.get_manifest('framework-1', 'manifest-1')
     >>>
     >>> # get a message
     >>> loader.get_message('framework-1', 'homepage_sidebar', 'in_review')
+
     """
     def __init__(self, content_path):
         self.content_path = content_path
@@ -384,13 +502,17 @@ class ContentLoader(object):
         # A defaultdict that defaults to a defaultdict of dicts
         self._questions = defaultdict(partial(defaultdict, dict))
 
-    def get_builder(self, framework_slug, manifest):
+    def get_manifest(self, framework_slug, manifest):
         try:
             if framework_slug not in self._content:
                 raise KeyError
-            return ContentBuilder(self._content[framework_slug][manifest])
+            manifest = self._content[framework_slug][manifest]
         except KeyError:
             raise ContentNotFoundError("Content not found for {} and {}".format(framework_slug, manifest))
+
+        return ContentManifest(manifest)
+
+    get_builder = get_manifest  # TODO remove once apps have switched to .get_manifest
 
     def load_manifest(self, framework_slug, question_set, manifest):
         if manifest not in self._content[framework_slug]:
@@ -401,7 +523,7 @@ class ContentLoader(object):
                 raise ContentNotFoundError("No manifest at {}".format(manifest_path))
 
             self._content[framework_slug][manifest] = [
-                self._populate_section(framework_slug, question_set, section) for section in manifest_sections
+                self._load_nested_questions(framework_slug, question_set, section) for section in manifest_sections
             ]
 
         return self._content[framework_slug][manifest]
@@ -418,15 +540,16 @@ class ContentLoader(object):
         if not self._has_question(framework_slug, question_set, question):
             try:
                 questions_path = self._questions_path(framework_slug, question_set)
-                self._questions[framework_slug][question_set][question] = _load_question(question, questions_path)
+                self._questions[framework_slug][question_set][question] = self._load_nested_questions(
+                    framework_slug, question_set,
+                    _load_question(question, questions_path)
+                )
             except IOError:
                 raise ContentNotFoundError("No question {} at {}".format(question, questions_path))
 
         return self._questions[framework_slug][question_set][question].copy()
 
-    def get_message(
-        self, framework_slug, block, framework_status, supplier_status=None
-    ):
+    def get_message(self, framework_slug, block, framework_status, supplier_status=None):
         if block not in self._messages[framework_slug]:
             raise ContentNotFoundError(
                 "Message file at {} not loaded".format(self._message_path(framework_slug, block))
@@ -436,9 +559,7 @@ class ContentLoader(object):
             self._message_key(framework_status, supplier_status), None
         )
 
-    def load_messages(
-        self, framework_slug, blocks
-    ):
+    def load_messages(self, framework_slug, blocks):
         if not isinstance(blocks, list):
             raise TypeError('Content blocks must be a list')
 
@@ -464,16 +585,17 @@ class ContentLoader(object):
     def _message_path(self, framework_slug, message):
         return os.path.join(self._root_path(framework_slug), 'messages', '{}.yml'.format(message))
 
-    def _populate_section(self, framework_slug, question_set, section):
-        section['id'] = _make_section_id(section['name'])
-        section['questions'] = [
-            self.get_question(framework_slug, question_set, question) for question in section['questions']
-        ]
-        return section
+    def _load_nested_questions(self, framework_slug, question_set, section_or_question):
+        if 'questions' in section_or_question:
+            section_or_question['questions'] = [
+                self.get_question(framework_slug, question_set, question)
+                for question in section_or_question['questions']
+            ]
+            section_or_question['slug'] = _make_slug(section_or_question['name'])
 
-    def _message_key(
-        self, framework_status, supplier_status
-    ):
+        return section_or_question
+
+    def _message_key(self, framework_status, supplier_status):
         return '{}{}'.format(
             framework_status,
             '-{}'.format(supplier_status) if supplier_status else ''
@@ -496,16 +618,16 @@ def _load_question(question, directory):
     question_content = read_yaml(
         os.path.join(directory, '{}.yml'.format(question))
     )
-    if question_content:
-        question_content["id"] = _make_question_id(question)
+
+    question_content["id"] = _make_question_id(question)
 
     return question_content
 
 
-def _make_section_id(name):
+def _make_slug(name):
     return inflection.underscore(
         re.sub(r"\s", "_", name)
-    )
+    ).replace('_', '-')
 
 
 def _make_question_id(question):

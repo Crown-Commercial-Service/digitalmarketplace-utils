@@ -6,7 +6,7 @@ import pytest
 
 import io
 
-from dmutils.content_loader import ContentLoader, ContentSection, ContentBuilder, read_yaml, ContentNotFoundError
+from dmutils.content_loader import ContentLoader, ContentSection, ContentManifest, read_yaml, ContentNotFoundError
 
 from sys import version_info
 if version_info.major == 2:
@@ -15,15 +15,15 @@ else:
     import builtins
 
 
-class TestContentBuilder(object):
+class TestContentManifest(object):
     def test_content_builder_init(self):
-        content = ContentBuilder([])
+        content = ContentManifest([])
 
         assert content.sections == []
 
     def test_content_builder_init_copies_section_list(self):
         sections = []
-        content = ContentBuilder(sections)
+        content = ContentManifest(sections)
 
         sections.append('new')
         assert content.sections == []
@@ -31,18 +31,18 @@ class TestContentBuilder(object):
     def test_content_builder_iteration(self):
         def section(id):
             return {
-                'id': id,
+                'slug': id,
                 'name': 'name',
                 'questions': []
             }
 
-        content = ContentBuilder([section(1), section(2), section(3)])
+        content = ContentManifest([section(1), section(2), section(3)])
 
-        assert [section.id for section in content] == [1, 2, 3]
+        assert [s.id for s in content] == [1, 2, 3]
 
     def test_a_question_with_a_dependency(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -57,8 +57,8 @@ class TestContentBuilder(object):
         assert len(content.sections) == 1
 
     def test_missing_depends_key_filter(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -73,8 +73,8 @@ class TestContentBuilder(object):
         assert len(content.sections) == 0
 
     def test_question_without_dependencies(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -85,8 +85,8 @@ class TestContentBuilder(object):
         assert len(content.sections) == 1
 
     def test_a_question_with_a_dependency_that_doesnt_match(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -101,8 +101,8 @@ class TestContentBuilder(object):
         assert len(content.sections) == 0
 
     def test_a_question_which_depends_on_one_of_several_answers(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -119,8 +119,8 @@ class TestContentBuilder(object):
         assert len(content.filter({"lot": "SCS"}).sections) == 1
 
     def test_a_question_which_shouldnt_be_shown(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -135,8 +135,8 @@ class TestContentBuilder(object):
         assert len(content.filter({"lot": "IaaS"}).sections) == 0
 
     def test_a_section_which_has_a_mixture_of_dependencies(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -161,8 +161,8 @@ class TestContentBuilder(object):
         assert len(content.sections) == 1
 
     def test_section_modification(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -190,8 +190,8 @@ class TestContentBuilder(object):
         assert len(content2.sections[0]["questions"]) == 1
 
     def test_that_filtering_is_cumulative(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -231,8 +231,8 @@ class TestContentBuilder(object):
         assert len(content.sections) == 0
 
     def test_get_section(self):
-        content = ContentBuilder([{
-            "id": "first_section",
+        content = ContentManifest([{
+            "slug": "first_section",
             "name": "First section",
             "questions": [
                 {
@@ -251,10 +251,42 @@ class TestContentBuilder(object):
         content = content.filter({"lot": "IaaS"})
         assert content.get_section("first_section") is None
 
+    def test_summary(self):
+        content = ContentManifest([{
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [
+                {
+                    "id": "q1",
+                    "question": 'First question',
+                    "questions": [
+                        {"id": "q2", "type": "text"},
+                        {"id": "q3", "type": "text"}
+                    ]
+                },
+                {"id": "q4", "type": "text", "optional": True},
+                {"id": "q5", "type": "text", "optional": False},
+                {"id": "q6", "type": "text", "optional": False},
+            ]
+        }])
+
+        summary = content.summary({'q2': 'some value', 'q6': 'another value'})
+        assert summary.get_question('q1').value == [
+            summary.get_question('q2'), summary.get_question('q3')
+        ]
+        assert summary.get_question('q1').answer_required
+        assert summary.get_question('q2').value == 'some value'
+        assert not summary.get_question('q2').answer_required
+        assert summary.get_question('q3').answer_required
+        assert summary.get_question('q4').value == ''
+        assert not summary.get_question('q4').answer_required
+        assert summary.get_question('q5').answer_required
+        assert not summary.get_question('q6').answer_required
+
     def test_get_question(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -266,7 +298,7 @@ class TestContentBuilder(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [{
                     "id": "q2",
@@ -278,7 +310,7 @@ class TestContentBuilder(object):
                 }]
             },
             {
-                "id": "third_section",
+                "slug": "third_section",
                 "name": "Third section",
                 "editable": True,
                 "questions": [{
@@ -298,9 +330,9 @@ class TestContentBuilder(object):
         assert content.get_question('q1') is None
 
     def test_get_next_section(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -312,7 +344,7 @@ class TestContentBuilder(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [{
                     "id": "q2",
@@ -324,7 +356,7 @@ class TestContentBuilder(object):
                 }]
             },
             {
-                "id": "third_section",
+                "slug": "third_section",
                 "name": "Third section",
                 "editable": True,
                 "questions": [{
@@ -348,9 +380,9 @@ class TestContentBuilder(object):
             "second_section") == "third_section"
 
     def test_get_all_data(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -359,7 +391,7 @@ class TestContentBuilder(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [{
                     "id": "q2",
@@ -368,7 +400,7 @@ class TestContentBuilder(object):
                 }]
             },
             {
-                "id": "third_section",
+                "slug": "third_section",
                 "name": "Third section",
                 "questions": [{
                     "id": "q3",
@@ -393,9 +425,9 @@ class TestContentBuilder(object):
         }
 
     def test_question_numbering(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [
                     {
@@ -411,7 +443,7 @@ class TestContentBuilder(object):
                 ]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [
                     {
@@ -428,9 +460,9 @@ class TestContentBuilder(object):
         assert content.get_question("q3")['number'] == 3
 
     def test_question_numbers_respect_filtering(self):
-        content = ContentBuilder([
+        content = ContentManifest([
             {
-                "id": "first_section",
+                "slug": "first_section",
                 "name": "First section",
                 "questions": [{
                     "id": "q1",
@@ -442,7 +474,7 @@ class TestContentBuilder(object):
                 }]
             },
             {
-                "id": "second_section",
+                "slug": "second_section",
                 "name": "Second section",
                 "questions": [
                     {
@@ -473,7 +505,7 @@ class TestContentBuilder(object):
 class TestContentSection(object):
     def test_get_question_ids(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -487,9 +519,72 @@ class TestContentSection(object):
         })
         assert section.get_question_ids() == ['q1', 'q2']
 
+    def test_get_multiquestion_ids(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "question": "Boolean question",
+                "type": "Boolean question",
+                "questions": [
+                    {
+                        "id": "q2",
+                        "type": "text"
+                    },
+                    {
+                        "id": "q3",
+                        "type": "text"
+                    }
+                ]
+            }]
+        })
+        assert section.get_question_ids() == ['q2', 'q3']
+
+    def test_get_question_as_section(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "edit_questions": False,
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "slug": "q0-slug",
+                "question": "Q0",
+                "type": "multiquestion",
+                "questions": [
+                    {
+                        "id": "q2",
+                        "type": "text"
+                    },
+                    {
+                        "id": "q3",
+                        "type": "text"
+                    }
+                ]
+            }]
+        })
+
+        question_section = section.get_question_as_section('q0-slug')
+        assert question_section.name == "Q0"
+        assert question_section.editable == section.edit_questions
+        assert question_section.get_question_ids() == ['q2', 'q3']
+
+    def test_get_question_as_section_missing_question(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "question": "Q0",
+            }]
+        })
+
+        question_section = section.get_question_as_section('q0-slug')
+        assert question_section is None
+
     def test_get_question_ids_filtered_by_type(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -505,9 +600,15 @@ class TestContentSection(object):
 
     def test_get_data(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
+                "id": "q0",
+                "questions": [
+                    {"id": "q01", "type": "text"},
+                    {"id": "q02", "type": "radios"}
+                ]
+            }, {
                 "id": "q1",
                 "question": "Boolean question",
                 "type": "boolean",
@@ -557,6 +658,7 @@ class TestContentSection(object):
 
         form = ImmutableMultiDict([
             ('q1', 'true'),
+            ('q01', 'some nested question'),
             ('q2', 'Some text stuff'),
             ('q3', 'value'),
             ('q3', 'Should be lost'),
@@ -580,6 +682,7 @@ class TestContentSection(object):
         data = section.get_data(form)
 
         assert data == {
+            'q01': 'some nested question',
             'q1': True,
             'q2': 'Some text stuff',
             'q3': 'value',
@@ -623,9 +726,15 @@ class TestContentSection(object):
 
     def test_unformat_data(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
+                "id": "q0",
+                "questions": [
+                    {"id": "q01", "type": "text"},
+                    {"id": "q02", "type": "radios"}
+                ]
+            }, {
                 "id": "q1",
                 "question": "Boolean question",
                 "type": "boolean",
@@ -674,6 +783,7 @@ class TestContentSection(object):
         })
 
         data = {
+            'q01': 'q01 value',
             'q1': True,
             'q2': 'Some text stuff',
             'q3': 'value',
@@ -691,6 +801,7 @@ class TestContentSection(object):
         form = section.unformat_data(data)
 
         assert form == {
+            'q01': 'q01 value',
             'q1': True,
             'q2': 'Some text stuff',
             'q3': 'value',
@@ -708,7 +819,7 @@ class TestContentSection(object):
 
     def test_get_question(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -724,7 +835,7 @@ class TestContentSection(object):
 
     def test_get_field_names_with_pricing_question(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
@@ -737,7 +848,7 @@ class TestContentSection(object):
 
     def test_get_field_names_with_no_pricing_question(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -750,7 +861,7 @@ class TestContentSection(object):
 
     def test_has_changes_to_save_no_changes(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -762,7 +873,7 @@ class TestContentSection(object):
 
     def test_hash_changes_to_save_field_different(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -774,7 +885,7 @@ class TestContentSection(object):
 
     def test_has_changes_to_save_field_not_set_on_service(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -786,7 +897,7 @@ class TestContentSection(object):
 
     def test_get_error_message(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -802,7 +913,7 @@ class TestContentSection(object):
 
     def test_get_error_message_returns_default(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -818,7 +929,7 @@ class TestContentSection(object):
 
     def test_get_error_messages(self):
         section = ContentSection.create({
-            "id": "second_section",
+            "slug": "second_section",
             "name": "Second section",
             "questions": [{
                 "id": "q2",
@@ -867,7 +978,7 @@ class TestContentSection(object):
 
     def test_section_description(self):
         section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [],
             "description": "This is the first section"
@@ -927,7 +1038,7 @@ class TestContentLoader(object):
                      'name': 'question1', 'id': 'question1'},
                     {'depends': [{'being': 'SaaS', 'on': 'lot'}],
                      'name': 'question2', 'id': 'question2'}],
-                'id': 'section1'}
+                'slug': 'section1'}
         ]
         read_yaml_mock.assert_has_calls([
             mock.call('content/frameworks/framework-slug/manifests/my-manifest.yml'),
@@ -965,6 +1076,23 @@ class TestContentLoader(object):
         }
         read_yaml_mock.assert_called_with(
             'content/frameworks/framework-slug/questions/question-set/question1.yml')
+
+    def test_get_question_loads_nested_questions(self, read_yaml_mock):
+        read_yaml_mock.side_effect = [
+            {"name": "question1", "type": "multiquestion", "questions": ["question10", "question20"]},
+            {"name": "question10", "type": "text"},
+            {"name": "question20", "type": "checkboxes"},
+        ]
+
+        yaml_loader = ContentLoader('content/')
+
+        assert yaml_loader.get_question('framework-slug', 'question-set', 'question1')
+
+        read_yaml_mock.assert_has_calls([
+            mock.call('content/frameworks/framework-slug/questions/question-set/question1.yml'),
+            mock.call('content/frameworks/framework-slug/questions/question-set/question10.yml'),
+            mock.call('content/frameworks/framework-slug/questions/question-set/question20.yml'),
+        ])
 
     def test_get_question_fails_if_question_cannot_be_read(self, read_yaml_mock):
         read_yaml_mock.side_effect = IOError
@@ -1110,14 +1238,14 @@ class TestContentLoader(object):
         with pytest.raises(ContentNotFoundError):
             messages.load_messages('not-a-framework', ['index'])
 
-    def test_get_builder(self, read_yaml_mock):
+    def test_get_manifest(self, read_yaml_mock):
         self.set_read_yaml_mock_response(read_yaml_mock)
 
         yaml_loader = ContentLoader('content/')
         yaml_loader.load_manifest('framework-slug', 'question-set', 'manifest')
 
-        builder = yaml_loader.get_builder('framework-slug', 'manifest')
-        assert isinstance(builder, ContentBuilder)
+        builder = yaml_loader.get_manifest('framework-slug', 'manifest')
+        assert isinstance(builder, ContentManifest)
 
         assert [
             section.id for section in builder.sections
@@ -1129,12 +1257,12 @@ class TestContentLoader(object):
         yaml_loader = ContentLoader('content/')
         yaml_loader.load_manifest('framework-slug', 'question-set', 'manifest')
 
-        builder1 = yaml_loader.get_builder('framework-slug', 'manifest')
-        builder2 = yaml_loader.get_builder('framework-slug', 'manifest')
+        builder1 = yaml_loader.get_manifest('framework-slug', 'manifest')
+        builder2 = yaml_loader.get_manifest('framework-slug', 'manifest')
 
         assert builder1 != builder2
 
-    def test_get_builder_fails_if_manifest_has_not_been_loaded(self, read_yaml_mock):
+    def test_get_manifest_fails_if_manifest_has_not_been_loaded(self, read_yaml_mock):
         with pytest.raises(ContentNotFoundError):
             yaml_loader = ContentLoader('content/')
-            yaml_loader.get_builder('framework-slug', 'manifest')
+            yaml_loader.get_manifest('framework-slug', 'manifest')

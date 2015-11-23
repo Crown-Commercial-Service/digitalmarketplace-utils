@@ -203,7 +203,7 @@ class TestUploadDocument(unittest.TestCase):
 class TestUploadServiceDocuments(object):
     def setup(self):
         self.section = ContentSection.create({
-            "id": "first_section",
+            "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "pricingDocumentURL",

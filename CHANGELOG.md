@@ -2,6 +2,36 @@
 
 Records breaking changes from major version bumps
 
+## 14.0.0
+
+PR: [#211](https://github.com/alphagov/digitalmarketplace-utils/pull/211)
+
+### What changed
+
+Breaking changes:
+* `ContentSection.id` used in edit section URLs now uses dashes instead of underscores.
+
+Non-breaking changes:
+* `ContentBuilder` class renamed to `ContentManifest`
+* `.get_builder` is renamed to `.get_manifest`, but the old name is kept as an alias to give
+  frontend apps time to update
+* Question fields can be now accessed as attributes of `ContentQuestion`
+* `service_attribute` is being replaced by `ContetManifest.summary` and `ContentQuestionSummary`
+
+### Example app change
+
+Test URLs referencing section IDs need to be updated:
+
+Old
+```
+res = self.client.get('/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
+```
+
+New
+```
+res = self.client.get('/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
+```
+
 ## 13.0.0
 
 PR: [#203](https://github.com/alphagov/digitalmarketplace-utils/pull/203)
