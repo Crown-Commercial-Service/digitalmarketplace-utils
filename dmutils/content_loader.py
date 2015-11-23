@@ -200,12 +200,12 @@ class ContentSection(object):
         """
 
         return [
-            field for question in self.questions for field in question.fields
+            form_field for question in self.questions for form_field in question.form_fields
         ]
 
     def get_question_ids(self, type=None):
         return [
-            field for question in self.questions for field in question.get_question_ids(type)
+            form_field for question in self.questions for form_field in question.get_question_ids(type)
         ]
 
     def get_data(self, form_data):
@@ -416,7 +416,7 @@ class ContentQuestion(object):
         return self.get('name') or self.question
 
     @property
-    def fields(self):
+    def form_fields(self):
         if self.type == 'pricing':
             return PRICE_FIELDS
         else:
