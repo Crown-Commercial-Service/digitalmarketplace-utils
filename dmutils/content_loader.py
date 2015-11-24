@@ -253,7 +253,7 @@ class ContentSection(object):
         """
         return any([
             any(service.get(key) != update_data[key] for key in update_data),
-            any(question.id not in service for question in self.questions)
+            any(form_field not in service for form_field in self.get_field_names())
         ])
 
     def get_error_messages(self, errors, lot):
