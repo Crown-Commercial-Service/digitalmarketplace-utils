@@ -10,6 +10,7 @@ from itertools import chain
 from werkzeug.datastructures import ImmutableMultiDict
 
 from .config import convert_to_boolean, convert_to_number
+from .formats import format_price
 
 
 class ContentNotFoundError(Exception):
@@ -489,6 +490,13 @@ class ContentQuestionSummary(ContentQuestion):
     def value(self):
         if self.questions:
             return self.questions
+        if self.type == "pricing":
+            return format_price(
+                self._service_data.get(self.fields.get('minimum_price')),
+                self._service_data.get(self.fields.get('maximum_price')),
+                self._service_data.get(self.fields.get('price_unit')),
+                self._service_data.get(self.fields.get('price_interval')),
+            )
         return self._service_data.get(self.id, '')
 
     @property
