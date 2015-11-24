@@ -887,7 +887,8 @@ class TestContentSection(object):
                 "type": "pricing",
             }]
         })
-        assert section.get_field_names() == ["q1"]
+        with pytest.raises(AssertionError):
+            section.get_field_names()
 
     def test_get_field_names_with_good_pricing_question(self):
         section = ContentSection.create({

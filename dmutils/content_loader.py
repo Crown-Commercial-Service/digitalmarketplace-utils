@@ -206,8 +206,6 @@ class ContentSection(object):
         This list of field names corresponds to the keys of the data returned
         by :func:`ContentSection.get_data`.
         """
-        return list(self.get_valid_params())
-
         return [
             form_field for question in self.questions for form_field in question.form_fields
         ]
@@ -217,15 +215,6 @@ class ContentSection(object):
         return [
             form_field for question in self.questions for form_field in question.get_question_ids(type)
         ]
-
-    def get_valid_params(self):
-        valid_params = set(self.get_question_ids())
-        for question in self.questions:
-            # if the question has fields, swap the id out for them as a valid param
-            if question.get('fields'):
-                valid_params.update(question.get('fields').values())
-                valid_params.remove(question.get('id'))
-        return valid_params
 
     def get_data(self, form_data):
         """Extract data for a section from a submitted form
