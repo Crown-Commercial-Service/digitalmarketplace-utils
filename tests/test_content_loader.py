@@ -329,6 +329,42 @@ class TestContentManifest(object):
         content = content.filter({'lot': 'IaaS'})
         assert content.get_question('q1') is None
 
+    def test_get_question_by_slug(self):
+        content = ContentManifest([
+            {
+                "slug": "first_section",
+                "name": "First section",
+                "questions": [{
+                    "id": "q1",
+                    "type": "multiquestion",
+                    "question": 'Section one question',
+                    "slug": "section-one-question",
+                    "questions": [{"id": "sec1One"}, {"id": "sec1Two"}],
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["digital-specialists"]
+                    }]
+                }]
+            },
+            {
+                "slug": "second_section",
+                "name": "Second section",
+                "questions": [{
+                    "id": "q2",
+                    "type": "multiquestion",
+                    "question": 'Section two question',
+                    "slug": "section-two-question",
+                    "questions": [{"id": "sec2One"}, {"id": "sec2Two"}],
+                    "depends": [{
+                        "on": "lot",
+                        "being": ["digital-specialists"]
+                    }]
+                }]
+            }
+        ])
+
+        assert content.get_question_by_slug('section-two-question').get('id') == 'q2'
+
     def test_get_next_section(self):
         content = ContentManifest([
             {
