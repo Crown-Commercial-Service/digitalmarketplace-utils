@@ -789,6 +789,8 @@ class TestContentSection(object):
         ])
         data = section.get_data(form)
         assert data == {
+            'q4': [],
+            'q5': [],
             'q6': {'assurance': 'yes I am'},
         }
 
