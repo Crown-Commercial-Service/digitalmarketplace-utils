@@ -483,6 +483,7 @@ class ContentQuestionSummary(ContentQuestion):
         self.questions = question.questions
         if self.questions:
             self.questions = [q.summary(service_data) for q in self.questions]
+        self.fields = question.fields
 
     @property
     def value(self):
@@ -494,7 +495,11 @@ class ContentQuestionSummary(ContentQuestion):
     def answer_required(self):
         if self.questions:
             return any(question.answer_required for question in self.questions)
-        if self.value in ['', [], None]:
+        elif self.fields:
+            return any(
+                self._service_data.get(field_name) in ['', [], None]
+                for field_name in self.required_form_fields)
+        elif self.value in ['', [], None]:
             if not self.get('optional'):
                 return True
         else:

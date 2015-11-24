@@ -270,10 +270,32 @@ class TestContentManifest(object):
                 {"id": "q4", "type": "text", "optional": True},
                 {"id": "q5", "type": "text", "optional": False},
                 {"id": "q6", "type": "text", "optional": False},
+                {
+                    "id": "q7",
+                    "type": "pricing",
+                    "fields": {
+                        "minimum_price": "q7.min",
+                        "maximum_price": "q7.max",
+                    },
+                    "optional_fields": [
+                        "maximum_price"
+                    ]
+                },
+                {
+                    "id": "q8",
+                    "type": "pricing",
+                    "fields": {
+                        "minimum_price": "q8.min",
+                        "maximum_price": "q8.max",
+                    },
+                    "optional_fields": [
+                        "maximum_price"
+                    ]
+                }
             ]
         }])
 
-        summary = content.summary({'q2': 'some value', 'q6': 'another value'})
+        summary = content.summary({'q2': 'some value', 'q6': 'another value', 'q7.min': '10'})
         assert summary.get_question('q1').value == [
             summary.get_question('q2'), summary.get_question('q3')
         ]
@@ -285,6 +307,8 @@ class TestContentManifest(object):
         assert not summary.get_question('q4').answer_required
         assert summary.get_question('q5').answer_required
         assert not summary.get_question('q6').answer_required
+        assert not summary.get_question('q7').answer_required
+        assert summary.get_question('q8').answer_required
 
     def test_get_question(self):
         content = ContentManifest([
