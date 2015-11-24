@@ -274,7 +274,7 @@ class ContentSection(object):
 
             errors_map[error_key] = {
                 'input_name': field_name,
-                'question': question['question'],
+                'question': question.label,
                 'message': validation_message,
             }
         return errors_map

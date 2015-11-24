@@ -1043,6 +1043,7 @@ class TestContentSection(object):
             "questions": [{
                 "id": "q2",
                 "question": "Second question",
+                "name": "second",
                 "type": "text",
                 "validations": [
                     {'name': 'the_error', 'message': 'This is the error message'},
@@ -1089,6 +1090,7 @@ class TestContentSection(object):
 
         assert result['priceString']['message'] == "No min price"
         assert result['q2']['message'] == "This is the error message"
+        assert result['q2']['question'] == "second"
         assert result['q3--assurance']['message'] == "There there, it'll be ok."
         assert result['serviceTypes']['message'] == "This is the error message"
 
