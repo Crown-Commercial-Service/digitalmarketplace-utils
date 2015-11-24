@@ -359,11 +359,11 @@ class ContentQuestion(object):
 
     def get_data(self, form_data):
         if self.get('fields'):
-            fields = self.get('fields')
-            questions_data = {}
-            for key in set(fields.values()) & set(form_data):
-                questions_data[key] = form_data[key]
-            return questions_data
+            return {
+                key: form_data[key]
+                for key in self['fields'].values()
+                if key in form_data
+            }
         elif self.questions:
             questions_data = {}
             for question in self.questions:
