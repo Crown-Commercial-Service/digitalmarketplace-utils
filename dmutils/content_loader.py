@@ -511,13 +511,12 @@ class ContentQuestionSummary(ContentQuestion):
 
     @property
     def answer_required(self):
-        if self.questions:
-            return any(question.answer_required for question in self.questions)
-        elif self.value in ['', [], None]:
-            if not self.get('optional'):
-                return True
-        else:
+        if self.get('optional'):
             return False
+        elif self.questions:
+            return any(question.answer_required for question in self.questions)
+        else:
+            return self.is_empty
 
 
 class ContentLoader(object):

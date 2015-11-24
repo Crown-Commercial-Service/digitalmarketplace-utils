@@ -292,7 +292,16 @@ class TestContentManifest(object):
                     "optional_fields": [
                         "maximum_price"
                     ]
-                }
+                },
+                {
+                    "id": "q9",
+                    "question": 'Never required question',
+                    "optional": True,
+                    "questions": [
+                        {"id": "q71", "type": "text"},
+                        {"id": "q72", "type": "text"}
+                    ]
+                },
             ]
         }])
 
@@ -315,6 +324,7 @@ class TestContentManifest(object):
         assert summary.get_question('q7').value == u'£10 per day'
         assert not summary.get_question('q7').answer_required
         assert summary.get_question('q8').answer_required
+        assert not summary.get_question('q9').answer_required
 
     def test_get_question(self):
         content = ContentManifest([
