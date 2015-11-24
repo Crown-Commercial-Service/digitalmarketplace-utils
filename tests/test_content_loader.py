@@ -673,6 +673,12 @@ class TestContentSection(object):
                 "id": "q7",
                 "question": "Pricing question",
                 "type": "pricing",
+                "fields": {
+                    "minimum_price": "q7-min_price",
+                    "maximum_price": "q7-max_price",
+                    "price_unit": "q7-price_unit",
+                    "price_interval": "q7-price_interval"
+                }
             }, {
                 "id": "q8",
                 "question": "Upload question",
@@ -704,10 +710,10 @@ class TestContentSection(object):
             ('q5', 'check 2'),
             ('q6', '71234567890'),
             ('q6--assurance', 'yes I am'),
-            ('q7', '12.12'),
-            ('q7', '13.13'),
-            ('q7', 'Unit'),
-            ('q7', 'Hour'),
+            ('q7-min_price', '12.12'),
+            ('q7-max_price', '13.13'),
+            ('q7-price_unit', 'Unit'),
+            ('q7-price_interval', 'Hour'),
             ('q8', 'blah blah'),
             ('q9', '12.12'),
             ('q10', 'Looooooooaaaaaaaaads of text'),
@@ -725,10 +731,10 @@ class TestContentSection(object):
             'q4': ['value 1', 'value 2'],
             'q5': ['check 1', 'check 2'],
             'q6': {'assurance': 'yes I am', 'value': '71234567890'},
-            'priceMin': '12.12',
-            'priceMax': '13.13',
-            'priceUnit': 'Unit',
-            'priceInterval': 'Hour',
+            'q7-min_price': '12.12',
+            'q7-max_price': '13.13',
+            'q7-price_unit': 'Unit',
+            'q7-price_interval': 'Hour',
             'q9': 12.12,
             'q10': 'Looooooooaaaaaaaaads of text',
         }
@@ -744,18 +750,11 @@ class TestContentSection(object):
         ])
         assert section.get_data(form)['q9'] == 'not a number'
 
-        with pytest.raises(ValueError):
-            form = ImmutableMultiDict([
-                ('q7', '12.12'),
-            ])
-            section.get_data(form)
-
         # Test 'orphaned' assurance is returned
         form = ImmutableMultiDict([
             ('q6--assurance', 'yes I am'),
         ])
         data = section.get_data(form)
-        print("DATA: {}".format(data))
         assert data == {
             'q6': {'assurance': 'yes I am'},
         }
@@ -799,6 +798,12 @@ class TestContentSection(object):
                 "id": "q7",
                 "question": "Pricing question",
                 "type": "pricing",
+                "fields": {
+                    "minimim_price": "q7-min",
+                    "maximum_price": "q7-min",
+                    "price_unit": "q7-unit",
+                    "price_interval": "q7-interval"
+                }
             }, {
                 "id": "q8",
                 "question": "Upload question",
@@ -826,10 +831,10 @@ class TestContentSection(object):
             'q4': ['value 1', 'value 2'],
             'q5': ['check 1', 'check 2'],
             'q6': {'assurance': 'yes I am', 'value': '71234567890'},
-            'priceMin': '12.12',
-            'priceMax': '13.13',
-            'priceUnit': 'Unit',
-            'priceInterval': 'Hour',
+            'q7-min': '12.12',
+            'q7-max': '13.13',
+            'q7-unit': 'Unit',
+            'q7-interval': 'Hour',
             'q9': 12.12,
             'q10': 'Looooooooaaaaaaaaads of text',
         }
@@ -845,10 +850,10 @@ class TestContentSection(object):
             'q5': ['check 1', 'check 2'],
             'q6': '71234567890',
             'q6--assurance': 'yes I am',
-            'priceMin': '12.12',
-            'priceMax': '13.13',
-            'priceUnit': 'Unit',
-            'priceInterval': 'Hour',
+            'q7-min': '12.12',
+            'q7-max': '13.13',
+            'q7-unit': 'Unit',
+            'q7-interval': 'Hour',
             'q9': 12.12,
             'q10': 'Looooooooaaaaaaaaads of text',
         }
@@ -869,18 +874,36 @@ class TestContentSection(object):
 
         assert section.get_question('q1').get('id') == 'q1'
 
-    def test_get_field_names_with_pricing_question(self):
+    def test_get_field_names_with_incomplete_pricing_question(self):
         section = ContentSection.create({
             "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
                 "question": "First question",
-                "type": "pricing"
+                "type": "pricing",
+            }]
+        })
+        assert section.get_field_names() == ["q1"]
+
+    def test_get_field_names_with_good_pricing_question(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "First question",
+                "type": "pricing",
+                "fields": {
+                    "minimum_price": "q1-minprice",
+                    "maximum_price": "q1-maxprice"
+                }
             }]
         })
 
-        assert section.get_field_names() == ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
+        # using sets because sort order -TM
+        expected = set(['q1-minprice', 'q1-maxprice'])
+        assert set(section.get_field_names()) == expected
 
     def test_get_field_names_with_no_pricing_question(self):
         section = ContentSection.create({
@@ -984,9 +1007,16 @@ class TestContentSection(object):
             }, {
                 "id": "priceString",
                 "question": "Price question",
-                "type": "price",
+                "type": "pricing",
+                "fields": {
+                    "minimum_price": "priceString-min"
+                },
                 "validations": [
-                    {"name": "no_min_price_specified", "message": "No min price"},
+                    {
+                        "name": "answer_required",
+                        "field": "priceString-min",
+                        "message": "No min price"
+                    },
                 ]
             }, {
                 "id": "q3",
@@ -1001,7 +1031,7 @@ class TestContentSection(object):
         errors = {
             "q2": "the_error",
             "serviceTypes": "the_error",
-            "priceMin": "answer_required",
+            "priceString-min": "answer_required",
             "q3": "assurance_required",
         }
 
