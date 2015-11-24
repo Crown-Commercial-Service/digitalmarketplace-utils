@@ -341,13 +341,18 @@ class ContentQuestion(object):
         else:
             self.questions = None
 
+        if 'fields' in data:
+            self.fields = data['fields']
+        else:
+            self.fields = {}
+
     def summary(self, service_data):
         return ContentQuestionSummary(
             self, service_data
         )
 
     def get_question(self, field_name):
-        if field_name in self.get('fields', {}).values():
+        if field_name in self.fields.values():
             return self
         if self.id == field_name:
             return self
@@ -358,10 +363,10 @@ class ContentQuestion(object):
             )
 
     def get_data(self, form_data):
-        if self.get('fields'):
+        if self.fields:
             return {
                 key: form_data[key]
-                for key in self['fields'].values()
+                for key in self.fields.values()
                 if key in form_data
             }
         elif self.questions:
@@ -418,8 +423,8 @@ class ContentQuestion(object):
 
     @property
     def form_fields(self):
-        if self.get('fields', False):
-            return self.get('fields').values()
+        if self.fields:
+            return self.fields.values()
         else:
             # pricing fields should have fields.
             # throw an assertion error if they don't.
@@ -436,7 +441,7 @@ class ContentQuestion(object):
         if self.get('optional'):
             return self.form_fields
         elif self.get('optional_fields'):
-            return [self['fields'][key] for key in self['optional_fields']]
+            return [self.fields[key] for key in self['optional_fields']]
         else:
             if self.questions:
                 return list(chain.from_iterable(
