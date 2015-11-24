@@ -211,9 +211,8 @@ class ContentSection(object):
         ]
 
     def get_question_ids(self, type=None):
-        # TODO: variable name reconsider?
         return [
-            form_field for question in self.questions for form_field in question.get_question_ids(type)
+            question_id for question in self.questions for question_id in question.get_question_ids(type)
         ]
 
     def get_data(self, form_data):
