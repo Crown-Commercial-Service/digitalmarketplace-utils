@@ -302,7 +302,7 @@ class TestContentManifest(object):
             'q7.min': '10',
             'q7.unit': 'day'})
         assert summary.get_question('q1').value == [
-            summary.get_question('q2'), summary.get_question('q3')
+            summary.get_question('q2')
         ]
         assert summary.get_question('q1').answer_required
         assert summary.get_question('q2').value == 'some value'

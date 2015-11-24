@@ -486,9 +486,13 @@ class ContentQuestionSummary(ContentQuestion):
         return self.get('field_defaults', {}).get(field_key)
 
     @property
+    def is_empty(self):
+        return self.value in ['', [], None]
+
+    @property
     def value(self):
         if self.questions:
-            return self.questions
+            return [question for question in self.questions if not question.is_empty]
         if self.type == "pricing":
             minimum_price = self._service_data.get(self.fields.get('minimum_price'))
             maximum_price = self._service_data.get(self.fields.get('maximum_price'))
