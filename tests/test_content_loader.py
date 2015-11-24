@@ -630,6 +630,7 @@ class TestContentSection(object):
                 "slug": "q0-slug",
                 "question": "Q0",
                 "type": "multiquestion",
+                "hint": "Some description",
                 "questions": [
                     {
                         "id": "q2",
@@ -645,6 +646,7 @@ class TestContentSection(object):
 
         question_section = section.get_question_as_section('q0-slug')
         assert question_section.name == "Q0"
+        assert question_section.description == "Some description"
         assert question_section.editable == section.edit_questions
         assert question_section.get_question_ids() == ['q2', 'q3']
 

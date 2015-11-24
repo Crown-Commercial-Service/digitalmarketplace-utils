@@ -197,7 +197,7 @@ class ContentSection(object):
             editable=self.edit_questions,
             edit_questions=False,
             questions=question.questions,
-            description=question.get('description')
+            description=question.get('hint')
         )
 
     def get_field_names(self):
