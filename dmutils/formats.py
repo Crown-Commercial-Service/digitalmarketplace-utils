@@ -90,17 +90,12 @@ def format_field_based_price(service, question):
     """
     if 'fields' in question:
         fields = question['fields']
-        min_price_f = fields.get('minimum_price', None)
-        max_price_f = fields.get('maximum_price', None)
-        price_unit_f = fields.get('price_unit', None)
-        price_interval_f = fields.get('price_interval', None)
+        min_price = service.get(fields.get('minimum_price'))
+        max_price = service.get(fields.get('maximum_price'))
+        price_unit = service.get(fields.get('price_unit'))
+        price_interval = service.get(fields.get('price_interval'))
 
-        min_price = service.get(min_price_f, None)
-        max_price = service.get(max_price_f, None)
-        price_unit = service.get(price_unit_f, None)
-        price_interval = service.get(price_interval_f, None)
-
-        if min_price_f and price_interval_f and min_price and max_price:
+        if min_price and price_unit:
             return format_price(
                 min_price, max_price, price_unit, price_interval
             )

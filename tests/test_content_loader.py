@@ -968,7 +968,8 @@ class TestContentSection(object):
             }]
         })
 
-        assert section.get_error_message('q2', 'the_error') == "This is the error message"
+        expected = "This is the error message"
+        assert section.get_question('q2').get_error_message('the_error') == expected
 
     def test_get_error_message_returns_default(self):
         section = ContentSection.create({
@@ -984,7 +985,8 @@ class TestContentSection(object):
             }]
         })
 
-        assert section.get_error_message('q2', 'other_error') == "There was a problem with the answer to this question"
+        expected = "There was a problem with the answer to this question"
+        assert section.get_question('q2').get_error_message('other_error') == expected
 
     def test_get_error_messages(self):
         section = ContentSection.create({

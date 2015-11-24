@@ -280,7 +280,7 @@ class ContentSection(object):
                 field_name = 'serviceType{}'.format(lot)
 
             question = self.get_question(field_name)
-            validation_message = self.get_error_message(field_name, message_key)
+            validation_message = question.get_error_message(message_key, field_name)
 
             error_key = question.id
             if message_key == 'assurance_required':
@@ -292,18 +292,6 @@ class ContentSection(object):
                 'message': validation_message,
             }
         return errors_map
-
-    def get_error_message(self, field_name, message_key):
-        """Return a single error message
-
-        :param field_name:
-        :param message_key: error message key as returned by the data API
-        """
-        for validation in self.get_question(field_name)['validations']:
-            if validation['name'] == message_key:
-                if validation.get('field', field_name) == field_name:
-                    return validation['message']
-        return 'There was a problem with the answer to this question'
 
     def unformat_data(self, data):
         """Unpack assurance information to be used in a form
@@ -420,6 +408,20 @@ class ContentQuestion(object):
             }
 
         return {self.id: value}
+
+    def get_error_message(self, message_key, field_name=None):
+        """Return a single error message.
+
+        :param message_key: error message key as returned by the data API
+        :param field_name:
+        """
+        if field_name is None:
+            field_name = self.id
+        for validation in self.get_question(field_name).get('validations', []):
+            if validation['name'] == message_key:
+                if validation.get('field', field_name) == field_name:
+                    return validation['message']
+        return 'There was a problem with the answer to this question'
 
     @property
     def label(self):
