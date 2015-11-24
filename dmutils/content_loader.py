@@ -472,7 +472,7 @@ class ContentQuestion(object):
         return getattr(self, key)
 
     def __repr__(self):
-        return '<ContentQuestion: number={0.number}, data={0._data}>'.format(self)
+        return '<{0.__class__.__name__}: number={0.number}, data={0._data}>'.format(self)
 
 
 class ContentQuestionSummary(ContentQuestion):
