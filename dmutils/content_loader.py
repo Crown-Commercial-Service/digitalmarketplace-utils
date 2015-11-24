@@ -6,6 +6,7 @@ import re
 import os
 from collections import defaultdict
 from functools import partial
+from itertools import chain
 from werkzeug.datastructures import ImmutableMultiDict
 
 from .config import convert_to_boolean, convert_to_number
@@ -437,6 +438,23 @@ class ContentQuestion(object):
             # TODO: maybe we can check this elsewhere?
             assert self.type != "pricing"
             return self.get_question_ids()
+
+    @property
+    def required_form_fields(self):
+        return list(set(self.form_fields) - set(self._optional_form_fields))
+
+    @property
+    def _optional_form_fields(self):
+        if self.get('optional'):
+            return self.form_fields
+        elif self.get('optional_fields'):
+            return [self['fields'][key] for key in self['optional_fields']]
+        else:
+            if self.questions:
+                return list(chain.from_iterable(
+                    question._optional_form_fields for question in self.questions))
+            else:
+                return []
 
     def get_question_ids(self, type=None):
         if self.questions:
