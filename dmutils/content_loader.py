@@ -136,6 +136,12 @@ class ContentManifest(object):
             if question:
                 return question
 
+    def get_question_by_slug(self, question_slug):
+        for section in self.sections:
+            question = section.get_question_by_slug(question_slug)
+            if question:
+                return question
+
 
 class ContentSection(object):
     @classmethod
