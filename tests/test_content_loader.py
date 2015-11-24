@@ -1153,6 +1153,7 @@ class TestContentQuestion(object):
         })
         assert question.required_form_fields == ['example2']
 
+
 class TestReadYaml(object):
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
     def test_loading_existant_file(self, mocked_open):
