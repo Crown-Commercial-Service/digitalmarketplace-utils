@@ -2,6 +2,20 @@
 
 Records breaking changes from major version bumps
 
+## 15.0.0
+
+PR: [#210](https://github.com/alphagov/digitalmarketplace-utils/pull/210)
+
+### What changed
+
+Breaking changes:
+* `content_builder` module no longer does special handling of pricing fields. The content
+  repository must therefore be upgraded along with this change.
+
+### Example app change
+
+Upgrade digitalmarketplace-frameworks to `0.5.0` in `bower.json`
+
 ## 14.0.0
 
 PR: [#211](https://github.com/alphagov/digitalmarketplace-utils/pull/211)
