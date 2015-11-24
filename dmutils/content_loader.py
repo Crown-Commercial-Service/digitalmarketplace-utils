@@ -486,6 +486,9 @@ class ContentQuestionSummary(ContentQuestion):
             self.questions = [q.summary(service_data) for q in self.questions]
         self.fields = question.fields
 
+    def _default_for_field(self, field_key):
+        return self.get('field_defaults', {}).get(field_key)
+
     @property
     def value(self):
         if self.questions:
@@ -494,8 +497,8 @@ class ContentQuestionSummary(ContentQuestion):
             return format_price(
                 self._service_data.get(self.fields.get('minimum_price')),
                 self._service_data.get(self.fields.get('maximum_price')),
-                self._service_data.get(self.fields.get('price_unit')),
-                self._service_data.get(self.fields.get('price_interval')),
+                self._service_data.get(self.fields.get('price_unit'), self._default_for_field('price_unit')),
+                self._service_data.get(self.fields.get('price_interval'), self._default_for_field('price_interval')),
             )
         return self._service_data.get(self.id, '')
 
