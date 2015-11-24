@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import yaml
 import inflection
 import re
@@ -555,14 +557,24 @@ class ContentLoader(object):
 
         return self._questions[framework_slug][question_set][question].copy()
 
-    def get_message(self, framework_slug, block, framework_status, supplier_status=None):
+    def get_message(self, framework_slug, block, key, sub_key=None):
+        """
+        `block` corresponds to
+          - a file in the frameworks directory
+          - the place where the message will be used, eg homepage sidebar, lot page
+
+        `key` and `sub_key` are used to look up a specific message, for example a message might depend on:
+          - the status of a framework
+          - the status of a supplier’s application to a framework
+          - the context in which the message will be displayed
+        """
         if block not in self._messages[framework_slug]:
             raise ContentNotFoundError(
                 "Message file at {} not loaded".format(self._message_path(framework_slug, block))
             )
 
         return self._messages[framework_slug][block].get(
-            self._message_key(framework_status, supplier_status), None
+            self._message_key(key, sub_key), None
         )
 
     def load_messages(self, framework_slug, blocks):
