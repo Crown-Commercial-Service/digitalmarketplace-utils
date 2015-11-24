@@ -426,12 +426,14 @@ class ContentQuestion(object):
     def form_fields(self):
         if self.fields:
             return self.fields.values()
+        elif self.questions:
+            return list(chain.from_iterable(question.form_fields for question in self.questions))
         else:
             # pricing fields should have fields.
             # throw an assertion error if they don't.
             # TODO: maybe we can check this elsewhere?
             assert self.type != "pricing"
-            return self.get_question_ids()
+            return [self.id]
 
     @property
     def required_form_fields(self):
