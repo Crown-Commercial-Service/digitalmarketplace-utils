@@ -1034,7 +1034,7 @@ class TestContentSection(object):
                     {'name': 'the_error', 'message': 'This is the error message'},
                 ],
             }, {
-                "id": "serviceTypeSCS",
+                "id": "serviceTypes",
                 "question": "Third question",
                 "type": "text",
                 "validations": [
@@ -1076,7 +1076,7 @@ class TestContentSection(object):
         assert result['priceString']['message'] == "No min price"
         assert result['q2']['message'] == "This is the error message"
         assert result['q3--assurance']['message'] == "There there, it'll be ok."
-        assert result['serviceTypeSCS']['message'] == "This is the error message"
+        assert result['serviceTypes']['message'] == "This is the error message"
 
     def test_section_description(self):
         section = ContentSection.create({

@@ -266,9 +266,6 @@ class ContentSection(object):
         """
         errors_map = {}
         for field_name, message_key in errors.items():
-            if field_name == 'serviceTypes':
-                field_name = 'serviceType{}'.format(lot)
-
             question = self.get_question(field_name)
             validation_message = question.get_error_message(message_key, field_name)
 
