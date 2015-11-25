@@ -8,7 +8,7 @@ import io
 
 from dmutils.content_loader import (
     ContentLoader, ContentSection, ContentQuestion, ContentManifest,
-    read_yaml, ContentNotFoundError
+    read_yaml, ContentNotFoundError, QuestionNotFoundError
 )
 
 from sys import version_info
@@ -1093,6 +1093,19 @@ class TestContentSection(object):
         assert result['q2']['question'] == "second"
         assert result['q3--assurance']['message'] == "There there, it'll be ok."
         assert result['serviceTypes']['message'] == "This is the error message"
+
+    def test_get_error_messages_with_unknown_error_key(self):
+        section = ContentSection.create({
+            "slug": "second_section",
+            "name": "Second section",
+            "questions": []
+        })
+        errors = {
+            "q1": "the_error"
+        }
+
+        with pytest.raises(QuestionNotFoundError):
+            section.get_error_messages(errors, "SCS")
 
     def test_section_description(self):
         section = ContentSection.create({

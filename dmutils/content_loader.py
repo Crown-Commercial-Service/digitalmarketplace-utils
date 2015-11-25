@@ -16,6 +16,10 @@ class ContentNotFoundError(Exception):
     pass
 
 
+class QuestionNotFoundError(Exception):
+    pass
+
+
 class ContentManifest(object):
     """An ordered set of sections each made up of one or more questions.
 
@@ -266,6 +270,8 @@ class ContentSection(object):
         errors_map = {}
         for field_name, message_key in errors.items():
             question = self.get_question(field_name)
+            if not question:
+                raise QuestionNotFoundError(field_name)
             validation_message = question.get_error_message(message_key, field_name)
 
             error_key = question.id
