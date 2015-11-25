@@ -490,22 +490,23 @@ class ContentQuestionSummary(ContentQuestion):
         if self.questions:
             return self.questions
         if self.type == "pricing":
-            return format_price(
-                self._service_data.get(self.fields.get('minimum_price')),
-                self._service_data.get(self.fields.get('maximum_price')),
-                self._service_data.get(self.fields.get('price_unit'), self._default_for_field('price_unit')),
-                self._service_data.get(self.fields.get('price_interval'), self._default_for_field('price_interval')),
-            )
+            minimum_price = self._service_data.get(self.fields.get('minimum_price'))
+            maximum_price = self._service_data.get(self.fields.get('maximum_price'))
+            price_unit = self._service_data.get(self.fields.get('price_unit'),
+                                                self._default_for_field('price_unit'))
+            price_interval = self._service_data.get(self.fields.get('price_interval'),
+                                                    self._default_for_field('price_interval'))
+
+            if minimum_price and price_unit:
+                return format_price(minimum_price, maximum_price, price_unit, price_interval)
+            else:
+                return ''
         return self._service_data.get(self.id, '')
 
     @property
     def answer_required(self):
         if self.questions:
             return any(question.answer_required for question in self.questions)
-        elif self.fields:
-            return any(
-                self._service_data.get(field_name) in ['', [], None]
-                for field_name in self.required_form_fields)
         elif self.value in ['', [], None]:
             if not self.get('optional'):
                 return True
