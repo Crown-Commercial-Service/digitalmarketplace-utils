@@ -197,7 +197,7 @@ class ContentSection(object):
             editable=self.edit_questions,
             edit_questions=False,
             questions=question.questions,
-            description=question.get('description')
+            description=question.get('hint')
         )
 
     def get_field_names(self):
@@ -253,7 +253,7 @@ class ContentSection(object):
         """
         return any([
             any(service.get(key) != update_data[key] for key in update_data),
-            any(question.id not in service for question in self.questions)
+            any(form_field not in service for form_field in self.get_field_names())
         ])
 
     def get_error_messages(self, errors, lot):
@@ -274,7 +274,7 @@ class ContentSection(object):
 
             errors_map[error_key] = {
                 'input_name': field_name,
-                'question': question['question'],
+                'question': question.label,
                 'message': validation_message,
             }
         return errors_map
@@ -378,6 +378,8 @@ class ContentQuestion(object):
         if self.id not in form_data:
             if self.get('assuranceApproach') and '{}--assurance'.format(self.id) in form_data:
                 return {self.id: {'assurance': form_data.get('{}--assurance'.format(self.id))}}
+            elif self.type in ['list', 'checkboxes']:
+                return {self.id: []}
             else:
                 return {}
 
@@ -486,9 +488,13 @@ class ContentQuestionSummary(ContentQuestion):
         return self.get('field_defaults', {}).get(field_key)
 
     @property
+    def is_empty(self):
+        return self.value in ['', [], None]
+
+    @property
     def value(self):
         if self.questions:
-            return self.questions
+            return [question for question in self.questions if not question.is_empty]
         if self.type == "pricing":
             minimum_price = self._service_data.get(self.fields.get('minimum_price'))
             maximum_price = self._service_data.get(self.fields.get('maximum_price'))
@@ -505,13 +511,12 @@ class ContentQuestionSummary(ContentQuestion):
 
     @property
     def answer_required(self):
-        if self.questions:
-            return any(question.answer_required for question in self.questions)
-        elif self.value in ['', [], None]:
-            if not self.get('optional'):
-                return True
-        else:
+        if self.get('optional'):
             return False
+        elif self.questions:
+            return any(question.answer_required for question in self.questions)
+        else:
+            return self.is_empty
 
 
 class ContentLoader(object):

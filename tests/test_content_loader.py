@@ -292,7 +292,16 @@ class TestContentManifest(object):
                     "optional_fields": [
                         "maximum_price"
                     ]
-                }
+                },
+                {
+                    "id": "q9",
+                    "question": 'Never required question',
+                    "optional": True,
+                    "questions": [
+                        {"id": "q71", "type": "text"},
+                        {"id": "q72", "type": "text"}
+                    ]
+                },
             ]
         }])
 
@@ -302,7 +311,7 @@ class TestContentManifest(object):
             'q7.min': '10',
             'q7.unit': 'day'})
         assert summary.get_question('q1').value == [
-            summary.get_question('q2'), summary.get_question('q3')
+            summary.get_question('q2')
         ]
         assert summary.get_question('q1').answer_required
         assert summary.get_question('q2').value == 'some value'
@@ -315,6 +324,7 @@ class TestContentManifest(object):
         assert summary.get_question('q7').value == u'£10 per day'
         assert not summary.get_question('q7').answer_required
         assert summary.get_question('q8').answer_required
+        assert not summary.get_question('q9').answer_required
 
     def test_get_question(self):
         content = ContentManifest([
@@ -620,6 +630,7 @@ class TestContentSection(object):
                 "slug": "q0-slug",
                 "question": "Q0",
                 "type": "multiquestion",
+                "hint": "Some description",
                 "questions": [
                     {
                         "id": "q2",
@@ -635,6 +646,7 @@ class TestContentSection(object):
 
         question_section = section.get_question_as_section('q0-slug')
         assert question_section.name == "Q0"
+        assert question_section.description == "Some description"
         assert question_section.editable == section.edit_questions
         assert question_section.get_question_ids() == ['q2', 'q3']
 
@@ -789,6 +801,8 @@ class TestContentSection(object):
         ])
         data = section.get_data(form)
         assert data == {
+            'q4': [],
+            'q5': [],
             'q6': {'assurance': 'yes I am'},
         }
 
@@ -1029,6 +1043,7 @@ class TestContentSection(object):
             "questions": [{
                 "id": "q2",
                 "question": "Second question",
+                "name": "second",
                 "type": "text",
                 "validations": [
                     {'name': 'the_error', 'message': 'This is the error message'},
@@ -1075,6 +1090,7 @@ class TestContentSection(object):
 
         assert result['priceString']['message'] == "No min price"
         assert result['q2']['message'] == "This is the error message"
+        assert result['q2']['question'] == "second"
         assert result['q3--assurance']['message'] == "There there, it'll be ok."
         assert result['serviceTypes']['message'] == "This is the error message"
 
