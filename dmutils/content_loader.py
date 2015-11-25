@@ -422,7 +422,7 @@ class ContentQuestion(object):
     @property
     def form_fields(self):
         if self.fields:
-            return self.fields.values()
+            return sorted(self.fields.values())
         elif self.questions:
             return list(chain.from_iterable(question.form_fields for question in self.questions))
         else:
