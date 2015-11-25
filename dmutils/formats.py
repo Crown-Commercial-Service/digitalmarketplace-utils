@@ -76,35 +76,6 @@ def get_label_for_lot_param(lot_to_check):
     return None
 
 
-def format_field_based_price(service, question):
-    """Format a price string from a service using field mappings
-    provided in the question definition.
-
-    :param service: a service dictionary, returned from data API
-
-    :param question: dictionary describing the question containing
-                     `fields`.
-
-    :return: a formatted price string if the required
-             fields are set in the service dictionary.
-    """
-    if 'fields' in question:
-        fields = question['fields']
-        min_price = service.get(fields.get('minimum_price'))
-        max_price = service.get(fields.get('maximum_price'))
-        price_unit = service.get(fields.get('price_unit'))
-        price_interval = service.get(fields.get('price_interval'))
-
-        if min_price and price_unit:
-            return format_price(
-                min_price, max_price, price_unit, price_interval
-            )
-        else:
-            return u''
-    else:
-        return u''
-
-
 def format_service_price(service):
     """Format a price string from a service dictionary
 

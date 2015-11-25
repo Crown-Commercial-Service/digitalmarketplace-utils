@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from dmutils.formats import (
     get_label_for_lot_param, lot_to_lot_case,
-    format_price, format_service_price, format_field_based_price,
+    format_price, format_service_price,
     timeformat, shortdateformat, dateformat, datetimeformat
 )
 import pytz
@@ -36,52 +36,6 @@ class TestFormats(object):
 
         for example, expected in cases:
             assert get_label_for_lot_param(example) == expected
-
-
-def test_format_field_based_price():
-    draft = {
-        u'priceString-minimum': u'50',
-        u'priceString-maximum': u'100',
-        u'priceString-interval': u'',
-        u'priceString-unit': u'Unit',
-    }
-    q = {
-        'question': 'Service price',
-        'fields': {
-            'maximum_price': 'priceString-maximum',
-            'minimum_price': 'priceString-minimum',
-            'price_unit': 'priceString-unit',
-            'price_interval': 'priceString-interval'},
-        'validations': [],
-        'type': 'pricing',
-        'id': 'priceString'
-    }
-    assert format_field_based_price(draft, q) == u"£50 to £100 per unit"
-
-
-def test_format_field_based_price_fail():
-    q = {
-        'question': 'Service price',
-        'fields': {
-            'maximum_price': 'priceString-maximum',
-            'minimum_price': 'priceString-minimum',
-            'price_unit': 'priceString-unit',
-            'price_interval': 'priceString-interval'},
-        'validations': [],
-        'type': 'pricing',
-        'id': 'priceString'
-    }
-
-    drafts = [
-        {},
-        {'priceString-minimum': None},
-        {'priceString-minimum': None, 'priceString-maximum': None},
-        {'priceString-unit': None},
-        {'priceString-interval': None}
-    ]
-
-    for draft in drafts:
-        assert format_field_based_price(draft, q) == u''
 
 
 def test_format_service_price():
