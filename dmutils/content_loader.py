@@ -9,6 +9,7 @@ from functools import partial
 from werkzeug.datastructures import ImmutableMultiDict
 
 from .config import convert_to_boolean, convert_to_number
+from .formats import format_price
 
 
 class ContentNotFoundError(Exception):
@@ -203,17 +204,15 @@ class ContentSection(object):
         """Return a list of field names that this section returns
 
         This list of field names corresponds to the keys of the data returned
-        by :func:`ContentSection.get_data`. This only affects the pricing question
-        that gets expanded into the the pricing fields.
+        by :func:`ContentSection.get_data`.
         """
-
         return [
             form_field for question in self.questions for form_field in question.form_fields
         ]
 
     def get_question_ids(self, type=None):
         return [
-            form_field for question in self.questions for form_field in question.get_question_ids(type)
+            question_id for question in self.questions for question_id in question.get_question_ids(type)
         ]
 
     def get_data(self, form_data):
@@ -265,49 +264,20 @@ class ContentSection(object):
         :return: error dictionary with human readable error messages
         """
         errors_map = {}
-        for question_id, message_key in errors.items():
-            field_name = question_id
-            if question_id == 'serviceTypes':
-                field_name = question_id = 'serviceType{}'.format(lot)
-            elif question_id in PRICE_FIELDS:
-                message_key = self._rewrite_pricing_error_key(question_id, message_key)
-                field_name = question_id = 'priceString'
-            elif message_key == 'assurance_required':
-                field_name = '{}--assurance'.format(question_id)
+        for field_name, message_key in errors.items():
+            question = self.get_question(field_name)
+            validation_message = question.get_error_message(message_key, field_name)
 
-            validation_message = self.get_error_message(question_id, message_key)
+            error_key = question.id
+            if message_key == 'assurance_required':
+                error_key = '{}--assurance'.format(error_key)
 
-            errors_map[field_name] = {
+            errors_map[error_key] = {
                 'input_name': field_name,
-                'question': self.get_question(question_id)['question'],
+                'question': question['question'],
                 'message': validation_message,
             }
         return errors_map
-
-    def get_error_message(self, question_id, message_key):
-        """Return a single error message
-
-        :param question_id:
-        :param message_key: error message key as returned by the data API
-        """
-        for validation in self.get_question(question_id)['validations']:
-            if validation['name'] == message_key:
-                return validation['message']
-        return 'There was a problem with the answer to this question'
-
-    def _rewrite_pricing_error_key(self, question_id, message_key):
-        """Return a rewritten error message_key for a pricing error"""
-        if message_key == 'answer_required':
-            if question_id == 'priceMin':
-                return 'no_min_price_specified'
-            elif question_id == 'priceUnit':
-                return 'no_unit_specified'
-        elif message_key == 'not_money_format':
-            if question_id == 'priceMin':
-                return 'min_price_not_a_number'
-            elif question_id == 'priceMax':
-                return 'max_price_not_a_number'
-        return message_key
 
     def unformat_data(self, data):
         """Unpack assurance information to be used in a form
@@ -368,12 +338,19 @@ class ContentQuestion(object):
         else:
             self.questions = None
 
+        if 'fields' in data:
+            self.fields = data['fields']
+        else:
+            self.fields = {}
+
     def summary(self, service_data):
         return ContentQuestionSummary(
             self, service_data
         )
 
     def get_question(self, field_name):
+        if field_name in self.fields.values():
+            return self
         if self.id == field_name:
             return self
         elif self.questions:
@@ -383,8 +360,12 @@ class ContentQuestion(object):
             )
 
     def get_data(self, form_data):
-        if self.id in form_data and self.type == 'pricing':
-            return expand_pricing_field(form_data.getlist(self.id))
+        if self.fields:
+            return {
+                key: form_data[key]
+                for key in self.fields.values()
+                if key in form_data
+            }
         elif self.questions:
             questions_data = {}
             for question in self.questions:
@@ -419,16 +400,51 @@ class ContentQuestion(object):
 
         return {self.id: value}
 
+    def get_error_message(self, message_key, field_name=None):
+        """Return a single error message.
+
+        :param message_key: error message key as returned by the data API
+        :param field_name:
+        """
+        if field_name is None:
+            field_name = self.id
+        for validation in self.get_question(field_name).get('validations', []):
+            if validation['name'] == message_key:
+                if validation.get('field', field_name) == field_name:
+                    return validation['message']
+        return 'There was a problem with the answer to this question'
+
     @property
     def label(self):
         return self.get('name') or self.question
 
     @property
     def form_fields(self):
-        if self.type == 'pricing':
-            return PRICE_FIELDS
+        if self.fields:
+            return sorted(self.fields.values())
+        elif self.questions:
+            return [form_field for question in self.questions for form_field in question.form_fields]
         else:
-            return self.get_question_ids()
+            # pricing fields should have fields.
+            # throw an assertion error if they don't.
+            # TODO: maybe we can check this elsewhere?
+            assert self.type != "pricing"
+            return [self.id]
+
+    @property
+    def required_form_fields(self):
+        return list(set(self.form_fields) - set(self._optional_form_fields))
+
+    @property
+    def _optional_form_fields(self):
+        if self.get('optional'):
+            return self.form_fields
+        elif self.get('optional_fields'):
+            return [self.fields[key] for key in self['optional_fields']]
+        elif self.questions:
+            return [form_field for question in self.questions for form_field in question._optional_form_fields]
+        else:
+            return []
 
     def get_question_ids(self, type=None):
         if self.questions:
@@ -452,7 +468,7 @@ class ContentQuestion(object):
         return getattr(self, key)
 
     def __repr__(self):
-        return '<ContentQuestion: number={0.number}, data={0._data}>'.format(self)
+        return '<{0.__class__.__name__}: number={0.number}, data={0._data}>'.format(self)
 
 
 class ContentQuestionSummary(ContentQuestion):
@@ -464,18 +480,34 @@ class ContentQuestionSummary(ContentQuestion):
         self.questions = question.questions
         if self.questions:
             self.questions = [q.summary(service_data) for q in self.questions]
+        self.fields = question.fields
+
+    def _default_for_field(self, field_key):
+        return self.get('field_defaults', {}).get(field_key)
 
     @property
     def value(self):
         if self.questions:
             return self.questions
+        if self.type == "pricing":
+            minimum_price = self._service_data.get(self.fields.get('minimum_price'))
+            maximum_price = self._service_data.get(self.fields.get('maximum_price'))
+            price_unit = self._service_data.get(self.fields.get('price_unit'),
+                                                self._default_for_field('price_unit'))
+            price_interval = self._service_data.get(self.fields.get('price_interval'),
+                                                    self._default_for_field('price_interval'))
+
+            if minimum_price and price_unit:
+                return format_price(minimum_price, maximum_price, price_unit, price_interval)
+            else:
+                return ''
         return self._service_data.get(self.id, '')
 
     @property
     def answer_required(self):
         if self.questions:
             return any(question.answer_required for question in self.questions)
-        if self.value in ['', [], None]:
+        elif self.value in ['', [], None]:
             if not self.get('optional'):
                 return True
         else:
@@ -618,18 +650,6 @@ class ContentLoader(object):
             framework_status,
             '-{}'.format(supplier_status) if supplier_status else ''
         )
-
-
-# TODO: move this into question definition with questions represented by multiple fields
-PRICE_FIELDS = ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
-
-
-def expand_pricing_field(pricing):
-    if len(pricing) < len(PRICE_FIELDS):
-        raise ValueError("The pricing field did not have enough elements: {}".format(pricing))
-    return {
-        field_name: pricing[i] for i, field_name in enumerate(PRICE_FIELDS)
-    }
 
 
 def _load_question(question, directory):

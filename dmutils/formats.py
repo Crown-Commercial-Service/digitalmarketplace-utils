@@ -79,7 +79,7 @@ def get_label_for_lot_param(lot_to_check):
 def format_service_price(service):
     """Format a price string from a service dictionary
 
-    :param service: a service dictionary as would be returned from the data API
+    :param service: a service dictionary, returned from data API
 
     :return: a formatted price string if the required
              fields are set in the service dictionary.

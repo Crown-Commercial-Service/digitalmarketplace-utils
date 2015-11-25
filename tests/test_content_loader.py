@@ -6,7 +6,10 @@ import pytest
 
 import io
 
-from dmutils.content_loader import ContentLoader, ContentSection, ContentManifest, read_yaml, ContentNotFoundError
+from dmutils.content_loader import (
+    ContentLoader, ContentSection, ContentQuestion, ContentManifest,
+    read_yaml, ContentNotFoundError
+)
 
 from sys import version_info
 if version_info.major == 2:
@@ -267,10 +270,37 @@ class TestContentManifest(object):
                 {"id": "q4", "type": "text", "optional": True},
                 {"id": "q5", "type": "text", "optional": False},
                 {"id": "q6", "type": "text", "optional": False},
+                {
+                    "id": "q7",
+                    "type": "pricing",
+                    "fields": {
+                        "minimum_price": "q7.min",
+                        "maximum_price": "q7.max",
+                        "price_unit": "q7.unit",
+                    },
+                    "optional_fields": [
+                        "maximum_price"
+                    ]
+                },
+                {
+                    "id": "q8",
+                    "type": "pricing",
+                    "fields": {
+                        "minimum_price": "q8.min",
+                        "maximum_price": "q8.max",
+                    },
+                    "optional_fields": [
+                        "maximum_price"
+                    ]
+                }
             ]
         }])
 
-        summary = content.summary({'q2': 'some value', 'q6': 'another value'})
+        summary = content.summary({
+            'q2': 'some value',
+            'q6': 'another value',
+            'q7.min': '10',
+            'q7.unit': 'day'})
         assert summary.get_question('q1').value == [
             summary.get_question('q2'), summary.get_question('q3')
         ]
@@ -282,6 +312,9 @@ class TestContentManifest(object):
         assert not summary.get_question('q4').answer_required
         assert summary.get_question('q5').answer_required
         assert not summary.get_question('q6').answer_required
+        assert summary.get_question('q7').value == u'£10 per day'
+        assert not summary.get_question('q7').answer_required
+        assert summary.get_question('q8').answer_required
 
     def test_get_question(self):
         content = ContentManifest([
@@ -673,6 +706,12 @@ class TestContentSection(object):
                 "id": "q7",
                 "question": "Pricing question",
                 "type": "pricing",
+                "fields": {
+                    "minimum_price": "q7-min_price",
+                    "maximum_price": "q7-max_price",
+                    "price_unit": "q7-price_unit",
+                    "price_interval": "q7-price_interval"
+                }
             }, {
                 "id": "q8",
                 "question": "Upload question",
@@ -704,10 +743,10 @@ class TestContentSection(object):
             ('q5', 'check 2'),
             ('q6', '71234567890'),
             ('q6--assurance', 'yes I am'),
-            ('q7', '12.12'),
-            ('q7', '13.13'),
-            ('q7', 'Unit'),
-            ('q7', 'Hour'),
+            ('q7-min_price', '12.12'),
+            ('q7-max_price', '13.13'),
+            ('q7-price_unit', 'Unit'),
+            ('q7-price_interval', 'Hour'),
             ('q8', 'blah blah'),
             ('q9', '12.12'),
             ('q10', 'Looooooooaaaaaaaaads of text'),
@@ -725,10 +764,10 @@ class TestContentSection(object):
             'q4': ['value 1', 'value 2'],
             'q5': ['check 1', 'check 2'],
             'q6': {'assurance': 'yes I am', 'value': '71234567890'},
-            'priceMin': '12.12',
-            'priceMax': '13.13',
-            'priceUnit': 'Unit',
-            'priceInterval': 'Hour',
+            'q7-min_price': '12.12',
+            'q7-max_price': '13.13',
+            'q7-price_unit': 'Unit',
+            'q7-price_interval': 'Hour',
             'q9': 12.12,
             'q10': 'Looooooooaaaaaaaaads of text',
         }
@@ -744,18 +783,11 @@ class TestContentSection(object):
         ])
         assert section.get_data(form)['q9'] == 'not a number'
 
-        with pytest.raises(ValueError):
-            form = ImmutableMultiDict([
-                ('q7', '12.12'),
-            ])
-            section.get_data(form)
-
         # Test 'orphaned' assurance is returned
         form = ImmutableMultiDict([
             ('q6--assurance', 'yes I am'),
         ])
         data = section.get_data(form)
-        print("DATA: {}".format(data))
         assert data == {
             'q6': {'assurance': 'yes I am'},
         }
@@ -799,6 +831,12 @@ class TestContentSection(object):
                 "id": "q7",
                 "question": "Pricing question",
                 "type": "pricing",
+                "fields": {
+                    "minimim_price": "q7-min",
+                    "maximum_price": "q7-min",
+                    "price_unit": "q7-unit",
+                    "price_interval": "q7-interval"
+                }
             }, {
                 "id": "q8",
                 "question": "Upload question",
@@ -826,10 +864,10 @@ class TestContentSection(object):
             'q4': ['value 1', 'value 2'],
             'q5': ['check 1', 'check 2'],
             'q6': {'assurance': 'yes I am', 'value': '71234567890'},
-            'priceMin': '12.12',
-            'priceMax': '13.13',
-            'priceUnit': 'Unit',
-            'priceInterval': 'Hour',
+            'q7-min': '12.12',
+            'q7-max': '13.13',
+            'q7-unit': 'Unit',
+            'q7-interval': 'Hour',
             'q9': 12.12,
             'q10': 'Looooooooaaaaaaaaads of text',
         }
@@ -845,10 +883,10 @@ class TestContentSection(object):
             'q5': ['check 1', 'check 2'],
             'q6': '71234567890',
             'q6--assurance': 'yes I am',
-            'priceMin': '12.12',
-            'priceMax': '13.13',
-            'priceUnit': 'Unit',
-            'priceInterval': 'Hour',
+            'q7-min': '12.12',
+            'q7-max': '13.13',
+            'q7-unit': 'Unit',
+            'q7-interval': 'Hour',
             'q9': 12.12,
             'q10': 'Looooooooaaaaaaaaads of text',
         }
@@ -869,18 +907,37 @@ class TestContentSection(object):
 
         assert section.get_question('q1').get('id') == 'q1'
 
-    def test_get_field_names_with_pricing_question(self):
+    def test_get_field_names_with_incomplete_pricing_question(self):
         section = ContentSection.create({
             "slug": "first_section",
             "name": "First section",
             "questions": [{
                 "id": "q1",
                 "question": "First question",
-                "type": "pricing"
+                "type": "pricing",
+            }]
+        })
+        with pytest.raises(AssertionError):
+            section.get_field_names()
+
+    def test_get_field_names_with_good_pricing_question(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "First question",
+                "type": "pricing",
+                "fields": {
+                    "minimum_price": "q1-minprice",
+                    "maximum_price": "q1-maxprice"
+                }
             }]
         })
 
-        assert section.get_field_names() == ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
+        # using sets because sort order -TM
+        expected = set(['q1-minprice', 'q1-maxprice'])
+        assert set(section.get_field_names()) == expected
 
     def test_get_field_names_with_no_pricing_question(self):
         section = ContentSection.create({
@@ -945,7 +1002,8 @@ class TestContentSection(object):
             }]
         })
 
-        assert section.get_error_message('q2', 'the_error') == "This is the error message"
+        expected = "This is the error message"
+        assert section.get_question('q2').get_error_message('the_error') == expected
 
     def test_get_error_message_returns_default(self):
         section = ContentSection.create({
@@ -961,7 +1019,8 @@ class TestContentSection(object):
             }]
         })
 
-        assert section.get_error_message('q2', 'other_error') == "There was a problem with the answer to this question"
+        expected = "There was a problem with the answer to this question"
+        assert section.get_question('q2').get_error_message('other_error') == expected
 
     def test_get_error_messages(self):
         section = ContentSection.create({
@@ -975,7 +1034,7 @@ class TestContentSection(object):
                     {'name': 'the_error', 'message': 'This is the error message'},
                 ],
             }, {
-                "id": "serviceTypeSCS",
+                "id": "serviceTypes",
                 "question": "Third question",
                 "type": "text",
                 "validations": [
@@ -984,9 +1043,16 @@ class TestContentSection(object):
             }, {
                 "id": "priceString",
                 "question": "Price question",
-                "type": "price",
+                "type": "pricing",
+                "fields": {
+                    "minimum_price": "priceString-min"
+                },
                 "validations": [
-                    {"name": "no_min_price_specified", "message": "No min price"},
+                    {
+                        "name": "answer_required",
+                        "field": "priceString-min",
+                        "message": "No min price"
+                    },
                 ]
             }, {
                 "id": "q3",
@@ -1001,7 +1067,7 @@ class TestContentSection(object):
         errors = {
             "q2": "the_error",
             "serviceTypes": "the_error",
-            "priceMin": "answer_required",
+            "priceString-min": "answer_required",
             "q3": "assurance_required",
         }
 
@@ -1010,7 +1076,7 @@ class TestContentSection(object):
         assert result['priceString']['message'] == "No min price"
         assert result['q2']['message'] == "This is the error message"
         assert result['q3--assurance']['message'] == "There there, it'll be ok."
-        assert result['serviceTypeSCS']['message'] == "This is the error message"
+        assert result['serviceTypes']['message'] == "This is the error message"
 
     def test_section_description(self):
         section = ContentSection.create({
@@ -1023,6 +1089,99 @@ class TestContentSection(object):
 
         copy_of_section = section.copy()
         assert copy_of_section.description == "This is the first section"
+
+
+class TestContentQuestion(object):
+    def test_form_fields_property(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "text"
+        })
+        assert question.form_fields == ['example']
+
+    def test_form_fields_property_with_pricing_field(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "pricing",
+            "fields": {
+                "minimum_price": "priceMin",
+                "maximum_price": "priceMax",
+            }
+        })
+        assert sorted(question.form_fields) == sorted(['priceMin', 'priceMax'])
+
+    def test_form_fields_property_with_multiquestion(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "multiquestion",
+            "questions": [
+                {
+                    "id": "example2",
+                    "type": "text",
+                },
+                {
+                    "id": "example3",
+                    "type": "text",
+                }
+            ]
+        })
+        assert question.form_fields == ['example2', 'example3']
+
+    def test_required_form_fields_property(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "pricing",
+            "fields": {
+                "minimum_price": "priceMin",
+                "maximum_price": "priceMax",
+            }
+        })
+        assert sorted(question.required_form_fields) == sorted(['priceMin', 'priceMax'])
+
+    def test_required_form_fields_property_when_optional(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "pricing",
+            "optional": True,
+            "fields": {
+                "minimum_price": "priceMin",
+                "maximum_price": "priceMax",
+            }
+        })
+        assert question.required_form_fields == []
+
+    def test_required_form_fields_property_with_optional_fields(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "pricing",
+            "fields": {
+                "minimum_price": "priceMin",
+                "maximum_price": "priceMax",
+            },
+            "optional_fields": [
+                "minimum_price"
+            ]
+        })
+        assert question.required_form_fields == ['priceMax']
+
+    def test_required_form_fields_with_multiquestion(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "multiquestion",
+            "questions": [
+                {
+                    "id": "example2",
+                    "type": "text",
+                    "optional": False,
+                },
+                {
+                    "id": "example3",
+                    "type": "text",
+                    "optional": True,
+                }
+            ]
+        })
+        assert question.required_form_fields == ['example2']
 
 
 class TestReadYaml(object):
