@@ -6,7 +6,6 @@ import re
 import os
 from collections import defaultdict
 from functools import partial
-from itertools import chain
 from werkzeug.datastructures import ImmutableMultiDict
 
 from .config import convert_to_boolean, convert_to_number
@@ -424,7 +423,7 @@ class ContentQuestion(object):
         if self.fields:
             return sorted(self.fields.values())
         elif self.questions:
-            return list(chain.from_iterable(question.form_fields for question in self.questions))
+            return [form_field for question in self.questions for form_field in question.form_fields]
         else:
             # pricing fields should have fields.
             # throw an assertion error if they don't.
@@ -442,12 +441,10 @@ class ContentQuestion(object):
             return self.form_fields
         elif self.get('optional_fields'):
             return [self.fields[key] for key in self['optional_fields']]
+        elif self.questions:
+            return [form_field for question in self.questions for form_field in question._optional_form_fields]
         else:
-            if self.questions:
-                return list(chain.from_iterable(
-                    question._optional_form_fields for question in self.questions))
-            else:
-                return []
+            return []
 
     def get_question_ids(self, type=None):
         if self.questions:
