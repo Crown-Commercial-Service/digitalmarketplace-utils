@@ -373,7 +373,7 @@ class ContentQuestion(object):
     def get_data(self, form_data):
         if self.fields:
             return {
-                key: form_data[key]
+                key: form_data[key] if form_data[key] else None
                 for key in self.fields.values()
                 if key in form_data
             }
@@ -411,7 +411,7 @@ class ContentQuestion(object):
                 "assurance": form_data.get(self.id + '--assurance'),
             }
 
-        return {self.id: value}
+        return {self.id: value if value else None}
 
     def get_error_message(self, message_key, field_name=None):
         """Return a single error message.
