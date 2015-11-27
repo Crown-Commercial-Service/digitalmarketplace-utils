@@ -22,6 +22,7 @@ class AuditTypes(Enum):
     invite_user = "invite_user"
     send_clarification_question = "send_clarification_question"
     view_clarification_questions = "view_clarification_questions"
+    send_application_question = "send_application_question"
     send_g7_application_question = "send_g7_application_question"
     snapshot_framework_stats = "snapshot_framework_stats"
     framework_update = "framework_update"
