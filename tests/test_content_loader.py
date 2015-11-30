@@ -811,6 +811,12 @@ class TestContentSection(object):
             'q6': {'assurance': 'yes I am'},
         }
 
+        # Test empty lists are not converted to `None`
+        form = ImmutableMultiDict([
+            ('q4', '')
+        ])
+        assert section.get_data(form)['q4'] == ['']
+
     def test_unformat_data(self):
         section = ContentSection.create({
             "slug": "first_section",
