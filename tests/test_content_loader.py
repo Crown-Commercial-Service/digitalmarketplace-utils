@@ -1112,12 +1112,15 @@ class TestContentSection(object):
             "slug": "first_section",
             "name": "First section",
             "questions": [],
-            "description": "This is the first section"
+            "description": "This is the first section",
+            "summary_page_description": "This is a summary of the first section"
         })
         assert section.description == "This is the first section"
+        assert section.summary_page_description == "This is a summary of the first section"
 
         copy_of_section = section.copy()
         assert copy_of_section.description == "This is the first section"
+        assert copy_of_section.summary_page_description == "This is a summary of the first section"
 
 
 class TestContentQuestion(object):
