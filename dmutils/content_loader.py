@@ -333,7 +333,7 @@ class ContentSection(object):
     def _has_assurance(self, key):
         """Return True if a question has an assurance component"""
         question = self.get_question(key)
-        return bool(question) and question.get('assuranceApproach', False)
+        return bool(question) and question.has_assurance()
 
 
 class ContentQuestion(object):
@@ -459,6 +459,9 @@ class ContentQuestion(object):
         else:
             return []
 
+    def has_assurance(self):
+        return self.get('assuranceApproach', False)
+
     def get_question_ids(self, type=None):
         if self.questions:
             return [question.id for question in self.questions if type in [question.type, None]]
@@ -518,7 +521,16 @@ class ContentQuestionSummary(ContentQuestion):
                 return format_price(minimum_price, maximum_price, price_unit, price_interval)
             else:
                 return ''
+        if self.has_assurance():
+            return self._service_data.get(self.id, {}).get('value', '')
+
         return self._service_data.get(self.id, '')
+
+    @property
+    def assurance(self):
+        if self.has_assurance():
+            return self._service_data.get(self.id, {}).get('assurance', '')
+        return ''
 
     @property
     def answer_required(self):
