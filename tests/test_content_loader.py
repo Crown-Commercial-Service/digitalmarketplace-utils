@@ -740,6 +740,10 @@ class TestContentSection(object):
                 "id": "q11",
                 "question": "Text question",
                 "type": "text"
+            }, {
+                "id": "q12",
+                "question": "Text question",
+                "type": "text"
             }]
         })
 
@@ -756,14 +760,14 @@ class TestContentSection(object):
             ('q6', '71234567890'),
             ('q6--assurance', 'yes I am'),
             ('q7-min_price', '12.12'),
-            ('q7-max_price', '13.13'),
+            ('q7-max_price', ''),
             ('q7-price_unit', 'Unit'),
             ('q7-price_interval', 'Hour'),
             ('q8', 'blah blah'),
             ('q9', '12.12'),
             ('q10', 'Looooooooaaaaaaaaads of text'),
             ('extra_field', 'Should be lost'),
-            ('q12', 'Should be lost'),
+            ('q12', ''),
         ])
 
         data = section.get_data(form)
@@ -777,11 +781,12 @@ class TestContentSection(object):
             'q5': ['check 1', 'check 2'],
             'q6': {'assurance': 'yes I am', 'value': '71234567890'},
             'q7-min_price': '12.12',
-            'q7-max_price': '13.13',
+            'q7-max_price': None,
             'q7-price_unit': 'Unit',
             'q7-price_interval': 'Hour',
             'q9': 12.12,
             'q10': 'Looooooooaaaaaaaaads of text',
+            'q12': None,
         }
 
         # Failure modes
@@ -805,6 +810,12 @@ class TestContentSection(object):
             'q5': [],
             'q6': {'assurance': 'yes I am'},
         }
+
+        # Test empty lists are not converted to `None`
+        form = ImmutableMultiDict([
+            ('q4', '')
+        ])
+        assert section.get_data(form)['q4'] == ['']
 
     def test_unformat_data(self):
         section = ContentSection.create({
