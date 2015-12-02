@@ -1411,6 +1411,20 @@ class TestContentLoader(object):
         }
         mock_read_yaml.assert_called_with('content/frameworks/g-cloud-7/messages/index.yml')
 
+    def test_get_message_with_no_key(self, mock_read_yaml):
+        mock_read_yaml.return_value = {
+            'field_one': 'value_one',
+            'field_two': 'value_two',
+        }
+        messages = ContentLoader('content/')
+        messages.load_messages('g-cloud-7', ['index'])
+
+        assert messages.get_message('g-cloud-7', 'index') == {
+            'field_one': 'value_one',
+            'field_two': 'value_two',
+        }
+        assert messages.get_message('g-cloud-7', 'index', 'field_one') == 'value_one'
+
     def test_load_message_argument_types(self, mock_read_yaml):
 
         mock_read_yaml.return_value = {}

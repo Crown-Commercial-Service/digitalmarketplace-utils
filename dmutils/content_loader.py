@@ -605,7 +605,7 @@ class ContentLoader(object):
 
         return self._questions[framework_slug][question_set][question].copy()
 
-    def get_message(self, framework_slug, block, key, sub_key=None):
+    def get_message(self, framework_slug, block, key=None, sub_key=None):
         """
         `block` corresponds to
           - a file in the frameworks directory
@@ -620,10 +620,12 @@ class ContentLoader(object):
             raise ContentNotFoundError(
                 "Message file at {} not loaded".format(self._message_path(framework_slug, block))
             )
-
-        return self._messages[framework_slug][block].get(
-            self._message_key(key, sub_key), None
-        )
+        if key is not None:
+            return self._messages[framework_slug][block].get(
+                self._message_key(key, sub_key), None
+            )
+        else:
+            return self._messages[framework_slug][block]
 
     def load_messages(self, framework_slug, blocks):
         if not isinstance(blocks, list):
