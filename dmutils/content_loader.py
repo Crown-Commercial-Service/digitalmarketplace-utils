@@ -284,7 +284,7 @@ class ContentSection(object):
                 error_key = '{}--assurance'.format(error_key)
 
             errors_map[error_key] = {
-                'input_name': field_name,
+                'input_name': error_key,
                 'question': question.label,
                 'message': validation_message,
             }
