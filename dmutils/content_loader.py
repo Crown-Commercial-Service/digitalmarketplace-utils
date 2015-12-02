@@ -4,7 +4,7 @@ import yaml
 import inflection
 import re
 import os
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from functools import partial
 from werkzeug.datastructures import ImmutableMultiDict
 
@@ -272,7 +272,7 @@ class ContentSection(object):
         :param lot: the lot of the service
         :return: error dictionary with human readable error messages
         """
-        errors_map = {}
+        question_errors = []
         for field_name, message_key in errors.items():
             question = self.get_question(field_name)
             if not question:
@@ -283,11 +283,17 @@ class ContentSection(object):
             if message_key == 'assurance_required':
                 error_key = '{}--assurance'.format(error_key)
 
-            errors_map[error_key] = {
+            question_errors.append((question, {
                 'input_name': error_key,
                 'question': question.label,
                 'message': validation_message,
-            }
+            }))
+
+        errors_map = OrderedDict(
+            (error['input_name'], error)
+            for _, error in sorted(question_errors, key=lambda e: self.questions.index(e[0]))
+        )
+
         return errors_map
 
     def unformat_data(self, data):
