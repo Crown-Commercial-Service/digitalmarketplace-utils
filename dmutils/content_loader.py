@@ -272,27 +272,12 @@ class ContentSection(object):
         :param lot: the lot of the service
         :return: error dictionary with human readable error messages
         """
-        question_errors = []
-        for field_name, message_key in errors.items():
-            question = self.get_question(field_name)
-            if not question:
-                raise QuestionNotFoundError(field_name)
-            validation_message = question.get_error_message(message_key, field_name)
+        if set(errors.keys()) - set(self.get_field_names()):
+            raise QuestionNotFoundError(errors.keys())
 
-            error_key = question.id
-            if message_key == 'assurance_required':
-                error_key = '{}--assurance'.format(error_key)
-
-            question_errors.append((question, {
-                'input_name': error_key,
-                'question': question.label,
-                'message': validation_message,
-            }))
-
-        errors_map = OrderedDict(
-            (error['input_name'], error)
-            for _, error in sorted(question_errors, key=lambda e: self.questions.index(e[0]))
-        )
+        errors_map = OrderedDict()
+        for question in self.questions:
+            errors_map.update(question.get_error_messages(errors))
 
         return errors_map
 
@@ -418,6 +403,30 @@ class ContentQuestion(object):
             }
 
         return {self.id: value if value else None}
+
+    def get_error_messages(self, errors):
+        error_fields = set(errors.keys()) & set(self.form_fields)
+        if not error_fields:
+            return {}
+
+        question_errors = {}
+        for field_name in sorted(error_fields):
+            question = self.get_question(field_name)
+            message_key = errors[field_name]
+
+            validation_message = question.get_error_message(message_key, field_name)
+
+            error_key = question.id
+            if message_key == 'assurance_required':
+                error_key = '{}--assurance'.format(error_key)
+
+            question_errors[error_key] = {
+                'input_name': error_key,
+                'question': question.label,
+                'message': validation_message,
+            }
+
+        return question_errors
 
     def get_error_message(self, message_key, field_name=None):
         """Return a single error message.
