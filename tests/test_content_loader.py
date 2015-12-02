@@ -1101,14 +1101,18 @@ class TestContentSection(object):
                 "validations": [
                     {"name": "assurance_required", "message": "There there, it'll be ok."},
                 ]
+            }, {
+                "id": "q4",
+                "question": "No Errors",
+                "type": "text"
             }]
         })
 
         errors = {
             "q2": "the_error",
+            "q3": "assurance_required",
             "serviceTypes": "the_error",
             "priceString-min": "answer_required",
-            "q3": "assurance_required",
         }
 
         result = section.get_error_messages(errors, 'SCS')
@@ -1118,6 +1122,10 @@ class TestContentSection(object):
         assert result['q2']['question'] == "second"
         assert result['q3--assurance']['message'] == "There there, it'll be ok."
         assert result['serviceTypes']['message'] == "This is the error message"
+
+        assert result["priceString"]["input_name"] == "priceString"
+
+        assert list(result.keys()) == ["q2", "serviceTypes", "priceString", "q3--assurance"]
 
     def test_get_error_messages_with_unknown_error_key(self):
         section = ContentSection.create({
