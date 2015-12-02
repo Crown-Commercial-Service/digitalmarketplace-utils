@@ -302,6 +302,13 @@ class TestContentManifest(object):
                         {"id": "q72", "type": "text"}
                     ]
                 },
+                {
+                    "id": "q10",
+                    "question": 'Are you sure you are assured?',
+                    'type': 'boolean',
+                    "optional": False,
+                    'assuranceApproach': '2answers-type1',
+                }
             ]
         }])
 
@@ -309,7 +316,11 @@ class TestContentManifest(object):
             'q2': 'some value',
             'q6': 'another value',
             'q7.min': '10',
-            'q7.unit': 'day'})
+            'q7.unit': 'day',
+            'q10': {'value': True, 'assurance': 'Service provider assertion'},
+            'q11': {'value': True}
+        })
+
         assert summary.get_question('q1').value == [
             summary.get_question('q2')
         ]
@@ -319,12 +330,15 @@ class TestContentManifest(object):
         assert summary.get_question('q3').answer_required
         assert summary.get_question('q4').value == ''
         assert not summary.get_question('q4').answer_required
+        assert summary.get_question('q4').assurance == ''  # question without assurance returns an empty string
         assert summary.get_question('q5').answer_required
         assert not summary.get_question('q6').answer_required
         assert summary.get_question('q7').value == u'£10 per day'
         assert not summary.get_question('q7').answer_required
         assert summary.get_question('q8').answer_required
         assert not summary.get_question('q9').answer_required
+        assert summary.get_question('q10').value is True
+        assert summary.get_question('q10').assurance == 'Service provider assertion'
 
     def test_get_question(self):
         content = ContentManifest([
