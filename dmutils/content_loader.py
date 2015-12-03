@@ -460,7 +460,7 @@ class ContentQuestion(object):
             return []
 
     def has_assurance(self):
-        return self.get('assuranceApproach', False)
+        return True if self.get('assuranceApproach') else False
 
     def get_question_ids(self, type=None):
         if self.questions:
