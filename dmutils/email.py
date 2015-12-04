@@ -1,6 +1,8 @@
 import hashlib
 import base64
+
 from flask import current_app
+from flask._compat import string_types
 from mandrill import Mandrill, Error
 from itsdangerous import URLSafeTimedSerializer
 
@@ -9,14 +11,10 @@ class MandrillException(Exception):
     pass
 
 
-def send_email(
-        email_address,
-        email_body,
-        api_key,
-        subject,
-        from_email,
-        from_name,
-        tags):
+def send_email(to_email_addresses, email_body, api_key, subject, from_email, from_name, tags):
+    if isinstance(to_email_addresses, string_types):
+        to_email_addresses = [to_email_addresses]
+
     try:
         mandrill_client = Mandrill(api_key)
 
@@ -27,25 +25,21 @@ def send_email(
             'from_name': from_name,
             'to': [{
                 'email': email_address,
-                'name': 'Recipient Name',
                 'type': 'to'
-            }],
+            } for email_address in to_email_addresses],
             'important': False,
-            'track_opens': None,
-            'track_clicks': None,
+            'track_opens': False,
+            'track_clicks': False,
             'auto_text': True,
             'tags': tags,
-            'headers': {'Reply-To': from_email},  # noqa
+            'headers': {'Reply-To': from_email},
+            'preserve_recipients': False,
             'recipient_metadata': [{
                 'rcpt': email_address
-            }]
+            } for email_address in to_email_addresses]
         }
 
-        result = mandrill_client.messages.send(
-            message=message,
-            async=False,
-            ip_pool='Main Pool'
-        )
+        result = mandrill_client.messages.send(message=message, async=True)
     except Error as e:
         # Mandrill errors are thrown as exceptions
         current_app.logger.error("A mandrill error occurred: {error}",

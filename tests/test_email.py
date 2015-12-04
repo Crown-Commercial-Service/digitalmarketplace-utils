@@ -35,15 +35,15 @@ def test_calls_send_email_with_correct_params(email_app, mandrill):
             'from_name': "from_name",
             'to': [{
                 'email': "email_address",
-                'name': 'Recipient Name',
                 'type': 'to'
             }],
             'important': False,
-            'track_opens': None,
-            'track_clicks': None,
+            'track_opens': False,
+            'track_clicks': False,
             'auto_text': True,
             'tags': ['password-resets'],
             'headers': {'Reply-To': "from_email"},  # noqa
+            'preserve_recipients': False,
             'recipient_metadata': [{
                 'rcpt': "email_address"
             }]
@@ -60,11 +60,35 @@ def test_calls_send_email_with_correct_params(email_app, mandrill):
 
         )
 
-        mandrill.messages.send.assert_called_once_with(
-            message=expected_call,
-            async=False,
-            ip_pool='Main Pool'
+        mandrill.messages.send.assert_called_once_with(message=expected_call, async=True)
+
+
+def test_calls_send_email_to_multiple_addresses(email_app, mandrill):
+    with email_app.app_context():
+
+        mandrill.messages.send.return_value = [
+            {'_id': '123', 'email': '123'}]
+
+        send_email(
+            ["email_address1", "email_address2"],
+            "body",
+            "api_key",
+            "subject",
+            "from_email",
+            "from_name",
+            ["password-resets"]
+
         )
+
+        assert mandrill.messages.send.call_args[1]['message']['to'] == [
+            {'email': "email_address1", 'type': 'to'},
+            {'email': "email_address2", 'type': 'to'},
+        ]
+
+        assert mandrill.messages.send.call_args[1]['message']['recipient_metadata'] == [
+            {'rcpt': "email_address1"},
+            {'rcpt': "email_address2"},
+        ]
 
 
 def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
