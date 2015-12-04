@@ -381,7 +381,7 @@ class ContentQuestion(object):
             if self.get('assuranceApproach') and '{}--assurance'.format(self.id) in form_data:
                 return {self.id: {'assurance': form_data.get('{}--assurance'.format(self.id))}}
             elif self.type in ['list', 'checkboxes']:
-                return {self.id: []}
+                return {self.id: None}
             else:
                 return {}
 
@@ -402,7 +402,10 @@ class ContentQuestion(object):
                 "assurance": form_data.get(self.id + '--assurance'),
             }
 
-        return {self.id: value if value else None}
+        if self.type != 'boolean':
+            value = value if value else None
+
+        return {self.id: value}
 
     def get_error_messages(self, errors):
         error_fields = set(errors.keys()) & set(self.form_fields)
