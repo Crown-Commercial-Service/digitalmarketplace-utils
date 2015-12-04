@@ -39,7 +39,7 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
             } for email_address in to_email_addresses]
         }
 
-        result = mandrill_client.messages.send(message=message)
+        result = mandrill_client.messages.send(message=message, async=True)
     except Error as e:
         # Mandrill errors are thrown as exceptions
         current_app.logger.error("A mandrill error occurred: {error}",

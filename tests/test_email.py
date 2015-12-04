@@ -60,7 +60,7 @@ def test_calls_send_email_with_correct_params(email_app, mandrill):
 
         )
 
-        mandrill.messages.send.assert_called_once_with(message=expected_call)
+        mandrill.messages.send.assert_called_once_with(message=expected_call, async=True)
 
 
 def test_calls_send_email_to_multiple_addresses(email_app, mandrill):
