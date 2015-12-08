@@ -93,8 +93,11 @@ def format_service_price(service):
         service.get('priceInterval'))
 
 
-def format_price(min_price, max_price, unit, interval):
+def format_price(min_price, max_price, unit, interval, hours_for_price=None):
     """Format a price string"""
+    if hours_for_price:
+        return u'{} for £{}'.format(hours_for_price, min_price)
+
     formatted_price = u'£{}'.format(min_price)
     if max_price:
         formatted_price += u' to £{}'.format(max_price)
