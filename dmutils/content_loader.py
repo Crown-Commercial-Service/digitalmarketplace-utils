@@ -534,9 +534,11 @@ class ContentQuestionSummary(ContentQuestion):
                                                 self._default_for_field('price_unit'))
             price_interval = self._service_data.get(self.fields.get('price_interval'),
                                                     self._default_for_field('price_interval'))
+            hours_for_price = self._service_data.get(self.fields.get('hours_for_price'),
+                                                     self._default_for_field('hours_for_price'))
 
             if minimum_price and price_unit:
-                return format_price(minimum_price, maximum_price, price_unit, price_interval)
+                return format_price(minimum_price, maximum_price, price_unit, price_interval, hours_for_price)
             else:
                 return ''
         if self.has_assurance():
