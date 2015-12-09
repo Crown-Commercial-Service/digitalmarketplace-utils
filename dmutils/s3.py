@@ -34,13 +34,26 @@ class S3(object):
 
         return match.group(1)
 
-    def save(self, path, file, acl='public-read', move_prefix=None):
+    def save(self, path, file, acl='public-read', move_prefix=None, timestamp=None):
+        """Save a file in an S3 bucket
+
+        canned ACL list: https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
+
+        :param path:        location in S3 bucket at which to save the file
+        :param file:        file object to be saved in S3
+        :param acl:         S3 canned ACL
+        :param move_prefix: Prefix to give to existing file when moving it out of the way
+        :param timestamp:   Timestamp to set for this file rather than using utcnow
+
+        :return: S3 Key
+        """
         path = path.lstrip('/')
 
         self._move_existing(path, move_prefix)
 
         key = self.bucket.new_key(path)
         filesize = get_file_size_up_to_maximum(file)
+        key.set_metadata('timestamp', (timestamp or datetime.datetime.utcnow()).isoformat())
         key.set_contents_from_file(
             file,
             headers={'Content-Type': self._get_mimetype(key.name)}
@@ -74,7 +87,7 @@ class S3(object):
         if key:
             return key.generate_url(expires_in)
 
-    def list(self, prefix='', delimiter=''):
+    def list(self, prefix='', delimiter='', load_timestamps=False):
         """
         return a list of file keys (ordered by last_modified date) from an s3 bucket
 
@@ -85,13 +98,13 @@ class S3(object):
         """
         # http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.bucket.Bucket.list
         list_of_keys = self.bucket.list(prefix, delimiter)
-        return [
-            self._format_key(key)
-            for key in sorted(list_of_keys, key=lambda key: key.last_modified)
+        return sorted([
+            self._format_key(key, load_timestamps)
+            for key in list_of_keys
             if not (key.size == 0 and key.name[-1] == '/')
-        ]
+        ], key=lambda key: key['last_modified'])
 
-    def _format_key(self, key):
+    def _format_key(self, key, load_timestamps):
         """
         transform a boto s3 Key object into a (simpler) dict
 
@@ -99,12 +112,16 @@ class S3(object):
         :return:    dict
         """
         filename, ext = os.path.splitext(os.path.basename(key.name))
+        timestamp = None
+        if load_timestamps:
+            key = self.bucket.get_key(key.name)
+            timestamp = key.get_metadata('timestamp')
 
         return {
             'path': key.name,
             'filename': filename,
             'ext': ext[1:],
-            'last_modified': key.last_modified,
+            'last_modified': timestamp or key.last_modified,
             'size': key.size
         }
 
