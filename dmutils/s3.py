@@ -6,6 +6,7 @@ import boto.exception
 import datetime
 import mimetypes
 import logging
+from dateutil.parser import parse as parse_time
 
 from boto.exception import S3ResponseError  # noqa
 
@@ -119,11 +120,14 @@ class S3(object):
             key = self.bucket.get_key(key.name)
             timestamp = key.get_metadata('timestamp')
 
+        timestamp = timestamp or key.last_modified
+        timestamp = parse_time(timestamp)
+
         return {
             'path': key.name,
             'filename': filename,
             'ext': ext[1:],
-            'last_modified': timestamp or key.last_modified,
+            'last_modified': timestamp.strftime(DATETIME_FORMAT),
             'size': key.size
         }
 
