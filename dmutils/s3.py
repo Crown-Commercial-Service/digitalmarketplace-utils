@@ -9,6 +9,7 @@ import logging
 
 from boto.exception import S3ResponseError  # noqa
 
+from .formats import DATETIME_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,8 @@ class S3(object):
 
         key = self.bucket.new_key(path)
         filesize = get_file_size_up_to_maximum(file)
-        key.set_metadata('timestamp', (timestamp or datetime.datetime.utcnow()).isoformat())
+        timestamp = timestamp or datetime.datetime.utcnow()
+        key.set_metadata('timestamp', timestamp.strftime(DATETIME_FORMAT))
         key.set_contents_from_file(
             file,
             headers={'Content-Type': self._get_mimetype(key.name)}

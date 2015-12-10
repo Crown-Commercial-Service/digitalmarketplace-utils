@@ -147,7 +147,7 @@ class TestS3Uploader(unittest.TestCase):
         S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
 
         mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
-            'timestamp', "2015-10-10T00:00:00")
+            'timestamp', "2015-10-10T00:00:00.000000Z")
 
     @freeze_time('2015-10-10')
     def test_save_sets_timestamp_to_provided_time(self):
@@ -158,7 +158,7 @@ class TestS3Uploader(unittest.TestCase):
                                timestamp=datetime.datetime(2015, 10, 11))
 
         mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
-            'timestamp', "2015-10-11T00:00:00")
+            'timestamp', "2015-10-11T00:00:00.000000Z")
 
     def test_save_sets_content_type_and_acl(self):
         mock_bucket = FakeBucket()
