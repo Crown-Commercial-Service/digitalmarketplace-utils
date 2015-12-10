@@ -4,6 +4,7 @@ import datetime
 
 import mock
 import pytest
+from freezegun import freeze_time
 from .helpers import mock_file
 from dmutils.s3 import S3, get_file_size_up_to_maximum
 
@@ -104,12 +105,60 @@ class TestS3Uploader(unittest.TestCase):
 
         self.assertEqual(S3('test-bucket').list(), expected)
 
+    def test_list_files_with_loading_custom_timestamps(self):
+        mock_bucket = mock.Mock()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        fake_key = FakeKey('dir/file 1.odt')
+        mock_bucket.list.return_value = [fake_key]
+        mock_bucket.get_key.return_value = FakeKey('dir/file 1.odt', timestamp='2015-10-10T15:00:00.0000Z')
+
+        assert S3('test-bucket').list(load_timestamps=True)[0]['last_modified'] == '2015-10-10T15:00:00.0000Z'
+
+    def test_list_files_with_loading_custom_timestamps_sorts_by_timestamp(self):
+        mock_bucket = mock.Mock()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        fake_key = FakeKey('dir/file 1.odt')
+        mock_bucket.list.return_value = [fake_key, fake_key, fake_key]
+        mock_bucket.get_key.side_effect = [
+            FakeKey('dir/file 1.odt', timestamp='2015-12-10T15:00:00.0000Z'),
+            FakeKey('dir/file 1.odt', timestamp='2015-11-10T15:00:00.0000Z'),
+            FakeKey('dir/file 1.odt'),
+        ]
+
+        results = S3('test-bucket').list(load_timestamps=True)
+        assert results[0]['last_modified'] == '2015-08-17T14:00:00.000Z'
+        assert results[1]['last_modified'] == '2015-11-10T15:00:00.0000Z'
+        assert results[2]['last_modified'] == '2015-12-10T15:00:00.0000Z'
+
     def test_save_file(self):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
         S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
-        self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
+        assert mock_bucket.keys == set(['folder/test-file.pdf'])
+
+    @freeze_time('2015-10-10')
+    def test_save_sets_timestamp_to_current_time(self):
+        mock_bucket = FakeBucket()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
+
+        mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
+            'timestamp', "2015-10-10T00:00:00")
+
+    @freeze_time('2015-10-10')
+    def test_save_sets_timestamp_to_provided_time(self):
+        mock_bucket = FakeBucket()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123),
+                               timestamp=datetime.datetime(2015, 10, 11))
+
+        mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
+            'timestamp', "2015-10-11T00:00:00")
 
     def test_save_sets_content_type_and_acl(self):
         mock_bucket = FakeBucket()
@@ -215,10 +264,11 @@ class FakeBucket(object):
 
 
 class FakeKey(object):
-    def __init__(self, name, last_modified=None, size=None):
+    def __init__(self, name, last_modified=None, size=None, timestamp=None):
         self.name = name
         self.last_modified = last_modified or '2015-08-17T14:00:00.000Z'
         self.size = size if size is not None else 1
+        self.timestamp = timestamp
 
     def fake_format_key(self, filename, ext):
         return {
@@ -228,6 +278,9 @@ class FakeKey(object):
             'last_modified': self.last_modified,
             'size': self.size
         }
+
+    def get_metadata(self, key):
+        return self.timestamp if key == 'timestamp' and self.timestamp else None
 
 
 def test_get_file_size_just_below_maximum():
