@@ -93,7 +93,7 @@ class TestS3Uploader(unittest.TestCase):
         self.s3_mock.get_bucket.return_value = mock_bucket
 
         fake_key_later = FakeKey('dir/file 1.odt')
-        fake_key_earlier = FakeKey('dir/file 2.odt', last_modified='2014-08-17T14:00:00.000Z')
+        fake_key_earlier = FakeKey('dir/file 2.odt', last_modified='2014-08-17T14:00:00.000000Z')
         mock_bucket.list.return_value = [
             fake_key_later,
             fake_key_earlier
@@ -113,7 +113,7 @@ class TestS3Uploader(unittest.TestCase):
         mock_bucket.list.return_value = [fake_key]
         mock_bucket.get_key.return_value = FakeKey('dir/file 1.odt', timestamp='2015-10-10T15:00:00.0000Z')
 
-        assert S3('test-bucket').list(load_timestamps=True)[0]['last_modified'] == '2015-10-10T15:00:00.0000Z'
+        assert S3('test-bucket').list(load_timestamps=True)[0]['last_modified'] == '2015-10-10T15:00:00.000000Z'
 
     def test_list_files_with_loading_custom_timestamps_sorts_by_timestamp(self):
         mock_bucket = mock.Mock()
@@ -128,9 +128,9 @@ class TestS3Uploader(unittest.TestCase):
         ]
 
         results = S3('test-bucket').list(load_timestamps=True)
-        assert results[0]['last_modified'] == '2015-08-17T14:00:00.000Z'
-        assert results[1]['last_modified'] == '2015-11-10T15:00:00.0000Z'
-        assert results[2]['last_modified'] == '2015-12-10T15:00:00.0000Z'
+        assert results[0]['last_modified'] == '2015-08-17T14:00:00.000000Z'
+        assert results[1]['last_modified'] == '2015-11-10T15:00:00.000000Z'
+        assert results[2]['last_modified'] == '2015-12-10T15:00:00.000000Z'
 
     def test_save_file(self):
         mock_bucket = FakeBucket()
@@ -147,7 +147,7 @@ class TestS3Uploader(unittest.TestCase):
         S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
 
         mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
-            'timestamp', "2015-10-10T00:00:00")
+            'timestamp', "2015-10-10T00:00:00.000000Z")
 
     @freeze_time('2015-10-10')
     def test_save_sets_timestamp_to_provided_time(self):
@@ -158,7 +158,7 @@ class TestS3Uploader(unittest.TestCase):
                                timestamp=datetime.datetime(2015, 10, 11))
 
         mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
-            'timestamp', "2015-10-11T00:00:00")
+            'timestamp', "2015-10-11T00:00:00.000000Z")
 
     def test_save_sets_content_type_and_acl(self):
         mock_bucket = FakeBucket()
@@ -266,7 +266,7 @@ class FakeBucket(object):
 class FakeKey(object):
     def __init__(self, name, last_modified=None, size=None, timestamp=None):
         self.name = name
-        self.last_modified = last_modified or '2015-08-17T14:00:00.000Z'
+        self.last_modified = last_modified or '2015-08-17T14:00:00.000000Z'
         self.size = size if size is not None else 1
         self.timestamp = timestamp
 
