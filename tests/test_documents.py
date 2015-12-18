@@ -16,7 +16,7 @@ from dmutils.documents import (
     validate_documents,
     upload_document, upload_service_documents,
     get_signed_url, get_agreement_document_path,
-    sanitise_supplier_name)
+    sanitise_supplier_name, file_is_pdf, file_is_zip)
 
 
 class TestGenerateFilename(unittest.TestCase):
@@ -70,6 +70,14 @@ class TestValidateDocuments(unittest.TestCase):
 
     def test_file_is_not_open_document_format(self):
         self.assertFalse(file_is_open_document_format(mock_file('file1.doc', 1)))
+
+    def test_file_is_pdf(self):
+        self.assertTrue(file_is_pdf(mock_file('file.pdf', 1)))
+        self.assertFalse(file_is_pdf(mock_file('file.doc', 1)))
+
+    def test_file_is_zip(self):
+        self.assertTrue(file_is_zip(mock_file('file.zip', 1)))
+        self.assertFalse(file_is_zip(mock_file('file.sit', 1)))
 
     def test_validate_documents(self):
         self.assertEqual(

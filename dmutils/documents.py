@@ -140,6 +140,20 @@ def file_is_open_document_format(file_object):
     ]
 
 
+def file_is_pdf(file_object):
+    """Checks file extension as being PDF."""
+    return get_extension(file_object.filename) in [
+        ".pdf", ".pda"
+    ]
+
+
+def file_is_zip(file_object):
+    """Checks file extension as being ZIP."""
+    return get_extension(file_object.filename) in [
+        ".zip"
+    ]
+
+
 def generate_file_name(framework_slug, bucket_short_name, supplier_id, service_id, field, filename, suffix=None):
     if suffix is None:
         suffix = default_file_suffix()
@@ -191,6 +205,7 @@ def get_agreement_document_path(framework_slug, supplier_id, supplier_name, docu
 
 
 def sanitise_supplier_name(supplier_name):
+    """Replace ampersands with 'and' and spaces with a single underscore."""
     sanitised_supplier_name = supplier_name.strip().replace(' ', '_').replace('&', 'and')
     for bad_char in BAD_SUPPLIER_NAME_CHARACTERS:
         sanitised_supplier_name = sanitised_supplier_name.replace(bad_char, '')
