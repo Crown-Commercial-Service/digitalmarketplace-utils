@@ -317,11 +317,6 @@ def test_get_countersigned_agreement_document_path():
         'g-cloud-12/agreements/1234/1234-countersigned-framework-agreement.pdf'
 
 
-def test_get_countersigned_agreement_document_path_with_filename():
-    assert get_countersigned_agreement_document_path('g-cloud-12', 1234, 'another-filename.pdf') == \
-        'g-cloud-12/agreements/1234/1234-another-filename.pdf'
-
-
 def test_sanitise_supplier_name():
     assert sanitise_supplier_name('Kev\'s Butties') == 'Kevs_Butties'
     assert sanitise_supplier_name('   Supplier A   ') == 'Supplier_A'

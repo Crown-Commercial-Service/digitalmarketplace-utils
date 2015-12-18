@@ -204,13 +204,10 @@ def get_agreement_document_path(framework_slug, supplier_id, supplier_name, docu
     )
 
 
-def get_countersigned_agreement_document_path(framework_slug,
-                                              supplier_id,
-                                              document_name="countersigned-framework-agreement.pdf"):
-    return '{0}/agreements/{1}/{1}-{2}'.format(
+def get_countersigned_agreement_document_path(framework_slug, supplier_id):
+    return '{0}/agreements/{1}/{1}-countersigned-framework-agreement.pdf'.format(
         framework_slug,
-        supplier_id,
-        document_name
+        supplier_id
     )
 
 
