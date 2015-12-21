@@ -204,6 +204,13 @@ def get_agreement_document_path(framework_slug, supplier_id, supplier_name, docu
     )
 
 
+def get_countersigned_agreement_document_path(framework_slug, supplier_id):
+    return '{0}/agreements/{1}/{1}-countersigned-framework-agreement.pdf'.format(
+        framework_slug,
+        supplier_id
+    )
+
+
 def sanitise_supplier_name(supplier_name):
     """Replace ampersands with 'and' and spaces with a single underscore."""
     sanitised_supplier_name = supplier_name.strip().replace(' ', '_').replace('&', 'and')
