@@ -770,6 +770,15 @@ class TestDataApiClient(object):
             "users": {"active": False}
         }
 
+    def test_can_export_users(self, data_client, rmock):
+        rmock.get(
+            "http://baseurl/users/export/g-cloud-7",
+            json={"users": "result"},
+            status_code=200)
+        result = data_client.export_users('g-cloud-7')
+        assert rmock.called
+        assert result == {"users": "result"}
+
     @staticmethod
     def user():
         return {'users': {

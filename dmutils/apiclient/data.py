@@ -327,6 +327,11 @@ class DataAPIClient(BaseAPIClient):
                     extra={"user_id": user_id, "params": params})
         return user
 
+    def export_users(self, framework_slug):
+        return self._get(
+            "/users/export/{}".format(framework_slug)
+        )
+
     # Services
 
     def find_draft_services(self, supplier_id, service_id=None, framework=None):
