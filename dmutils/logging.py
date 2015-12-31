@@ -37,7 +37,7 @@ def init_app(app):
 
     handlers = get_handlers(app)
     loglevel = logging.getLevelName(app.config['DM_LOG_LEVEL'])
-    loggers = [app.logger, logging.getLogger('dmutils')]
+    loggers = [app.logger, logging.getLogger('dmutils'), logging.getLogger('dmapiclient')]
     for logger, handler in product(loggers, handlers):
         logger.addHandler(handler)
         logger.setLevel(loglevel)
