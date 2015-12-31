@@ -6,4 +6,4 @@ from dmapiclient import audit
 
 import flask_featureflags
 
-__version__ = '15.12.0'
+__version__ = '16.0.0'
