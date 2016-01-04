@@ -1,14 +1,11 @@
-backoff==1.0.7
 boto==2.38.0
 contextlib2==0.4.0
 Flask>=0.10
 six==1.9.0
-requests==2.7.0
 pyyaml==3.11
 python-json-logger==0.1.4
 inflection==0.2.1
 Flask-FeatureFlags==0.6
-enum34==1.0.4
 mandrill==1.0.57
 monotonic==0.3
 pytz==2015.4

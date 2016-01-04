@@ -2,6 +2,45 @@
 
 Records breaking changes from major version bumps
 
+## 16.0.0
+
+PR: [#233](https://github.com/alphagov/digitalmarketplace-utils/pull/233)
+
+### What changed
+
+`apiclient` and `audit` were moved to the new [dmapiclient](https://github.com/alphagov/digitalmarketplace-apiclient) package. Changes required to the apps are described in the [dmapiclient changelog](https://github.com/alphagov/digitalmarketplace-apiclient/blob/master/CHANGELOG.md).
+
+Imports from `dmutils.apiclient` and `dmutils.audit` modules have to be changed to
+the new package name (eg `from dmapiclient import ...`).
+
+API client logger names have changed from `dmutils.apiclient.*` to `dmapiclient.*`.
+
+### Example app change
+
+1. Add dmapiclient package to `requirements.txt`:
+
+   ```
+   git+https://github.com/alphagov/digitalmarketplace-apiclient.git@1.0.1#egg=digitalmarketplace-apiclient==1.0.1
+   ```
+
+2. Replace imports from `apiclient` modules:
+
+   Old
+   ```
+   from dmutils.apiclient.errors import HTTPError
+   from dmutils.apiclient import SearchAPIClient
+   from dmutils.audit import AuditTypes
+   ```
+
+   New
+   ```
+   from dmapiclient import HTTPError
+   from dmapiclient import SearchAPIClient
+   from dmapiclient.audit import AuditTypes
+   ```
+
+3. Check that `dmapiclient` logger is configured
+
 ## 15.0.0
 
 PR: [#210](https://github.com/alphagov/digitalmarketplace-utils/pull/210)
