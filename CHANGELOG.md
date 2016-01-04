@@ -10,10 +10,8 @@ PR: [#233](https://github.com/alphagov/digitalmarketplace-utils/pull/233)
 
 `apiclient` and `audit` were moved to the new [dmapiclient](https://github.com/alphagov/digitalmarketplace-apiclient) package. Changes required to the apps are described in the [dmapiclient changelog](https://github.com/alphagov/digitalmarketplace-apiclient/blob/master/CHANGELOG.md).
 
-Main package imports (ie `from dmutils.apiclient import ...`) are preserved by
-`dmutils`, however imports from `dmutils.apiclient.*` modules have to be changed
-to either imports from the main package namespace or the new package name
-(eg `from dmapiclient.errors import ...`).
+Imports from `dmutils.apiclient` and `dmutils.audit` modules have to be changed to
+the new package name (eg `from dmapiclient import ...`).
 
 API client logger names have changed from `dmutils.apiclient.*` to `dmapiclient.*`.
 
@@ -30,27 +28,18 @@ API client logger names have changed from `dmutils.apiclient.*` to `dmapiclient.
    Old
    ```
    from dmutils.apiclient.errors import HTTPError
-   ```
-
-   New
-   ```
-   from dmapiclient import HTTPError
-   ```
-
-3. Check that `dmapiclient` logger is configured
-4. (Optional) rewrite all `dmutils.apiclient` and `dmutils.audit` imports to use new package:
-
-   Old
-   ```
    from dmutils.apiclient import SearchAPIClient
    from dmutils.audit import AuditTypes
    ```
 
    New
    ```
+   from dmapiclient import HTTPError
    from dmapiclient import SearchAPIClient
    from dmapiclient.audit import AuditTypes
    ```
+
+3. Check that `dmapiclient` logger is configured
 
 ## 15.0.0
 

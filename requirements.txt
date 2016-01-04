@@ -1,6 +1,3 @@
-# Extracted packages
-git+https://github.com/alphagov/digitalmarketplace-apiclient.git@1.0.1#egg=digitalmarketplace-apiclient==1.0.1
-
 boto==2.38.0
 contextlib2==0.4.0
 Flask>=0.10
