@@ -90,6 +90,15 @@ class S3(object):
         if key:
             return key.generate_url(expires_in)
 
+    def get_key(self, path):
+        key = self.bucket.get_key(path)
+        if key:
+            return self._format_key(key, False, key.get_metadata('timestamp'))
+
+    def delete_key(self, path):
+        self._move_existing(path, None)
+        self.bucket.delete_key(path)
+
     def list(self, prefix='', delimiter='', load_timestamps=False):
         """
         return a list of file keys (ordered by last_modified date) from an s3 bucket
@@ -109,7 +118,7 @@ class S3(object):
             if not (key.size == 0 and key.name[-1] == '/')
         ], key=lambda key: key['last_modified'])
 
-    def _format_key(self, key, load_timestamps):
+    def _format_key(self, key, load_timestamps, timestamp=None):
         """
         transform a boto s3 Key object into a (simpler) dict
 
@@ -119,7 +128,6 @@ class S3(object):
         :return:    dict
         """
         filename, ext = os.path.splitext(os.path.basename(key.name))
-        timestamp = None
         if load_timestamps:
             key = self.bucket.get_key(key.name)
             timestamp = key.get_metadata('timestamp')

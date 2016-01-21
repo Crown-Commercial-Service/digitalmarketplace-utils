@@ -64,6 +64,32 @@ class TestS3Uploader(unittest.TestCase):
         S3('test-bucket').get_signed_url('documents/file.pdf', 10)
         mock_bucket.s3_key_mock.generate_url.assert_called_with(10)
 
+    def test_get_key(self):
+        mock_bucket = mock.Mock()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        fake_key = FakeKey('dir/file1.pdf')
+        mock_bucket.get_key.return_value = fake_key
+
+        assert S3('test-bucket').get_key('dir/file1.pdf') == fake_key.fake_format_key(filename='file1', ext='pdf')
+
+    def test_delete_key(self):
+        mock_bucket = FakeBucket(['folder/test-file.pdf'])
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        S3('test-bucket').delete_key('folder/test-file.pdf')
+
+        assert 'folder/test-file.pdf' not in mock_bucket.keys
+
+    @freeze_time('2015-10-10')
+    def test_delete_key_moves_file_with_prefix(self):
+        mock_bucket = FakeBucket(['folder/test-file.pdf'])
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        S3('test-bucket').delete_key('folder/test-file.pdf')
+
+        assert 'folder/2015-10-10T00:00:00-test-file.pdf' in mock_bucket.keys
+
     def test_list_files(self):
         mock_bucket = mock.Mock()
         self.s3_mock.get_bucket.return_value = mock_bucket
