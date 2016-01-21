@@ -90,13 +90,24 @@ class S3(object):
         if key:
             return key.generate_url(expires_in)
 
+    def get_key(self, path):
+        key = self.bucket.get_key(path)
+        if key:
+            return self._format_key(key, False, key.get_metadata('timestamp'))
+
+    def delete_key(self, path):
+        self._move_existing(path, None)
+        self.bucket.delete_key(path)
+
     def list(self, prefix='', delimiter='', load_timestamps=False):
         """
         return a list of file keys (ordered by last_modified date) from an s3 bucket
 
         Prefix & Delimiter: http://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
-        :param prefix:      filter by files whose names begin with the prefix
-        :param delimiter:   filter out files whose names contain the delimiter
+        :param prefix:         filter by files whose names begin with the prefix
+        :param delimiter:      filter out files whose names contain the delimiter
+        :param load_timestamp: by default custom timestamps are not loaded as they require an extra API call.
+                               If you need to show the timestamp set this to True.
         :return: list
         """
         # http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.bucket.Bucket.list
@@ -107,15 +118,16 @@ class S3(object):
             if not (key.size == 0 and key.name[-1] == '/')
         ], key=lambda key: key['last_modified'])
 
-    def _format_key(self, key, load_timestamps):
+    def _format_key(self, key, load_timestamps, timestamp=None):
         """
         transform a boto s3 Key object into a (simpler) dict
 
-        :param key: http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.key.Key
+        :param key:            http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.key.Key
+        :param load_timestamp: by default custom timestamps are not loaded as they require an extra API call.
+                               If you need to show the timestamp set this to True.
         :return:    dict
         """
         filename, ext = os.path.splitext(os.path.basename(key.name))
-        timestamp = None
         if load_timestamps:
             key = self.bucket.get_key(key.name)
             timestamp = key.get_metadata('timestamp')
