@@ -95,8 +95,10 @@ class S3(object):
         return a list of file keys (ordered by last_modified date) from an s3 bucket
 
         Prefix & Delimiter: http://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
-        :param prefix:      filter by files whose names begin with the prefix
-        :param delimiter:   filter out files whose names contain the delimiter
+        :param prefix:         filter by files whose names begin with the prefix
+        :param delimiter:      filter out files whose names contain the delimiter
+        :param load_timestamp: by default custom timestamps are not loaded as they require an extra API call.
+                               If you need to show the timestamp set this to True.
         :return: list
         """
         # http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.bucket.Bucket.list
@@ -111,7 +113,9 @@ class S3(object):
         """
         transform a boto s3 Key object into a (simpler) dict
 
-        :param key: http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.key.Key
+        :param key:            http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.key.Key
+        :param load_timestamp: by default custom timestamps are not loaded as they require an extra API call.
+                               If you need to show the timestamp set this to True.
         :return:    dict
         """
         filename, ext = os.path.splitext(os.path.basename(key.name))
