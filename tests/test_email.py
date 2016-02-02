@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
-from dmutils.email import generate_token, decode_token, \
-    send_email, MandrillException, hash_email
-from itsdangerous import BadTimeSignature
 import pytest
 import mock
 import six
-from dmutils.config import init_app
+
+from datetime import datetime
+from itsdangerous import BadTimeSignature
 from mandrill import Error
+
+from dmutils.config import init_app
+from dmutils.email import (
+    generate_token, decode_token, send_email, MandrillException, hash_email,
+    token_created_before_password_last_changed,
+    decode_invitation_token, decode_password_reset_token)
+from dmutils.formats import DATETIME_FORMAT
+from .test_user import user_json
 
 
 @pytest.yield_fixture
@@ -19,6 +26,10 @@ def mandrill():
 @pytest.yield_fixture
 def email_app(app):
     init_app(app)
+    app.config['SHARED_EMAIL_KEY'] = "Key"
+    app.config['INVITE_EMAIL_SALT'] = "Salt"
+    app.config['SECRET_KEY'] = "Secret"
+    app.config["RESET_PASSWORD_SALT"] = "PassSalt"
     yield app
 
 
@@ -157,3 +168,44 @@ def test_hash_email():
 
     for test, expected in tests:
         assert hash_email(test) == expected
+
+
+def test_decode_password_reset_token_ok_for_good_token(email_app):
+    user = user_json()
+    user['users']['passwordChangedAt'] = "2016-01-01T12:00:00.30Z"
+    data_api_client = mock.Mock()
+    data_api_client.get_user.return_value = user
+    with email_app.app_context():
+        data = {'user': 'test@example.com'}
+        token = generate_token(data, 'Secret', 'PassSalt')
+        assert decode_password_reset_token(token, data_api_client) == data
+
+
+def test_decode_invitation_token_decodes_ok_for_buyer(email_app):
+    with email_app.app_context():
+        data = {'email_address': 'test-user@email.com'}
+        token = generate_token(data, 'Key', 'Salt')
+        assert decode_invitation_token(token, role='buyer') == data
+
+
+def test_decode_invitation_token_decodes_ok_for_supplier(email_app):
+    with email_app.app_context():
+        data = {'email_address': 'test-user@email.com', 'supplier_id': 1234, 'supplier_name': 'A. Supplier'}
+        token = generate_token(data, 'Key', 'Salt')
+        assert decode_invitation_token(token, role='supplier') == data
+
+
+def test_decode_does_not_work_if_there_are_missing_keys(email_app):
+    with email_app.app_context():
+        data = {'email_address': 'test-user@email.com', 'supplier_name': 'A. Supplier'}
+        token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])
+
+        assert decode_invitation_token(token, role='supplier') is None
+
+
+def test_token_created_before_password_last_changed():
+    january_first = datetime.strptime("2016-01-01T12:00:00.30Z", DATETIME_FORMAT)
+    january_second = datetime.strptime("2016-02-01T12:00:00.30Z", DATETIME_FORMAT)
+
+    assert token_created_before_password_last_changed(january_first, january_second) is True
+    assert token_created_before_password_last_changed(january_second, january_first) is False
