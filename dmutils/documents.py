@@ -195,11 +195,10 @@ def get_signed_url(bucket, path, base_url):
         return url
 
 
-def get_agreement_document_path(framework_slug, supplier_id, supplier_name, document_name):
-    return '{0}/agreements/{1}/{2}-{1}-{3}'.format(
+def get_agreement_document_path(framework_slug, supplier_id, document_name):
+    return '{0}/agreements/{1}/{1}-{2}'.format(
         framework_slug,
         supplier_id,
-        sanitise_supplier_name(supplier_name),
         document_name
     )
 

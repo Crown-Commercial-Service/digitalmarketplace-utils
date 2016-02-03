@@ -308,8 +308,8 @@ def test_get_signed_url(base_url, expected):
 
 
 def test_get_agreement_document_path():
-    assert get_agreement_document_path('g-cloud-7', 1234, 'supplier name', 'foo.pdf') == \
-        'g-cloud-7/agreements/1234/supplier_name-1234-foo.pdf'
+    assert get_agreement_document_path('g-cloud-7', 1234, 'foo.pdf') == \
+        'g-cloud-7/agreements/1234/1234-foo.pdf'
 
 
 def test_get_countersigned_agreement_document_path():
