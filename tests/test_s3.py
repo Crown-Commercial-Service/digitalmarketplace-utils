@@ -197,6 +197,19 @@ class TestS3Uploader(unittest.TestCase):
             mock.ANY, headers={'Content-Type': 'application/pdf'})
         mock_bucket.s3_key_mock.set_acl.assert_called_with('public-read')
 
+    def test_save_sets_content_type_and_content_disposition_header(self):
+        mock_bucket = FakeBucket()
+        self.s3_mock.get_bucket.return_value = mock_bucket
+
+        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123), download_filename='new-test-file.pdf')
+        self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
+
+        mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
+            mock.ANY, headers={
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'attachment; filename="new-test-file.pdf"'
+            })
+
     def test_save_strips_leading_slash(self):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket

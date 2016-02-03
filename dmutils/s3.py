@@ -36,7 +36,7 @@ class S3(object):
 
         return match.group(1)
 
-    def save(self, path, file, acl='public-read', move_prefix=None, timestamp=None):
+    def save(self, path, file, acl='public-read', move_prefix=None, timestamp=None, download_filename=None):
         """Save a file in an S3 bucket
 
         canned ACL list: https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
@@ -57,9 +57,12 @@ class S3(object):
         filesize = get_file_size_up_to_maximum(file)
         timestamp = timestamp or datetime.datetime.utcnow()
         key.set_metadata('timestamp', timestamp.strftime(DATETIME_FORMAT))
+        headers = {'Content-Type': self._get_mimetype(key.name)}
+        if download_filename:
+            headers['Content-Disposition'] = 'attachment; filename="{}"'.format(download_filename)
         key.set_contents_from_file(
             file,
-            headers={'Content-Type': self._get_mimetype(key.name)}
+            headers=headers
         )
         key.set_acl(acl)
         logger.info(
