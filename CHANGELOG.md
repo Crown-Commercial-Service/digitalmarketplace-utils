@@ -2,6 +2,41 @@
 
 Records breaking changes from major version bumps
 
+## 17.0.0
+
+PR: [#238](https://github.com/alphagov/digitalmarketplace-utils/pull/238)
+
+### What changed
+
+`documents.get_agreement_document_path` no longer takes `supplier_name` argument since uploaded
+file paths are constructed using `supplier_id` and `document_name` only.
+
+`documents.get_countersigned_agreement_document_path` has been removed.
+
+### Example app change
+
+Old:
+```python
+get_agreement_document_path(framework_slug, supplier_id, legal_supplier_name, document_name)
+```
+
+New:
+```python
+get_agreement_document_path(framework_slug, supplier_id, document_name)
+```
+
+Old:
+```python
+get_countersigned_agreement_document_path(framework_slug, supplier_id)
+```
+
+New:
+```python
+from dmutils.documents import COUNTERSIGNED_AGREEMENT_FILENAME
+
+get_agreement_document_path(framework_slug, supplier_id, COUNTERSIGNED_AGREEMENT_FILENAME)
+```
+
 ## 16.0.0
 
 PR: [#233](https://github.com/alphagov/digitalmarketplace-utils/pull/233)
