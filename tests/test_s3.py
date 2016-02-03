@@ -207,7 +207,7 @@ class TestS3Uploader(unittest.TestCase):
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
             mock.ANY, headers={
                 'Content-Type': 'application/pdf',
-                'Content-Disposition': 'attachment; filename="new-test-file.pdf"'
+                'Content-Disposition': 'attachment; filename="new-test-file.pdf"'.encode('utf-8')
             })
 
     def test_save_strips_leading_slash(self):

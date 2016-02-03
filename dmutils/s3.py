@@ -59,7 +59,7 @@ class S3(object):
         key.set_metadata('timestamp', timestamp.strftime(DATETIME_FORMAT))
         headers = {'Content-Type': self._get_mimetype(key.name)}
         if download_filename:
-            headers['Content-Disposition'] = 'attachment; filename="{}"'.format(download_filename)
+            headers['Content-Disposition'] = 'attachment; filename="{}"'.format(download_filename).encode('utf-8')
         key.set_contents_from_file(
             file,
             headers=headers
