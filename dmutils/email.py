@@ -93,12 +93,10 @@ def decode_password_reset_token(token, data_api_client):
         )
     except SignatureExpired:
         current_app.logger.info("Password reset attempt with expired token.")
-        flash('token_expired', 'error')
-        return None
+        return {'error': 'token_expired'}
     except BadSignature as e:
         current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
-        flash('token_invalid', 'error')
-        return None
+        return {'error': 'token_invalid'}
 
     user = data_api_client.get_user(decoded["user"])
     user_last_changed_password_at = datetime.strptime(
@@ -111,8 +109,7 @@ def decode_password_reset_token(token, data_api_client):
             user_last_changed_password_at
     ):
         current_app.logger.info("Error changing password: Token generated earlier than password was last changed.")
-        flash('token_invalid', 'error')
-        return None
+        return {'error': 'token_invalid'}
 
     return decoded
 
