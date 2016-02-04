@@ -12,6 +12,11 @@ from .s3 import S3ResponseError, get_file_size_up_to_maximum, FILE_SIZE_LIMIT
 BAD_SUPPLIER_NAME_CHARACTERS = ['#', '%', '&', '{', '}', '\\', '<', '>', '*', '?', '/', '$',
                                 '!', "'", '"', ':', '@', '+', '`', '|', '=', ',', '.']
 
+RESULT_LETTER_FILENAME = 'result-letter.pdf'
+AGREEMENT_FILENAME = 'framework-agreement.pdf'
+SIGNED_AGREEMENT_PREFIX = 'signed-framework-agreement'
+COUNTERSIGNED_AGREEMENT_FILENAME = 'countersigned-framework-agreement.pdf'
+
 
 def filter_empty_files(files):
     """Remove any empty files from the list.
@@ -200,13 +205,6 @@ def get_agreement_document_path(framework_slug, supplier_id, document_name):
         framework_slug,
         supplier_id,
         document_name
-    )
-
-
-def get_countersigned_agreement_document_path(framework_slug, supplier_id):
-    return '{0}/agreements/{1}/{1}-countersigned-framework-agreement.pdf'.format(
-        framework_slug,
-        supplier_id
     )
 
 
