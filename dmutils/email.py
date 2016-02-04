@@ -1,10 +1,18 @@
-import hashlib
 import base64
+import hashlib
+import six
 
-from flask import current_app
+from flask import current_app, flash
 from flask._compat import string_types
+
+from datetime import datetime
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from mandrill import Mandrill, Error
-from itsdangerous import URLSafeTimedSerializer
+
+from .formats import DATETIME_FORMAT
+
+ONE_DAY_IN_SECONDS = 86400
+SEVEN_DAYS_IN_SECONDS = 604800
 
 
 class MandrillException(Exception):
@@ -73,3 +81,65 @@ def hash_email(email):
     m.update(email.encode('utf-8'))
 
     return base64.urlsafe_b64encode(m.digest())
+
+
+def decode_password_reset_token(token, data_api_client):
+    try:
+        decoded, timestamp = decode_token(
+            token,
+            current_app.config["SECRET_KEY"],
+            current_app.config["RESET_PASSWORD_SALT"],
+            ONE_DAY_IN_SECONDS
+        )
+    except SignatureExpired:
+        current_app.logger.info("Password reset attempt with expired token.")
+        return {'error': 'token_expired'}
+    except BadSignature as e:
+        current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
+        return {'error': 'token_invalid'}
+
+    user = data_api_client.get_user(decoded["user"])
+    user_last_changed_password_at = datetime.strptime(
+        user['users']['passwordChangedAt'],
+        DATETIME_FORMAT
+    )
+
+    if token_created_before_password_last_changed(
+            timestamp,
+            user_last_changed_password_at
+    ):
+        current_app.logger.info("Error changing password: Token generated earlier than password was last changed.")
+        return {'error': 'token_invalid'}
+
+    return decoded
+
+
+def decode_invitation_token(encoded_token, role):
+    required_fields = ['email_address', 'supplier_id', 'supplier_name'] if role == 'supplier' else ['email_address']
+    try:
+        token, timestamp = decode_token(
+            encoded_token,
+            current_app.config['SHARED_EMAIL_KEY'],
+            current_app.config['INVITE_EMAIL_SALT'],
+            SEVEN_DAYS_IN_SECONDS
+        )
+        if all(field in token for field in required_fields):
+            return token
+        else:
+            raise ValueError('Invitation token is missing required keys')
+    except SignatureExpired as e:
+        current_app.logger.info("Invitation attempt with expired token. error {error}",
+                                extra={'error': six.text_type(e)})
+        return None
+    except BadSignature as e:
+        current_app.logger.info("Invitation reset attempt with expired token. error {error}",
+                                extra={'error': six.text_type(e)})
+        return None
+    except ValueError as e:
+        current_app.logger.info("error {error}",
+                                extra={'error': six.text_type(e)})
+        return None
+
+
+def token_created_before_password_last_changed(token_timestamp, user_timestamp):
+    return token_timestamp < user_timestamp
