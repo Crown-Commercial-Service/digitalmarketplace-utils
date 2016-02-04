@@ -16,7 +16,8 @@ from dmutils.documents import (
     validate_documents,
     upload_document, upload_service_documents,
     get_signed_url, get_agreement_document_path,
-    sanitise_supplier_name, file_is_pdf, file_is_zip, get_countersigned_agreement_document_path)
+    sanitise_supplier_name, file_is_pdf, file_is_zip
+)
 
 
 class TestGenerateFilename(unittest.TestCase):
@@ -308,13 +309,8 @@ def test_get_signed_url(base_url, expected):
 
 
 def test_get_agreement_document_path():
-    assert get_agreement_document_path('g-cloud-7', 1234, 'supplier name', 'foo.pdf') == \
-        'g-cloud-7/agreements/1234/supplier_name-1234-foo.pdf'
-
-
-def test_get_countersigned_agreement_document_path():
-    assert get_countersigned_agreement_document_path('g-cloud-12', 1234) == \
-        'g-cloud-12/agreements/1234/1234-countersigned-framework-agreement.pdf'
+    assert get_agreement_document_path('g-cloud-7', 1234, 'foo.pdf') == \
+        'g-cloud-7/agreements/1234/1234-foo.pdf'
 
 
 def test_sanitise_supplier_name():
