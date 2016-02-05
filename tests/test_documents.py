@@ -15,7 +15,7 @@ from dmutils.documents import (
     file_is_open_document_format,
     validate_documents,
     upload_document, upload_service_documents,
-    get_signed_url, get_agreement_document_path,
+    get_signed_url, get_agreement_document_path, get_document_path,
     sanitise_supplier_name, file_is_pdf, file_is_zip
 )
 
@@ -310,6 +310,11 @@ def test_get_signed_url(base_url, expected):
 
 def test_get_agreement_document_path():
     assert get_agreement_document_path('g-cloud-7', 1234, 'foo.pdf') == \
+        'g-cloud-7/agreements/1234/1234-foo.pdf'
+
+
+def test_get_document_path():
+    assert get_document_path('g-cloud-7', 1234, 'agreements', 'foo.pdf') == \
         'g-cloud-7/agreements/1234/1234-foo.pdf'
 
 

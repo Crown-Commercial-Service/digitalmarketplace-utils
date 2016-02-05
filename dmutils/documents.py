@@ -200,9 +200,19 @@ def get_signed_url(bucket, path, base_url):
         return url
 
 
+# this method is deprecated
 def get_agreement_document_path(framework_slug, supplier_id, document_name):
     return '{0}/agreements/{1}/{1}-{2}'.format(
         framework_slug,
+        supplier_id,
+        document_name
+    )
+
+
+def get_document_path(framework_slug, supplier_id, bucket_category, document_name):
+    return '{0}/{1}/{2}/{2}-{3}'.format(
+        framework_slug,
+        bucket_category,
         supplier_id,
         document_name
     )
