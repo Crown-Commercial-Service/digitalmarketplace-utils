@@ -8,7 +8,7 @@ import io
 
 from dmutils.content_loader import (
     ContentLoader, ContentSection, ContentQuestion, ContentManifest,
-    read_yaml, ContentNotFoundError, QuestionNotFoundError
+    read_yaml, ContentNotFoundError, QuestionNotFoundError, _make_slug
 )
 
 from sys import version_info
@@ -1545,3 +1545,12 @@ class TestContentLoader(object):
         with pytest.raises(ContentNotFoundError):
             yaml_loader = ContentLoader('content/')
             yaml_loader.get_manifest('framework-slug', 'manifest')
+
+
+@pytest.mark.parametrize("title,slug", [
+    ("The Title", "the-title"),
+    ("This\nAnd\tThat ", "this-and-that"),
+    ("This&That?", "this-that"),
+])
+def test_make_slug(title, slug):
+    assert _make_slug(title) == slug
