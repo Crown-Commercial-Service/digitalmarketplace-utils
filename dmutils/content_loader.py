@@ -387,6 +387,8 @@ class ContentQuestion(object):
 
         if self.id == 'serviceTypes' or self.type in ['list', 'checkboxes']:
             value = form_data.getlist(self.id)
+        elif self.type == 'yes_no_question':
+            value = list(map(convert_to_boolean, form_data.getlist(self.id)))
         elif self.type == 'boolean':
             value = convert_to_boolean(form_data[self.id])
         elif self.type == 'percentage':
