@@ -822,6 +822,12 @@ class TestContentSection(object):
         assert section.get_data(form)['q1'] is False
 
         form = ImmutableMultiDict([
+            ('q5', 'not boolean'),
+            ('q5', 'falsey')
+        ])
+        assert section.get_data(form)['q5'] == ['not boolean', 'falsey']
+
+        form = ImmutableMultiDict([
             ('q10', 'not a number')
         ])
         assert section.get_data(form)['q10'] == 'not a number'
