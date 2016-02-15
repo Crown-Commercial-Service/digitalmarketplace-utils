@@ -11,11 +11,10 @@ from dmutils.content_loader import (
     read_yaml, ContentNotFoundError, QuestionNotFoundError, _make_slug
 )
 
-from sys import version_info
-if version_info.major == 2:
-    import __builtin__ as builtins
-else:
+try:
     import builtins
+except ImportError:
+    import __builtin__ as builtins
 
 
 class TestContentManifest(object):
