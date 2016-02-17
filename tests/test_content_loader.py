@@ -721,7 +721,7 @@ class TestContentSection(object):
             }, {
                 "id": "q5",
                 "question": "Yes no question",
-                "type": "yes_no_question",
+                "type": "boolean_list",
             }, {
                 "id": "q6",
                 "question": "Checkboxes question",
@@ -886,7 +886,7 @@ class TestContentSection(object):
             }, {
                 "id": "q5",
                 "question": "Yes no question",
-                "type": "yes_no_question",
+                "type": "boolean_list",
             }, {
                 "id": "q6",
                 "question": "Checkboxes question",
