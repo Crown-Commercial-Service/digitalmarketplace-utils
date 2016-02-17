@@ -377,7 +377,7 @@ class ContentQuestion(object):
             return self._get_single_question_data(form_data)
 
     def _get_single_question_data(self, form_data):
-        if self.id not in form_data:
+        if self.id not in form_data and self.type != 'yes_no_question':
             if self.get('assuranceApproach') and '{}--assurance'.format(self.id) in form_data:
                 return {self.id: {'assurance': form_data.get('{}--assurance'.format(self.id))}}
             elif self.type in ['list', 'checkboxes']:
@@ -388,7 +388,22 @@ class ContentQuestion(object):
         if self.id == 'serviceTypes' or self.type in ['list', 'checkboxes']:
             value = form_data.getlist(self.id)
         elif self.type == 'yes_no_question':
-            value = list(map(convert_to_boolean, form_data.getlist(self.id)))
+
+            # if self.id is 'q5', form keys will come back as ('q5-0', 'true'), ('q5-1', 'false'), ('q5-3', 'true'), ...
+            # here, we build a dict with keys as indices and values converted to boolean, eg {0: True, 1: False, 3: True, ...}  # noqa
+            boolean_indices_and_values = {
+                int(k.split('-')[-1]): convert_to_boolean(v) for k, v in form_data.items()
+                if k.startswith("{}-".format(self.id)) and
+                k.split('-')[-1].isdigit()
+            }
+
+            if not len(boolean_indices_and_values):
+                return {}
+
+            value = [None] * (max(boolean_indices_and_values.keys()) + 1)
+            for k, v in boolean_indices_and_values.items():
+                value[k] = v
+
         elif self.type == 'boolean':
             value = convert_to_boolean(form_data[self.id])
         elif self.type == 'percentage':

@@ -772,8 +772,10 @@ class TestContentSection(object):
             ('q3', 'Should be lost'),
             ('q4', 'value 1'),
             ('q4', 'value 2'),
-            ('q5', 'true'),
-            ('q5', 'false'),
+            ('q5-0', 'true'),
+            ('q5-1', 'false'),
+            ('q5-4', 'true'),
+            ('q5-not-valid', 'true'),
             ('q6', 'check 1'),
             ('q6', 'check 2'),
             ('q7', '71234567890'),
@@ -797,7 +799,7 @@ class TestContentSection(object):
             'q2': 'Some text stuff',
             'q3': 'value',
             'q4': ['value 1', 'value 2'],
-            'q5': [True, False],
+            'q5': [True, False, None, None, True],
             'q6': ['check 1', 'check 2'],
             'q7': {'assurance': 'yes I am', 'value': '71234567890'},
             'q8-min_price': '12.12',
@@ -821,12 +823,6 @@ class TestContentSection(object):
         assert section.get_data(form)['q1'] is False
 
         form = ImmutableMultiDict([
-            ('q5', 'not boolean'),
-            ('q5', 'falsey')
-        ])
-        assert section.get_data(form)['q5'] == ['not boolean', 'falsey']
-
-        form = ImmutableMultiDict([
             ('q10', 'not a number')
         ])
         assert section.get_data(form)['q10'] == 'not a number'
@@ -848,10 +844,18 @@ class TestContentSection(object):
         ])
         assert section.get_data(form)['q4'] == ['']
 
+        # if we have one empty value
         form = ImmutableMultiDict([
-            ('q5', '')
+            ('q5-0', '')
         ])
         assert section.get_data(form)['q5'] == ['']
+
+        # if we have a value without an index number, we ignore it
+        form = ImmutableMultiDict([
+            ('q5', 'true'),
+            ('q5-', 'true')
+        ])
+        assert 'q5' not in section.get_data(form)
 
     def test_unformat_data(self):
         section = ContentSection.create({
