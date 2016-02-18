@@ -11,11 +11,10 @@ from dmutils.content_loader import (
     read_yaml, ContentNotFoundError, QuestionNotFoundError, _make_slug
 )
 
-from sys import version_info
-if version_info.major == 2:
-    import __builtin__ as builtins
-else:
+try:
     import builtins
+except ImportError:
+    import __builtin__ as builtins
 
 
 class TestContentManifest(object):
@@ -721,41 +720,45 @@ class TestContentSection(object):
                 "type": "list",
             }, {
                 "id": "q5",
+                "question": "Yes no question",
+                "type": "boolean_list",
+            }, {
+                "id": "q6",
                 "question": "Checkboxes question",
                 "type": "checkboxes",
             }, {
-                "id": "q6",
+                "id": "q7",
                 "question": "Service ID question",
                 "type": "service_id",
                 "assuranceApproach": "2answers-type1",
             }, {
-                "id": "q7",
+                "id": "q8",
                 "question": "Pricing question",
                 "type": "pricing",
                 "fields": {
-                    "minimum_price": "q7-min_price",
-                    "maximum_price": "q7-max_price",
-                    "price_unit": "q7-price_unit",
-                    "price_interval": "q7-price_interval"
+                    "minimum_price": "q8-min_price",
+                    "maximum_price": "q8-max_price",
+                    "price_unit": "q8-price_unit",
+                    "price_interval": "q8-price_interval"
                 }
             }, {
-                "id": "q8",
+                "id": "q9",
                 "question": "Upload question",
                 "type": "upload",
             }, {
-                "id": "q9",
+                "id": "q10",
                 "question": "Percentage question",
                 "type": "percentage",
             }, {
-                "id": "q10",
+                "id": "q11",
                 "question": "Large text question",
                 "type": "textbox_large",
             }, {
-                "id": "q11",
+                "id": "q12",
                 "question": "Text question",
                 "type": "text"
             }, {
-                "id": "q12",
+                "id": "q13",
                 "question": "Text question",
                 "type": "text"
             }]
@@ -769,19 +772,23 @@ class TestContentSection(object):
             ('q3', 'Should be lost'),
             ('q4', 'value 1'),
             ('q4', 'value 2'),
-            ('q5', 'check 1'),
-            ('q5', 'check 2'),
-            ('q6', '71234567890'),
-            ('q6--assurance', 'yes I am'),
-            ('q7-min_price', '12.12'),
-            ('q7-max_price', ''),
-            ('q7-price_unit', 'Unit'),
-            ('q7-price_interval', 'Hour'),
-            ('q8', 'blah blah'),
-            ('q9', '12.12'),
-            ('q10', 'Looooooooaaaaaaaaads of text'),
+            ('q5-0', 'true'),
+            ('q5-1', 'false'),
+            ('q5-4', 'true'),
+            ('q5-not-valid', 'true'),
+            ('q6', 'check 1'),
+            ('q6', 'check 2'),
+            ('q7', '71234567890'),
+            ('q7--assurance', 'yes I am'),
+            ('q8-min_price', '12.12'),
+            ('q8-max_price', ''),
+            ('q8-price_unit', 'Unit'),
+            ('q8-price_interval', 'Hour'),
+            ('q9', 'blah blah'),
+            ('q10', '12.12'),
+            ('q11', 'Looooooooaaaaaaaaads of text'),
             ('extra_field', 'Should be lost'),
-            ('q12', ''),
+            ('q13', ''),
         ])
 
         data = section.get_data(form)
@@ -792,15 +799,16 @@ class TestContentSection(object):
             'q2': 'Some text stuff',
             'q3': 'value',
             'q4': ['value 1', 'value 2'],
-            'q5': ['check 1', 'check 2'],
-            'q6': {'assurance': 'yes I am', 'value': '71234567890'},
-            'q7-min_price': '12.12',
-            'q7-max_price': None,
-            'q7-price_unit': 'Unit',
-            'q7-price_interval': 'Hour',
-            'q9': 12.12,
-            'q10': 'Looooooooaaaaaaaaads of text',
-            'q12': None,
+            'q5': [True, False, None, None, True],
+            'q6': ['check 1', 'check 2'],
+            'q7': {'assurance': 'yes I am', 'value': '71234567890'},
+            'q8-min_price': '12.12',
+            'q8-max_price': None,
+            'q8-price_unit': 'Unit',
+            'q8-price_interval': 'Hour',
+            'q10': 12.12,
+            'q11': 'Looooooooaaaaaaaaads of text',
+            'q13': None,
         }
 
         # Failure modes
@@ -815,19 +823,19 @@ class TestContentSection(object):
         assert section.get_data(form)['q1'] is False
 
         form = ImmutableMultiDict([
-            ('q9', 'not a number')
+            ('q10', 'not a number')
         ])
-        assert section.get_data(form)['q9'] == 'not a number'
+        assert section.get_data(form)['q10'] == 'not a number'
 
         # Test 'orphaned' assurance is returned
         form = ImmutableMultiDict([
-            ('q6--assurance', 'yes I am'),
+            ('q7--assurance', 'yes I am'),
         ])
         data = section.get_data(form)
         assert data == {
             'q4': None,
-            'q5': None,
-            'q6': {'assurance': 'yes I am'},
+            'q6': None,
+            'q7': {'assurance': 'yes I am'},
         }
 
         # Test empty lists are not converted to `None`
@@ -835,6 +843,19 @@ class TestContentSection(object):
             ('q4', '')
         ])
         assert section.get_data(form)['q4'] == ['']
+
+        # if we have one empty value
+        form = ImmutableMultiDict([
+            ('q5-0', '')
+        ])
+        assert section.get_data(form)['q5'] == ['']
+
+        # if we have a value without an index number, we ignore it
+        form = ImmutableMultiDict([
+            ('q5', 'true'),
+            ('q5-', 'true')
+        ])
+        assert 'q5' not in section.get_data(form)
 
     def test_unformat_data(self):
         section = ContentSection.create({
@@ -864,37 +885,41 @@ class TestContentSection(object):
                 "type": "list",
             }, {
                 "id": "q5",
+                "question": "Yes no question",
+                "type": "boolean_list",
+            }, {
+                "id": "q6",
                 "question": "Checkboxes question",
                 "type": "checkboxes",
             }, {
-                "id": "q6",
+                "id": "q7",
                 "question": "Service ID question",
                 "type": "service_id",
                 "assuranceApproach": "2answers-type1",
             }, {
-                "id": "q7",
+                "id": "q8",
                 "question": "Pricing question",
                 "type": "pricing",
                 "fields": {
-                    "minimim_price": "q7-min",
-                    "maximum_price": "q7-min",
-                    "price_unit": "q7-unit",
-                    "price_interval": "q7-interval"
+                    "minimim_price": "q8-min",
+                    "maximum_price": "q8-min",
+                    "price_unit": "q8-unit",
+                    "price_interval": "q8-interval"
                 }
             }, {
-                "id": "q8",
+                "id": "q9",
                 "question": "Upload question",
                 "type": "upload",
             }, {
-                "id": "q9",
+                "id": "q10",
                 "question": "Percentage question",
                 "type": "percentage",
             }, {
-                "id": "q10",
+                "id": "q11",
                 "question": "Large text question",
                 "type": "textbox_large",
             }, {
-                "id": "q11",
+                "id": "q12",
                 "question": "Text question",
                 "type": "text"
             }]
@@ -906,14 +931,15 @@ class TestContentSection(object):
             'q2': 'Some text stuff',
             'q3': 'value',
             'q4': ['value 1', 'value 2'],
-            'q5': ['check 1', 'check 2'],
-            'q6': {'assurance': 'yes I am', 'value': '71234567890'},
-            'q7-min': '12.12',
-            'q7-max': '13.13',
-            'q7-unit': 'Unit',
-            'q7-interval': 'Hour',
-            'q9': 12.12,
-            'q10': 'Looooooooaaaaaaaaads of text',
+            'q5': [True, False],
+            'q6': ['check 1', 'check 2'],
+            'q7': {'assurance': 'yes I am', 'value': '71234567890'},
+            'q8-min': '12.12',
+            'q8-max': '13.13',
+            'q8-unit': 'Unit',
+            'q8-interval': 'Hour',
+            'q10': 12.12,
+            'q11': 'Looooooooaaaaaaaaads of text',
         }
 
         form = section.unformat_data(data)
@@ -924,15 +950,16 @@ class TestContentSection(object):
             'q2': 'Some text stuff',
             'q3': 'value',
             'q4': ['value 1', 'value 2'],
-            'q5': ['check 1', 'check 2'],
-            'q6': '71234567890',
-            'q6--assurance': 'yes I am',
-            'q7-min': '12.12',
-            'q7-max': '13.13',
-            'q7-unit': 'Unit',
-            'q7-interval': 'Hour',
-            'q9': 12.12,
-            'q10': 'Looooooooaaaaaaaaads of text',
+            'q5': [True, False],
+            'q6': ['check 1', 'check 2'],
+            'q7': '71234567890',
+            'q7--assurance': 'yes I am',
+            'q8-min': '12.12',
+            'q8-max': '13.13',
+            'q8-unit': 'Unit',
+            'q8-interval': 'Hour',
+            'q10': 12.12,
+            'q11': 'Looooooooaaaaaaaaads of text',
         }
 
     def test_get_question(self):
