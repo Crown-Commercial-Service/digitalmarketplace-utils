@@ -385,7 +385,7 @@ class ContentQuestion(object):
             else:
                 return {}
 
-        if self.id == 'serviceTypes' or self.type in ['list', 'checkboxes']:
+        if self.type in ['list', 'checkboxes']:
             value = form_data.getlist(self.id)
         elif self.type == 'boolean_list':
 
