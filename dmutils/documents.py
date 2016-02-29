@@ -220,7 +220,8 @@ def get_document_path(framework_slug, supplier_id, bucket_category, document_nam
 
 def sanitise_supplier_name(supplier_name):
     """Replace ampersands with 'and' and spaces with a single underscore."""
-    sanitised_supplier_name = supplier_name.strip().replace(' ', '_').replace('&', 'and')
+    sanitised_supplier_name = supplier_name.encode("ascii", errors="ignore").decode("ascii").strip()
+    sanitised_supplier_name = sanitised_supplier_name.replace(' ', '_').replace('&', 'and')
     for bad_char in BAD_SUPPLIER_NAME_CHARACTERS:
         sanitised_supplier_name = sanitised_supplier_name.replace(bad_char, '')
     while '__' in sanitised_supplier_name:
