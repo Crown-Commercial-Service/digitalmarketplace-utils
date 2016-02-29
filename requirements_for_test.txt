@@ -1,5 +1,5 @@
 -r requirements.txt
-pytest==2.7.0
+pytest==2.8.7
 mock==1.0.1
 pep8==1.6.2
 freezegun==0.3.4

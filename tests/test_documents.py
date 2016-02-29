@@ -1,3 +1,4 @@
+# coding: utf-8
 import unittest
 
 import mock
@@ -319,8 +320,9 @@ def test_get_document_path():
 
 
 def test_sanitise_supplier_name():
-    assert sanitise_supplier_name('Kev\'s Butties') == 'Kevs_Butties'
-    assert sanitise_supplier_name('   Supplier A   ') == 'Supplier_A'
-    assert sanitise_supplier_name('Kev & Sons. | Ltd') == 'Kev_and_Sons_Ltd'
-    assert sanitise_supplier_name('\ / : * ? \' " < > |') == '_'
-    assert sanitise_supplier_name('kev@the*agency') == 'kevtheagency'
+    assert sanitise_supplier_name(u'Kev\'s Butties') == 'Kevs_Butties'
+    assert sanitise_supplier_name(u'   Supplier A   ') == 'Supplier_A'
+    assert sanitise_supplier_name(u'Kev & Sons. | Ltd') == 'Kev_and_Sons_Ltd'
+    assert sanitise_supplier_name(u'\ / : * ? \' " < > |') == '_'
+    assert sanitise_supplier_name(u'kev@the*agency') == 'kevtheagency'
+    assert sanitise_supplier_name(u"Ψ is a silly character") == "is_a_silly_character"
