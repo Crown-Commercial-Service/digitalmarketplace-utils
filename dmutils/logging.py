@@ -108,11 +108,13 @@ class CustomLogFormatter(logging.Formatter):
 
     def format(self, record):
         record = self.add_fields(record)
+        msg = super(CustomLogFormatter, self).format(record)
+
         try:
-            record.msg = record.msg.format(**record.__dict__)
+            msg = msg.format(**record.__dict__)
         except KeyError as e:
             logger.exception("failed to format log message: {} not found".format(e))
-        return super(CustomLogFormatter, self).format(record)
+        return msg
 
 
 class JSONFormatter(BaseJSONFormatter):
