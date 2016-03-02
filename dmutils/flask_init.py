@@ -56,6 +56,10 @@ def init_app(
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)
 
+    @application.context_processor
+    def inject_global_template_variables():
+        return application.config['BASE_TEMPLATE_DATA']
+
 
 def get_extra_files(paths):
     for path in paths:
