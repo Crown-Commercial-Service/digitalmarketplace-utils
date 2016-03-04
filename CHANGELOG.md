@@ -2,6 +2,21 @@
 
 Records breaking changes from major version bumps
 
+## 18.0.0
+
+PR: [#247](https://github.com/alphagov/digitalmarketplace-utils/pull/247)
+
+### What changed
+
+The `ContentLoader` now takes the question `id` from the contents of the YAML file if it is there.
+It still falls back to the file name if there is no `id` in the file. The reason this is a breaking
+change is that the `serviceTypes` id is now expected to be taken from the `id` field.
+
+### Example app change
+
+Upgrade [digitalmarketplace-frameworks](https://github.com/alphagov/digitalmarketplace-frameworks) to
+version 0.20.0 or above.
+
 ## 17.0.0
 
 PR: [#238](https://github.com/alphagov/digitalmarketplace-utils/pull/238)
