@@ -265,11 +265,10 @@ class ContentSection(object):
             any(form_field not in service for form_field in self.get_field_names())
         ])
 
-    def get_error_messages(self, errors, lot):
+    def get_error_messages(self, errors):
         """Convert API error keys into error messages
 
         :param errors: error dictionary as returned by the data API
-        :param lot: the lot of the service
         :return: error dictionary with human readable error messages
         """
         if set(errors.keys()) - set(self.get_field_names()):

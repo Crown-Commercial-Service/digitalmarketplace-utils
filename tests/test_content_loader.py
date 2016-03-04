@@ -1147,7 +1147,7 @@ class TestContentSection(object):
             "priceString-min": "answer_required",
         }
 
-        result = section.get_error_messages(errors, 'SCS')
+        result = section.get_error_messages(errors)
 
         assert result['priceString']['message'] == "No min price"
         assert result['q2']['message'] == "This is the error message"
@@ -1170,7 +1170,7 @@ class TestContentSection(object):
         }
 
         with pytest.raises(QuestionNotFoundError):
-            section.get_error_messages(errors, "SCS")
+            section.get_error_messages(errors)
 
     def test_section_description(self):
         section = ContentSection.create({
