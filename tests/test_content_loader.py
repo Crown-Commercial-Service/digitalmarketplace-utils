@@ -595,6 +595,37 @@ class TestContentManifest(object):
 
 
 class TestContentSection(object):
+    def setup_for_boolean_list_tests(self):
+        section = {
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "question": "Boolean list question",
+                "type": "boolean_list",
+            }]
+        }
+
+        brief = {
+            "briefs": {
+                "q0": [
+                    "Can you do Sketch, Photoshop, Illustrator, and InDesign?",
+                    "Can you can communicate like a boss?",
+                    "Can you write clean and semantic HTML, CSS and Javascript?",
+                    "Can you fight injustice full time?"
+                ]
+            }
+        }
+
+        form = OrderedMultiDict([
+            ('q0-0', 'true'),
+            ('q0-1', 'true'),
+            ('q0-2', 'true'),
+            ('q0-3', 'true')
+        ])
+
+        return section, brief, form
+
     def test_get_question_ids(self):
         section = ContentSection.create({
             "slug": "first_section",
@@ -1186,6 +1217,35 @@ class TestContentSection(object):
         copy_of_section = section.copy()
         assert copy_of_section.description == "This is the first section"
         assert copy_of_section.summary_page_description == "This is a summary of the first section"
+
+    def test_inject_messages_into_section(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        section = ContentSection.create(section)
+
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        assert section.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
+
+    def test_inject_messages_into_section_and_section_summary(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        section['questions'].append({
+            "id": "q1",
+            "question": "Text question",
+            "type": "text"
+        })
+        form_data['q1'] = 'Some text stuff'
+
+        section = ContentSection.create(section)
+
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        assert section_summary.get_question('q0').value == [True, True, True, True]
+        assert section_summary.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
+
+        assert section_summary.get_question('q1').value == 'Some text stuff'
+        assert section_summary.get_question('q1').get('boolean_list_questions') is None
 
 
 class TestContentQuestion(object):
