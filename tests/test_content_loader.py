@@ -1311,7 +1311,7 @@ class TestContentLoader(object):
         return {"name": "question1", "depends": [{"on": "lot", "being": "SaaS"}]}
 
     def question2(self):
-        return {"name": "question2", "depends": [{"on": "lot", "being": "SaaS"}]}
+        return {"id": "q2", "name": "question2", "depends": [{"on": "lot", "being": "SaaS"}]}
 
     def question3(self):
         return {"name": "question3", "depends": [{"on": "lot", "being": "SaaS"}]}
@@ -1329,7 +1329,7 @@ class TestContentLoader(object):
                     {'depends': [{'being': 'SaaS', 'on': 'lot'}],
                      'name': 'question1', 'id': 'question1'},
                     {'depends': [{'being': 'SaaS', 'on': 'lot'}],
-                     'name': 'question2', 'id': 'question2'}],
+                     'name': 'question2', 'id': 'q2'}],
                 'slug': 'section1'}
         ]
         read_yaml_mock.assert_has_calls([
@@ -1368,6 +1368,18 @@ class TestContentLoader(object):
         }
         read_yaml_mock.assert_called_with(
             'content/frameworks/framework-slug/questions/question-set/question1.yml')
+
+    def test_get_question_uses_id_if_available(self, read_yaml_mock):
+        read_yaml_mock.return_value = self.question2()
+
+        yaml_loader = ContentLoader("content/")
+
+        assert yaml_loader.get_question('framework-slug', 'question-set', 'question2') == {
+            'depends': [{'being': 'SaaS', 'on': 'lot'}],
+            'name': 'question2', 'id': 'q2'
+        }
+        read_yaml_mock.assert_called_with(
+            'content/frameworks/framework-slug/questions/question-set/question2.yml')
 
     def test_get_question_loads_nested_questions(self, read_yaml_mock):
         read_yaml_mock.side_effect = [

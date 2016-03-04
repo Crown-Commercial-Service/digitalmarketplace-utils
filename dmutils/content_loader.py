@@ -724,7 +724,7 @@ def _load_question(question, directory):
         os.path.join(directory, '{}.yml'.format(question))
     )
 
-    question_content["id"] = _make_question_id(question)
+    question_content["id"] = question_content.get("id", question)
 
     return question_content
 
@@ -733,12 +733,6 @@ def _make_slug(name):
     return inflection.underscore(
         re.sub(r"[\s&?]", "_", name).strip("_")
     ).replace('_', '-')
-
-
-def _make_question_id(question):
-    if re.match('^serviceTypes(SCS|SaaS|PaaS|IaaS)', question):
-        return 'serviceTypes'
-    return question
 
 
 def read_yaml(yaml_file):
