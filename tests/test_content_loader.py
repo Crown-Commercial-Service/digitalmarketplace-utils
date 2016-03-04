@@ -720,7 +720,7 @@ class TestContentSection(object):
                 "type": "list",
             }, {
                 "id": "q5",
-                "question": "Yes no question",
+                "question": "Boolean list question",
                 "type": "boolean_list",
             }, {
                 "id": "q6",
@@ -885,7 +885,7 @@ class TestContentSection(object):
                 "type": "list",
             }, {
                 "id": "q5",
-                "question": "Yes no question",
+                "question": "Boolean list question",
                 "type": "boolean_list",
             }, {
                 "id": "q6",
