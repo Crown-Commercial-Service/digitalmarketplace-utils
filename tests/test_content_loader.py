@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import mock
-from werkzeug.datastructures import ImmutableOrderedMultiDict
+from werkzeug.datastructures import ImmutableOrderedMultiDict, OrderedMultiDict
 import pytest
 
 import io
@@ -1203,6 +1203,109 @@ class TestContentSection(object):
         with pytest.raises(QuestionNotFoundError):
             section.get_error_messages(errors)
 
+    def test_get_error_messages_for_boolean_list_one_question_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert error_messages['q0'] == True
+        for error_key in ['q0-3']:
+            assert error_key in error_messages
+            base_error_key, index = error_key.split('-')[0], int(error_key.split('-')[-1])
+            assert brief['briefs'][base_error_key][index] == error_messages[error_key]['question']
+
+    def test_get_error_messages_for_boolean_list_all_questions_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-0')
+        form_data.pop('q0-1')
+        form_data.pop('q0-2')
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert error_messages['q0'] == True
+        for error_key in ['q0-0', 'q0-1', 'q0-2', 'q0-3']:
+            assert error_key in error_messages
+            base_error_key, index = error_key.split('-')[0], int(error_key.split('-')[-1])
+            assert brief['briefs'][base_error_key][index] == error_messages[error_key]['question']
+
+    def test_get_error_messages_no_boolean_list_questions_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        section['questions'].append({
+            "id": "q1",
+            "question": "Text question",
+            "type": "text"
+        })
+        errors = {"q1": "text_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert 'q1' in error_messages
+        for error_key in ['q0', 'q0-0', 'q0-1', 'q0-2', 'q0-3']:
+            assert error_key not in error_messages
+
+    def test_cannot_get_boolean_list_error_messages_without_section_summary(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        error_messages = section.get_error_messages(errors)
+
+        assert 'q0' in error_messages
+        assert 'q0-3' not in error_messages
+        assert len(error_messages.keys()) == 1
+
+    def test_get_wrong_boolean_list_error_messages_without_brief_questions_injected(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert 'q0' in error_messages
+        assert 'q0-3' not in error_messages
+        assert len(error_messages.keys()) == 1
+
+    def test_get_wrong_boolean_list_error_messages_without_response_data(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        section_summary = section.summary({})
+        error_messages = section_summary.get_error_messages(errors)
+
+        # when an error key exists but no response data, all questions are assumed empty
+        for error_key in ['q0', 'q0-0', 'q0-1', 'q0-2', 'q0-3']:
+            assert error_key in error_messages
+
     def test_section_description(self):
         section = ContentSection.create({
             "slug": "first_section",
@@ -1221,8 +1324,8 @@ class TestContentSection(object):
     def test_inject_messages_into_section(self):
 
         section, brief, form_data = self.setup_for_boolean_list_tests()
-        section = ContentSection.create(section)
 
+        section = ContentSection.create(section)
         section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
         assert section.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
 
@@ -1237,7 +1340,6 @@ class TestContentSection(object):
         form_data['q1'] = 'Some text stuff'
 
         section = ContentSection.create(section)
-
         section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
         response_data = section.get_data(form_data)
         section_summary = section.summary(response_data)
