@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import mock
-from werkzeug.datastructures import ImmutableMultiDict
+from werkzeug.datastructures import ImmutableOrderedMultiDict
 import pytest
 
 import io
@@ -502,7 +502,7 @@ class TestContentManifest(object):
             }
         ])
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'some text'),
             ('q2', 'other text'),
             ('q3', '  lots of      whitespace     \t\n'),
@@ -795,7 +795,7 @@ class TestContentSection(object):
             }]
         })
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'true'),
             ('q01', 'some nested question'),
             ('q2', 'Some text stuff'),
@@ -843,23 +843,23 @@ class TestContentSection(object):
         }
 
         # Failure modes
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'not boolean')
         ])
         assert section.get_data(form)['q1'] == 'not boolean'
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'false')
         ])
         assert section.get_data(form)['q1'] is False
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q10', 'not a number')
         ])
         assert section.get_data(form)['q10'] == 'not a number'
 
         # Test 'orphaned' assurance is returned
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q7--assurance', 'yes I am'),
         ])
         data = section.get_data(form)
@@ -870,19 +870,19 @@ class TestContentSection(object):
         }
 
         # Test empty lists are not converted to `None`
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q4', '')
         ])
         assert section.get_data(form)['q4'] == ['']
 
         # if we have one empty value
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q5-0', '')
         ])
         assert section.get_data(form)['q5'] == ['']
 
         # if we have a value without an index number, we ignore it
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q5', 'true'),
             ('q5-', 'true')
         ])
