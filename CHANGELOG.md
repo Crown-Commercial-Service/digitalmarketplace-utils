@@ -2,6 +2,28 @@
 
 Records breaking changes from major version bumps
 
+## 19.0.0
+
+PR: [#248](https://github.com/alphagov/digitalmarketplace-utils/pull/248)
+
+### What changed
+
+Removed the `lot` parameter from the `.get_error_messages()` method of a `ContentSection`.  It wasn't
+being used for anything, so the logic remains unaffected.  Calling `.get_error_messages()` with
+the lot slug will from this point forward throw an error.
+
+### Example app change
+
+Old:
+```python
+section.get_error_messages(errors, lot['slug'])
+```
+
+New:
+```python
+section.get_error_messages(errors)
+```
+
 ## 18.0.0
 
 PR: [#247](https://github.com/alphagov/digitalmarketplace-utils/pull/247)

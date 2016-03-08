@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import mock
-from werkzeug.datastructures import ImmutableMultiDict
+from werkzeug.datastructures import ImmutableOrderedMultiDict, OrderedMultiDict
 import pytest
 
 import io
@@ -502,7 +502,7 @@ class TestContentManifest(object):
             }
         ])
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'some text'),
             ('q2', 'other text'),
             ('q3', '  lots of      whitespace     \t\n'),
@@ -595,6 +595,37 @@ class TestContentManifest(object):
 
 
 class TestContentSection(object):
+    def setup_for_boolean_list_tests(self):
+        section = {
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q0",
+                "question": "Boolean list question",
+                "type": "boolean_list",
+            }]
+        }
+
+        brief = {
+            "briefs": {
+                "q0": [
+                    "Can you do Sketch, Photoshop, Illustrator, and InDesign?",
+                    "Can you can communicate like a boss?",
+                    "Can you write clean and semantic HTML, CSS and Javascript?",
+                    "Can you fight injustice full time?"
+                ]
+            }
+        }
+
+        form = OrderedMultiDict([
+            ('q0-0', 'true'),
+            ('q0-1', 'true'),
+            ('q0-2', 'true'),
+            ('q0-3', 'true')
+        ])
+
+        return section, brief, form
+
     def test_get_question_ids(self):
         section = ContentSection.create({
             "slug": "first_section",
@@ -720,7 +751,7 @@ class TestContentSection(object):
                 "type": "list",
             }, {
                 "id": "q5",
-                "question": "Yes no question",
+                "question": "Boolean list question",
                 "type": "boolean_list",
             }, {
                 "id": "q6",
@@ -764,7 +795,7 @@ class TestContentSection(object):
             }]
         })
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'true'),
             ('q01', 'some nested question'),
             ('q2', 'Some text stuff'),
@@ -812,23 +843,23 @@ class TestContentSection(object):
         }
 
         # Failure modes
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'not boolean')
         ])
         assert section.get_data(form)['q1'] == 'not boolean'
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q1', 'false')
         ])
         assert section.get_data(form)['q1'] is False
 
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q10', 'not a number')
         ])
         assert section.get_data(form)['q10'] == 'not a number'
 
         # Test 'orphaned' assurance is returned
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q7--assurance', 'yes I am'),
         ])
         data = section.get_data(form)
@@ -839,19 +870,19 @@ class TestContentSection(object):
         }
 
         # Test empty lists are not converted to `None`
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q4', '')
         ])
         assert section.get_data(form)['q4'] == ['']
 
         # if we have one empty value
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q5-0', '')
         ])
         assert section.get_data(form)['q5'] == ['']
 
         # if we have a value without an index number, we ignore it
-        form = ImmutableMultiDict([
+        form = ImmutableOrderedMultiDict([
             ('q5', 'true'),
             ('q5-', 'true')
         ])
@@ -885,7 +916,7 @@ class TestContentSection(object):
                 "type": "list",
             }, {
                 "id": "q5",
-                "question": "Yes no question",
+                "question": "Boolean list question",
                 "type": "boolean_list",
             }, {
                 "id": "q6",
@@ -1147,7 +1178,7 @@ class TestContentSection(object):
             "priceString-min": "answer_required",
         }
 
-        result = section.get_error_messages(errors, 'SCS')
+        result = section.get_error_messages(errors)
 
         assert result['priceString']['message'] == "No min price"
         assert result['q2']['message'] == "This is the error message"
@@ -1170,7 +1201,110 @@ class TestContentSection(object):
         }
 
         with pytest.raises(QuestionNotFoundError):
-            section.get_error_messages(errors, "SCS")
+            section.get_error_messages(errors)
+
+    def test_get_error_messages_for_boolean_list_one_question_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert error_messages['q0'] == True
+        for error_key in ['q0-3']:
+            assert error_key in error_messages
+            base_error_key, index = error_key.split('-')[0], int(error_key.split('-')[-1])
+            assert brief['briefs'][base_error_key][index] == error_messages[error_key]['question']
+
+    def test_get_error_messages_for_boolean_list_all_questions_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-0')
+        form_data.pop('q0-1')
+        form_data.pop('q0-2')
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert error_messages['q0'] == True
+        for error_key in ['q0-0', 'q0-1', 'q0-2', 'q0-3']:
+            assert error_key in error_messages
+            base_error_key, index = error_key.split('-')[0], int(error_key.split('-')[-1])
+            assert brief['briefs'][base_error_key][index] == error_messages[error_key]['question']
+
+    def test_get_error_messages_no_boolean_list_questions_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        section['questions'].append({
+            "id": "q1",
+            "question": "Text question",
+            "type": "text"
+        })
+        errors = {"q1": "text_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert 'q1' in error_messages
+        for error_key in ['q0', 'q0-0', 'q0-1', 'q0-2', 'q0-3']:
+            assert error_key not in error_messages
+
+    def test_cannot_get_boolean_list_error_messages_without_section_summary(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        error_messages = section.get_error_messages(errors)
+
+        assert 'q0' in error_messages
+        assert 'q0-3' not in error_messages
+        assert len(error_messages.keys()) == 1
+
+    def test_get_wrong_boolean_list_error_messages_without_brief_questions_injected(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        error_messages = section_summary.get_error_messages(errors)
+
+        assert 'q0' in error_messages
+        assert 'q0-3' not in error_messages
+        assert len(error_messages.keys()) == 1
+
+    def test_get_wrong_boolean_list_error_messages_without_response_data(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        form_data.pop('q0-3')
+        errors = {"q0": "boolean_list_error"}
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        section_summary = section.summary({})
+        error_messages = section_summary.get_error_messages(errors)
+
+        # when an error key exists but no response data, all questions are assumed empty
+        for error_key in ['q0', 'q0-0', 'q0-1', 'q0-2', 'q0-3']:
+            assert error_key in error_messages
 
     def test_section_description(self):
         section = ContentSection.create({
@@ -1186,6 +1320,34 @@ class TestContentSection(object):
         copy_of_section = section.copy()
         assert copy_of_section.description == "This is the first section"
         assert copy_of_section.summary_page_description == "This is a summary of the first section"
+
+    def test_inject_messages_into_section(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        assert section.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
+
+    def test_inject_messages_into_section_and_section_summary(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        section['questions'].append({
+            "id": "q1",
+            "question": "Text question",
+            "type": "text"
+        })
+        form_data['q1'] = 'Some text stuff'
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        response_data = section.get_data(form_data)
+        section_summary = section.summary(response_data)
+        assert section_summary.get_question('q0').value == [True, True, True, True]
+        assert section_summary.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
+
+        assert section_summary.get_question('q1').value == 'Some text stuff'
+        assert section_summary.get_question('q1').get('boolean_list_questions') is None
 
 
 class TestContentQuestion(object):

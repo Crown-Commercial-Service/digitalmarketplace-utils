@@ -265,11 +265,10 @@ class ContentSection(object):
             any(form_field not in service for form_field in self.get_field_names())
         ])
 
-    def get_error_messages(self, errors, lot):
+    def get_error_messages(self, errors):
         """Convert API error keys into error messages
 
         :param errors: error dictionary as returned by the data API
-        :param lot: the lot of the service
         :return: error dictionary with human readable error messages
         """
         if set(errors.keys()) - set(self.get_field_names()):
@@ -318,6 +317,10 @@ class ContentSection(object):
         for question in self.questions:
             if question.get('slug') == question_slug:
                 return question
+
+    def inject_brief_questions_into_boolean_list_question(self, brief):
+        for question in self.questions:
+            question.inject_brief_questions_into_boolean_list_question(brief)
 
     # Type checking
 
@@ -494,6 +497,10 @@ class ContentQuestion(object):
         else:
             return []
 
+    def inject_brief_questions_into_boolean_list_question(self, brief):
+        if self.type == 'boolean_list':
+            self.boolean_list_questions = brief[self.id]
+
     def has_assurance(self):
         return True if self.get('assuranceApproach') else False
 
@@ -533,8 +540,39 @@ class ContentQuestionSummary(ContentQuestion):
             self.questions = [q.summary(service_data) for q in self.questions]
         self.fields = question.fields
 
+        if question.get('boolean_list_questions'):
+            self.boolean_list_questions = question.boolean_list_questions
+
     def _default_for_field(self, field_key):
         return self.get('field_defaults', {}).get(field_key)
+
+    def get_error_messages(self, errors):
+
+        question_errors = super(ContentQuestionSummary, self).get_error_messages(errors)
+
+        boolean_list_questions = self.get('boolean_list_questions')
+        boolean_list_values = self.get('value') or []
+
+        if self.id in question_errors and self.type == 'boolean_list' and boolean_list_questions:
+            # pad list of values to same length as boolean_list_questions
+            boolean_list_values.extend([None] * (len(boolean_list_questions) - len(boolean_list_values)))
+
+            for index, boolean_list_question in enumerate(boolean_list_questions):
+                if not isinstance(boolean_list_values[index], bool):
+                    # Each non-boolean value is an error
+                    boolean_question_id = "{}-{}".format(self.id, index)
+                    question_errors[boolean_question_id] = {
+                        'input_name': boolean_question_id,
+                        'message': question_errors[self.id]['message'],
+                        'question': boolean_list_question
+                    }
+
+            question_errors[self.id] = True
+            question_errors = OrderedDict([
+                (k, question_errors[k]) for k in sorted(question_errors.keys())
+            ])
+
+        return question_errors
 
     @property
     def is_empty(self):
