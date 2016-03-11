@@ -1329,6 +1329,20 @@ class TestContentSection(object):
         section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
         assert section.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
 
+    def test_inject_messages_into_section_optional_question_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        # add an optional boolean list question
+        section['questions'].append({
+            "id": "q1",
+            "question": "Optional boolean list question",
+            "type": "boolean_list",
+        })
+
+        section = ContentSection.create(section)
+        section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
+        assert section.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
+
     def test_inject_messages_into_section_and_section_summary(self):
 
         section, brief, form_data = self.setup_for_boolean_list_tests()
