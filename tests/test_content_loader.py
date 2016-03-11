@@ -608,6 +608,7 @@ class TestContentSection(object):
 
         brief = {
             "briefs": {
+                "id": "0",
                 "q0": [
                     "Can you do Sketch, Photoshop, Illustrator, and InDesign?",
                     "Can you can communicate like a boss?",
@@ -1337,11 +1338,22 @@ class TestContentSection(object):
             "id": "q1",
             "question": "Optional boolean list question",
             "type": "boolean_list",
+            "optional": True
         })
 
         section = ContentSection.create(section)
         section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
         assert section.get_question('q0').get('boolean_list_questions') == brief['briefs']['q0']
+
+    def test_inject_messages_into_section_non_optional_question_missing(self):
+
+        section, brief, form_data = self.setup_for_boolean_list_tests()
+        # add an optional boolean list question
+        brief['briefs'].pop("q0")
+
+        section = ContentSection.create(section)
+        with pytest.raises(ContentNotFoundError):
+            section.inject_brief_questions_into_boolean_list_question(brief['briefs'])
 
     def test_inject_messages_into_section_and_section_summary(self):
 
