@@ -499,7 +499,11 @@ class ContentQuestion(object):
 
     def inject_brief_questions_into_boolean_list_question(self, brief):
         if self.type == 'boolean_list':
-            self.boolean_list_questions = brief[self.id]
+            if self.id not in brief.keys() and not self.get('optional'):
+                raise ContentNotFoundError("No {} found for brief {}".format(self.id, brief['id']))
+
+            # briefs might not have optional boolean_list questions
+            self.boolean_list_questions = brief.get(self.id, [])
 
     def has_assurance(self):
         return True if self.get('assuranceApproach') else False
