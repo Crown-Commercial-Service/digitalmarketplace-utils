@@ -1216,7 +1216,7 @@ class TestContentSection(object):
         section_summary = section.summary(response_data)
         error_messages = section_summary.get_error_messages(errors)
 
-        assert error_messages['q0'] == True
+        assert error_messages['q0'] is True
         for error_key in ['q0-3']:
             assert error_key in error_messages
             base_error_key, index = error_key.split('-')[0], int(error_key.split('-')[-1])
@@ -1237,7 +1237,7 @@ class TestContentSection(object):
         section_summary = section.summary(response_data)
         error_messages = section_summary.get_error_messages(errors)
 
-        assert error_messages['q0'] == True
+        assert error_messages['q0'] is True
         for error_key in ['q0-0', 'q0-1', 'q0-2', 'q0-3']:
             assert error_key in error_messages
             base_error_key, index = error_key.split('-')[0], int(error_key.split('-')[-1])
@@ -1467,6 +1467,29 @@ class TestContentQuestion(object):
             ]
         })
         assert question.required_form_fields == ['example2']
+
+
+class TestContentQuestionSummary(object):
+    def test_question_value_with_no_options(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "text",
+        }).summary({'example': 'value1'})
+
+        assert question.value == 'value1'
+
+    def test_question_value_returns_matching_option_label(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "checkboxes",
+            "options": [
+                {"label": "Wrong label", "value": "value"},
+                {"label": "Option label", "value": "value1"},
+                {"label": "Wrong label", "value": "value11"},
+            ]
+        }).summary({'example': 'value1'})
+
+        assert question.value == 'Option label'
 
 
 class TestReadYaml(object):
