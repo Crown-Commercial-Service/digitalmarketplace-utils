@@ -103,6 +103,46 @@ def test_calls_send_email_to_multiple_addresses(email_app, mandrill):
         ]
 
 
+def test_calls_send_email_with_alternative_reply_to(email_app, mandrill):
+    with email_app.app_context():
+        mandrill.messages.send.return_value = [
+            {'_id': '123', 'email': '123'}]
+
+        expected_call = {
+            'html': "body",
+            'subject': "subject",
+            'from_email': "from_email",
+            'from_name': "from_name",
+            'to': [{
+                'email': "email_address",
+                'type': 'to'
+            }],
+            'important': False,
+            'track_opens': False,
+            'track_clicks': False,
+            'auto_text': True,
+            'tags': ['password-resets'],
+            'headers': {'Reply-To': "reply_address"},
+            'preserve_recipients': False,
+            'recipient_metadata': [{
+                'rcpt': "email_address"
+            }]
+        }
+
+        send_email(
+            "email_address",
+            "body",
+            "api_key",
+            "subject",
+            "from_email",
+            "from_name",
+            ["password-resets"],
+            reply_to="reply_address"
+        )
+
+        mandrill.messages.send.assert_called_once_with(message=expected_call, async=True)
+
+
 def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
     with email_app.app_context():
 

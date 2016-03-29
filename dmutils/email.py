@@ -19,7 +19,7 @@ class MandrillException(Exception):
     pass
 
 
-def send_email(to_email_addresses, email_body, api_key, subject, from_email, from_name, tags):
+def send_email(to_email_addresses, email_body, api_key, subject, from_email, from_name, tags, reply_to=None):
     if isinstance(to_email_addresses, string_types):
         to_email_addresses = [to_email_addresses]
 
@@ -40,7 +40,7 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
             'track_clicks': False,
             'auto_text': True,
             'tags': tags,
-            'headers': {'Reply-To': from_email},
+            'headers': {'Reply-To': reply_to or from_email},
             'preserve_recipients': False,
             'recipient_metadata': [{
                 'rcpt': email_address
