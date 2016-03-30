@@ -58,7 +58,13 @@ def init_app(
 
     @application.context_processor
     def inject_global_template_variables():
-        return application.config['BASE_TEMPLATE_DATA']
+        return dict(
+            pluralize=pluralize,
+            **(application.config['BASE_TEMPLATE_DATA'] or {}))
+
+
+def pluralize(count, singular, plural):
+    return singular if count == 1 else plural
 
 
 def get_extra_files(paths):
