@@ -603,7 +603,15 @@ class ContentQuestionSummary(ContentQuestion):
         if self.has_assurance():
             return self._service_data.get(self.id, {}).get('value', '')
 
-        return self._service_data.get(self.id, '')
+        # Look up display values for options that have different labels from values
+        options = self.get('options')
+        value = self._service_data.get(self.id, '')
+        if options and value:
+            for option in options:
+                if 'label' in option and 'value' in option and option['value'] == value:
+                    return option['label']
+
+        return value
 
     @property
     def assurance(self):
