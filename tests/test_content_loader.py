@@ -1363,6 +1363,18 @@ class TestContentSection(object):
         assert copy_of_section.description == "This is the first section"
         assert copy_of_section.summary_page_description == "This is a summary of the first section"
 
+    def test_section_step(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [],
+            "step": 1
+        })
+        assert section.step == 1
+
+        copy_of_section = section.copy()
+        assert copy_of_section.step == 1
+
     def test_inject_messages_into_section(self):
 
         section, brief, form_data = self.setup_for_boolean_list_tests()
