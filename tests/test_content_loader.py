@@ -641,7 +641,7 @@ class TestContentSection(object):
                 "type": "text",
             }]
         })
-        assert section.has_summary_page == True
+        assert section.has_summary_page is True
 
     def test_has_no_summary_page_if_single_question_no_description(self):
         section = ContentSection.create({
@@ -653,7 +653,7 @@ class TestContentSection(object):
                 "type": "boolean",
             }]
         })
-        assert section.has_summary_page == False
+        assert section.has_summary_page is False
 
     def test_has_summary_page_if_single_question_with_description(self):
         section = ContentSection.create({
@@ -666,7 +666,7 @@ class TestContentSection(object):
                 "type": "boolean",
             }]
         })
-        assert section.has_summary_page == True
+        assert section.has_summary_page is True
 
     def test_get_question_ids(self):
         section = ContentSection.create({

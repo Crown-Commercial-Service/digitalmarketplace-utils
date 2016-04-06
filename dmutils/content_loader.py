@@ -331,7 +331,7 @@ class ContentSection(object):
 
     @property
     def has_summary_page(self):
-        return len(self.questions) > 1 or self.description
+        return len(self.questions) > 1 or self.description is not None
 
 
 class ContentQuestion(object):
