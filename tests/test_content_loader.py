@@ -627,6 +627,47 @@ class TestContentSection(object):
 
         return section, brief, form
 
+    def test_has_summary_page_if_multiple_questions(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "Boolean question",
+                "type": "boolean",
+            }, {
+                "id": "q2",
+                "question": "Text question",
+                "type": "text",
+            }]
+        })
+        assert section.has_summary_page == True
+
+    def test_has_no_summary_page_if_single_question_no_description(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "questions": [{
+                "id": "q1",
+                "question": "Boolean question",
+                "type": "boolean",
+            }]
+        })
+        assert section.has_summary_page == False
+
+    def test_has_summary_page_if_single_question_with_description(self):
+        section = ContentSection.create({
+            "slug": "first_section",
+            "name": "First section",
+            "description": "Section about a single topic",
+            "questions": [{
+                "id": "q1",
+                "question": "Boolean question",
+                "type": "boolean",
+            }]
+        })
+        assert section.has_summary_page == True
+
     def test_get_question_ids(self):
         section = ContentSection.create({
             "slug": "first_section",
