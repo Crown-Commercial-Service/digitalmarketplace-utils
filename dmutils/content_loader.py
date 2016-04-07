@@ -329,6 +329,10 @@ class ContentSection(object):
         question = self.get_question(key)
         return bool(question) and question.has_assurance()
 
+    @property
+    def has_summary_page(self):
+        return len(self.questions) > 1 or self.description is not None
+
 
 class ContentQuestion(object):
     def __init__(self, data, number=None):
