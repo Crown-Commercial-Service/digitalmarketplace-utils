@@ -163,10 +163,19 @@ class ContentSection(object):
                 edit_questions=section.get('edit_questions'),
                 questions=[ContentQuestion(question) for question in section['questions']],
                 description=section.get('description'),
-                summary_page_description=section.get('summary_page_description'))
+                summary_page_description=section.get('summary_page_description'),
+                step=section.get('step'))
 
     def __init__(
-        self, slug, name, editable, edit_questions, questions, description=None, summary_page_description=None
+            self,
+            slug,
+            name,
+            editable,
+            edit_questions,
+            questions,
+            description=None,
+            summary_page_description=None,
+            step=None
     ):
         self.id = slug  # TODO deprecated, use `.slug` instead
         self.slug = slug
@@ -176,6 +185,7 @@ class ContentSection(object):
         self.questions = questions
         self.description = description
         self.summary_page_description = summary_page_description
+        self.step = step
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -188,7 +198,8 @@ class ContentSection(object):
             edit_questions=self.edit_questions,
             questions=self.questions[:],
             description=self.description,
-            summary_page_description=self.summary_page_description)
+            summary_page_description=self.summary_page_description,
+            step=self.step)
 
     def summary(self, service_data):
         summary_section = self.copy()
