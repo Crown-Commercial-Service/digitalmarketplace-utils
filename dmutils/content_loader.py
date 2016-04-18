@@ -602,6 +602,7 @@ class ContentQuestionSummary(ContentQuestion):
         if self.questions:
             return [question for question in self.questions if not question.is_empty]
         if self.type == "pricing":
+            price = self._service_data.get(self.fields.get('price'))
             minimum_price = self._service_data.get(self.fields.get('minimum_price'))
             maximum_price = self._service_data.get(self.fields.get('maximum_price'))
             price_unit = self._service_data.get(self.fields.get('price_unit'),
@@ -611,8 +612,8 @@ class ContentQuestionSummary(ContentQuestion):
             hours_for_price = self._service_data.get(self.fields.get('hours_for_price'),
                                                      self._default_for_field('hours_for_price'))
 
-            if minimum_price and price_unit:
-                return format_price(minimum_price, maximum_price, price_unit, price_interval, hours_for_price)
+            if price or minimum_price:
+                return format_price(price or minimum_price, maximum_price, price_unit, price_interval, hours_for_price)
             else:
                 return ''
         if self.has_assurance():
