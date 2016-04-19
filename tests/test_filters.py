@@ -10,7 +10,12 @@ def test_markdown_filter_produces_markup():
 
 Paragraph
 **Bold**
-*Emphasis*"""
+*Emphasis*
+
+HTML is an abbreviation.
+
+*[HTML]: Hyper Text Markup Language
+"""
 
     html_string = """<h2>H2 title</h2>
 <ul>
@@ -19,6 +24,7 @@ Paragraph
 </ul>
 <p>Paragraph
 <strong>Bold</strong>
-<em>Emphasis</em></p>"""
+<em>Emphasis</em></p>
+<p><abbr title="Hyper Text Markup Language">HTML</abbr> is an abbreviation.</p>"""
 
     assert markdown_filter(markdown_string) == html_string
