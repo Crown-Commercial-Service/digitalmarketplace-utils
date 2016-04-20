@@ -7,6 +7,7 @@ DATE_FORMAT = "%Y-%m-%d"
 DISPLAY_SHORT_DATE_FORMAT = '%d %B'
 DISPLAY_DATE_FORMAT = '%A %d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
+DISPLAY_SHORT_TIME_FORMAT = "%-I:%M %p"
 DISPLAY_DATETIME_FORMAT = '%A %d %B %Y at %H:%M'
 
 LOTS = [
@@ -35,6 +36,10 @@ LOTS = [
 
 def timeformat(value, default_value=None):
     return _format_date(value, default_value, DISPLAY_TIME_FORMAT)
+
+
+def short_time_format(value, default_value=None):
+    return _format_date(value, default_value, DISPLAY_SHORT_TIME_FORMAT)
 
 
 def shortdateformat(value, default_value=None):
