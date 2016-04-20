@@ -114,6 +114,8 @@ def test_shortdateformat():
         (datetime(2012, 8, 10, 9, 8, 7, 6), "10 August"),
         ("2012-08-10T09:08:07.0Z", "10 August"),
         (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "10 August"),
+        ("2016-04-27T23:59:59.0Z", "27 April"),
+        (datetime(2016, 4, 27, 23, 59, 59, 0, tzinfo=pytz.utc), "27 April"),
     ]
 
     def check_shortdateformat(dt, formatted_date):
@@ -130,6 +132,8 @@ def test_dateformat():
         (datetime(2012, 8, 10, 9, 8, 7, 6), "Friday 10 August 2012"),
         ("2012-08-10T09:08:07.0Z", "Friday 10 August 2012"),
         (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "Friday 10 August 2012"),
+        ("2016-04-27T23:59:59.0Z", "Wednesday 27 April 2016"),
+        (datetime(2016, 4, 27, 23, 59, 59, 0), "Wednesday 27 April 2016"),
     ]
 
     def check_dateformat(dt, formatted_date):
