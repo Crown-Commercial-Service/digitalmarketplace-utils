@@ -38,11 +38,11 @@ def timeformat(value, default_value=None):
 
 
 def shortdateformat(value, default_value=None):
-    return _format_date(value, default_value, DISPLAY_SHORT_DATE_FORMAT)
+    return _format_date(value, default_value, DISPLAY_SHORT_DATE_FORMAT, localize=False)
 
 
 def dateformat(value, default_value=None):
-    return _format_date(value, default_value, DISPLAY_DATE_FORMAT)
+    return _format_date(value, default_value, DISPLAY_DATE_FORMAT, localize=False)
 
 
 def datetimeformat(value, default_value=None):
@@ -52,14 +52,17 @@ def datetimeformat(value, default_value=None):
 EUROPE_LONDON = pytz.timezone("Europe/London")
 
 
-def _format_date(value, default_value, fmt):
+def _format_date(value, default_value, fmt, localize=True):
     if not value:
         return default_value
     if not isinstance(value, datetime):
         value = datetime.strptime(value, DATETIME_FORMAT)
     if value.tzinfo is None:
         value = pytz.utc.localize(value)
-    return value.astimezone(EUROPE_LONDON).strftime(fmt)
+    if localize:
+        return value.astimezone(EUROPE_LONDON).strftime(fmt)
+    else:
+        return value.strftime(fmt)
 
 
 def lot_to_lot_case(lot_to_check):
