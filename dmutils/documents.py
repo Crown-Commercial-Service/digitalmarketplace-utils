@@ -152,6 +152,13 @@ def file_is_pdf(file_object):
     ]
 
 
+def file_is_csv(file_object):
+    """Checks file extension as being PDF."""
+    return get_extension(file_object.filename) in [
+        ".csv"
+    ]
+
+
 def file_is_zip(file_object):
     """Checks file extension as being ZIP."""
     return get_extension(file_object.filename) in [
