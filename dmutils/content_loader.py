@@ -424,7 +424,7 @@ class ContentQuestion(object):
 
         elif self.type == 'boolean':
             value = convert_to_boolean(form_data[self.id])
-        elif self.type == 'percentage':
+        elif self.type == 'number':
             value = convert_to_number(form_data[self.id])
         elif self.type != 'upload':
             value = form_data[self.id]

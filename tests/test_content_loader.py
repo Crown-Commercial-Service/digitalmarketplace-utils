@@ -820,8 +820,8 @@ class TestContentSection(object):
                 "type": "upload",
             }, {
                 "id": "q10",
-                "question": "Percentage question",
-                "type": "percentage",
+                "question": "number question",
+                "type": "number",
             }, {
                 "id": "q11",
                 "question": "Large text question",
@@ -985,8 +985,8 @@ class TestContentSection(object):
                 "type": "upload",
             }, {
                 "id": "q10",
-                "question": "Percentage question",
-                "type": "percentage",
+                "question": "number question",
+                "type": "number",
             }, {
                 "id": "q11",
                 "question": "Large text question",
