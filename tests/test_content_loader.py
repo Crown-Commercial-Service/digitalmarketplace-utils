@@ -823,6 +823,10 @@ class TestContentSection(object):
                 "question": "number question",
                 "type": "number",
             }, {
+                "id": "q101",
+                "question": "zero number question",
+                "type": "number",
+            }, {
                 "id": "q11",
                 "question": "Large text question",
                 "type": "textbox_large",
@@ -859,6 +863,7 @@ class TestContentSection(object):
             ('q8-price_interval', 'Hour'),
             ('q9', 'blah blah'),
             ('q10', '12.12'),
+            ('q101', '0'),
             ('q11', 'Looooooooaaaaaaaaads of text'),
             ('extra_field', 'Should be lost'),
             ('q13', ''),
@@ -880,6 +885,7 @@ class TestContentSection(object):
             'q8-price_unit': 'Unit',
             'q8-price_interval': 'Hour',
             'q10': 12.12,
+            'q101': 0,
             'q11': 'Looooooooaaaaaaaaads of text',
             'q13': None,
         }

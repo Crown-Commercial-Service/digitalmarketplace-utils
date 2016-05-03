@@ -437,7 +437,7 @@ class ContentQuestion(object):
                 "assurance": form_data.get(self.id + '--assurance'),
             }
 
-        if self.type != 'boolean':
+        if self.type not in ['boolean', 'number']:
             value = value if value else None
 
         return {self.id: value}
