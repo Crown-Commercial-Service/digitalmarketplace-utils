@@ -622,6 +622,11 @@ class ContentQuestionSummary(ContentQuestion):
         # Look up display values for options that have different labels from values
         options = self.get('options')
         value = self._service_data.get(self.id, '')
+        if self.type == "number" and self.get('unit'):
+            if self.unit_position == "after":
+                return u"{}{}".format(value, self.unit)
+            else:
+                return u"{}{}".format(self.unit, value)
         if options and value:
             for option in options:
                 if 'label' in option and 'value' in option and option['value'] == value:

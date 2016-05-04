@@ -1550,6 +1550,34 @@ class TestContentQuestionSummary(object):
 
         assert question.value == 'Option label'
 
+    def test_number_questions_without_unit(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "number",
+        }).summary({'example': '12.20'})
+
+        assert question.value == '12.20'
+
+    def test_number_questions_adds_unit_before(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "number",
+            "unit": u"£",
+            "unit_position": "before",
+        }).summary({'example': '12.20'})
+
+        assert question.value == u'£12.20'
+
+    def test_number_questions_adds_unit_after(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "number",
+            "unit": u"£",
+            "unit_position": "after",
+        }).summary({'example': '12.20'})
+
+        assert question.value == u'12.20£'
+
 
 class TestReadYaml(object):
     @mock.patch.object(builtins, 'open', return_value=io.StringIO(u'foo: bar'))
