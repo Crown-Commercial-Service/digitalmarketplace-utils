@@ -424,7 +424,7 @@ class ContentQuestion(object):
 
         elif self.type == 'boolean':
             value = convert_to_boolean(form_data[self.id])
-        elif self.type == 'percentage':
+        elif self.type == 'number':
             value = convert_to_number(form_data[self.id])
         elif self.type != 'upload':
             value = form_data[self.id]
@@ -437,7 +437,7 @@ class ContentQuestion(object):
                 "assurance": form_data.get(self.id + '--assurance'),
             }
 
-        if self.type != 'boolean':
+        if self.type not in ['boolean', 'number']:
             value = value if value else None
 
         return {self.id: value}
@@ -622,6 +622,11 @@ class ContentQuestionSummary(ContentQuestion):
         # Look up display values for options that have different labels from values
         options = self.get('options')
         value = self._service_data.get(self.id, '')
+        if self.type == "number" and self.get('unit'):
+            if self.unit_position == "after":
+                return u"{}{}".format(value, self.unit)
+            else:
+                return u"{}{}".format(self.unit, value)
         if options and value:
             for option in options:
                 if 'label' in option and 'value' in option and option['value'] == value:

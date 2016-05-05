@@ -820,8 +820,12 @@ class TestContentSection(object):
                 "type": "upload",
             }, {
                 "id": "q10",
-                "question": "Percentage question",
-                "type": "percentage",
+                "question": "number question",
+                "type": "number",
+            }, {
+                "id": "q101",
+                "question": "zero number question",
+                "type": "number",
             }, {
                 "id": "q11",
                 "question": "Large text question",
@@ -859,6 +863,7 @@ class TestContentSection(object):
             ('q8-price_interval', 'Hour'),
             ('q9', 'blah blah'),
             ('q10', '12.12'),
+            ('q101', '0'),
             ('q11', 'Looooooooaaaaaaaaads of text'),
             ('extra_field', 'Should be lost'),
             ('q13', ''),
@@ -880,6 +885,7 @@ class TestContentSection(object):
             'q8-price_unit': 'Unit',
             'q8-price_interval': 'Hour',
             'q10': 12.12,
+            'q101': 0,
             'q11': 'Looooooooaaaaaaaaads of text',
             'q13': None,
         }
@@ -985,8 +991,8 @@ class TestContentSection(object):
                 "type": "upload",
             }, {
                 "id": "q10",
-                "question": "Percentage question",
-                "type": "percentage",
+                "question": "number question",
+                "type": "number",
             }, {
                 "id": "q11",
                 "question": "Large text question",
@@ -1543,6 +1549,34 @@ class TestContentQuestionSummary(object):
         }).summary({'example': 'value1'})
 
         assert question.value == 'Option label'
+
+    def test_number_questions_without_unit(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "number",
+        }).summary({'example': '12.20'})
+
+        assert question.value == '12.20'
+
+    def test_number_questions_adds_unit_before(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "number",
+            "unit": u"£",
+            "unit_position": "before",
+        }).summary({'example': '12.20'})
+
+        assert question.value == u'£12.20'
+
+    def test_number_questions_adds_unit_after(self):
+        question = ContentQuestion({
+            "id": "example",
+            "type": "number",
+            "unit": u"£",
+            "unit_position": "after",
+        }).summary({'example': '12.20'})
+
+        assert question.value == u'12.20£'
 
 
 class TestReadYaml(object):

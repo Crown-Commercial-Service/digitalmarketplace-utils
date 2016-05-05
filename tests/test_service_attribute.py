@@ -22,11 +22,11 @@ class TestAttribute(unittest.TestCase):
             ''
         )
         self.assertEqual(
-            Attribute(None, 'percentage').type,
+            Attribute(None, 'number').type,
             'text'
         )
         self.assertEqual(
-            Attribute(None, 'percentage').value,
+            Attribute(None, 'number').value,
             ''
         )
         self.assertEqual(
