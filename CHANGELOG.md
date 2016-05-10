@@ -2,6 +2,37 @@
 
 Records breaking changes from major version bumps
 
+## 20.0.0
+
+PR: [#264](https://github.com/alphagov/digitalmarketplace-utils/pull/264)
+
+### What changed
+
+Removed content_loader.py to a separate package which can be found [here](https://github.com/alphagov/digitalmarketplace-content-loader). The associated tests were
+moved too. Any app which imported the content loader form dmutils will need to be updated to import
+from it's new location. To import the new package, add `git+https://github.com/alphagov/digitalmarketplace-content-loader.git@1.0.0#egg=digitalmarketplace-content-loader==1.0.0`
+to it's `requirements.txt`.
+
+Removed a couple of functions from `formats.py`. `format_price` was only used by content_loader
+so it made sense to move it to the new package. `format_service_price` is a dependency of `format_price`
+and so was also moved. It is imported by the front end apps however so they will need updating to import
+from it's new location before they can use this version of dmutils.
+
+Mocked a dependency on `ContentSection` from `test_documents.py`. As `ContentSection` is part of the
+content loader and has been moved to the new package, it made sense to mock the dependency.
+
+### Example app change
+
+Old:
+```python
+from dmutils.content_loader import ContentSection
+```
+
+New:
+```python
+from dmcontent.content_loader import ContentSection
+```
+
 ## 19.0.0
 
 PR: [#248](https://github.com/alphagov/digitalmarketplace-utils/pull/248)

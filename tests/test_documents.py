@@ -8,7 +8,6 @@ from freezegun import freeze_time
 from .helpers import mock_file
 from dmutils.s3 import S3ResponseError
 
-from dmutils.content_loader import ContentSection
 from dmutils.documents import (
     generate_file_name,
     file_is_not_empty, file_is_empty, filter_empty_files,
@@ -216,19 +215,8 @@ class TestUploadDocument(unittest.TestCase):
 
 class TestUploadServiceDocuments(object):
     def setup(self):
-        self.section = ContentSection.create({
-            "slug": "first_section",
-            "name": "First section",
-            "questions": [{
-                "id": "pricingDocumentURL",
-                "question": "pricing document",
-                "type": "upload",
-            }, {
-                "id": "q2",
-                "question": "Text question",
-                "type": "text",
-            }]
-        })
+        self.section = mock.Mock()
+        self.section.get_question_ids.return_value = ['pricingDocumentURL']
         self.service = {
             'frameworkSlug': 'g-cloud-7',
             'supplierId': '12345',
