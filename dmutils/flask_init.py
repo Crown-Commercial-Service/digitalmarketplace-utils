@@ -55,6 +55,7 @@ def init_app(
     application.add_template_filter(formats.shortdateformat)
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)
+    application.add_template_filter(filters.smartjoin)
 
     @application.context_processor
     def inject_global_template_variables():
