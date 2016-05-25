@@ -28,17 +28,15 @@ def test_formatter_request_id_in_non_logging_app(app):
         assert RequestIdFilter().request_id == 'no-request-id'
 
 
-def test_init_app_adds_stream_handler_in_debug(app):
-    app.config['DEBUG'] = True
+def test_init_app_adds_stream_handler_without_log_path(app):
     init_app(app)
 
     assert len(app.logger.handlers) == 1
     assert isinstance(app.logger.handlers[0], logging.StreamHandler)
 
 
-def test_init_app_adds_file_handlers_in_non_debug(app):
+def test_init_app_adds_file_handlers_with_log_path(app):
     with tempfile.NamedTemporaryFile() as f:
-        app.config['DEBUG'] = False
         app.config['DM_LOG_PATH'] = f.name
         init_app(app)
 
