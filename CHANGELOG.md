@@ -2,6 +2,42 @@
 
 Records breaking changes from major version bumps
 
+## 21.0.0
+
+PR: [#266](https://github.com/alphagov/digitalmarketplace-utils/pull/266)
+
+### What changed
+
+Logs will be written to a file or stdout/stderr based on the value of `DM_LOG_PATH`, even for environments with `DEBUG = True`.
+To write logs to stderr `DM_LOG_PATH` should be set to a falsy value (eg `None` or empty string). Currently, most app configs
+set `DM_LOG_PATH` to `/var/log/...` in the shared config. This declaration should be moved to Preview/Staging/Production configs,
+with the shared default set to `None`.
+
+### Example app change
+
+Old:
+```python
+
+class Config(object):
+    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
+
+class Live(object):
+    pass
+
+```
+
+New:
+```python
+
+class Config(object):
+    DM_LOG_PATH = None
+
+class Live(object):
+    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
+
+```
+
+
 ## 20.0.0
 
 PR: [#264](https://github.com/alphagov/digitalmarketplace-utils/pull/264)
