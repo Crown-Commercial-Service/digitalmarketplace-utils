@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def init_app(app):
     app.config.setdefault('DM_LOG_LEVEL', 'INFO')
     app.config.setdefault('DM_APP_NAME', 'none')
-    app.config.setdefault('DM_LOG_PATH', './log/application.log')
+    app.config.setdefault('DM_LOG_PATH', None)
 
     @app.after_request
     def after_request(response):
@@ -59,15 +59,16 @@ def get_handlers(app):
     standard_formatter = CustomLogFormatter(LOG_FORMAT, TIME_FORMAT)
     json_formatter = JSONFormatter(LOG_FORMAT, TIME_FORMAT)
 
-    if app.debug:
-        handler = logging.StreamHandler(sys.stderr)
-        handlers.append(configure_handler(handler, app, standard_formatter))
-    else:
+    # Log to files if the path is set, otherwise log to stderr
+    if app.config['DM_LOG_PATH']:
         handler = logging.FileHandler(app.config['DM_LOG_PATH'])
         handlers.append(configure_handler(handler, app, standard_formatter))
 
         handler = logging.FileHandler(app.config['DM_LOG_PATH'] + '.json')
         handlers.append(configure_handler(handler, app, json_formatter))
+    else:
+        handler = logging.StreamHandler(sys.stderr)
+        handlers.append(configure_handler(handler, app, standard_formatter))
 
     return handlers
 
