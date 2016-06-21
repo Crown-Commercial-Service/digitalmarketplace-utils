@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from dmutils.filters import markdown_filter, smartjoin, format_links
 
 
@@ -61,8 +62,8 @@ def test_format_link_with_implied_protocol():
 
 
 def test_format_link_with_text():
-    text = 'This is the link: http://www.example.com'
-    formatted_text = 'This is the link: <a href=http://www.example.com rel="external">http://www.example.com</a>'
+    text = 'This is the Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ link: http://www.example.com'
+    formatted_text = 'This is the Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ link: <a href=http://www.example.com rel="external">http://www.example.com</a>'  # noqa
     assert format_links(text) == formatted_text
 
 
@@ -81,5 +82,5 @@ def test_multiple_urls():
 
 
 def test_no_links_no_change():
-    text = 'There are no links.'
+    text = 'There are no Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ links.'
     assert format_links(text) == text

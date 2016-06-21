@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import re
 from markdown import markdown
 from flask import Markup
@@ -33,10 +34,10 @@ def format_links(text):
         formattedText = ""
         for text in textArray:
             if text in matches:
-                formattedText = link.format(formattedText, Markup.escape(text))
+                formattedText = link.format(formattedText, Markup.escape(text.decode('utf-8')))
             else:
-                formattedText = '{}{}'.format(formattedText, Markup.escape(text))
+                formattedText = '{}{}'.format(formattedText, Markup.escape(text.decode('utf-8')))
         formattedText = Markup(formattedText)
-        return formattedText
+        return formattedText.encode('utf-8')
     else:
         return text
