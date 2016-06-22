@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import re
 from markdown import markdown
 from flask import Markup
@@ -25,19 +24,20 @@ def format_links(text):
                                 \.                        # match dot in host name
                                 (?:[^\s/?\.#<>"']+\.?)+   # match rest of domain
                                 (?:/[^\s<>"']*)?          # rest of url
-                                [^\s<>"'\.]               # no dot at end
+                                [^\s<>,"'\.]               # no dot at end
                                 )""", re.X)
     matches = url_match.findall(text)
-    link = '{0}<a href={1} rel="external">{1}</a>'
     if matches:
-        textArray = url_match.split(text)
+        link = '{0}<a href={1} rel="external">{2}</a>'
         formattedText = ""
+        textArray = url_match.split(text)
         for text in textArray:
             if text in matches:
-                formattedText = link.format(formattedText, Markup.escape(text.decode('utf-8')))
+                url = "http://{}".format(text) if text.startswith('www') else text
+                formattedText = link.format(formattedText, Markup.escape(url), Markup.escape(text))
             else:
-                formattedText = '{}{}'.format(formattedText, Markup.escape(text.decode('utf-8')))
+                formattedText = '{}{}'.format(formattedText, Markup.escape(text))
         formattedText = Markup(formattedText)
-        return formattedText.encode('utf-8')
+        return formattedText
     else:
         return text
