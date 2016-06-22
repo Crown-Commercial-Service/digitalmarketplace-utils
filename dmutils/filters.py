@@ -26,17 +26,17 @@ def format_links(text):
                                 (?:/[^\s<>"']*)?          # rest of url
                                 [^\s<>,"'\.]               # no dot at end
                                 )""", re.X)
-    matches = url_match.findall(text)
-    if matches:
+    matched_urls = url_match.findall(text)
+    if matched_urls:
         link = '{0}<a href={1} rel="external">{2}</a>'
         formattedText = ""
         textArray = url_match.split(text)
-        for text in textArray:
-            if text in matches:
-                url = "http://{}".format(text) if text.startswith('www') else text
-                formattedText = link.format(formattedText, Markup.escape(url), Markup.escape(text))
+        for partial_text in textArray:
+            if partial_text in matched_urls:
+                url = "http://{}".format(partial_text) if text.startswith('www') else partial_text
+                formattedText = link.format(formattedText, Markup.escape(url), Markup.escape(partial_text))
             else:
-                formattedText = '{}{}'.format(formattedText, Markup.escape(text))
+                formattedText = '{}{}'.format(formattedText, Markup.escape(partial_text))
         formattedText = Markup(formattedText)
         return formattedText
     else:
