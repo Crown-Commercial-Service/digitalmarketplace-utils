@@ -29,16 +29,19 @@ def format_links(text):
                                 )""", re.X)
     matched_urls = url_match.findall(text)
     if matched_urls:
-        link = '{0}<a href="{1}" rel="external">{2}</a>'
-        formattedText = ""
-        textArray = url_match.split(text)
-        for partial_text in textArray:
+        link = '<a href="{0}" rel="external">{1}</a>'
+        formatted_text = ""
+        text_array = url_match.split(text)
+        formatted_text_array = []
+        for partial_text in text_array:
             if partial_text in matched_urls:
-                url = "http://{}".format(partial_text) if partial_text.startswith('www') else partial_text
-                formattedText = link.format(formattedText, Markup.escape(url), Markup.escape(partial_text))
+                url = "https://{}".format(partial_text) if partial_text.startswith('www') else partial_text
+                url = link.format(Markup.escape(url), Markup.escape(partial_text))
+                formatted_text_array.append(url)
             else:
-                formattedText = '{}{}'.format(formattedText, Markup.escape(partial_text))
-        formattedText = Markup(formattedText)
-        return formattedText
+                partial_text = Markup.escape(partial_text)
+                formatted_text_array.append(partial_text)
+        formatted_text = Markup(''.join(formatted_text_array))
+        return formatted_text
     else:
         return text

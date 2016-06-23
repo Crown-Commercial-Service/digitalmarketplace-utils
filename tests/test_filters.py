@@ -58,7 +58,7 @@ def test_format_link():
 
 def test_format_link_with_implied_protocol():
     link = 'www.example.com'
-    formatted_link = '<a href="http://www.example.com" rel="external">www.example.com</a>'
+    formatted_link = '<a href="https://www.example.com" rel="external">www.example.com</a>'
     assert format_links(link) == formatted_link
 
 
