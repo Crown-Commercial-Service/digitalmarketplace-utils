@@ -56,7 +56,7 @@ def test_format_link():
     assert format_links(link) == formatted_link
 
 
-def test_format_link_withput_protocol():
+def test_format_link_without_protocol():
     link = 'www.example.com'
     formatted_link = '<span class="break-link">www.example.com</span>'
     assert format_links(link) == formatted_link
@@ -71,6 +71,15 @@ def test_format_link_with_text():
 def test_format_link_and_text_escapes_extra_html():
     text = 'This is the <strong>link</strong>: http://www.example.com'
     formatted_text = 'This is the &lt;strong&gt;link&lt;/strong&gt;: <a href="http://www.example.com" rel="external">http://www.example.com</a>'  # noqa
+    assert format_links(text) == formatted_text
+
+
+def test_format_link_does_not_die_horribly():
+    text = 'This is the URL that made a previous regex die horribly' \
+           'https://something&lt;span&gt;what&lt;/span&gt;something.com'
+    formatted_text = 'This is the URL that made a previous regex die horribly' \
+                     '<a href="https://something&amp;lt;span&amp;gt;what&amp;lt;/span&amp;gt;something.com" ' \
+                     'rel="external">https://something&amp;lt;span&amp;gt;what&amp;lt;/span&amp;gt;something.com</a>'
     assert format_links(text) == formatted_text
 
 
