@@ -20,18 +20,15 @@ def smartjoin(input):
 
 def format_links(text):
     url_match = re.compile(r"""(
-                                (?:https?://|www\.)       # start with http:// or www.
-                                (?:[^\s/?\.#<>"']+\.?)+   # first part of host name
-                                \.                        # match dot in host name
-                                (?:[^\s/?\.#<>"']+\.?)+   # match rest of domain
-                                (?:/[^\s<>"']*)?          # rest of url
-                                [^\s<>,"'\.]              # no dot at end
+                                (?:https?://|www\.)    # start with http:// or www.
+                                (?:[^\s<>"'/?#]+)      # domain doesn't have these characters
+                                (?:[^\s<>"']+)         # post-domain part of URL doesn't have these characters
+                                [^\s<>,"'\.]           # no dot at end
                                 )""", re.X)
     matched_urls = url_match.findall(text)
     if matched_urls:
         link = '<a href="{0}" rel="external">{0}</a>'
         plaintext_link = '<span class="break-link">{0}</span>'
-        formatted_text = ""
         text_array = url_match.split(text)
         formatted_text_array = []
         for partial_text in text_array:
