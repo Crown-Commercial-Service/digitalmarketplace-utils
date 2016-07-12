@@ -18,7 +18,16 @@ def smartjoin(input):
         return ''
 
 
-def format_links(text):
+def format_links(text, link_classes=("urlized-link",), plaintext_link_classes=("urlized-plaintext-link",)):
+    """
+        Replaces apparent urls in plaintext `text` with <a href="..."> elements, applying `link_classes` to the
+        resulting elements.
+
+        Apparent pseudo-urls (url-like substrings missing the scheme (beginning "www") are wrapped in a <span> element
+        to which `plaintext_link_classes` are applied.
+
+        `link_classes` and `plaintext_link_classes` are expected to be valid sensible html class names
+    """
     url_match = re.compile(r"""(
                                 (?:https?://|www\.)    # start with http:// or www.
                                 (?:[^\s<>"'/?#]+)      # domain doesn't have these characters
@@ -27,16 +36,18 @@ def format_links(text):
                                 )""", re.X)
     matched_urls = url_match.findall(text)
     if matched_urls:
-        link = '<a href="{0}" rel="external">{0}</a>'
-        plaintext_link = '<span class="break-link">{0}</span>'
+        link = '<a href="{0}" class="{1}" rel="external">{0}</a>'
+        plaintext_link = '<span class="{1}">{0}</span>'
+        joined_link_classes = " ".join(link_classes)
+        joined_plaintext_link_classes = " ".join(plaintext_link_classes)
         text_array = url_match.split(text)
         formatted_text_array = []
         for partial_text in text_array:
             if partial_text in matched_urls:
                 if partial_text.startswith('www'):
-                    url = plaintext_link.format(Markup.escape(partial_text))
+                    url = plaintext_link.format(Markup.escape(partial_text), joined_plaintext_link_classes)
                 else:
-                    url = link.format(Markup.escape(partial_text))
+                    url = link.format(Markup.escape(partial_text), joined_link_classes)
                 formatted_text_array.append(url)
             else:
                 partial_text = Markup.escape(partial_text)
