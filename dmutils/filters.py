@@ -27,7 +27,7 @@ def format_links(text):
                                 )""", re.X)
     matched_urls = url_match.findall(text)
     if matched_urls:
-        link = '<a href="{0}" rel="external">{0}</a>'
+        link = '<a href="{0}" class="break-link" rel="external">{0}</a>'
         plaintext_link = '<span class="break-link">{0}</span>'
         text_array = url_match.split(text)
         formatted_text_array = []
