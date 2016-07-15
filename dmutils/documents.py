@@ -16,6 +16,7 @@ RESULT_LETTER_FILENAME = 'result-letter.pdf'
 AGREEMENT_FILENAME = 'framework-agreement.pdf'
 SIGNED_AGREEMENT_PREFIX = 'signed-framework-agreement'
 COUNTERSIGNED_AGREEMENT_FILENAME = 'countersigned-framework-agreement.pdf'
+SIGNATURE_PAGE_FILENAME = 'signature-page.pdf'
 
 
 def filter_empty_files(files):
