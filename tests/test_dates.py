@@ -210,7 +210,7 @@ class TestPublishingDates():
         assert dates['answers_close'] == datetime.datetime(2016, 1, 15, 23, 59, 59)
         assert dates['closing_date'] == datetime.datetime(2016, 1, 18, 23, 59, 59)
 
-    def test_get_publishing_dates_returns_correct_dates_if_publishedAt_is_a_date_object(self):
+    def test_get_publishing_dates_returns_correct_dates_if_published_at__key_is_a_date_object(self):
         brief = {
             'publishedAt': datetime.datetime(2016, 1, 4, 12, 0, 0),
         }
