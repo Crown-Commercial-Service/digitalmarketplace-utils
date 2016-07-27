@@ -9,16 +9,16 @@ def get_publishing_dates(brief):
     dates = {}
 
     if brief_is_from_api_(brief):
-        dates['today'] = get_start_date_from_brief_api(brief)
+        dates['published_date'] = get_start_date_from_brief_api(brief)
     elif brief_is_from_frontend_app_and_published_(brief):
-        dates['today'] = get_start_date_from_published_frontend_brief(brief)
+        dates['published_date'] = get_start_date_from_published_frontend_brief(brief)
     else:
-        dates['today'] = get_todays_date()
+        dates['published_date'] = get_todays_date()
 
     length = get_length_of_brief(brief)
 
-    dates['closing_date'] = dates['today'] + timedelta(days=APPLICATION_OPEN_DAYS[length])
-    dates['questions_close'] = workday(dates['today'], QUESTIONS_OPEN_DAYS[length])
+    dates['closing_date'] = dates['published_date'] + timedelta(days=APPLICATION_OPEN_DAYS[length])
+    dates['questions_close'] = workday(dates['published_date'], QUESTIONS_OPEN_DAYS[length])
     dates['answers_close'] = workday(dates['closing_date'], -1)
     dates['application_open_weeks'] = APPLICATION_OPEN_DAYS[length]//7
     dates['closing_time'] = '{d:%I:%M %p}'.format(d=dates['closing_date']).lower()
