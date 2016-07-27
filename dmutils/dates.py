@@ -8,14 +8,14 @@ def get_publishing_dates(brief):
     QUESTIONS_OPEN_DAYS = {'1 week': 2, '2 weeks': 5}
     dates = {}
 
-    if brief_is_from_api_(brief):
-        dates['published_date'] = get_start_date_from_brief_api(brief)
-    elif brief_is_from_frontend_app_and_published_(brief):
-        dates['published_date'] = get_start_date_from_published_frontend_brief(brief)
+    if _brief_is_from_api_(brief):
+        dates['published_date'] = _get_start_date_from_brief_api(brief)
+    elif _brief_is_from_frontend_app_and_published_(brief):
+        dates['published_date'] = _get_start_date_from_published_frontend_brief(brief)
     else:
-        dates['published_date'] = get_todays_date()
+        dates['published_date'] = _get_todays_date()
 
-    length = get_length_of_brief(brief)
+    length = _get_length_of_brief(brief)
 
     dates['closing_date'] = dates['published_date'] + timedelta(days=APPLICATION_OPEN_DAYS[length])
     dates['questions_close'] = workday(dates['published_date'], QUESTIONS_OPEN_DAYS[length])
@@ -26,28 +26,28 @@ def get_publishing_dates(brief):
     return dates
 
 
-def brief_is_from_api_(brief):
+def _brief_is_from_api_(brief):
     return brief.get('publishedAt') and isinstance(brief.get('publishedAt'), datetime)
 
 
-def brief_is_from_frontend_app_and_published_(brief):
+def _brief_is_from_frontend_app_and_published_(brief):
     return brief.get('publishedAt') and isinstance(brief.get('publishedAt'), string_types)
 
 
-def get_start_date_from_brief_api(brief):
+def _get_start_date_from_brief_api(brief):
     return brief.get('publishedAt').replace(hour=23, minute=59, second=59, microsecond=0)
 
 
-def get_start_date_from_published_frontend_brief(brief):
+def _get_start_date_from_published_frontend_brief(brief):
     return datetime.strptime(brief['publishedAt'][0:10], '%Y-%m-%d') \
         .replace(hour=23, minute=59, second=59, microsecond=0)
 
 
-def get_todays_date():
+def _get_todays_date():
     return datetime.utcnow().replace(hour=23, minute=59, second=59, microsecond=0)
 
 
-def get_length_of_brief(brief):
+def _get_length_of_brief(brief):
     if brief.get('requirementsLength') == '1 week':
         return '1 week'
     else:
