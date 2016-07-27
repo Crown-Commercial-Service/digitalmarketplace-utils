@@ -210,7 +210,31 @@ class TestPublishingDates():
         assert dates['answers_close'] == datetime.datetime(2016, 1, 15, 23, 59, 59)
         assert dates['closing_date'] == datetime.datetime(2016, 1, 18, 23, 59, 59)
 
-    def test_get_publishing_dates_returns_correct_dates_if_published_at__key_is_a_date_object(self):
+    def test_get_publishing_dates_returns_correct_dates_if_brief_is_published_with_1_week_requirementsLength(self):
+        brief = {
+            'publishedAt': u'2016-01-04T12:00:00.00000Z',
+            'requirementsLength': '1 week'
+        }
+
+        dates = dates_package.get_publishing_dates(brief)
+
+        assert dates['questions_close'] == datetime.datetime(2016, 1, 6, 23, 59, 59)
+        assert dates['answers_close'] == datetime.datetime(2016, 1, 8, 23, 59, 59)
+        assert dates['closing_date'] == datetime.datetime(2016, 1, 11, 23, 59, 59)
+
+    def test_get_publishing_dates_returns_correct_dates_if_brief_is_published_with_2_week_requirementsLength(self):
+        brief = {
+            'publishedAt': u'2016-01-04T12:00:00.00000Z',
+            'requirementsLength': '2 weeks'
+        }
+
+        dates = dates_package.get_publishing_dates(brief)
+
+        assert dates['questions_close'] == datetime.datetime(2016, 1, 11, 23, 59, 59)
+        assert dates['answers_close'] == datetime.datetime(2016, 1, 15, 23, 59, 59)
+        assert dates['closing_date'] == datetime.datetime(2016, 1, 18, 23, 59, 59)
+
+    def test_get_publishing_dates_returns_correct_dates_if_published_at_key_is_a_date_object(self):
         brief = {
             'publishedAt': datetime.datetime(2016, 1, 4, 12, 0, 0),
         }
