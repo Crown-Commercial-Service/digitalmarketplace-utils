@@ -20,7 +20,7 @@ def get_publishing_dates(brief):
     dates['closing_date'] = dates['published_date'] + timedelta(days=APPLICATION_OPEN_DAYS[length])
     dates['questions_close'] = workday(dates['published_date'], QUESTIONS_OPEN_DAYS[length])
     dates['answers_close'] = workday(dates['closing_date'], -1)
-    dates['application_open_weeks'] = APPLICATION_OPEN_DAYS[length]//7
+    dates['application_open_weeks'] = length
     dates['closing_time'] = '{d:%I:%M %p}'.format(d=dates['closing_date']).lower()
 
     return dates
