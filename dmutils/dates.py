@@ -48,7 +48,4 @@ def _get_todays_date():
 
 
 def _get_length_of_brief(brief):
-    if brief.get('requirementsLength') == '1 week':
-        return '1 week'
-    else:
-        return '2 weeks'
+    return brief['requirementsLength'] if brief.get('requirementsLength') else '2 weeks'
