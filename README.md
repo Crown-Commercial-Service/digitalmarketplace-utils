@@ -13,6 +13,22 @@ Digital Marketplace utils
 * Helper code for Flask configuration
 * A formed version of Flask Feature Flags
 
+## Logging from applications
+
+When logging from applications you should write your message as a [format
+string](https://docs.python.org/2/library/string.html#format-string-syntax) and pass any required
+arguments to the log method in the `extra` named argument. This allows our logging to use them as
+separate fields in our JSON logs making it much easier to search and aggregate on them.
+
+```python
+logger.info("the user {user_id} did the thing '{thing}'", extra={
+    'user_id': user_id, 'thing': thing
+})
+```
+
+Note that apart from not getting the benefit, passing the formatted message can be dangerous. User
+generated content may be passed, unescaped to the `.format` method.
+
 ## Using FeatureFlags
 
 Hide not-ready-to-ship features until they're ready.
