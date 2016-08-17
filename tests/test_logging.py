@@ -7,6 +7,8 @@ except ImportError:
     from io import StringIO
 import json
 
+import mock
+
 from dmutils import request_id
 from dmutils.logging import init_app, RequestIdFilter, JSONFormatter, CustomLogFormatter
 from dmutils.logging import LOG_FORMAT, TIME_FORMAT
@@ -33,6 +35,38 @@ def test_init_app_adds_stream_handler_without_log_path(app):
 
     assert len(app.logger.handlers) == 1
     assert isinstance(app.logger.handlers[0], logging.StreamHandler)
+
+
+def test_app_after_request_logs_responses_with_info_level(app):
+    init_app(app)
+
+    # since app.logger is a read-only property we need to patch the Flask class
+    with mock.patch('flask.Flask.logger') as logger:
+        app.test_client().get('/')
+
+        logger.log.assert_called_once_with(
+            logging.INFO,
+            '{method} {url} {status}',
+            extra={'url': u'http://localhost/', 'status': 404, 'method': 'GET'}
+        )
+
+
+def test_app_after_request_logs_5xx_responses_with_error_level(app):
+    @app.route('/')
+    def error_route():
+        return 'error', 500
+
+    init_app(app)
+
+    # since app.logger is a read-only property we need to patch the Flask class
+    with mock.patch('flask.Flask.logger') as logger:
+        app.test_client().get('/')
+
+        logger.log.assert_called_once_with(
+            logging.ERROR,
+            '{method} {url} {status}',
+            extra={'url': u'http://localhost/', 'status': 500, 'method': 'GET'}
+        )
 
 
 def test_init_app_adds_file_handlers_with_log_path(app):
