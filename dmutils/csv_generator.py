@@ -2,7 +2,6 @@ import unicodecsv
 
 
 def iter_csv(rows):
-
     class Line(object):
         def __init__(self):
             self._line = None

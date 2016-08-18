@@ -11,5 +11,5 @@ class TestIterCsv():
         result = iter_csv(rows)
         lines = [line for line in result]
 
-        assert lines[0] == 'a,b,c,d\r\n'
-        assert lines[1] == 'e,f,g,h\r\n'
+        assert lines[0] == b'a,b,c,d\r\n'
+        assert lines[1] == b'e,f,g,h\r\n'
