@@ -55,6 +55,7 @@ def test_calls_send_email_with_correct_params(email_app, mandrill):
             'auto_text': True,
             'tags': ['password-resets'],
             'headers': {'Reply-To': "from_email"},  # noqa
+            'metadata': None,
             'preserve_recipients': False,
             'recipient_metadata': [{
                 'rcpt': "email_address"
@@ -69,7 +70,6 @@ def test_calls_send_email_with_correct_params(email_app, mandrill):
             "from_email",
             "from_name",
             ["password-resets"]
-
         )
 
         mandrill.messages.send.assert_called_once_with(message=expected_call, async=True)
@@ -122,6 +122,7 @@ def test_calls_send_email_with_alternative_reply_to(email_app, mandrill):
             'track_clicks': False,
             'auto_text': True,
             'tags': ['password-resets'],
+            'metadata': None,
             'headers': {'Reply-To': "reply_address"},
             'preserve_recipients': False,
             'recipient_metadata': [{
