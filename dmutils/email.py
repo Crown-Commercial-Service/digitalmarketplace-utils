@@ -19,7 +19,10 @@ class MandrillException(Exception):
     pass
 
 
-def send_email(to_email_addresses, email_body, api_key, subject, from_email, from_name, tags, reply_to=None):
+def send_email(to_email_addresses, email_body, api_key, subject, from_email, from_name, tags, reply_to=None,
+               metadata=None, logger=None):
+    logger = logger or current_app.logger
+
     if isinstance(to_email_addresses, string_types):
         to_email_addresses = [to_email_addresses]
 
@@ -40,6 +43,7 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
             'track_clicks': False,
             'auto_text': True,
             'tags': tags,
+            'metadata': metadata,
             'headers': {'Reply-To': reply_to or from_email},
             'preserve_recipients': False,
             'recipient_metadata': [{
@@ -50,14 +54,11 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
         result = mandrill_client.messages.send(message=message, async=True)
     except Error as e:
         # Mandrill errors are thrown as exceptions
-        current_app.logger.error("A mandrill error occurred: {error}",
-                                 extra={'error': e})
+        logger.error("Failed to send an email: {error}", extra={'error': e})
         raise MandrillException(e)
 
-    current_app.logger.info("Sent {tags} response: id={id}, email={email_hash}",
-                            extra={'tags': tags,
-                                   'id': result[0]['_id'],
-                                   'email_hash': hash_email(result[0]['email'])})
+    logger.info("Sent {tags} response: id={id}, email={email_hash}",
+                extra={'tags': tags, 'id': result[0]['_id'], 'email_hash': hash_email(result[0]['email'])})
 
 
 def generate_token(data, secret_key, salt):
