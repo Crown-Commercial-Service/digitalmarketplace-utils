@@ -94,6 +94,11 @@ def test_User_has_any_role(user_json):
     assert not user.has_any_role('other', 'admin')
 
 
+def test_User_modern_getattr(user_json):
+    user = User.from_json(user_json)
+    assert getattr(user, "banana", "mango") == "mango"
+
+
 def test_User_load_user(user_json):
     data_api_client = mock.Mock()
     data_api_client.get_user.return_value = user_json
