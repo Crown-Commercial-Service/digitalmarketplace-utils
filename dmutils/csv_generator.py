@@ -1,19 +1,26 @@
 import unicodecsv
 
 
-def iter_csv(rows):
-    class Line(object):
-        def __init__(self):
-            self._line = None
+class _StringPipe(object):
+    """
+    A trivial implementation of something a bit like StringIO but acts more like a pipe than a file,
+    flushing its output buffer when read. This way it can be used in lazy iteration for incremental output.
+    """
+    def __init__(self, initial_value=b""):
+        self._contents = initial_value
 
-        def write(self, line):
-            self._line = line
+    def write(self, line):
+        self._contents += line
 
-        def read(self):
-            return self._line
+    def read(self):
+        retval = self._contents
+        self._contents = b""
+        return retval
 
-    line = Line()
-    writer = unicodecsv.writer(line)
-    for row in rows:
+
+def iter_csv(row_iter):
+    pipe = _StringPipe()
+    writer = unicodecsv.writer(pipe)
+    for row in row_iter:
         writer.writerow(row)
-        yield line.read()
+        yield pipe.read()
