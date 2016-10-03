@@ -17,7 +17,7 @@ from dmutils.documents import (
     upload_document, upload_service_documents,
     get_signed_url, get_agreement_document_path, get_document_path,
     sanitise_supplier_name, file_is_pdf, file_is_zip, file_is_image,
-    file_is_csv)
+    file_is_csv, generate_timestamped_document_upload_path)
 
 
 class TestGenerateFilename(unittest.TestCase):
@@ -324,6 +324,12 @@ def test_get_agreement_document_path():
 def test_get_document_path():
     assert get_document_path('g-cloud-7', 1234, 'agreements', 'foo.pdf') == \
         'g-cloud-7/agreements/1234/1234-foo.pdf'
+
+
+def test_generate_timestamped_document_upload_path():
+    with freeze_time('2015-01-02 03:04:05'):
+        assert generate_timestamped_document_upload_path('g-rain-12', '54321', 'agreeeeements', 'a-thing.pdf') == \
+            'g-rain-12/agreeeeements/54321/2015-01-02T03:04:05-54321-a-thing.pdf'
 
 
 def test_sanitise_supplier_name():
