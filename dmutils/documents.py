@@ -233,6 +233,16 @@ def get_document_path(framework_slug, supplier_id, bucket_category, document_nam
     )
 
 
+def generate_timestamped_document_upload_path(framework_slug, supplier_id, bucket_category, doc_name):
+    return '{0}/{1}/{2}/{3}-{2}-{4}'.format(
+        framework_slug,
+        bucket_category,
+        supplier_id,
+        datetime.datetime.utcnow().isoformat(),
+        doc_name
+    )
+
+
 def sanitise_supplier_name(supplier_name):
     """Replace ampersands with 'and' and spaces with a single underscore."""
     sanitised_supplier_name = supplier_name.encode("ascii", errors="ignore").decode("ascii").strip()
