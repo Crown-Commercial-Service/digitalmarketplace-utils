@@ -36,16 +36,19 @@ class S3(object):
 
         return match.group(1)
 
-    def save(self, path, file, acl='public-read', move_prefix=None, timestamp=None, download_filename=None):
+    def save(self, path, file, acl='public-read', move_prefix=None, timestamp=None, download_filename=None,
+             disposition_type='attachment'):
         """Save a file in an S3 bucket
 
         canned ACL list: https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
 
-        :param path:        location in S3 bucket at which to save the file
-        :param file:        file object to be saved in S3
-        :param acl:         S3 canned ACL
-        :param move_prefix: Prefix to give to existing file when moving it out of the way
-        :param timestamp:   Timestamp to set for this file rather than using utcnow
+        :param path:              location in S3 bucket at which to save the file
+        :param file:              file object to be saved in S3
+        :param acl:               S3 canned ACL
+        :param move_prefix:       Prefix to give to existing file when moving it out of the way
+        :param timestamp:         Timestamp to set for this file rather than using utcnow
+        :param download_filename: Suggested name for a browser to download, part of Content-Disposition header
+        :param disposition_type:  Content-Disposition type - e.g. "attachment" or "inline"
 
         :return: S3 Key
         """
@@ -59,7 +62,9 @@ class S3(object):
         key.set_metadata('timestamp', timestamp.strftime(DATETIME_FORMAT))
         headers = {'Content-Type': self._get_mimetype(key.name)}
         if download_filename:
-            headers['Content-Disposition'] = 'attachment; filename="{}"'.format(download_filename).encode('utf-8')
+            headers['Content-Disposition'] = '{}; filename="{}"'.format(
+                disposition_type, download_filename
+            ).encode('utf-8')
         key.set_contents_from_file(
             file,
             headers=headers
