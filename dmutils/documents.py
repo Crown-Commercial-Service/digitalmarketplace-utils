@@ -1,5 +1,6 @@
 import os
 import datetime
+import re
 
 try:
     import urlparse
@@ -244,6 +245,16 @@ def generate_timestamped_document_upload_path(framework_slug, supplier_id, bucke
     timestamped_doc_name = timestamped_file_name + file_extension
 
     return get_document_path(framework_slug, supplier_id, bucket_category, timestamped_doc_name)
+
+
+def degenerate_document_path_and_return_doc_name(document_path):
+    """Takes a document path and returns just the generic document name
+
+    An inverse function for `get_document_path` which returns what would have been
+    the `document_name` param (i.e. removes all framework slug, supplier id and bucket category
+    information)
+    """
+    return re.split('/\d+-', document_path)[-1]
 
 
 def sanitise_supplier_name(supplier_name):

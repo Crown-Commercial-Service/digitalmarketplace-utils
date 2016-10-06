@@ -17,7 +17,8 @@ from dmutils.documents import (
     upload_document, upload_service_documents,
     get_signed_url, get_agreement_document_path, get_document_path,
     sanitise_supplier_name, file_is_pdf, file_is_zip, file_is_image,
-    file_is_csv, generate_timestamped_document_upload_path)
+    file_is_csv, generate_timestamped_document_upload_path,
+    degenerate_document_path_and_return_doc_name)
 
 
 class TestGenerateFilename(unittest.TestCase):
@@ -330,6 +331,19 @@ def test_generate_timestamped_document_upload_path():
     with freeze_time('2015-01-02 03:04:05'):
         assert generate_timestamped_document_upload_path('g-rain-12', '54321', 'agreeeeements', 'a-thing.pdf') == \
             'g-rain-12/agreeeeements/54321/54321-a-thing-2015-01-02-030405.pdf'
+
+
+def test_degenerate_document_path_and_return_doc_name():
+    assert (
+        degenerate_document_path_and_return_doc_name(
+            "g-cloud-8/agreements/5478/5478-signed-framework-agreement-12-10-2016-101234.pdf"
+        ) == "signed-framework-agreement-12-10-2016-101234.pdf"
+    )
+    assert (
+        degenerate_document_path_and_return_doc_name(
+            "g-cloud-7/agreements/1234/1234-countersigned-framework-agreement.jpg"
+        ) == "countersigned-framework-agreement.jpg"
+    )
 
 
 def test_sanitise_supplier_name():
