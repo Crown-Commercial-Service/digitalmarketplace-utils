@@ -238,13 +238,12 @@ def get_document_path(framework_slug, supplier_id, bucket_category, document_nam
 
 
 def generate_timestamped_document_upload_path(framework_slug, supplier_id, bucket_category, doc_name):
-    return '{0}/{1}/{2}/{3}-{2}-{4}'.format(
-        framework_slug,
-        bucket_category,
-        supplier_id,
-        datetime.datetime.utcnow().isoformat(),
-        doc_name
-    )
+    """Generates a file path with a timestamp inserted before the file extension"""
+    file_name, file_extension = os.path.splitext(doc_name)
+    timestamped_file_name = file_name + '-' + datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
+    timestamped_doc_name = timestamped_file_name + file_extension
+
+    return get_document_path(framework_slug, supplier_id, bucket_category, timestamped_doc_name)
 
 
 def sanitise_supplier_name(supplier_name):

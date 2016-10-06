@@ -329,7 +329,7 @@ def test_get_document_path():
 def test_generate_timestamped_document_upload_path():
     with freeze_time('2015-01-02 03:04:05'):
         assert generate_timestamped_document_upload_path('g-rain-12', '54321', 'agreeeeements', 'a-thing.pdf') == \
-            'g-rain-12/agreeeeements/54321/2015-01-02T03:04:05-54321-a-thing.pdf'
+            'g-rain-12/agreeeeements/54321/54321-a-thing-2015-01-02-030405.pdf'
 
 
 def test_sanitise_supplier_name():
