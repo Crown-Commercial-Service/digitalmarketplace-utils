@@ -10,7 +10,6 @@ mandrill==1.0.57
 monotonic==0.3
 pytz==2015.4
 Flask-WTF==0.12
-markdown==2.6.2
 Flask-Script==2.0.5
 workdays==1.4
 unicodecsv==0.14.1
