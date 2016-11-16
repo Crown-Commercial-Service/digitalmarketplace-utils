@@ -2,6 +2,35 @@
 
 Records breaking changes from major version bumps
 
+## 22.0.0
+
+PR: [#286](https://github.com/alphagov/digitalmarketplace-utils/pull/286)
+
+### What changed
+
+We used to be able to use a `|markdown` filter in our jinja templates which would turn markdown formatted strings into [Markup](http://jinja.pocoo.org/docs/dev/api/#jinja2.Markup) strings as well as permit HTML tags.
+This opened us up to vulnerabilities where untrusted input might end up going through one of these filters and expose us to a cross-site scripting (XSS) exploit.
+
+Going forward, markdown formatted text will be allowed in specific fields (documented in the [README for digitalmarketplace-frameworks](https://github.com/alphagov/digitalmarketplace-frameworks/blob/4c0502379910d8248f062b8aaf35fc58ce912370/README.md#template-fields)) and then rendered by TemplateFields, handled by the Content Loader.
+
+### Example app change
+
+Old:
+```jinja
+
+<h2>Question name: {{ question.name|markdown }}</h2>
+
+```
+
+New:
+```jinja
+
+<!-- question.name is now a `TemplateField` which renders markdown when accessed -->
+<h2>Question name: {{ question.name }}</h2>
+
+```
+
+
 ## 21.0.0
 
 PR: [#266](https://github.com/alphagov/digitalmarketplace-utils/pull/266)

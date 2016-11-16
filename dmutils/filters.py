@@ -1,11 +1,6 @@
 from __future__ import unicode_literals
 import re
-from markdown import markdown
 from flask import Markup
-
-
-def markdown_filter(text, *args, **kwargs):
-    return markdown(text, ['markdown.extensions.abbr'], *args, **kwargs)
 
 
 def smartjoin(input):

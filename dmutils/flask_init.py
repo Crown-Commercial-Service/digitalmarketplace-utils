@@ -1,7 +1,6 @@
 import os
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 from . import config, logging, proxy_fix, request_id, formats, filters
-from flask import Markup
 from flask.ext.script import Manager, Server
 
 
@@ -47,9 +46,6 @@ def init_app(
         response.headers['X-Frame-Options'] = 'DENY'
         return response
 
-    @application.template_filter('markdown')
-    def markdown_filter_flask(data):
-        return Markup(filters.markdown_filter(data))
     application.add_template_filter(filters.format_links)
     application.add_template_filter(formats.timeformat)
     application.add_template_filter(formats.shortdateformat)
