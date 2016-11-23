@@ -112,7 +112,10 @@ def decode_password_reset_token(token, data_api_client):
         current_app.logger.info("Error changing password: Token generated earlier than password was last changed.")
         return {'error': 'token_invalid'}
 
-    return decoded
+    return {
+        'user': user['users']['id'],
+        'email': user['users']['emailAddress']
+    }
 
 
 def decode_invitation_token(encoded_token, role):
