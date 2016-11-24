@@ -218,9 +218,13 @@ def test_decode_password_reset_token_ok_for_good_token(email_app):
     data_api_client = mock.Mock()
     data_api_client.get_user.return_value = user
     with email_app.app_context():
-        data = {'user': 'test@example.com'}
+        data = {'user': 123}
         token = generate_token(data, 'Secret', 'PassSalt')
-        assert decode_password_reset_token(token, data_api_client) == data
+        assert decode_password_reset_token(token, data_api_client) == {
+            'user': 123,
+            'email': 'test@example.com'
+        }
+    data_api_client.get_user.assert_called_once_with(123)
 
 
 def test_decode_password_reset_token_does_not_work_if_bad_token(email_app):
@@ -228,7 +232,7 @@ def test_decode_password_reset_token_does_not_work_if_bad_token(email_app):
     user['users']['passwordChangedAt'] = "2016-01-01T12:00:00.30Z"
     data_api_client = mock.Mock()
     data_api_client.get_user.return_value = user
-    data = {'user': 'test@example.com'}
+    data = {'user': 123}
     token = generate_token(data, 'Secret', 'PassSalt')[1:]
 
     with email_app.app_context():
@@ -242,7 +246,7 @@ def test_decode_password_reset_token_does_not_work_if_token_expired(email_app):
     data_api_client.get_user.return_value = user
     with freeze_time('2015-01-02 03:04:05'):
         # Token was generated a year before current time
-        data = {'user': 'test@example.com'}
+        data = {'user': 123}
         token = generate_token(data, 'Secret', 'PassSalt')
 
     with freeze_time('2016-01-02 03:04:05'):
@@ -258,7 +262,7 @@ def test_decode_password_reset_token_does_not_work_if_password_changed_later_tha
 
     with freeze_time('2016-01-01T12:00:00.30Z'):
         # Token was generated an hour earlier than password was changed
-        data = {'user': 'test@example.com'}
+        data = {'user': 123}
         token = generate_token(data, 'Secret', 'PassSalt')
 
     with freeze_time('2016-01-01T14:00:00.30Z'):
