@@ -103,13 +103,13 @@ def encrypt_data(json_data, secret_key, salt):
     data = json.dumps(json_data).encode('utf-8')
     f = fernet.Fernet(secret_key)
     encrypted_data = f.encrypt(data)
-    return encrypted_data.decode()
+    return six.binary_type(encrypted_data)
 
 
 def decrypt_data(encrypted_data, secret_key, salt, max_age_in_seconds):
     secret_key = hash_string(secret_key + salt)
     f = fernet.Fernet(secret_key)
-    data = f.decrypt(encrypted_data.encode('utf-8'), ttl=max_age_in_seconds)
+    data = f.decrypt(six.binary_type(encrypted_data), ttl=max_age_in_seconds)
 
     timestamp = parse_fernet_timestamp(encrypted_data)
     return json.loads(data.decode('utf-8')), timestamp
