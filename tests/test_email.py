@@ -10,7 +10,7 @@ from mandrill import Error
 
 from dmutils.config import init_app
 from dmutils.email import (
-    generate_token, decode_token, send_email, MandrillException, hash_email,
+    generate_token, decode_token, send_email, MandrillException, hash_string,
     token_created_before_password_last_changed,
     decode_invitation_token, decode_password_reset_token)
 from dmutils.formats import DATETIME_FORMAT
@@ -149,7 +149,7 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
 
         mandrill.messages.send.side_effect = Error("this is an error")
 
-        try:
+        with pytest.raises(MandrillException) as e:
             send_email(
                 "email_address",
                 "body",
@@ -160,8 +160,7 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
                 ["password-resets"]
 
             )
-        except MandrillException as e:
-            assert str(e) == "this is an error"
+        assert str(e.value) == "this is an error"
 
 
 def test_can_generate_token():
@@ -202,14 +201,12 @@ def test_cant_decode_token_with_wrong_key():
     assert "does not match" in str(error.value)
 
 
-def test_hash_email():
-    tests = [
-        (u'test@example.com', six.b('lz3-Rj7IV4X1-Vr1ujkG7tstkxwk5pgkqJ6mXbpOgTs=')),
-        (u'☃@example.com', six.b('jGgXle8WEBTTIFhP25dF8Ck-FxQSCZ_N0iWYBWve4Ps=')),
-    ]
-
-    for test, expected in tests:
-        assert hash_email(test) == expected
+@pytest.mark.parametrize('test, expected', [
+    (u'test@example.com', six.b('lz3-Rj7IV4X1-Vr1ujkG7tstkxwk5pgkqJ6mXbpOgTs=')),
+    (u'☃@example.com', six.b('jGgXle8WEBTTIFhP25dF8Ck-FxQSCZ_N0iWYBWve4Ps=')),
+])
+def test_hash_string(test, expected):
+    assert hash_string(test) == expected
 
 
 def test_decode_password_reset_token_ok_for_good_token(email_app):

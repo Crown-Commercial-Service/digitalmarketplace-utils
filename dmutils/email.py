@@ -2,7 +2,7 @@ import base64
 import hashlib
 import six
 
-from flask import current_app, flash
+from flask import current_app
 from flask._compat import string_types
 
 from datetime import datetime
@@ -58,7 +58,7 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
         raise MandrillException(e)
 
     logger.info("Sent {tags} response: id={id}, email={email_hash}",
-                extra={'tags': tags, 'id': result[0]['_id'], 'email_hash': hash_email(result[0]['email'])})
+                extra={'tags': tags, 'id': result[0]['_id'], 'email_hash': hash_string(result[0]['email'])})
 
 
 def generate_token(data, secret_key, salt):
@@ -77,9 +77,9 @@ def decode_token(token, secret_key, salt, max_age_in_seconds=86400):
     return decoded, timestamp
 
 
-def hash_email(email):
+def hash_string(string):
     m = hashlib.sha256()
-    m.update(email.encode('utf-8'))
+    m.update(string.encode('utf-8'))
 
     return base64.urlsafe_b64encode(m.digest())
 
