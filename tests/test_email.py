@@ -5,14 +5,22 @@ import mock
 import six
 
 from datetime import datetime
-from itsdangerous import BadTimeSignature
 from mandrill import Error
 
+from itsdangerous import URLSafeTimedSerializer
 from dmutils.config import init_app
 from dmutils.email import (
-    generate_token, decode_token, send_email, MandrillException, hash_string,
+    generate_token,
+    decode_token,
+    encrypt_data,
+    send_email,
+    MandrillException,
+    hash_string,
     token_created_before_password_last_changed,
-    decode_invitation_token, decode_password_reset_token)
+    decode_invitation_token,
+    decode_password_reset_token,
+    InvalidTokenException
+)
 from dmutils.formats import DATETIME_FORMAT
 from .test_user import user_json
 
@@ -163,17 +171,19 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
         assert str(e.value) == "this is an error"
 
 
-def test_can_generate_token():
-    token = generate_token({
-        "key1": "value1",
-        "key2": "value2"},
-        secret_key="1234567890",
-        salt="1234567890")
+def signed_token():
+    ts = URLSafeTimedSerializer("1234567890")
+    return ts.dumps({"key1": "value1", "key2": "value2"}, salt="0987654321")
 
-    token, timestamp = decode_token(token, "1234567890", "1234567890")
-    assert {
-        "key1": "value1",
-        "key2": "value2"} == token
+
+def encrypted_token():
+    return encrypt_data({"key1": "value1", "key2": "value2"}, secret_key="1234567890", salt="0987654321")
+
+
+@pytest.mark.parametrize('token', [signed_token, encrypted_token], ids=lambda x: x.__name__)
+def test_can_generate_token(token):
+    token, timestamp = decode_token(token(), "1234567890", "0987654321")
+    assert token == {"key1": "value1", "key2": "value2"}
     assert timestamp
 
 
@@ -184,9 +194,8 @@ def test_cant_decode_token_with_wrong_salt():
         secret_key="1234567890",
         salt="1234567890")
 
-    with pytest.raises(BadTimeSignature) as error:
+    with pytest.raises(InvalidTokenException) as error:
         decode_token(token, "1234567890", "failed")
-    assert "does not match" in str(error.value)
 
 
 def test_cant_decode_token_with_wrong_key():
@@ -196,9 +205,8 @@ def test_cant_decode_token_with_wrong_key():
         secret_key="1234567890",
         salt="1234567890")
 
-    with pytest.raises(BadTimeSignature) as error:
+    with pytest.raises(InvalidTokenException) as error:
         decode_token(token, "failed", "1234567890")
-    assert "does not match" in str(error.value)
 
 
 @pytest.mark.parametrize('test, expected', [
@@ -248,7 +256,7 @@ def test_decode_password_reset_token_does_not_work_if_token_expired(email_app):
 
     with freeze_time('2016-01-02 03:04:05'):
         with email_app.app_context():
-            assert decode_password_reset_token(token, data_api_client) == {'error': 'token_expired'}
+            assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
 
 def test_decode_password_reset_token_does_not_work_if_password_changed_later_than_token(email_app):

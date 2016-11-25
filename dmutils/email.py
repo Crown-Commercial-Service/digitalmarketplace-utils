@@ -1,13 +1,17 @@
 import base64
 import hashlib
 import six
+import struct
+import json
+from datetime import datetime
 
 from flask import current_app
 from flask._compat import string_types
 
-from datetime import datetime
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from mandrill import Mandrill, Error
+import itsdangerous
+from cryptography import fernet
+
 
 from .formats import DATETIME_FORMAT
 
@@ -16,6 +20,10 @@ SEVEN_DAYS_IN_SECONDS = 604800
 
 
 class MandrillException(Exception):
+    pass
+
+
+class InvalidTokenException(Exception):
     pass
 
 
@@ -62,12 +70,25 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
 
 
 def generate_token(data, secret_key, salt):
-    ts = URLSafeTimedSerializer(secret_key)
-    return ts.dumps(data, salt=salt)
+    return encrypt_data(data, secret_key, salt)
 
 
 def decode_token(token, secret_key, salt, max_age_in_seconds=86400):
-    ts = URLSafeTimedSerializer(secret_key)
+    try:
+        return decode_signed_token(token, secret_key, salt, max_age_in_seconds)
+    except itsdangerous.SignatureExpired as e:
+        # was a valid signed token, but had timed-out - re-raise
+        raise InvalidTokenException(str(e))
+    except itsdangerous.BadData:
+        try:
+            return decrypt_data(token, secret_key, salt, max_age_in_seconds)
+        except fernet.InvalidToken:
+            # not valid old style signed, or newstyle encrypted. We can't infer any message
+            raise InvalidTokenException('Invalid exception')
+
+
+def decode_signed_token(token, secret_key, salt, max_age_in_seconds=86400):
+    ts = itsdangerous.URLSafeTimedSerializer(secret_key)
     decoded, timestamp = ts.loads(
         token,
         salt=salt,
@@ -75,6 +96,40 @@ def decode_token(token, secret_key, salt, max_age_in_seconds=86400):
         return_timestamp=True
     )
     return decoded, timestamp
+
+
+def encrypt_data(json_data, secret_key, salt):
+    secret_key = hash_string(secret_key + salt)
+    data = json.dumps(json_data).encode('utf-8')
+    f = fernet.Fernet(secret_key)
+    encrypted_data = f.encrypt(data)
+    return encrypted_data.decode()
+
+
+def decrypt_data(encrypted_data, secret_key, salt, max_age_in_seconds):
+    secret_key = hash_string(secret_key + salt)
+    f = fernet.Fernet(secret_key)
+    data = f.decrypt(encrypted_data.encode('utf-8'), ttl=max_age_in_seconds)
+
+    timestamp = parse_fernet_timestamp(encrypted_data)
+    return json.loads(data.decode('utf-8')), timestamp
+
+
+def parse_fernet_timestamp(ciphertext):
+    """
+    Returns timestamp embedded in Fernet-encrypted ciphertext, converted to Python datetime object.
+
+    Decryption should be attempted before using this function, as that does cryptographically strong tests on the
+    validity of the ciphertext.
+    """
+    try:
+        decoded = base64.urlsafe_b64decode(ciphertext)
+        # This is a value in Unix Epoch time
+        epoch_timestamp = struct.unpack('>Q', decoded[1:9])[0]
+        timestamp = datetime.fromtimestamp(epoch_timestamp)
+        return timestamp
+    except struct.error as e:
+        raise ValueError(e.message)
 
 
 def hash_string(string):
@@ -92,10 +147,7 @@ def decode_password_reset_token(token, data_api_client):
             current_app.config["RESET_PASSWORD_SALT"],
             ONE_DAY_IN_SECONDS
         )
-    except SignatureExpired:
-        current_app.logger.info("Password reset attempt with expired token.")
-        return {'error': 'token_expired'}
-    except BadSignature as e:
+    except InvalidTokenException as e:
         current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
         return {'error': 'token_invalid'}
 
@@ -131,11 +183,7 @@ def decode_invitation_token(encoded_token, role):
             return token
         else:
             raise ValueError('Invitation token is missing required keys')
-    except SignatureExpired as e:
-        current_app.logger.info("Invitation attempt with expired token. error {error}",
-                                extra={'error': six.text_type(e)})
-        return None
-    except BadSignature as e:
+    except InvalidTokenException as e:
         current_app.logger.info("Invitation reset attempt with expired token. error {error}",
                                 extra={'error': six.text_type(e)})
         return None
