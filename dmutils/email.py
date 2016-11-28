@@ -65,39 +65,96 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
                 extra={'tags': tags, 'id': result[0]['_id'], 'email_hash': hash_string(result[0]['email'])})
 
 
-def generate_token(data, secret_key, salt):
-    return encrypt_data(data, secret_key, salt)
+def generate_token(data, secret_key, namespace):
+    return encrypt_data(data, secret_key, namespace)
 
 
-def decode_token(token, secret_key, salt, max_age_in_seconds=86400):
+def decode_token(token, secret_key, namespace, max_age_in_seconds=86400):
+    """
+    Decode a token given a secret_key and namespace.
+
+    The token may have been created by a previous version of dmutils, which only supported signed unencrypted tokens.
+    To maintain backwards compatibility during rollouts, we try and decode using the old format, and if that fails
+    assume it is is a new encrypted token.
+
+    This functionality can be removed once all rollouts have completed and the longest time-to-live of the old signed
+    tokens has expired (seven days for an invite email).
+    """
     try:
-        return decode_signed_token(token, secret_key, salt, max_age_in_seconds)
+        return decode_signed_token(token, secret_key, namespace, max_age_in_seconds)
     except itsdangerous.BadData:
-        return decrypt_data(token, secret_key, salt, max_age_in_seconds)
+        return decrypt_data(token, secret_key, namespace, max_age_in_seconds)
 
 
-def decode_signed_token(token, secret_key, salt, max_age_in_seconds=86400):
+def decode_signed_token(token, secret_key, namespace, max_age_in_seconds=86400):
     ts = itsdangerous.URLSafeTimedSerializer(secret_key)
     decoded, timestamp = ts.loads(
         token,
-        salt=salt,
+        salt=namespace,
         max_age=max_age_in_seconds,
         return_timestamp=True
     )
     return decoded, timestamp
 
 
-def encrypt_data(json_data, secret_key, salt):
-    secret_key = hash_string(secret_key + salt)
+def encrypt_data(json_data, secret_key, namespace):
+    """
+    Encrypt data using a provided secret_key and namespace.
+
+    The process is as follows:
+    * The secret_key is combined with the namespace and hashed using sha256. The namespace ensures that a token for
+      `invite-user` cannot be re-used by an attacker on the `reset-password` endpoint. Hashing is used to ensure the
+      key conforms to the 32 byte length requirement for Fernet.
+    * The combined secret key is used to initialise the Fernet encryption algorithm. Fernet is a wrapper around AES
+      that provides HMAC, TTL (time to live), and some quality of life features (url-safe base64 encoding)
+      The fernet spec can be viewed here: https://github.com/fernet/spec/blob/master/Spec.md
+    * The data is dumped from json and encrypted.
+    * The output data is returned as a urlsafe_base64 (https://tools.ietf.org/html/rfc4648#section-5) unicode string.
+
+    Fernet acepts and returns bytes, so call `.encode` before and `.decode` after to convert to strings, to ensure we
+    use regular python strings for as much of the code flow as possible
+
+    :param json_data: data to encrypt. Must be json-like blob that `json.dumps` will accept
+    :param secret_key: The secret key to encrypt with. No length/content restrictions. Must be a string type.
+    :param namespace: The namespace to encrypt with. No length/content restrictions. Must be a string type.
+    :return: returns a urlsale_base64 encoded encrypted unicode string.
+    :rtype: `unicode`
+    """
+    secret_key = hash_string(secret_key + namespace)
     data = json.dumps(json_data).encode('utf-8')
     f = fernet.Fernet(secret_key)
     return f.encrypt(data).decode('utf-8')
 
 
-def decrypt_data(encrypted_data, secret_key, salt, max_age_in_seconds):
+def decrypt_data(encrypted_data, secret_key, namespace, max_age_in_seconds):
+    """
+    Decrypt data using a provided secret_key, namespace, and TTL (max_age_in_seconds).
+
+    The process is as follows:
+    * secret key and fernet are initialised as in `encrypt_data`
+    * the data is decrypted and json_dumped
+    * the timestamp is pulled out and compared to the max_age_in_seconds to ensure that the token has not expired
+    * the original json-able blob is returned, along with the timestamp that it was encrypted at. This timestamp can
+      then be used for verifying the authenticity of the request, for example, comparing a password reset token
+      against the last time the password was reset to ensure it is not used twice.
+
+    Fernet acepts and returns bytes, so call `.encode` before and `.decode` after to convert to strings, to ensure we
+    use regular python strings for as much of the code flow as possible
+
+    :param encrypted_data: data to decrypt. Must be a string type.
+    :param secret_key: The secret key you encrypted the data with. Must be a string type.
+    :param namespace: The namespace you encrypted the data with. Must be a string type.
+    :param max_age_in_seconds: The maximum age of the encrypted data.
+    :return: the original encrypted data and the datetime it was encrypted at.
+    :rtype: `tuple(json-able, datetime)`
+    :raises fernet.InvalidToken: If the secret key and namespace are not able to decrypt the message,
+        or max_age_in_seconds has been exceeded.
+    """
     encrypted_bytes = encrypted_data.encode('utf-8')
-    secret_key = hash_string(secret_key + salt)
+    secret_key = hash_string(secret_key + namespace)
     f = fernet.Fernet(secret_key)
+
+    # this raises fernet.InvalidToken if the key does not match or if TTL is exceeded
     data = f.decrypt(encrypted_bytes, ttl=max_age_in_seconds)
 
     timestamp = _parse_fernet_timestamp(encrypted_bytes)
@@ -157,7 +214,7 @@ def decode_password_reset_token(token, data_api_client):
     }
 
 
-def decode_invitation_token(encoded_token, role):
+def decode_invitation_token(encoded_token):
     try:
         token, timestamp = decode_token(
             encoded_token,

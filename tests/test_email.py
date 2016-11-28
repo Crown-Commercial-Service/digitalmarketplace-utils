@@ -2,6 +2,7 @@
 from freezegun import freeze_time
 import pytest
 import mock
+import base64
 
 from datetime import datetime
 from mandrill import Error
@@ -39,6 +40,20 @@ def email_app(app):
     app.config['SECRET_KEY'] = "Secret"
     app.config["RESET_PASSWORD_SALT"] = "PassSalt"
     yield app
+
+
+@pytest.fixture
+def data_api_client():
+    user = user_json()
+    user['users']['passwordChangedAt'] = "2016-01-01T12:00:00.30Z"
+    data_api_client = mock.Mock()
+    data_api_client.get_user.return_value = user
+    return data_api_client
+
+
+@pytest.fixture
+def password_reset_token():
+    return {'user': 123, 'email': 'test@example.com'}
 
 
 def test_calls_send_email_with_correct_params(email_app, mandrill):
@@ -176,11 +191,11 @@ def signed_token():
 
 
 def encrypted_token():
-    return encrypt_data({"key1": "value1", "key2": "value2"}, secret_key="1234567890", salt="0987654321")
+    return encrypt_data({"key1": "value1", "key2": "value2"}, secret_key="1234567890", namespace="0987654321")
 
 
 @pytest.mark.parametrize('token', [signed_token, encrypted_token], ids=lambda x: x.__name__)
-def test_can_generate_token(token):
+def test_can_generate_and_decode_token(token):
     token, timestamp = decode_token(token(), "1234567890", "0987654321")
     assert token == {"key1": "value1", "key2": "value2"}
     assert timestamp
@@ -191,7 +206,7 @@ def test_cant_decode_token_with_wrong_salt():
         "key1": "value1",
         "key2": "value2"},
         secret_key="1234567890",
-        salt="1234567890")
+        namespace="1234567890")
 
     with pytest.raises(fernet.InvalidToken):
         decode_token(token, "1234567890", "failed")
@@ -202,7 +217,7 @@ def test_cant_decode_token_with_wrong_key():
         "key1": "value1",
         "key2": "value2"},
         secret_key="1234567890",
-        salt="1234567890")
+        namespace="1234567890")
 
     with pytest.raises(fernet.InvalidToken):
         decode_token(token, "failed", "1234567890")
@@ -216,77 +231,65 @@ def test_hash_string(test, expected):
     assert hash_string(test) == expected
 
 
-def test_decode_password_reset_token_ok_for_good_token(email_app):
-    user = user_json()
-    user['users']['passwordChangedAt'] = "2016-01-01T12:00:00.30Z"
-    data_api_client = mock.Mock()
-    data_api_client.get_user.return_value = user
+def test_generate_token_does_not_contain_plaintext_email(email_app, data_api_client, password_reset_token):
+    with email_app.app_context(), freeze_time('2016-01-01T12:00:00.30Z'):
+        token = generate_token(password_reset_token, 'Secret', 'PassSalt')
+        assert 'test@example.com' not in base64.urlsafe_b64decode(token.encode('utf-8'))
+
+
+def test_decrypt_token_ok_for_known_good_token():
+    # encrypted on 2016-01-01T12:00:00.30Z with secret 'Secret' and namespace 'PassSalt'
+    token = 'gAAAAABWhmpA1ecLpuzdKiIcJ_drdA1Vf4ip07TH3UqZ_fA-pD9yYlGMqSTi-Mpbd58Z-wlZfa5sXGE6FVHPilTpsZWEiMDRLdCBlccvBPbY9IOO5F3uabjkrk87mrlPxaSbMAza5Nku'  # noqa
+
+    with freeze_time('2016-01-01T12:00:00.30Z'):
+        data = decode_token(token, 'Secret', 'PassSalt')
+
+    assert data == ({'email': 'test@example.com', 'user': 123}, datetime(2016, 1, 1, 12, 0, 0))
+
+
+def test_decode_password_reset_token_ok_for_good_token(email_app, data_api_client, password_reset_token):
     with email_app.app_context():
-        data = {'user': 123}
-        token = generate_token(data, 'Secret', 'PassSalt')
-        assert decode_password_reset_token(token, data_api_client) == {
-            'user': 123,
-            'email': 'test@example.com'
-        }
+        token = generate_token(password_reset_token, 'Secret', 'PassSalt')
+        assert decode_password_reset_token(token, data_api_client) == password_reset_token
     data_api_client.get_user.assert_called_once_with(123)
 
 
-def test_decode_password_reset_token_does_not_work_if_bad_token(email_app):
-    user = user_json()
-    user['users']['passwordChangedAt'] = "2016-01-01T12:00:00.30Z"
-    data_api_client = mock.Mock()
-    data_api_client.get_user.return_value = user
-    data = {'user': 123}
-    token = generate_token(data, 'Secret', 'PassSalt')[1:]
+def test_decode_password_reset_token_does_not_work_if_bad_token(email_app, data_api_client, password_reset_token):
+    token = generate_token(password_reset_token, 'Secret', 'PassSalt')[1:]
 
     with email_app.app_context():
         assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
 
-def test_decode_password_reset_token_does_not_work_if_token_expired(email_app):
-    user = user_json()
-    user['users']['passwordChangedAt'] = "2016-01-01T12:00:00.30Z"
-    data_api_client = mock.Mock()
-    data_api_client.get_user.return_value = user
+def test_decode_password_reset_token_does_not_work_if_token_expired(email_app, data_api_client, password_reset_token):
     with freeze_time('2015-01-02 03:04:05'):
         # Token was generated a year before current time
-        data = {'user': 123}
-        token = generate_token(data, 'Secret', 'PassSalt')
+        token = generate_token(password_reset_token, 'Secret', 'PassSalt')
 
     with freeze_time('2016-01-02 03:04:05'):
         with email_app.app_context():
             assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
 
-def test_decode_password_reset_token_does_not_work_if_password_changed_later_than_token(email_app):
-    user = user_json()
-    user['users']['passwordChangedAt'] = "2016-01-01T13:00:00.30Z"
-    data_api_client = mock.Mock()
-    data_api_client.get_user.return_value = user
-
-    with freeze_time('2016-01-01T12:00:00.30Z'):
+def test_decode_password_reset_token_does_not_work_if_password_changed_later_than_token(
+    email_app, data_api_client, password_reset_token
+):
+    with freeze_time('2016-01-01T11:00:00.30Z'):
         # Token was generated an hour earlier than password was changed
-        data = {'user': 123}
-        token = generate_token(data, 'Secret', 'PassSalt')
+        token = generate_token(password_reset_token, 'Secret', 'PassSalt')
 
-    with freeze_time('2016-01-01T14:00:00.30Z'):
+    with freeze_time('2016-01-01T13:00:00.30Z'):
         # Token is two hours old; password was changed an hour ago
         with email_app.app_context():
             assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
 
-def test_decode_invitation_token_decodes_ok_for_buyer(email_app):
+def test_decode_invitation_token_decodes_ok(email_app):
     with email_app.app_context():
-        data = {'email_address': 'test-user@email.com'}
+        # works with arbitrary fields
+        data = {'email_address': 'test-user@email.com', 'supplier_id': 1234, 'foo': 'bar'}
         token = generate_token(data, 'Key', 'Salt')
-        assert decode_invitation_token(token, role='buyer') == data
-
-
-def test_decode_invitation_token_decodes_ok_for_supplier(email_app):
-    with email_app.app_context():
-        data = {'email_address': 'test-user@email.com', 'supplier_id': 1234, 'supplier_name': 'A. Supplier'}
-        token = generate_token(data, 'Key', 'Salt')
-        assert decode_invitation_token(token, role='supplier') == data
+        assert decode_invitation_token(token) == data
 
 
 def test_decode_invitation_token_does_not_work_if_bad_token(email_app):
@@ -294,7 +297,7 @@ def test_decode_invitation_token_does_not_work_if_bad_token(email_app):
         data = {'email_address': 'test-user@email.com', 'supplier_name': 'A. Supplier'}
         token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])[1:]
 
-        assert decode_invitation_token(token, role='supplier') is None
+        assert decode_invitation_token(token) is None
 
 
 def test_decode_invitation_token_does_not_work_if_token_expired(email_app):
@@ -303,7 +306,7 @@ def test_decode_invitation_token_does_not_work_if_token_expired(email_app):
         token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])
     with email_app.app_context():
 
-        assert decode_invitation_token(token, role='supplier') is None
+        assert decode_invitation_token(token) is None
 
 
 def test_token_created_before_password_last_changed():
