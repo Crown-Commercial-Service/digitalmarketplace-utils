@@ -23,10 +23,6 @@ class MandrillException(Exception):
     pass
 
 
-class InvalidTokenException(Exception):
-    pass
-
-
 def send_email(to_email_addresses, email_body, api_key, subject, from_email, from_name, tags, reply_to=None,
                metadata=None, logger=None):
     logger = logger or current_app.logger
@@ -76,15 +72,8 @@ def generate_token(data, secret_key, salt):
 def decode_token(token, secret_key, salt, max_age_in_seconds=86400):
     try:
         return decode_signed_token(token, secret_key, salt, max_age_in_seconds)
-    except itsdangerous.SignatureExpired as e:
-        # was a valid signed token, but had timed-out - re-raise
-        raise InvalidTokenException(str(e))
     except itsdangerous.BadData:
-        try:
-            return decrypt_data(token, secret_key, salt, max_age_in_seconds)
-        except fernet.InvalidToken:
-            # not valid old style signed, or newstyle encrypted. We can't infer any message
-            raise InvalidTokenException('Invalid exception')
+        return decrypt_data(token, secret_key, salt, max_age_in_seconds)
 
 
 def decode_signed_token(token, secret_key, salt, max_age_in_seconds=86400):
@@ -102,16 +91,16 @@ def encrypt_data(json_data, secret_key, salt):
     secret_key = hash_string(secret_key + salt)
     data = json.dumps(json_data).encode('utf-8')
     f = fernet.Fernet(secret_key)
-    encrypted_data = f.encrypt(data)
-    return six.binary_type(encrypted_data)
+    return f.encrypt(data).decode('utf-8')
 
 
 def decrypt_data(encrypted_data, secret_key, salt, max_age_in_seconds):
+    encrypted_bytes = encrypted_data.encode('utf-8')
     secret_key = hash_string(secret_key + salt)
     f = fernet.Fernet(secret_key)
-    data = f.decrypt(six.binary_type(encrypted_data), ttl=max_age_in_seconds)
+    data = f.decrypt(encrypted_bytes, ttl=max_age_in_seconds)
 
-    timestamp = parse_fernet_timestamp(encrypted_data)
+    timestamp = parse_fernet_timestamp(encrypted_bytes)
     return json.loads(data.decode('utf-8')), timestamp
 
 
@@ -129,13 +118,11 @@ def parse_fernet_timestamp(ciphertext):
         timestamp = datetime.fromtimestamp(epoch_timestamp)
         return timestamp
     except struct.error as e:
-        raise ValueError(e.message)
+        raise fernet.InvalidToken(e.message)
 
 
 def hash_string(string):
-    m = hashlib.sha256()
-    m.update(string.encode('utf-8'))
-
+    m = hashlib.sha256(string.encode('utf-8'))
     return base64.urlsafe_b64encode(m.digest())
 
 
@@ -147,7 +134,7 @@ def decode_password_reset_token(token, data_api_client):
             current_app.config["RESET_PASSWORD_SALT"],
             ONE_DAY_IN_SECONDS
         )
-    except InvalidTokenException as e:
+    except fernet.InvalidToken as e:
         current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
         return {'error': 'token_invalid'}
 
@@ -182,13 +169,9 @@ def decode_invitation_token(encoded_token, role):
         if all(field in token for field in required_fields):
             return token
         else:
-            raise ValueError('Invitation token is missing required keys')
-    except InvalidTokenException as e:
+            raise fernet.InvalidToken('Invitation token is missing required keys')
+    except fernet.InvalidToken as e:
         current_app.logger.info("Invitation reset attempt with expired token. error {error}",
-                                extra={'error': six.text_type(e)})
-        return None
-    except ValueError as e:
-        current_app.logger.info("error {error}",
                                 extra={'error': six.text_type(e)})
         return None
 

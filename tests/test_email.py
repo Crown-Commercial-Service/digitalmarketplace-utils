@@ -6,6 +6,7 @@ import six
 
 from datetime import datetime
 from mandrill import Error
+from cryptography import fernet
 
 from itsdangerous import URLSafeTimedSerializer
 from dmutils.config import init_app
@@ -18,8 +19,7 @@ from dmutils.email import (
     hash_string,
     token_created_before_password_last_changed,
     decode_invitation_token,
-    decode_password_reset_token,
-    InvalidTokenException
+    decode_password_reset_token
 )
 from dmutils.formats import DATETIME_FORMAT
 from .test_user import user_json
@@ -194,7 +194,7 @@ def test_cant_decode_token_with_wrong_salt():
         secret_key="1234567890",
         salt="1234567890")
 
-    with pytest.raises(InvalidTokenException) as error:
+    with pytest.raises(fernet.InvalidToken):
         decode_token(token, "1234567890", "failed")
 
 
@@ -205,7 +205,7 @@ def test_cant_decode_token_with_wrong_key():
         secret_key="1234567890",
         salt="1234567890")
 
-    with pytest.raises(InvalidTokenException) as error:
+    with pytest.raises(fernet.InvalidToken):
         decode_token(token, "failed", "1234567890")
 
 
