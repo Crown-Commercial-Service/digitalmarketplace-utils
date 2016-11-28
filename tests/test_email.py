@@ -2,7 +2,6 @@
 from freezegun import freeze_time
 import pytest
 import mock
-import six
 
 from datetime import datetime
 from mandrill import Error
@@ -210,8 +209,8 @@ def test_cant_decode_token_with_wrong_key():
 
 
 @pytest.mark.parametrize('test, expected', [
-    (u'test@example.com', six.b('lz3-Rj7IV4X1-Vr1ujkG7tstkxwk5pgkqJ6mXbpOgTs=')),
-    (u'☃@example.com', six.b('jGgXle8WEBTTIFhP25dF8Ck-FxQSCZ_N0iWYBWve4Ps=')),
+    (u'test@example.com', b'lz3-Rj7IV4X1-Vr1ujkG7tstkxwk5pgkqJ6mXbpOgTs='),
+    (u'☃@example.com', b'jGgXle8WEBTTIFhP25dF8Ck-FxQSCZ_N0iWYBWve4Ps='),
 ])
 def test_hash_string(test, expected):
     assert hash_string(test) == expected
@@ -288,14 +287,6 @@ def test_decode_invitation_token_decodes_ok_for_supplier(email_app):
         data = {'email_address': 'test-user@email.com', 'supplier_id': 1234, 'supplier_name': 'A. Supplier'}
         token = generate_token(data, 'Key', 'Salt')
         assert decode_invitation_token(token, role='supplier') == data
-
-
-def test_decode_invitation_token_does_not_work_if_there_are_missing_keys(email_app):
-    with email_app.app_context():
-        data = {'email_address': 'test-user@email.com', 'supplier_name': 'A. Supplier'}
-        token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])
-
-        assert decode_invitation_token(token, role='supplier') is None
 
 
 def test_decode_invitation_token_does_not_work_if_bad_token(email_app):

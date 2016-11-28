@@ -100,25 +100,25 @@ def decrypt_data(encrypted_data, secret_key, salt, max_age_in_seconds):
     f = fernet.Fernet(secret_key)
     data = f.decrypt(encrypted_bytes, ttl=max_age_in_seconds)
 
-    timestamp = parse_fernet_timestamp(encrypted_bytes)
+    timestamp = _parse_fernet_timestamp(encrypted_bytes)
     return json.loads(data.decode('utf-8')), timestamp
 
 
-def parse_fernet_timestamp(ciphertext):
+def _parse_fernet_timestamp(ciphertext):
     """
     Returns timestamp embedded in Fernet-encrypted ciphertext, converted to Python datetime object.
 
     Decryption should be attempted before using this function, as that does cryptographically strong tests on the
     validity of the ciphertext.
     """
+    decoded = base64.urlsafe_b64decode(ciphertext)
+
     try:
-        decoded = base64.urlsafe_b64decode(ciphertext)
-        # This is a value in Unix Epoch time
         epoch_timestamp = struct.unpack('>Q', decoded[1:9])[0]
-        timestamp = datetime.fromtimestamp(epoch_timestamp)
-        return timestamp
     except struct.error as e:
         raise fernet.InvalidToken(e.message)
+
+    return datetime.fromtimestamp(epoch_timestamp)
 
 
 def hash_string(string):
@@ -132,7 +132,7 @@ def decode_password_reset_token(token, data_api_client):
             token,
             current_app.config["SECRET_KEY"],
             current_app.config["RESET_PASSWORD_SALT"],
-            ONE_DAY_IN_SECONDS
+            ONE_DAY_IN_SECONDS,
         )
     except fernet.InvalidToken as e:
         current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
@@ -158,7 +158,6 @@ def decode_password_reset_token(token, data_api_client):
 
 
 def decode_invitation_token(encoded_token, role):
-    required_fields = ['email_address', 'supplier_id', 'supplier_name'] if role == 'supplier' else ['email_address']
     try:
         token, timestamp = decode_token(
             encoded_token,
@@ -166,10 +165,7 @@ def decode_invitation_token(encoded_token, role):
             current_app.config['INVITE_EMAIL_SALT'],
             SEVEN_DAYS_IN_SECONDS
         )
-        if all(field in token for field in required_fields):
-            return token
-        else:
-            raise fernet.InvalidToken('Invitation token is missing required keys')
+        return token
     except fernet.InvalidToken as e:
         current_app.logger.info("Invitation reset attempt with expired token. error {error}",
                                 extra={'error': six.text_type(e)})
