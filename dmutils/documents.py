@@ -266,3 +266,11 @@ def sanitise_supplier_name(supplier_name):
     while '__' in sanitised_supplier_name:
         sanitised_supplier_name = sanitised_supplier_name.replace('__', '_')
     return sanitised_supplier_name
+
+
+def generate_download_filename(supplier_id, document_name, supplier_name):
+    """
+        Used for generating supplier-friendly filenames to set as headers in s3 for files,
+        such as framework agreement documents, that suppliers need to download
+    """
+    return '{}-{}-{}'.format(sanitise_supplier_name(supplier_name), supplier_id, document_name)
