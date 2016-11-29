@@ -2,6 +2,32 @@
 
 Records breaking changes from major version bumps
 
+## 23.0.0
+
+PR: [#288](https://github.com/alphagov/digitalmarketplace-utils/pull/288)
+
+### What changed
+
+`decode_invitation_token` previously accepted a `role` parameter, which it would switch on to assert keys of the encoded token's data. For example, if you passed in 'supplier' it would assert that the token contains 'email_address', 'supplier_id', and 'supplier_name'. The contents of the data encoded shouldn't be the responsibility of the utils app, and is left to the implementing code to either check or not.
+
+### Example app change
+
+Old:
+```python
+
+data = decode_invitation_token(token, role='supplier')
+# data is guaranteed to contain fields 'email_address', 'supplier_id', 'supplier_name'
+```
+
+New:
+```python
+
+data = decode_invitation_token(token)
+# decode_invitation_token makes no assertions about the contents of the token
+assert 'email_address' in data.keys()
+
+```
+
 ## 22.0.0
 
 PR: [#286](https://github.com/alphagov/digitalmarketplace-utils/pull/286)
