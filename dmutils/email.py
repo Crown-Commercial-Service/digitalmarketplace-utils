@@ -163,7 +163,7 @@ def decrypt_data(encrypted_data, secret_key, namespace, max_age_in_seconds):
 
 def _parse_fernet_timestamp(ciphertext):
     """
-    Returns timestamp embedded in Fernet-encrypted ciphertext, converted to Python datetime object.
+    Returns utc timestamp embedded in Fernet-encrypted ciphertext, converted to Python datetime object.
 
     Decryption should be attempted before using this function, as that does cryptographically strong tests on the
     validity of the ciphertext.
@@ -175,7 +175,7 @@ def _parse_fernet_timestamp(ciphertext):
     except struct.error as e:
         raise fernet.InvalidToken(e.message)
 
-    return datetime.fromtimestamp(epoch_timestamp)
+    return datetime.utcfromtimestamp(epoch_timestamp)
 
 
 def hash_string(string):

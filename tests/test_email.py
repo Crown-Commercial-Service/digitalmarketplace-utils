@@ -19,7 +19,8 @@ from dmutils.email import (
     hash_string,
     token_created_before_password_last_changed,
     decode_invitation_token,
-    decode_password_reset_token
+    decode_password_reset_token,
+    _parse_fernet_timestamp
 )
 from dmutils.formats import DATETIME_FORMAT
 from .test_user import user_json
@@ -196,9 +197,10 @@ def encrypted_token():
 
 @pytest.mark.parametrize('token', [signed_token, encrypted_token], ids=lambda x: x.__name__)
 def test_can_generate_and_decode_token(token):
-    token, timestamp = decode_token(token(), "1234567890", "0987654321")
+    with freeze_time('2016-01-01T12:00:00Z'):
+        token, timestamp = decode_token(token(), "1234567890", "0987654321")
     assert token == {"key1": "value1", "key2": "value2"}
-    assert timestamp
+    assert timestamp == datetime(2016, 1, 1, 12, 0, 0)
 
 
 def test_cant_decode_token_with_wrong_salt():
@@ -234,7 +236,17 @@ def test_hash_string(test, expected):
 def test_generate_token_does_not_contain_plaintext_email(email_app, data_api_client, password_reset_token):
     with email_app.app_context(), freeze_time('2016-01-01T12:00:00.30Z'):
         token = generate_token(password_reset_token, 'Secret', 'PassSalt')
-        assert 'test@example.com' not in base64.urlsafe_b64decode(token.encode('utf-8'))
+
+    # a fernet string always starts with the version, which should be 128
+    assert token[:4] == 'gAAA'
+
+    token = token.encode('utf-8')
+
+    # Personally identifiable information should not be readable without secret key
+    assert b'test@example.com' not in base64.urlsafe_b64decode(token)
+
+    # a fernet string contains the timestamp at which it was encrypted
+    assert _parse_fernet_timestamp(token) == datetime(2016, 1, 1, 12)
 
 
 def test_decrypt_token_ok_for_known_good_token():
