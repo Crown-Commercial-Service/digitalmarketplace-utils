@@ -21,7 +21,6 @@ SIGNED_AGREEMENT_PREFIX = 'signed-framework-agreement'
 SIGNATURE_PAGE_FILENAME = 'signature-page.pdf'
 SIGNED_SIGNATURE_PAGE_PREFIX = 'signed-signature-page'
 
-COUNTERSIGNED_AGREEMENT_FILENAME = 'countersigned-framework-agreement.pdf'
 COUNTERPART_FILENAME = "agreement-countersignature.pdf"
 
 
