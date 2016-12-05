@@ -18,7 +18,7 @@ from dmutils.documents import (
     get_signed_url, get_agreement_document_path, get_document_path,
     sanitise_supplier_name, file_is_pdf, file_is_zip, file_is_image,
     file_is_csv, generate_timestamped_document_upload_path,
-    degenerate_document_path_and_return_doc_name)
+    degenerate_document_path_and_return_doc_name, generate_download_filename)
 
 
 class TestGenerateFilename(unittest.TestCase):
@@ -353,3 +353,7 @@ def test_sanitise_supplier_name():
     assert sanitise_supplier_name(u'\ / : * ? \' " < > |') == '_'
     assert sanitise_supplier_name(u'kev@the*agency') == 'kevtheagency'
     assert sanitise_supplier_name(u"Ψ is a silly character") == "is_a_silly_character"
+
+
+def test_generate_download_filename():
+    assert generate_download_filename(584425, 'result-letter.pdf', 'ICNT_Consulting_Ltd') == 'ICNT_Consulting_Ltd-584425-result-letter.pdf'   # noqa
