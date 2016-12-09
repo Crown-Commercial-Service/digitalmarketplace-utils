@@ -115,8 +115,20 @@ class CustomLogFormatter(logging.Formatter):
 
         try:
             msg = msg.format(**record.__dict__)
-        except KeyError as e:
-            logger.exception("failed to format log message: {} not found".format(e))
+        except:
+            # We know that KeyError, ValueError and IndexError are all possible things that can go
+            # wrong here - there is no guarantee that the message passed into the logger is
+            # actually suitable to be used as a format string. This is particularly so where an
+            # we are logging arbitrary exception that may reference code.
+            #
+            # We catch all exceptions rather than just those three, because _any_ failure to format the
+            # message must not result in an error, otherwise the original log message will never be
+            # returned and written to the logs, and that might be important info such as an
+            # exception.
+            #
+            # NB do not attempt to log either the exception or `msg` here, or you will
+            # find that too fails and you end up with an infinite recursion / stack overflow.
+            logger.info("failed to format log message")
         return msg
 
 
