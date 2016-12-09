@@ -178,3 +178,9 @@ class TestCustomLogFormatter(object):
         result = self.dmbuffer.getvalue()
 
         assert 'failed to format log message' in result
+
+    def test_failed_log_message_formatting_still_logs(self):
+        self.logger.info("hello {")
+
+        assert 'failed to format log message' in self.dmbuffer.getvalue()
+        assert 'hello {' in self.buffer.getvalue()
