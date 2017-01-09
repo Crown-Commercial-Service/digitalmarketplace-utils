@@ -1,26 +1,23 @@
+# -*- coding: utf-8 -*-
+"""Digital Marketplace Mandrill integration."""
 import base64
-import hashlib
-import six
-import struct
 import json
+import struct
 from datetime import datetime
 
+import itsdangerous
+import six
+from cryptography import fernet
 from flask import current_app
 from flask._compat import string_types
 
 from mandrill import Mandrill, Error
-import itsdangerous
-from cryptography import fernet
-
-
-from .formats import DATETIME_FORMAT
+from dmutils.email.exceptions import EmailError
+from dmutils.email.helpers import hash_string
+from dmutils.formats import DATETIME_FORMAT
 
 ONE_DAY_IN_SECONDS = 86400
 SEVEN_DAYS_IN_SECONDS = 604800
-
-
-class MandrillException(Exception):
-    pass
 
 
 def send_email(to_email_addresses, email_body, api_key, subject, from_email, from_name, tags, reply_to=None,
@@ -59,7 +56,7 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
     except Error as e:
         # Mandrill errors are thrown as exceptions
         logger.error("Failed to send an email: {error}", extra={'error': e})
-        raise MandrillException(e)
+        raise EmailError(e)
 
     logger.info("Sent {tags} response: id={id}, email={email_hash}",
                 extra={'tags': tags, 'id': result[0]['_id'], 'email_hash': hash_string(result[0]['email'])})
@@ -178,14 +175,9 @@ def _parse_fernet_timestamp(ciphertext):
     return datetime.utcfromtimestamp(epoch_timestamp)
 
 
-def hash_string(string):
-    m = hashlib.sha256(string.encode('utf-8'))
-    return base64.urlsafe_b64encode(m.digest())
-
-
 def decode_password_reset_token(token, data_api_client):
     try:
-        decoded, timestamp = decode_token(
+        decoded, token_timestamp = decode_token(
             token,
             current_app.config["SECRET_KEY"],
             current_app.config["RESET_PASSWORD_SALT"],
@@ -201,10 +193,8 @@ def decode_password_reset_token(token, data_api_client):
         DATETIME_FORMAT
     )
 
-    if token_created_before_password_last_changed(
-            timestamp,
-            user_last_changed_password_at
-    ):
+    # If the token was created before the last password change
+    if token_timestamp < user_last_changed_password_at:
         current_app.logger.info("Error changing password: Token generated earlier than password was last changed.")
         return {'error': 'token_invalid'}
 
@@ -216,7 +206,7 @@ def decode_password_reset_token(token, data_api_client):
 
 def decode_invitation_token(encoded_token):
     try:
-        token, timestamp = decode_token(
+        token, _ = decode_token(
             encoded_token,
             current_app.config['SHARED_EMAIL_KEY'],
             current_app.config['INVITE_EMAIL_SALT'],
@@ -227,7 +217,3 @@ def decode_invitation_token(encoded_token):
         current_app.logger.info("Invitation reset attempt with expired token. error {error}",
                                 extra={'error': six.text_type(e)})
         return None
-
-
-def token_created_before_password_last_changed(token_timestamp, user_timestamp):
-    return token_timestamp < user_timestamp

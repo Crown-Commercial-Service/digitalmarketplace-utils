@@ -1,0 +1,201 @@
+{
+  "links": {
+    "current": "https://api.notifications.service.gov.uk/v2/notifications",
+    "next": "https://api.notifications.service.gov.uk/v2/notifications?older_than=ac0973cd-3d1c-446d-bec5-665347beaf53"
+  },
+  "notifications": [
+    {
+      "body": "05/01/2017\n\nDear supplier, \n\nBen's Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \n\u2022 Digital outcomes - yes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T16:47:27.278075Z",
+      "created_at": "2017-01-05T16:47:26.042704Z",
+      "email_address": "ben.vandersteen@digital.cabinet-office.gov.uk",
+      "id": "85475586-e90f-4064-8720-5c9cc5850589",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "X-zrZv_IbzjZUnhsbWlsecLbwjndTpG0ZynXOif7V-k=",
+      "sent_at": "2017-01-05T16:47:26.474093Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    },{
+      "body": "05/01/2017\n\nDear supplier, \n\nBen's Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \nyes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T15:56:20.341232Z",
+      "created_at": "2017-01-05T15:56:14.740035Z",
+      "email_address": "ben.vandersteen@digital.cabinet-office.gov.uk",
+      "id": "dddc9b62-8539-43d1-907d-5853ad16f607",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "a4ayc_80_OGda4BO_1o_V0etpOqiLx1JwB5S3beHW0s=",
+      "sent_at": "2017-01-05T15:56:16.053399Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    },{
+      "body": "05/01/2017\n\nDear supplier, \n\nBen's Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \n\u2022 Digital outcomes - yes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T15:10:22.004915Z",
+      "created_at": "2017-01-05T15:10:19.355770Z",
+      "email_address": "ben.vandersteen@digital.cabinet-office.gov.uk",
+      "id": "e325353b-ab97-4f36-8381-c07ec36264d5",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "1HNeOiZeFu7gP1lxi5tdAwGcB9i2xR-Q2jpmbuwTqzU=",
+      "sent_at": "2017-01-05T15:10:20.962141Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    },{
+      "body": "05/01/2017\n\nDear supplier, \n\nYour Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \n\u2022 Digital outcomes - yes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T15:04:50.908482Z",
+      "created_at": "2017-01-05T15:04:44.813755Z",
+      "email_address": "tobi.ogunsina@digital.cabinet-office.gov.uk",
+      "id": "99b6ff9e-c556-4c55-8293-ce93189c8ab1",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "TgdAhWK-24tgzgXB3s_jrRa3IjCWfeAfZAt-Rym0n84=",
+      "sent_at": "2017-01-05T15:04:50.049479Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    },{
+      "body": "05/01/2017\n\nDear supplier, \n\nYour Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \n\u2022 Digital outcomes - yes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T15:04:20.789637Z",
+      "created_at": "2017-01-05T15:04:17.770267Z",
+      "email_address": "ben.vandersteen@digital.cabinet-office.gov.uk",
+      "id": "808a20f6-485b-4d2c-8be7-7e31ad1b3f46",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "SyJ3d9TdH8Ycb4hPSGQdArTRIdP9Moywi1Ux_Kzav4o=",
+      "sent_at": "2017-01-05T15:04:20.004533Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    },{
+      "body": "05/01/2017\n\nDear supplier, \n\nYour Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \n\u2022 Digital outcomes - yes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T15:03:52.004181Z",
+      "created_at": "2017-01-05T15:03:50.760620Z",
+      "email_address": "ben.vandersteen@digital.cabinet-office.gov.uk",
+      "id": "93dfd83c-a1f4-42b9-abae-d1fb74b39a7c",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "7y0SfeN7lCuq0GFF5UsMYZofIjJ7LrvPvsePVWSv450=",
+      "sent_at": "2017-01-05T15:03:51.184121Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    },{
+      "body": "05/01/2017\n\nDear supplier, \n\nYour Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \n\u2022 Digital outcomes - yes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T15:02:15.198445Z",
+      "created_at": "2017-01-05T15:02:12.337967Z",
+      "email_address": "ben.vandersteen@digital.cabinet-office.gov.uk",
+      "id": "2e80dbf4-6b92-4bae-b6de-93d8526b6e89",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "5_bAEXdujbfNMwtUF0_Xb30CFrYSOHpf_PuB5vCRloM=",
+      "sent_at": "2017-01-05T15:02:14.171462Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    },{
+      "body": "05/01/2017\n\nDear supplier, \n\nYour Awesome Company\u2019s application to Digital Outcomes and Specialists 2 was successful.\n\nYour results were: \n\u2022 Digital outcomes - yes\nno\nmaybe\nI don't know\n\nWe\u2019ve notified all applicants about their results. A 10-day 'standstill period' will start on 17 January 2017 and end at 11.59pm (GMT) on 26 January 2017. We expect the framework to be awarded on 27 January 2017 and services to go live on the Digital Marketplace in February 2016. \n\nYou must sign and return your framework agreement before you can sell services on the Digital Marketplace. \n\nYour framework agreement is ready to sign at: \nhttps://www.digitalmarketplace.service.gov.uk/suppliers/frameworks/digital-outcomes-and-specialists-2/agreement\n\n\nWe\u2019ll notify you when the standstill period is over. Until then, you shouldn\u2019t make any public announcements about the result of your application.\n\nYours faithfully,\nAlison Lisett\nHead of Sourcing Delivery\nCrown Commercial Service",
+      "completed_at": "2017-01-05T15:01:48.280326Z",
+      "created_at": "2017-01-05T15:01:44.708953Z",
+      "email_address": "robert.scott@digital.cabinet-office.gov.uk",
+      "id": "ac0973cd-3d1c-446d-bec5-665347beaf53",
+      "line_1": "None",
+      "line_2": "None",
+      "line_3": "None",
+      "line_4": "None",
+      "line_5": "None",
+      "line_6": "None",
+      "phone_number": "None",
+      "postcode": "None",
+      "reference": "eQJpm-Qsio5G-7tFAXJlF-hrIsVqGJ92JabaSQgbJFE=",
+      "sent_at": "2017-01-05T15:01:47.428623Z",
+      "status": "delivered",
+      "subject": "Your Digital Outcomes and Specialists 2 application has been successful",
+      "template": {
+        "id": "e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "uri": "https://api.notifications.service.gov.uk/service/95316ff0-e555-462d-a6e7-95d26fbfd091/template/e767bb69-5927-4a18-a0e7-93e8ab99c587",
+        "version": 16
+      },
+      "type": "email"
+    }
+  ]
+}
