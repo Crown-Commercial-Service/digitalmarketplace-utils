@@ -2,6 +2,35 @@
 
 Records breaking changes from major version bumps
 
+## 24.0.0
+
+PR: [#291](https://github.com/alphagov/digitalmarketplace-utils/pull/291)
+
+### What changed
+
+Normalised email exception classes with new `email.exceptions.EmailError`
+
+###Example app change
+
+Old:
+```
+from dmutils.email import MandrillException
+
+ ...
+
+except MandrillException
+```
+
+New:
+```
+from dmutils.email.exceptions import EmailError
+
+ ...
+
+except EmailError
+```
+
+
 ## 23.0.0
 
 PR: [#288](https://github.com/alphagov/digitalmarketplace-utils/pull/288)
@@ -27,6 +56,7 @@ data = decode_invitation_token(token)
 assert 'email_address' in data.keys()
 
 ```
+
 
 ## 22.0.0
 
