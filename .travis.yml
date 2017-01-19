@@ -3,7 +3,7 @@ python:
   - "2.7"
   - "3.4"
 install:
-  - pip install --process-dependency-links -e . .[test]
+  - pip install -r requirements_for_test.txt
 script:
   - ./scripts/run_tests.sh --cov=dmutils --cov-report=term-missing
 after_success:
