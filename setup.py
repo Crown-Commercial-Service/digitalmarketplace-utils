@@ -43,4 +43,3 @@ setup(
     ],
 )
 
-shutil.run('pip freeze > requirements.txt')
