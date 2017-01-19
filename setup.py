@@ -42,4 +42,3 @@ setup(
          'workdays==1.4'
     ],
 )
-
