@@ -41,18 +41,6 @@ setup(
          'unicodecsv==0.14.1',
          'workdays==1.4'
     ],
-    dependency_links=[
-        'git+https://github.com/alphagov/notifications-python-client.git@4.0.0#egg=notifications-python-client-4.0.0'
-    ],
-    extras_require={
-        'test': [
-            'coverage==3.7.1',
-            'freezegun==0.3.4',
-            'mock==1.0.1',
-            'pep8==1.6.2',
-            'pytest-cov==2.2.0',
-            'pytest==2.8.7',
-            'python-coveralls==2.5.0'
-        ]
-    }
 )
+
+shutil.run('pip freeze > requirements.txt')
