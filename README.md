@@ -13,13 +13,6 @@ Digital Marketplace utils
 * Helper code for Flask configuration
 * A formed version of Flask Feature Flags
 
-## Installation
-
-This repos requirements are handled in the `setup.py` and as such must be installed with:
-
-`pip install --process-dependency-links -e . .`
-`pip install --process-dependency-links -e . .[test]`
-
 ## Logging from applications
 
 When logging from applications you should write your message as a [format
