@@ -15,7 +15,6 @@ from dmutils.config import init_app
 from dmutils.email.dm_mandrill import (
     generate_token,
     decode_token,
-    encrypt_data,
     send_email,
     decode_invitation_token,
     decode_password_reset_token,
@@ -184,19 +183,15 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
         assert str(e.value) == 'this is an error'
 
 
-def signed_token():
-    ts = URLSafeTimedSerializer('1234567890')
-    return ts.dumps({'key1': 'value1', 'key2': 'value2'}, salt='0987654321')
+def test_can_generate_and_decode_token():
 
-
-def encrypted_token():
-    return encrypt_data({'key1': 'value1', 'key2': 'value2'}, secret_key='1234567890', namespace='0987654321')
-
-
-@pytest.mark.parametrize('token', [signed_token, encrypted_token], ids=lambda x: x.__name__)
-def test_can_generate_and_decode_token(token):
     with freeze_time('2016-01-01T12:00:00Z'):
-        token, timestamp = decode_token(token(), '1234567890', '0987654321')
+        encrypted_token = generate_token(
+            {'key1': 'value1', 'key2': 'value2'},
+            secret_key='1234567890',
+            namespace='0987654321'
+        )
+        token, timestamp = decode_token(encrypted_token, '1234567890', '0987654321')
     assert token == {'key1': 'value1', 'key2': 'value2'}
     assert timestamp == datetime(2016, 1, 1, 12, 0, 0)
 

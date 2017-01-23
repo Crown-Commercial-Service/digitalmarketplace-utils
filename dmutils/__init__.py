@@ -1,6 +1,4 @@
-from . import config, proxy_fix, formats, request_id
+from . import config, formats, logging, proxy_fix, request_id
 from .flask_init import init_app, init_manager
-
-import flask_featureflags
 
 __version__ = '24.0.1'
