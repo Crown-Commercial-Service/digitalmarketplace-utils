@@ -57,30 +57,8 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
         # Mandrill errors are thrown as exceptions
         logger.error("Failed to send an email: {error}", extra={'error': e})
         raise EmailError(e)
-
     logger.info("Sent {tags} response: id={id}, email={email_hash}",
                 extra={'tags': tags, 'id': result[0]['_id'], 'email_hash': hash_string(result[0]['email'])})
-
-
-def generate_token(data, secret_key, namespace):
-    return encrypt_data(data, secret_key, namespace)
-
-
-def decode_token(token, secret_key, namespace, max_age_in_seconds=86400):
-    """
-    Decode a token given a secret_key and namespace.
-
-    The token may have been created by a previous version of dmutils, which only supported signed unencrypted tokens.
-    To maintain backwards compatibility during rollouts, we try and decode using the old format, and if that fails
-    assume it is is a new encrypted token.
-
-    This functionality can be removed once all rollouts have completed and the longest time-to-live of the old signed
-    tokens has expired (seven days for an invite email).
-    """
-    try:
-        return decode_signed_token(token, secret_key, namespace, max_age_in_seconds)
-    except itsdangerous.BadData:
-        return decrypt_data(token, secret_key, namespace, max_age_in_seconds)
 
 
 def decode_signed_token(token, secret_key, namespace, max_age_in_seconds=86400):
@@ -119,8 +97,29 @@ def encrypt_data(json_data, secret_key, namespace):
     """
     secret_key = hash_string(secret_key + namespace)
     data = json.dumps(json_data).encode('utf-8')
-    f = fernet.Fernet(secret_key)
+    f = fernet.Fernet(secret_key.encode('utf-8'))
     return f.encrypt(data).decode('utf-8')
+
+
+def generate_token(data, secret_key, namespace):
+    return encrypt_data(data, secret_key, namespace)
+
+
+def _parse_fernet_timestamp(ciphertext):
+    """
+    Returns utc timestamp embedded in Fernet-encrypted ciphertext, converted to Python datetime object.
+
+    Decryption should be attempted before using this function, as that does cryptographically strong tests on the
+    validity of the ciphertext.
+    """
+    decoded = base64.urlsafe_b64decode(ciphertext)
+
+    try:
+        epoch_timestamp = struct.unpack('>Q', decoded[1:9])[0]
+    except struct.error as e:
+        raise fernet.InvalidToken(e.message)
+
+    return datetime.utcfromtimestamp(epoch_timestamp)
 
 
 def decrypt_data(encrypted_data, secret_key, namespace, max_age_in_seconds):
@@ -149,7 +148,7 @@ def decrypt_data(encrypted_data, secret_key, namespace, max_age_in_seconds):
     """
     encrypted_bytes = encrypted_data.encode('utf-8')
     secret_key = hash_string(secret_key + namespace)
-    f = fernet.Fernet(secret_key)
+    f = fernet.Fernet(secret_key.encode('utf-8'))
 
     # this raises fernet.InvalidToken if the key does not match or if TTL is exceeded
     data = f.decrypt(encrypted_bytes, ttl=max_age_in_seconds)
@@ -158,21 +157,21 @@ def decrypt_data(encrypted_data, secret_key, namespace, max_age_in_seconds):
     return json.loads(data.decode('utf-8')), timestamp
 
 
-def _parse_fernet_timestamp(ciphertext):
+def decode_token(token, secret_key, namespace, max_age_in_seconds=86400):
     """
-    Returns utc timestamp embedded in Fernet-encrypted ciphertext, converted to Python datetime object.
+    Decode a token given a secret_key and namespace.
 
-    Decryption should be attempted before using this function, as that does cryptographically strong tests on the
-    validity of the ciphertext.
+    The token may have been created by a previous version of dmutils, which only supported signed unencrypted tokens.
+    To maintain backwards compatibility during rollouts, we try and decode using the old format, and if that fails
+    assume it is is a new encrypted token.
+
+    This functionality can be removed once all rollouts have completed and the longest time-to-live of the old signed
+    tokens has expired (seven days for an invite email).
     """
-    decoded = base64.urlsafe_b64decode(ciphertext)
-
     try:
-        epoch_timestamp = struct.unpack('>Q', decoded[1:9])[0]
-    except struct.error as e:
-        raise fernet.InvalidToken(e.message)
-
-    return datetime.utcfromtimestamp(epoch_timestamp)
+        return decode_signed_token(token, secret_key, namespace, max_age_in_seconds)
+    except itsdangerous.BadData:
+        return decrypt_data(token, secret_key, namespace, max_age_in_seconds)
 
 
 def decode_password_reset_token(token, data_api_client):

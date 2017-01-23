@@ -5,6 +5,7 @@ from datetime import datetime
 
 import mock
 import pytest
+import six
 from cryptography import fernet
 from freezegun import freeze_time
 from itsdangerous import URLSafeTimedSerializer
@@ -20,9 +21,8 @@ from dmutils.email.dm_mandrill import (
     decode_password_reset_token,
     _parse_fernet_timestamp
 )
-from dmutils.email.helpers import hash_string
 from dmutils.email.exceptions import EmailError
-from tests.test_user import user_json
+from dmutils.email.helpers import hash_string
 
 
 @pytest.yield_fixture
@@ -43,11 +43,10 @@ def email_app(app):
 
 
 @pytest.fixture
-def data_api_client():
-    user = user_json()
-    user['users']['passwordChangedAt'] = '2016-01-01T12:00:00.30Z'
+def data_api_client(user_json):
+    user_json['users']['passwordChangedAt'] = '2016-01-01T12:00:00.30Z'
     data_api_client = mock.Mock()
-    data_api_client.get_user.return_value = user
+    data_api_client.get_user.return_value = user_json
     return data_api_client
 
 
@@ -229,7 +228,9 @@ def test_cant_decode_token_with_wrong_key():
     (u'☃@example.com', b'jGgXle8WEBTTIFhP25dF8Ck-FxQSCZ_N0iWYBWve4Ps='),
 ])
 def test_hash_string(test, expected):
-    assert hash_string(test) == expected
+    expected = expected.decode('utf-8')
+    result = hash_string(test)
+    assert result == expected
 
 
 def test_generate_token_does_not_contain_plaintext_email(email_app, data_api_client, password_reset_token):

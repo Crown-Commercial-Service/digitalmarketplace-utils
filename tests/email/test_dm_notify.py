@@ -90,7 +90,7 @@ class TestDMNotifyClient(object):
         """Test the staticmethod that creates the reference field to be sent with the request."""
         ref = dm_notify_client.get_reference(**self.standard_args)
         expected = (
-            b'K5fhXxlvVQ8sKPrqocizL-F2LcQ-Ee6FIFeMH0omijI='
+            'K5fhXxlvVQ8sKPrqocizL-F2LcQ-Ee6FIFeMH0omijI='
         )
 
         assert ref == expected
@@ -105,7 +105,7 @@ class TestDMNotifyClient(object):
                 self.email_address,
                 self.template_id,
                 personalisation=None,
-                reference=b'niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
+                reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
             )
 
     def test_personalisation_passed(self, dm_notify_client, notify_send_email):
@@ -122,7 +122,7 @@ class TestDMNotifyClient(object):
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation,
-                reference=b'jcUtmC7843cKFb0mXbz5FMJsOIGbuynAtFDCaCXRe9s='
+                reference='jcUtmC7843cKFb0mXbz5FMJsOIGbuynAtFDCaCXRe9s='
             )
 
     def test_personalisation_appears_in_reference(self, dm_notify_client, notify_send_email):
@@ -139,7 +139,7 @@ class TestDMNotifyClient(object):
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation,
-                reference=b'jcUtmC7843cKFb0mXbz5FMJsOIGbuynAtFDCaCXRe9s='
+                reference='jcUtmC7843cKFb0mXbz5FMJsOIGbuynAtFDCaCXRe9s='
             )
 
     def test_get_error_message(self, dm_notify_client, notify_example_http_error):
@@ -228,5 +228,5 @@ class TestDMNotifyClient(object):
                     self.email_address,
                     self.template_id,
                     personalisation=None,
-                    reference=b'niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
+                    reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
                 )
