@@ -35,3 +35,21 @@ def os_environ(request):
     request.addfinalizer(env_patch.stop)
 
     return env_patch.start()
+
+
+@pytest.fixture
+def user_json():
+    return {
+        "users": {
+            "id": 123,
+            "emailAddress": "test@example.com",
+            "name": "name",
+            "role": "supplier",
+            "locked": False,
+            "active": True,
+            "supplier": {
+                "supplierId": 321,
+                "name": "test supplier",
+            }
+        }
+    }

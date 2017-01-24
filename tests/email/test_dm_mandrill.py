@@ -5,6 +5,7 @@ from datetime import datetime
 
 import mock
 import pytest
+import six
 from cryptography import fernet
 from freezegun import freeze_time
 from itsdangerous import URLSafeTimedSerializer
@@ -14,15 +15,13 @@ from dmutils.config import init_app
 from dmutils.email.dm_mandrill import (
     generate_token,
     decode_token,
-    encrypt_data,
     send_email,
     decode_invitation_token,
     decode_password_reset_token,
     _parse_fernet_timestamp
 )
-from dmutils.email.helpers import hash_string
 from dmutils.email.exceptions import EmailError
-from tests.test_user import user_json
+from dmutils.email.helpers import hash_string
 
 
 @pytest.yield_fixture
@@ -43,11 +42,10 @@ def email_app(app):
 
 
 @pytest.fixture
-def data_api_client():
-    user = user_json()
-    user['users']['passwordChangedAt'] = '2016-01-01T12:00:00.30Z'
+def data_api_client(user_json):
+    user_json['users']['passwordChangedAt'] = '2016-01-01T12:00:00.30Z'
     data_api_client = mock.Mock()
-    data_api_client.get_user.return_value = user
+    data_api_client.get_user.return_value = user_json
     return data_api_client
 
 
@@ -185,19 +183,15 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
         assert str(e.value) == 'this is an error'
 
 
-def signed_token():
-    ts = URLSafeTimedSerializer('1234567890')
-    return ts.dumps({'key1': 'value1', 'key2': 'value2'}, salt='0987654321')
+def test_can_generate_and_decode_token():
 
-
-def encrypted_token():
-    return encrypt_data({'key1': 'value1', 'key2': 'value2'}, secret_key='1234567890', namespace='0987654321')
-
-
-@pytest.mark.parametrize('token', [signed_token, encrypted_token], ids=lambda x: x.__name__)
-def test_can_generate_and_decode_token(token):
     with freeze_time('2016-01-01T12:00:00Z'):
-        token, timestamp = decode_token(token(), '1234567890', '0987654321')
+        encrypted_token = generate_token(
+            {'key1': 'value1', 'key2': 'value2'},
+            secret_key='1234567890',
+            namespace='0987654321'
+        )
+        token, timestamp = decode_token(encrypted_token, '1234567890', '0987654321')
     assert token == {'key1': 'value1', 'key2': 'value2'}
     assert timestamp == datetime(2016, 1, 1, 12, 0, 0)
 
@@ -229,7 +223,9 @@ def test_cant_decode_token_with_wrong_key():
     (u'☃@example.com', b'jGgXle8WEBTTIFhP25dF8Ck-FxQSCZ_N0iWYBWve4Ps='),
 ])
 def test_hash_string(test, expected):
-    assert hash_string(test) == expected
+    expected = expected.decode('utf-8')
+    result = hash_string(test)
+    assert result == expected
 
 
 def test_generate_token_does_not_contain_plaintext_email(email_app, data_api_client, password_reset_token):

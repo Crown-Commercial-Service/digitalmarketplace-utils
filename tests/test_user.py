@@ -8,24 +8,6 @@ def user():
     return User(123, 'test@example.com', 321, 'test supplier', False, True, "Name", 'supplier')
 
 
-@pytest.fixture
-def user_json():
-    return {
-        "users": {
-            "id": 123,
-            "emailAddress": "test@example.com",
-            "name": "name",
-            "role": "supplier",
-            "locked": False,
-            "active": True,
-            "supplier": {
-                "supplierId": 321,
-                "name": "test supplier",
-            }
-        }
-    }
-
-
 def test_user_has_role():
     assert user_has_role({'users': {'role': 'admin'}}, 'admin')
 
