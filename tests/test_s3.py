@@ -5,7 +5,7 @@ import datetime
 import mock
 import pytest
 from freezegun import freeze_time
-from .helpers import mock_file
+from helpers import mock_file
 from dmutils.s3 import S3, get_file_size_up_to_maximum
 
 

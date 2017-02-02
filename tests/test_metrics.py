@@ -3,7 +3,7 @@ import time
 import mock
 
 from dmutils import metrics
-from .helpers import IsDatetime
+from helpers import IsDatetime
 
 
 @mock.patch('dmutils.metrics.connect_to_region')
