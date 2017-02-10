@@ -33,7 +33,7 @@ setup(
          'inflection==0.2.1',
          'mandrill==1.0.57',
          'monotonic==0.3',
-         'notifications-python-client==4.0.0',
+         'notifications-python-client==4.1.0',
          'python-json-logger==0.1.4',
          'pytz==2015.4',
          'pyyaml==3.11',
