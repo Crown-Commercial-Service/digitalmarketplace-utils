@@ -46,12 +46,15 @@ def init_app(
         response.headers['X-Frame-Options'] = 'DENY'
         return response
 
+    # Make filters accessible in templates.
     application.add_template_filter(filters.format_links)
-    application.add_template_filter(formats.timeformat)
-    application.add_template_filter(formats.shortdateformat)
+    application.add_template_filter(filters.nbsp)
+    application.add_template_filter(filters.smartjoin)
+    # Make select formats available in templates.
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)
-    application.add_template_filter(filters.smartjoin)
+    application.add_template_filter(formats.shortdateformat)
+    application.add_template_filter(formats.timeformat)
 
     @application.context_processor
     def inject_global_template_variables():
