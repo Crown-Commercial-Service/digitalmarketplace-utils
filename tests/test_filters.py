@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from dmutils.filters import smartjoin, format_links
+
+from flask import Markup
+
+from dmutils.filters import format_links, nbsp, smartjoin
 
 
 def test_smartjoin_for_more_than_one_item():
@@ -66,3 +69,27 @@ def test_multiple_urls():
 def test_no_links_no_change():
     text = 'There are no Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ links.'
     assert format_links(text) == text
+
+
+def test_nbsp():
+    """Test that spaces are replaced with nbsp."""
+    text = 'foo bar baz'
+    expected = Markup('foo&nbsp;bar&nbsp;baz')
+    result = nbsp(text)
+    assert result == expected
+
+
+def test_nbsp_escapes():
+    """Ensure the filter escapes HTML."""
+    text = 'foo bar baz <script>'
+    expected = Markup('foo&nbsp;bar&nbsp;baz&nbsp;&lt;script&gt;')
+    result = nbsp(text)
+    assert result == expected
+
+
+def test_nbsp_with_markup():
+    """When markup passed in should still return markup."""
+    text = Markup('foo bar baz <script>')
+    expected = Markup('foo&nbsp;bar&nbsp;baz&nbsp;<script>')
+    result = nbsp(text)
+    assert result == expected

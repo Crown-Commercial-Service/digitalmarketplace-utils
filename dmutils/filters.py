@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import re
-from flask import Markup
+from flask import Markup, escape
 
 
 def smartjoin(input):
@@ -40,3 +40,13 @@ def format_links(text):
         return formatted_text
     else:
         return text
+
+
+def nbsp(text):
+    """Replace spaces with nbsp.
+
+    If you want to use html with this filter you need to pass it in as marksafe
+    ie.
+    {{ "some text and <html>"|marksafe|nbsp }}"""
+    text = escape(text)
+    return text.replace(' ', Markup('&nbsp;'))
