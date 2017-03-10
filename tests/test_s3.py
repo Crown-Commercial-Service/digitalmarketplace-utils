@@ -35,19 +35,6 @@ class TestS3Uploader(object):
 
         assert S3('test-bucket').path_exists('foo') is True
 
-    def test_bucket_short_name(self):
-        assert S3('digitalmarketplace-anything-environ-environ').bucket_short_name == 'anything'
-
-    def test_bucket_short_name_invalid_format(self):
-        bad_bucket_names = [
-            'something-invalid',
-            'digitalmarketplace-something-environ-environ-other',
-            'digitalmarketplace-something-environ-other',
-        ]
-        for bad_bucket_name in bad_bucket_names:
-            with pytest.raises(ValueError):
-                S3(bad_bucket_name).bucket_short_name
-
     def test_get_signed_url(self):
         mock_bucket = FakeBucket(['documents/file.pdf'])
         self.s3_mock.get_bucket.return_value = mock_bucket

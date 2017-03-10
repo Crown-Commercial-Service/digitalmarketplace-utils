@@ -60,10 +60,11 @@ def validate_documents(files):
     return errors
 
 
-def upload_document(uploader, documents_url, service, field, file_contents, public=True):
+def upload_document(uploader, upload_type, documents_url, service, field, file_contents, public=True):
     """Upload the document to S3 bucket and return the document URL
 
     :param uploader: S3 uploader object
+    :param upload_type: Upload type (eg 'documents' or 'submissions')
     :param documents_url: base assets URL used as root for creating the full
                           document URL.
     :param service: service object used to look up service and supplier id
@@ -78,11 +79,11 @@ def upload_document(uploader, documents_url, service, field, file_contents, publ
              failed
 
     """
-    assert uploader.bucket_short_name in ['documents', 'submissions']
+    assert upload_type in ['documents', 'submissions']
 
     file_path = generate_file_name(
         service['frameworkSlug'],
-        uploader.bucket_short_name,
+        upload_type,
         service['supplierId'],
         service['id'],
         field,
@@ -104,8 +105,8 @@ def upload_document(uploader, documents_url, service, field, file_contents, publ
     return full_url
 
 
-def upload_service_documents(uploader, documents_url, service, request_files, section, public=True):
-    assert uploader.bucket_short_name in ['documents', 'submissions']
+def upload_service_documents(uploader, upload_type, documents_url, service, request_files, section, public=True):
+    assert upload_type in ['documents', 'submissions']
 
     files = {field: request_files[field] for field in section.get_question_ids(type="upload")
              if field in request_files}
@@ -120,7 +121,7 @@ def upload_service_documents(uploader, documents_url, service, request_files, se
 
     for field, contents in files.items():
         url = upload_document(
-            uploader, documents_url, service, field, contents,
+            uploader, upload_type, documents_url, service, field, contents,
             public=public)
 
         if not url:
@@ -179,7 +180,7 @@ def file_is_image(file_object):
     ]
 
 
-def generate_file_name(framework_slug, bucket_short_name, supplier_id, service_id, field, filename, suffix=None):
+def generate_file_name(framework_slug, upload_type, supplier_id, service_id, field, filename, suffix=None):
     if suffix is None:
         suffix = default_file_suffix()
 
@@ -192,7 +193,7 @@ def generate_file_name(framework_slug, bucket_short_name, supplier_id, service_i
 
     return '{}/{}/{}/{}-{}-{}{}'.format(
         framework_slug,
-        bucket_short_name,
+        upload_type,
         supplier_id,
         service_id,
         ID_TO_FILE_NAME_SUFFIX[field],

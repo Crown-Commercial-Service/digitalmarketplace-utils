@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import os
-import re
 import boto
 import boto.exception
 import datetime
@@ -15,26 +14,14 @@ from .formats import DATETIME_FORMAT
 logger = logging.getLogger(__name__)
 
 FILE_SIZE_LIMIT = 5400000  # approximately 5Mb
-BUCKET_SHORT_NAME_PATTERN = re.compile(
-    r'^digitalmarketplace-([^\-]+)-([^\-]+)-(\2)$'
-)
 
 
 class S3(object):
-    def __init__(self, bucket_name=None, host='s3-eu-west-1.amazonaws.com'):
+    def __init__(self, bucket_name, host='s3-eu-west-1.amazonaws.com'):
         conn = boto.connect_s3(host=host)
 
         self.bucket_name = bucket_name
         self.bucket = conn.get_bucket(bucket_name)
-
-    @property
-    def bucket_short_name(self):
-        match = BUCKET_SHORT_NAME_PATTERN.match(self.bucket_name)
-
-        if not match:
-            raise ValueError("Cannot parse bucket name: {}".format(self.bucket_name))
-
-        return match.group(1)
 
     def save(self, path, file, acl='public-read', move_prefix=None, timestamp=None, download_filename=None,
              disposition_type='attachment'):
