@@ -1,5 +1,3 @@
-import unittest
-import os
 import datetime
 
 import mock
@@ -9,8 +7,8 @@ from helpers import mock_file
 from dmutils.s3 import S3, get_file_size_up_to_maximum
 
 
-class TestS3Uploader(unittest.TestCase):
-    def setUp(self):
+class TestS3Uploader(object):
+    def setup_method(self, method):
         self.s3_mock = mock.Mock()
         self._boto_patch = mock.patch(
             'dmutils.s3.boto.connect_s3',
@@ -18,7 +16,7 @@ class TestS3Uploader(unittest.TestCase):
         )
         self._boto_patch.start()
 
-    def tearDown(self):
+    def teardown_method(self, method):
         self._boto_patch.stop()
 
     def test_get_bucket(self):
@@ -98,7 +96,7 @@ class TestS3Uploader(unittest.TestCase):
         mock_bucket.list.return_value = [fake_key]
         expected = [fake_key.fake_format_key(filename='file 1', ext='odt')]
 
-        self.assertEqual(S3('test-bucket').list(), expected)
+        assert S3('test-bucket').list() == expected
 
     def test_list_files_removes_directories(self):
         mock_bucket = mock.Mock()
@@ -112,7 +110,7 @@ class TestS3Uploader(unittest.TestCase):
         ]
         expected = [fake_key_file.fake_format_key(filename='file 1', ext='odt')]
 
-        self.assertEqual(S3('test-bucket').list(), expected)
+        assert S3('test-bucket').list() == expected
 
     def test_list_files_order_by_last_modified(self):
         mock_bucket = mock.Mock()
@@ -129,7 +127,7 @@ class TestS3Uploader(unittest.TestCase):
             fake_key_later.fake_format_key(filename='file 1', ext='odt')
         ]
 
-        self.assertEqual(S3('test-bucket').list(), expected)
+        assert S3('test-bucket').list() == expected
 
     def test_list_files_with_loading_custom_timestamps(self):
         mock_bucket = mock.Mock()
@@ -191,7 +189,7 @@ class TestS3Uploader(unittest.TestCase):
         self.s3_mock.get_bucket.return_value = mock_bucket
 
         S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
-        self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
+        assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
             mock.ANY, headers={'Content-Type': 'application/pdf'})
@@ -202,7 +200,7 @@ class TestS3Uploader(unittest.TestCase):
         self.s3_mock.get_bucket.return_value = mock_bucket
 
         S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123), download_filename='new-test-file.pdf')
-        self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
+        assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
             mock.ANY, headers={
@@ -220,7 +218,7 @@ class TestS3Uploader(unittest.TestCase):
             download_filename='new-test-file.pdf',
             disposition_type='chilled-out'
         )
-        self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
+        assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
             mock.ANY, headers={
@@ -237,7 +235,7 @@ class TestS3Uploader(unittest.TestCase):
             mock_file('blah', 123),
             disposition_type='manic'
         )
-        self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
+        assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
             mock.ANY, headers={
@@ -249,7 +247,7 @@ class TestS3Uploader(unittest.TestCase):
         self.s3_mock.get_bucket.return_value = mock_bucket
 
         S3('test-bucket').save('/folder/test-file.pdf', mock_file('blah', 123))
-        self.assertEqual(mock_bucket.keys, set(['folder/test-file.pdf']))
+        assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
     def test_default_move_prefix_is_datetime(self):
         mock_bucket = FakeBucket(['folder/test-file.pdf'])
@@ -263,10 +261,10 @@ class TestS3Uploader(unittest.TestCase):
                 'folder/test-file.pdf', mock_file('blah', 123),
             )
 
-            self.assertEqual(mock_bucket.keys, set([
+            assert mock_bucket.keys == set([
                 'folder/test-file.pdf',
                 'folder/2015-01-01T01:02:03.000004-test-file.pdf'
-            ]))
+            ])
 
     def test_save_existing_file(self):
         mock_bucket = FakeBucket(['folder/test-file.pdf'])
@@ -277,10 +275,10 @@ class TestS3Uploader(unittest.TestCase):
             move_prefix='OLD'
         )
 
-        self.assertEqual(mock_bucket.keys, set([
+        assert mock_bucket.keys == set([
             'folder/test-file.pdf',
             'folder/OLD-test-file.pdf'
-        ]))
+        ])
 
     def test_move_existing_doesnt_delete_file(self):
         mock_bucket = FakeBucket(['folder/test-file.odt'])
@@ -291,28 +289,24 @@ class TestS3Uploader(unittest.TestCase):
             move_prefix='OLD'
         )
 
-        self.assertEqual(mock_bucket.keys, set([
+        assert mock_bucket.keys == set([
             'folder/test-file.odt',
             'folder/OLD-test-file.odt'
-        ]))
+        ])
 
     def test_content_type_detection(self):
         # File extensions allowed for G6 documents: pdf, odt, ods, odp
         test_type = S3('test-bucket')._get_mimetype('test-file.pdf')
-        self.assertEqual(test_type,
-                         'application/pdf')
+        assert test_type == 'application/pdf'
 
         test_type = S3('test-bucket')._get_mimetype('test-file.odt')
-        self.assertEqual(test_type,
-                         'application/vnd.oasis.opendocument.text')
+        assert test_type == 'application/vnd.oasis.opendocument.text'
 
         test_type = S3('test-bucket')._get_mimetype('test-file.ods')
-        self.assertEqual(test_type,
-                         'application/vnd.oasis.opendocument.spreadsheet')
+        assert test_type == 'application/vnd.oasis.opendocument.spreadsheet'
 
         test_type = S3('test-bucket')._get_mimetype('test-file.odp')
-        self.assertEqual(test_type,
-                         'application/vnd.oasis.opendocument.presentation')
+        assert test_type == 'application/vnd.oasis.opendocument.presentation'
 
 
 class FakeBucket(object):
