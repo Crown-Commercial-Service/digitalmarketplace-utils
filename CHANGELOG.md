@@ -2,6 +2,38 @@
 
 Records breaking changes from major version bumps
 
+## 25.0.0
+
+PR: [#302](https://github.com/alphagov/digitalmarketplace-utils/pull/302)
+
+### What changed
+
+`upload_document` and `upload_service_documents` now require an explicit `upload_type`
+argument (eg 'documents' or 'submissions' for document uploads).
+
+`S3.short_bucket_name` property is removed, so there's no need to set the attribute
+on the mocks.
+
+###Example app change
+
+Old:
+```
+upload_service_documents(
+    uploader, documents_url, draft,
+    request.files, section, public=False
+)
+
+```
+
+New:
+```
+upload_service_documents(
+    uploader, 'documents', documents_url, draft,
+    request.files, section, public=False
+)
+```
+
+
 ## 24.0.0
 
 PR: [#291](https://github.com/alphagov/digitalmarketplace-utils/pull/291)

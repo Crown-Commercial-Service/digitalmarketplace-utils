@@ -140,11 +140,12 @@ class TestValidateDocuments(unittest.TestCase):
 
 class TestUploadDocument(unittest.TestCase):
     def test_document_upload(self):
-        uploader = mock.Mock(bucket_short_name="documents")
+        uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
             self.assertEquals(
                 upload_document(
                     uploader,
+                    'documents',
                     'http://assets',
                     {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                     "pricingDocumentURL",
@@ -160,11 +161,12 @@ class TestUploadDocument(unittest.TestCase):
         )
 
     def test_document_private_upload(self):
-        uploader = mock.Mock(bucket_short_name="documents")
+        uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
             self.assertEquals(
                 upload_document(
                     uploader,
+                    'documents',
                     'http://assets',
                     {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                     "pricingDocumentURL",
@@ -181,23 +183,25 @@ class TestUploadDocument(unittest.TestCase):
         )
 
     def test_document_upload_s3_error(self):
-        uploader = mock.Mock(bucket_short_name="documents")
+        uploader = mock.Mock()
         uploader.save.side_effect = S3ResponseError(403, 'Forbidden')
         with freeze_time('2015-01-02 04:05:00'):
             self.assertFalse(upload_document(
                 uploader,
+                'documents',
                 'http://assets',
                 {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                 "pricingDocumentURL",
                 mock_file('file.pdf', 1)
             ))
 
-    def test_document_upload_with_other_bucket_short_name(self):
-        uploader = mock.Mock(bucket_short_name="submissions")
+    def test_document_upload_with_other_upload_type(self):
+        uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
             self.assertEquals(
                 upload_document(
                     uploader,
+                    'submissions',
                     'http://assets',
                     {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                     "pricingDocumentURL",
@@ -212,12 +216,13 @@ class TestUploadDocument(unittest.TestCase):
             acl='public-read'
         )
 
-    def test_document_upload_with_invalid_short_bucket_name(self):
-        uploader = mock.Mock(bucket_short_name="invalid")
+    def test_document_upload_with_invalid_upload_type(self):
+        uploader = mock.Mock()
         with pytest.raises(AssertionError):
             self.assertEquals(
                 upload_document(
                     uploader,
+                    'invalid',
                     'http://assets',
                     {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                     "pricingDocumentURL",
@@ -238,7 +243,7 @@ class TestUploadServiceDocuments(object):
             'supplierId': '12345',
             'id': '654321',
         }
-        self.uploader = mock.Mock(bucket_short_name='documents')
+        self.uploader = mock.Mock()
         self.documents_url = 'http://localhost'
 
     def test_upload_service_documents(self):
@@ -246,7 +251,7 @@ class TestUploadServiceDocuments(object):
 
         with freeze_time('2015-10-04 14:36:05'):
             files, errors = upload_service_documents(
-                self.uploader, self.documents_url, self.service,
+                self.uploader, 'documents', self.documents_url, self.service,
                 request_files, self.section)
 
         self.uploader.save.assert_called_with(
@@ -260,7 +265,7 @@ class TestUploadServiceDocuments(object):
 
         with freeze_time('2015-10-04 14:36:05'):
             files, errors = upload_service_documents(
-                self.uploader, self.documents_url, self.service,
+                self.uploader, 'documents', self.documents_url, self.service,
                 request_files, self.section,
                 public=False)
 
@@ -274,7 +279,7 @@ class TestUploadServiceDocuments(object):
         request_files = {'pricingDocumentURL': mock_file('q1.pdf', 0)}
 
         files, errors = upload_service_documents(
-            self.uploader, self.documents_url, self.service,
+            self.uploader, 'documents', self.documents_url, self.service,
             request_files, self.section)
 
         assert len(files) == 0
@@ -284,7 +289,7 @@ class TestUploadServiceDocuments(object):
         request_files = {'serviceDefinitionDocumentURL': mock_file('q1.pdf', 100)}
 
         files, errors = upload_service_documents(
-            self.uploader, self.documents_url, self.service,
+            self.uploader, 'documents', self.documents_url, self.service,
             request_files, self.section)
 
         assert len(files) == 0
@@ -294,7 +299,7 @@ class TestUploadServiceDocuments(object):
         request_files = {'pricingDocumentURL': mock_file('q1.bad', 100)}
 
         files, errors = upload_service_documents(
-            self.uploader, self.documents_url, self.service,
+            self.uploader, 'documents', self.documents_url, self.service,
             request_files, self.section)
 
         assert files is None
