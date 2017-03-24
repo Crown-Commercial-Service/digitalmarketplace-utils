@@ -70,8 +70,8 @@ class DMNotifyClient(object):
     def get_error_message(email_address, error):
         """Format a logical error message from the error response."""
         messages = []
-        message_prefix = 'Error sending message to {email_address}: '.format(email_address=email_address)
-        message_string = '{status_code} {error}: {message}'
+        message_prefix = u'Error sending message to {email_address}: '.format(email_address=email_address)
+        message_string = u'{status_code} {error}: {message}'
 
         for message in error.message:
             format_kwargs = {
@@ -80,7 +80,7 @@ class DMNotifyClient(object):
                 'message': message['message'],
             }
             messages.append(message_string.format(**format_kwargs))
-        return message_prefix + ', '.join(messages)
+        return message_prefix + u', '.join(messages)
 
     def send_email(self, email_address, template_id, personalisation=None, allow_resend=True):
         """
