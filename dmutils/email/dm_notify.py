@@ -70,8 +70,8 @@ class DMNotifyClient(object):
     def get_error_message(email_address, error):
         """Format a logical error message from the error response."""
         messages = []
-        message_prefix = 'Error sending message to {email_address}: '.format(email_address=email_address)
-        message_string = '{status_code} {error}: {message}'
+        message_prefix = u'Error sending message to {email_address}: '.format(email_address=email_address)
+        message_string = u'{status_code} {error}: {message}'
 
         for message in error.message:
             format_kwargs = {
@@ -80,7 +80,7 @@ class DMNotifyClient(object):
                 'message': message['message'],
             }
             messages.append(message_string.format(**format_kwargs))
-        return message_prefix + ', '.join(messages)
+        return message_prefix + u', '.join(messages)
 
     def send_email(self, email_address, template_id, personalisation=None, allow_resend=True):
         """
@@ -94,24 +94,32 @@ class DMNotifyClient(object):
         """
         reference = self.get_reference(email_address, template_id, personalisation)
         if not allow_resend and self.has_been_sent(reference):
-            self.logger.info("Email {template_id} has already been sent to {email_address} with Notify", extra=dict(
-                email_address=hash_string(email_address),
-                template_id=template_id
-            ))
+            self.logger.info(
+                "Email with ref {ref} (template {template_id}) has already been sent to {email_address} through Notify",
+                extra=dict(
+                    email_address=hash_string(email_address),
+                    template_id=template_id,
+                    ref=reference,
+                ),
+            )
             return
         try:
             response = self.client.send_email_notification(
                 email_address,
                 template_id,
                 personalisation=personalisation,
-                reference=self.get_reference(email_address, template_id, personalisation)
+                reference=reference,
             )
         except HTTPError as e:
             self.logger.error(self.get_error_message(hash_string(email_address), e))
             raise EmailError(str(e))
         self._update_cache(reference)
-        self.logger.info("Sent {email_address} template email {template_id} with Notify", extra=dict(
-            email_address=hash_string(email_address),
-            template_id=template_id
-        ))
+        self.logger.info(
+            "Sent {email_address} email with ref {ref} (template {template_id}) through Notify",
+            extra=dict(
+                email_address=hash_string(email_address),
+                template_id=template_id,
+                ref=reference,
+            ),
+        )
         return response

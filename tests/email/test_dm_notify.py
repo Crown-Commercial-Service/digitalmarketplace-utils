@@ -28,7 +28,9 @@ def notify_example_http_error():
     e.status_code = 400
     e.message = [
         {u'message': u'email_address Not a valid email address', u'error': u'ValidationError'},
-        {u'message': u'template_id is not a valid UUID', u'error': u'ValidationError'}
+        {u'message': u'template_id is not a valid UUID', u'error': u'ValidationError'},
+        # notify do actually use non-ascii characters in their error messages
+        {u'message': u'Won\u2019t send unless you give us \u00a3\u00a3\u00a3', u'error': u'ValidationError'},
     ]
     return e
 
@@ -146,8 +148,9 @@ class TestDMNotifyClient(object):
         """Test error message format."""
         actual = dm_notify_client.get_error_message(self.email_address, notify_example_http_error)
         expected = (
-            'Error sending message to example@example.com: 400 ValidationError: email_address '
-            'Not a valid email address, 400 ValidationError: template_id is not a valid UUID'
+            u'Error sending message to example@example.com: 400 ValidationError: email_address '
+            u'Not a valid email address, 400 ValidationError: template_id is not a valid UUID, '
+            u'400 ValidationError: Won\u2019t send unless you give us \u00a3\u00a3\u00a3'
         )
 
         assert actual == expected
