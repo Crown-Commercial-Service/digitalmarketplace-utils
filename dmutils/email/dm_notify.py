@@ -2,7 +2,6 @@
 """Digital Marketplace Notify integration."""
 from collections import OrderedDict
 
-import six
 from flask import current_app
 from notifications_python_client import NotificationsAPIClient
 from notifications_python_client.errors import HTTPError
