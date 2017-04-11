@@ -59,10 +59,10 @@ def notify_send_email():
         },
         'uri': 'https://api.notifications.service.gov.uk/v2/notifications/ceb50d92-100d-4b8b-b559-14fa3b091cd',
         'template': {
-             'id': 'ceb50d92-100d-4b8b-b559-14fa3b091cda',
-             'version': 1,
-             'uri': 'https://api.notificaitons.service.gov.uk/service/'
-             'your_service_id/templates/bfb50d92-100d-4b8b-b559-14fa3b091cda'
+            'id': 'ceb50d92-100d-4b8b-b559-14fa3b091cda',
+            'version': 1,
+            'uri': 'https://api.notificaitons.service.gov.uk/service/'
+            'your_service_id/templates/bfb50d92-100d-4b8b-b559-14fa3b091cda'
         }
     }
     return example_response
@@ -78,9 +78,9 @@ class TestDMNotifyClient(object):
         self.email_address = 'example@example.com'
         self.template_id = 'my-cool-example-template'
         self.personalisation = OrderedDict([
-            ('foo\u00a3', 'foo_p13n'),
-            ('bar', 'bar_p13n\u00a3'),
-            ('\u00a3baz', '\u00a3baz_p13n'),
+            (u'foo\u00a3', u'foo_p13n'),
+            (u'bar', u'bar_p13n\u00a3'),
+            (u'\u00a3baz', u'\u00a3baz_p13n'),
         ])
         self.standard_args = {
             'email_address': self.email_address,
@@ -92,7 +92,7 @@ class TestDMNotifyClient(object):
         """Test the staticmethod that creates the reference field to be sent with the request."""
         ref = dm_notify_client.get_reference(**self.standard_args)
         expected = (
-            'GGLt11V_NsuKHlCC6gqY3Lbu5bLkj_M2m5CUwF-xPYk='
+            'jnQ0zrayV0IgiUDcXld9AVU9gM9wUn5ZyAgt2gGjeX8='
         )
 
         assert ref == expected
@@ -112,7 +112,7 @@ class TestDMNotifyClient(object):
 
     def test_personalisation_passed(self, dm_notify_client, notify_send_email):
         """Assert the expected existence of personalisation."""
-        personalisation = {'f\u00a3oo': 'bar\u00a3'}
+        personalisation = {u'f\u00a3oo': u'bar\u00a3'}
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
             notify_send_email.update(personalisation=personalisation)
             dm_notify_client.send_email(
@@ -124,12 +124,12 @@ class TestDMNotifyClient(object):
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation,
-                reference='Ui3K7qUcC7R_Nb80z7awVvEdWWDxC6m3HFpg2_cfojs='
+                reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s='
             )
 
     def test_personalisation_appears_in_reference(self, dm_notify_client, notify_send_email):
         """Assert personalisation is added to the auto generated reference."""
-        personalisation = {'f\u00a3oo': 'bar\u00a3'}
+        personalisation = {u'f\u00a3oo': u'bar\u00a3'}
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
             notify_send_email.update(personalisation=personalisation)
             dm_notify_client.send_email(
@@ -141,7 +141,7 @@ class TestDMNotifyClient(object):
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation,
-                reference='Ui3K7qUcC7R_Nb80z7awVvEdWWDxC6m3HFpg2_cfojs='
+                reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s='
             )
 
     def test_get_error_message(self, dm_notify_client, notify_example_http_error):
