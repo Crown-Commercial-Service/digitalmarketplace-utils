@@ -61,7 +61,7 @@ def notify_send_email():
         'template': {
             'id': 'ceb50d92-100d-4b8b-b559-14fa3b091cda',
             'version': 1,
-            'uri': 'https://api.notificaitons.service.gov.uk/service/'
+            'uri': 'https://api.notifications.service.gov.uk/service/'
             'your_service_id/templates/bfb50d92-100d-4b8b-b559-14fa3b091cda'
         }
     }
