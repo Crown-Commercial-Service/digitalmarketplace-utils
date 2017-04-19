@@ -62,8 +62,10 @@ class DMNotifyClient(object):
         :param kwargs: Extra data passed to the reference eg. {'notes': 'Manual resend'}
         :return: Hashed string 'reference' to be passed to client.send_email_notification or self.send_email
         """
-        personalisation_string = ','.join(list(map(str, personalisation.values()))) if personalisation else ''
-        details_string = '|'.join([email_address, template_id, personalisation_string])
+        personalisation_string = u','.join(
+            list(map(lambda x: x.format('utf-8'), personalisation.values()))
+        ) if personalisation else u''
+        details_string = u'|'.join([email_address, template_id, personalisation_string])
         return hash_string(details_string)
 
     @staticmethod
