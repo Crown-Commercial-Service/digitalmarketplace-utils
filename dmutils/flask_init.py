@@ -53,6 +53,7 @@ def init_app(
     # Make select formats available in templates.
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)
+    application.add_template_filter(formats.datetodatetimeformat)
     application.add_template_filter(formats.shortdateformat)
     application.add_template_filter(formats.timeformat)
 
