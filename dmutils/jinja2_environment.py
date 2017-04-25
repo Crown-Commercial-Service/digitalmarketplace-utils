@@ -1,6 +1,7 @@
 from jinja2.sandbox import SandboxedEnvironment
-from filters import format_links, nbsp, smartjoin
-from formats import dateformat, datetimeformat, shortdateformat
+
+from .filters import format_links, nbsp, smartjoin
+from .formats import dateformat, datetimeformat, datetodatetimeformat, shortdateformat
 
 
 CUSTOM_FILTERS = {
@@ -9,7 +10,8 @@ CUSTOM_FILTERS = {
     'smartjoin': smartjoin,
     'dateformat': dateformat,
     'datetimeformat': datetimeformat,
-    'shortdateformat': shortdateformat
+    'shortdateformat': shortdateformat,
+    'datetodatetimeformat': datetodatetimeformat
 }
 
 

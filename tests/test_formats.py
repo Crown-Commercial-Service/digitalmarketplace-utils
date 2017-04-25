@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from dmutils.formats import (
     get_label_for_lot_param, lot_to_lot_case,
-    timeformat, shortdateformat, dateformat, datetimeformat
+    timeformat, shortdateformat, dateformat, datetimeformat, datetodatetimeformat
 )
 import pytz
 from datetime import datetime
@@ -107,3 +107,11 @@ def test_datetimeformat():
 
     for dt, formatted_datetime in cases:
         yield check_datetimeformat, dt, formatted_datetime
+
+
+@pytest.mark.parametrize(
+    ("date", "expected_formatted_date"),
+    (('foo', 'foo'), ('2017-04-25', 'Tuesday 25 April 2017'), ('2017-4-25', 'Tuesday 25 April 2017'))
+)
+def test_datetodatetimeformat(date, expected_formatted_date):
+    assert datetodatetimeformat(date) == expected_formatted_date
