@@ -1,343 +1,330 @@
 import datetime
 import sys
 
-import mock
+import boto3
+from moto import mock_s3
 import pytest
 from freezegun import freeze_time
 from six import BytesIO
+from six.moves.urllib.parse import parse_qs, urlparse
 
-from dmutils.s3 import S3, get_file_size
-from helpers import MockFile
+from dmutils.s3 import S3, get_file_size, default_region
+from dmutils.formats import DATETIME_FORMAT
 
 
+@pytest.yield_fixture
+def s3_mock(request, os_environ):
+    # we don't want any real aws credentials this environment might have used in the tests
+    os_environ.update({
+        "AWS_ACCESS_KEY_ID": "AKIAIABCDABCDABCDABC",
+        "AWS_SECRET_ACCESS_KEY": "foobarfoobarfoobarfoobarfoobarfoobarfoob",
+    })
+
+    m = mock_s3()
+    m.start()
+    yield m
+    m.stop()
+
+
+@pytest.yield_fixture
+def empty_bucket(request, s3_mock):
+    s3_res = boto3.resource("s3", region_name=default_region)
+    bucket = s3_res.Bucket("dear-liza")
+    bucket.create()
+    yield bucket
+
+
+@pytest.yield_fixture
+def bucket_with_file(request, empty_bucket):
+    bucket = empty_bucket
+    obj = empty_bucket.Object("with/straw.dear.pdf")
+    obj.put(
+        Body=b"123412341234",
+        Metadata={
+            "timestamp": datetime.datetime(2005, 4, 3, 2, 1).strftime(DATETIME_FORMAT),
+        },
+        ContentType="application/pdf",
+        ContentDisposition='attachment; filename="blahs_on_blahs.pdf"',
+    )
+    yield bucket
+
+
+@pytest.yield_fixture(params=(
+    # tuples of (timestamp, expected_returned_timestamp)
+    (" 6th May 2011, 17:03", "2011-05-06T17:03:00.000000Z",),  # abitrarily formatted timestamp
+    (None, None,),
+))
+def bucket_with_weird_file(request, empty_bucket):
+    timestamp, expected_returned_timestamp = request.param
+    metadata = {}
+    if timestamp is not None:
+        metadata["timestamp"] = timestamp
+
+    bucket = empty_bucket
+    obj = empty_bucket.Object(".!!!.dear.pdf")
+
+    # note how none of these file properties match each other
+
+    obj.put(
+        Body=(u"\u00a3"*13).encode("utf-8"),
+        Metadata=metadata,
+        ContentType="image/jpeg",
+        ContentDisposition='attachment; filename="blahs_on_blahs.png"',
+    )
+    yield {"expected_returned_timestamp": expected_returned_timestamp}
+
+
+@pytest.yield_fixture
+def bucket_with_multiple_files(request, empty_bucket):
+    bucket = empty_bucket
+    for i in range(5):
+        empty_bucket.Object("with/A{}/paper.dear.odt".format(i)).put(
+            Body=b"abcdefgh"*(i+1),
+            Metadata={
+                "timestamp": datetime.datetime(2014, 10, ((i*11) % 28)+1).strftime(DATETIME_FORMAT),
+            } if i != 3 else {},
+        )
+    # a "directory" which shouldn't show up in listings
+    empty_bucket.Object("with/").put(Body=b"")
+    yield bucket
+
+
+@pytest.mark.usefixtures("s3_mock")
 class TestS3Uploader(object):
-    def setup_method(self, method):
-        self.s3_mock = mock.Mock()
-        self._boto_patch = mock.patch(
-            'dmutils.s3.boto.connect_s3',
-            return_value=self.s3_mock
-        )
-        self._boto_patch.start()
+    def test_bucket_name(self, empty_bucket):
+        assert S3("dear-liza").bucket_name == "dear-liza"
 
-    def teardown_method(self, method):
-        self._boto_patch.stop()
+    def test_path_exists(self, bucket_with_file):
+        assert S3('dear-liza').path_exists('with/straw.dear.pdf') is True
 
-    def test_get_bucket(self):
-        S3('test-bucket')
-        self.s3_mock.get_bucket.assert_called_with('test-bucket')
+    def test_path_exists_nonexistent_path(self, bucket_with_file):
+        assert S3('dear-liza').path_exists('with/pencil/sharpener.png') is False
 
-    def test_path_exists(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        assert S3('test-bucket').path_exists('foo') is False
-
-    def test_path_exists_nonexistent_path(self):
-        mock_bucket = FakeBucket(['foo'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        assert S3('test-bucket').path_exists('foo') is True
-
-    def test_get_signed_url(self):
-        mock_bucket = FakeBucket(['documents/file.pdf'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').get_signed_url('documents/file.pdf')
-        mock_bucket.s3_key_mock.generate_url.assert_called_with(30)
-
-    def test_get_signed_url_with_expires_at(self):
-        mock_bucket = FakeBucket(['documents/file.pdf'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').get_signed_url('documents/file.pdf', 10)
-        mock_bucket.s3_key_mock.generate_url.assert_called_with(10)
-
-    def test_get_key(self):
-        mock_bucket = mock.Mock()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        fake_key = FakeKey('dir/file1.pdf')
-        mock_bucket.get_key.return_value = fake_key
-
-        assert S3('test-bucket').get_key('dir/file1.pdf') == fake_key.fake_format_key(filename='file1', ext='pdf')
-
-    def test_delete_key(self):
-        mock_bucket = FakeBucket(['folder/test-file.pdf'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').delete_key('folder/test-file.pdf')
-
-        assert 'folder/test-file.pdf' not in mock_bucket.keys
+    def test_get_signed_url(self, bucket_with_file):
+        signed_url = S3('dear-liza').get_signed_url('with/straw.dear.pdf')
+        parsed_signed_url = urlparse(signed_url)
+        # to an extent the url format should be opaque and up to amazon so we might have to rethink these assertions if
+        # anything changes
+        assert "dear-liza" in parsed_signed_url.hostname
+        assert parsed_signed_url.path == "/with/straw.dear.pdf"
+        parsed_qs = parse_qs(parsed_signed_url.query)
+        assert parsed_qs["AWSAccessKeyId"] == ["AKIAIABCDABCDABCDABC"]
+        assert parsed_qs["Signature"]
 
     @freeze_time('2015-10-10')
-    def test_delete_key_moves_file_with_prefix(self):
-        mock_bucket = FakeBucket(['folder/test-file.pdf'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
+    def test_get_signed_url_with_expires_at(self, bucket_with_file):
+        signed_url = S3('dear-liza').get_signed_url('with/straw.dear.pdf', expires_in=10)
+        parsed_signed_url = urlparse(signed_url)
 
-        S3('test-bucket').delete_key('folder/test-file.pdf')
+        parsed_qs = parse_qs(parsed_signed_url.query)
+        assert parsed_qs["Expires"] == ["1444435210"]
 
-        assert 'folder/2015-10-10T00:00:00-test-file.pdf' in mock_bucket.keys
-
-    def test_list_files(self):
-        mock_bucket = mock.Mock()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        fake_key = FakeKey('dir/file 1.odt')
-        mock_bucket.list.return_value = [fake_key]
-        expected = [fake_key.fake_format_key(filename='file 1', ext='odt')]
-
-        assert S3('test-bucket').list() == expected
-
-    def test_list_files_removes_directories(self):
-        mock_bucket = mock.Mock()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        fake_key_directory = FakeKey('dir/', size=0)
-        fake_key_file = FakeKey('dir/file 1.odt')
-        mock_bucket.list.return_value = [
-            fake_key_directory,
-            fake_key_file
-        ]
-        expected = [fake_key_file.fake_format_key(filename='file 1', ext='odt')]
-
-        assert S3('test-bucket').list() == expected
-
-    def test_list_files_order_by_last_modified(self):
-        mock_bucket = mock.Mock()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        fake_key_later = FakeKey('dir/file 1.odt')
-        fake_key_earlier = FakeKey('dir/file 2.odt', last_modified='2014-08-17T14:00:00.000000Z')
-        mock_bucket.list.return_value = [
-            fake_key_later,
-            fake_key_earlier
-        ]
-        expected = [
-            fake_key_earlier.fake_format_key(filename='file 2', ext='odt'),
-            fake_key_later.fake_format_key(filename='file 1', ext='odt')
-        ]
-
-        assert S3('test-bucket').list() == expected
-
-    def test_list_files_with_loading_custom_timestamps(self):
-        mock_bucket = mock.Mock()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        fake_key = FakeKey('dir/file 1.odt')
-        mock_bucket.list.return_value = [fake_key]
-        mock_bucket.get_key.return_value = FakeKey('dir/file 1.odt', timestamp='2015-10-10T15:00:00.0000Z')
-
-        assert S3('test-bucket').list(load_timestamps=True)[0]['last_modified'] == '2015-10-10T15:00:00.000000Z'
-
-    def test_list_files_with_loading_custom_timestamps_sorts_by_timestamp(self):
-        mock_bucket = mock.Mock()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        fake_key = FakeKey('dir/file 1.odt')
-        mock_bucket.list.return_value = [fake_key, fake_key, fake_key]
-        mock_bucket.get_key.side_effect = [
-            FakeKey('dir/file 1.odt', timestamp='2015-12-10T15:00:00.0000Z'),
-            FakeKey('dir/file 1.odt', timestamp='2015-11-10T15:00:00.0000Z'),
-            FakeKey('dir/file 1.odt'),
-        ]
-
-        results = S3('test-bucket').list(load_timestamps=True)
-        assert results[0]['last_modified'] == '2015-08-17T14:00:00.000000Z'
-        assert results[1]['last_modified'] == '2015-11-10T15:00:00.000000Z'
-        assert results[2]['last_modified'] == '2015-12-10T15:00:00.000000Z'
-
-    def test_save_file(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'))
-        assert mock_bucket.keys == set(['folder/test-file.pdf'])
-
-    @freeze_time('2015-10-10')
-    def test_save_sets_timestamp_to_current_time(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'))
-
-        mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
-            'timestamp', "2015-10-10T00:00:00.000000Z")
-
-    @freeze_time('2015-10-10')
-    def test_save_sets_timestamp_to_provided_time(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'),
-                               timestamp=datetime.datetime(2015, 10, 11))
-
-        mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
-            'timestamp', "2015-10-11T00:00:00.000000Z")
-
-    def test_save_sets_content_type_and_acl(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'))
-        assert mock_bucket.keys == set(['folder/test-file.pdf'])
-
-        mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
-            mock.ANY, headers={'Content-Type': 'application/pdf'})
-        mock_bucket.s3_key_mock.set_acl.assert_called_with('public-read')
-
-    def test_save_sets_content_type_and_default_content_disposition_header(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'), download_filename='new-test-file.pdf')
-        assert mock_bucket.keys == set(['folder/test-file.pdf'])
-
-        mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
-            mock.ANY, headers={
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': 'attachment; filename="new-test-file.pdf"'.encode('utf-8')
-            })
-
-    def test_save_sets_content_type_and_content_disposition_header(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save(
-            'folder/test-file.pdf',
-            MockFile("*"*123, 'blah'),
-            download_filename='new-test-file.pdf',
-            disposition_type='chilled-out'
-        )
-        assert mock_bucket.keys == set(['folder/test-file.pdf'])
-
-        mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
-            mock.ANY, headers={
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': 'chilled-out; filename="new-test-file.pdf"'.encode('utf-8')
-            })
-
-    def test_save_with_disposition_type_but_no_download_filename_does_not_set_content_disposition(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save(
-            'folder/test-file.pdf',
-            MockFile("*"*123, 'blah'),
-            disposition_type='manic'
-        )
-        assert mock_bucket.keys == set(['folder/test-file.pdf'])
-
-        mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
-            mock.ANY, headers={
-                'Content-Type': 'application/pdf'
-            })
-
-    def test_save_strips_leading_slash(self):
-        mock_bucket = FakeBucket()
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save('/folder/test-file.pdf', MockFile("*"*123, 'blah'))
-        assert mock_bucket.keys == set(['folder/test-file.pdf'])
-
-    def test_default_move_prefix_is_datetime(self):
-        mock_bucket = FakeBucket(['folder/test-file.pdf'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
-        now = datetime.datetime(2015, 1, 1, 1, 2, 3, 4)
-
-        with mock.patch.object(datetime, 'datetime',
-                               mock.Mock(wraps=datetime.datetime)) as patched:
-            patched.utcnow.return_value = now
-            S3('test-bucket').save(
-                'folder/test-file.pdf', MockFile("*"*123, 'blah'),
-            )
-
-            assert mock_bucket.keys == set([
-                'folder/test-file.pdf',
-                'folder/2015-01-01T01:02:03.000004-test-file.pdf'
-            ])
-
-    def test_save_existing_file(self):
-        mock_bucket = FakeBucket(['folder/test-file.pdf'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket').save(
-            'folder/test-file.pdf', MockFile("*"*123, 'blah'),
-            move_prefix='OLD'
-        )
-
-        assert mock_bucket.keys == set([
-            'folder/test-file.pdf',
-            'folder/OLD-test-file.pdf'
-        ])
-
-    def test_move_existing_doesnt_delete_file(self):
-        mock_bucket = FakeBucket(['folder/test-file.odt'])
-        self.s3_mock.get_bucket.return_value = mock_bucket
-
-        S3('test-bucket')._move_existing(
-            existing_path='folder/test-file.odt',
-            move_prefix='OLD'
-        )
-
-        assert mock_bucket.keys == set([
-            'folder/test-file.odt',
-            'folder/OLD-test-file.odt'
-        ])
-
-    def test_content_type_detection(self):
-        # File extensions allowed for G6 documents: pdf, odt, ods, odp
-        test_type = S3('test-bucket')._get_mimetype('test-file.pdf')
-        assert test_type == 'application/pdf'
-
-        test_type = S3('test-bucket')._get_mimetype('test-file.odt')
-        assert test_type == 'application/vnd.oasis.opendocument.text'
-
-        test_type = S3('test-bucket')._get_mimetype('test-file.ods')
-        assert test_type == 'application/vnd.oasis.opendocument.spreadsheet'
-
-        test_type = S3('test-bucket')._get_mimetype('test-file.odp')
-        assert test_type == 'application/vnd.oasis.opendocument.presentation'
-
-
-class FakeBucket(object):
-    def __init__(self, keys=None):
-        self.keys = set(keys or [])
-        self.s3_key_mock = mock.Mock()
-        self.s3_key_mock.name = "test-file.pdf"
-
-    def get_key(self, key):
-        if key in self.keys:
-            return self.s3_key_mock
-
-    def delete_key(self, key):
-        self.keys.remove(key)
-
-    def new_key(self, key):
-        self.keys.add(key)
-        return self.s3_key_mock
-
-    def copy_key(self, new_key, *args, **kwargs):
-        self.keys.add(new_key)
-
-
-class FakeKey(object):
-    def __init__(self, name, last_modified=None, size=None, timestamp=None):
-        self.name = name
-        self.last_modified = last_modified or '2015-08-17T14:00:00.000000Z'
-        self.size = size if size is not None else 1
-        self.timestamp = timestamp
-
-    def fake_format_key(self, filename, ext):
-        return {
-            'path': self.name,
-            'ext': ext,
-            'filename': filename,
-            'last_modified': self.last_modified,
-            'size': self.size
+    def test_get_key(self, bucket_with_file):
+        assert S3('dear-liza').get_key('with/straw.dear.pdf') == {
+            "path": "with/straw.dear.pdf",
+            "filename": "straw.dear",
+            "ext": "pdf",
+            "size": 12,
+            "last_modified": "2005-04-03T02:01:00.000000Z",
         }
 
-    def get_metadata(self, key):
-        return self.timestamp if key == 'timestamp' and self.timestamp else None
+    def test_get_key_weird_file(self, bucket_with_weird_file):
+        assert S3('dear-liza').get_key('.!!!.dear.pdf') == {
+            "ext": "pdf",
+            "filename": ".!!!.dear",
+            "last_modified": bucket_with_weird_file["expected_returned_timestamp"],
+            "path": ".!!!.dear.pdf",
+            "size": 26,
+        }
+
+    def test_get_nonexistent_key(self, bucket_with_file):
+        assert S3('dear-liza').get_key('with/sarcasm.dear.pdf') is None
+
+    def test_delete_key(self, bucket_with_file):
+        S3('dear-liza').delete_key('with/straw.dear.pdf')
+
+        assert not list(bucket_with_file.objects.all())
+
+    def test_list_files(self, bucket_with_multiple_files):
+        # we want ordering to be irrelevant here, so normalizing...
+        def sortkey(f):
+            return f["path"]
+        assert sorted(S3("dear-liza").list(), key=sortkey) == sorted((
+            {
+                "path": "with/A0/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 8,
+            },
+            {
+                "path": "with/A1/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 16,
+            },
+            {
+                "path": "with/A2/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 24,
+            },
+            {
+                "path": "with/A3/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 32,
+            },
+            {
+                "path": "with/A4/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 40,
+            },
+        ), key=sortkey)
+
+    def test_list_files_order_by_last_modified(self, bucket_with_multiple_files):
+        assert S3("dear-liza").list(load_timestamps=True) == [
+            {
+                "path": "with/A3/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 32,
+                "last_modified": None,
+            },
+            {
+                "path": "with/A0/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 8,
+                "last_modified": "2014-10-01T00:00:00.000000Z",
+            },
+            {
+                "path": "with/A1/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 16,
+                "last_modified": "2014-10-12T00:00:00.000000Z",
+            },
+            {
+                "path": "with/A4/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 40,
+                "last_modified": "2014-10-17T00:00:00.000000Z",
+            },
+            {
+                "path": "with/A2/paper.dear.odt",
+                "filename": "paper.dear",
+                "ext": "odt",
+                "size": 24,
+                "last_modified": "2014-10-23T00:00:00.000000Z",
+            },
+        ]
+
+    @pytest.mark.parametrize("path,expected_path,expected_ct,expected_filename,expected_ext", (
+        (
+            "/with/epoxy.dear.jpeg",
+            "with/epoxy.dear.jpeg",
+            "image/jpeg",
+            "epoxy.dear",
+            "jpeg",
+        ),
+        (
+            "with/epoxy.dear.pdf",
+            "with/epoxy.dear.pdf",
+            "application/pdf",
+            "epoxy.dear",
+            "pdf",
+        ),
+        (
+            u"with/\u00a3.dear.odt",
+            u"with/\u00a3.dear.odt",
+            "application/vnd.oasis.opendocument.text",
+            u"\u00a3.dear",
+            "odt",
+        ),
+    ))
+    @pytest.mark.parametrize("timestamp,expected_timestamp", (
+        (None, "2016-10-02T00:00:00.000000Z",),  # the frozen "now" time
+        (datetime.datetime(2015, 4, 3, 2, 1), "2015-04-03T02:01:00.000000Z",),
+    ))
+    @pytest.mark.parametrize("download_filename,expected_cd", (
+        (None, None,),
+        ("blah.jpg", 'attachment; filename="blah.jpg"',),
+        (u"liza\u2019s.jpg", 'attachment; filename="lizas.jpg"',),
+    ))
+    @freeze_time('2016-10-02')
+    def test_save_file(
+            self,
+            empty_bucket,
+            path,
+            expected_path,
+            expected_ct,
+            expected_filename,
+            expected_ext,
+            timestamp,
+            expected_timestamp,
+            download_filename,
+            expected_cd,
+            ):
+        returned_key_dict = S3("dear-liza").save(
+            path,
+            file_=BytesIO(b"one two three"),
+            timestamp=timestamp,
+            download_filename=download_filename,
+        )
+
+        assert returned_key_dict == {
+            "path": expected_path,
+            "filename": expected_filename,
+            "ext": expected_ext,
+            "last_modified": expected_timestamp,
+            "size": 13,
+        }
+
+        summary_list = list(empty_bucket.objects.all())
+        assert len(summary_list) == 1
+        assert summary_list[0].key == expected_path
+        obj0 = summary_list[0].Object()
+        assert obj0.metadata == {
+            "timestamp": expected_timestamp,
+        }
+        assert obj0.content_disposition == expected_cd
+        assert obj0.get()["Body"].read() == b"one two three"
+        if sys.version_info < (3, 0):
+            # moto currently has a py3 bug which makes this fail - the fix not yet upstream - perhaps next time you come
+            # across this message try updating moto to the latest version and see if this works
+            assert obj0.content_type == expected_ct
+
+    @freeze_time('2014-10-20')
+    def test_save_existing_file(self, bucket_with_file):
+        returned_key_dict = S3("dear-liza").save(
+            "with/straw.dear.pdf",
+            file_=BytesIO(b"significantly longer contents than before"),
+            download_filename="significantly_different.pdf",
+        )
+
+        assert returned_key_dict == {
+            "path": "with/straw.dear.pdf",
+            "filename": "straw.dear",
+            "ext": "pdf",
+            "last_modified": "2014-10-20T00:00:00.000000Z",
+            "size": 41,
+        }
+
+        summary_list = list(bucket_with_file.objects.all())
+        assert len(summary_list) == 1
+        assert summary_list[0].key == "with/straw.dear.pdf"
+        obj0 = summary_list[0].Object()
+        assert obj0.metadata == {
+            "timestamp": "2014-10-20T00:00:00.000000Z",
+        }
+        assert obj0.content_disposition == 'attachment; filename="significantly_different.pdf"'
+        assert obj0.get()["Body"].read() == b"significantly longer contents than before"
+        if sys.version_info < (3, 0):
+            # moto currently has a py3 bug which makes this fail - the fix not yet upstream - perhaps next time you come
+            # across this message try updating moto to the latest version and see if this works
+            assert obj0.content_type == "application/pdf"
 
 
 def test_get_file_size_binary_file():
@@ -349,7 +336,7 @@ def test_get_file_size_binary_file():
     assert test_file.tell() == 234
 
 
-@pytest.mark.skipif(sys.version_info < (3,0), reason="Only relevant to Py3")
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="Only relevant to Py3")
 def test_get_file_size_text_file():
     from io import TextIOWrapper
     test_inner_file = BytesIO()

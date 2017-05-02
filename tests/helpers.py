@@ -23,4 +23,5 @@ class MockFile(BytesIO):
 
     @property
     def filename(self):
+        # weird flask property
         return self._filename

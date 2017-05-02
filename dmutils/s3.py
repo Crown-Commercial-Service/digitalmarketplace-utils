@@ -1,13 +1,14 @@
 from __future__ import absolute_import
 import os
-import boto
-import boto.exception
+import boto3
 import datetime
 import mimetypes
 import logging
 from dateutil.parser import parse as parse_time
+from six import text_type
 
-from boto.exception import S3ResponseError  # noqa
+# import this and catch it if you like but doing so you give up any pretense at boto version independence.
+from botocore.exceptions import ClientError
 
 from .formats import DATETIME_FORMAT
 
@@ -15,15 +16,19 @@ logger = logging.getLogger(__name__)
 
 FILE_SIZE_LIMIT = 5400000  # approximately 5Mb
 
+default_region = "eu-west-1"
+
 
 class S3(object):
-    def __init__(self, bucket_name, host='s3-eu-west-1.amazonaws.com'):
-        conn = boto.connect_s3(host=host)
+    def __init__(self, bucket_name, region_name=default_region):
+        self._resource = boto3.resource("s3", region_name=region_name)
+        self._bucket = self._resource.Bucket(bucket_name)
 
-        self.bucket_name = bucket_name
-        self.bucket = conn.get_bucket(bucket_name)
+    @property
+    def bucket_name(self):
+        return self._bucket.name
 
-    def save(self, path, file_, acl='public-read', move_prefix=None, timestamp=None, download_filename=None,
+    def save(self, path, file_, acl='public-read', timestamp=None, download_filename=None,
              disposition_type='attachment'):
         """Save a file in an S3 bucket
 
@@ -32,43 +37,51 @@ class S3(object):
         :param path:              location in S3 bucket at which to save the file
         :param file_:             file object to be saved in S3
         :param acl:               S3 canned ACL
-        :param move_prefix:       Prefix to give to existing file when moving it out of the way
         :param timestamp:         Timestamp to set for this file rather than using utcnow
         :param download_filename: Suggested name for a browser to download, part of Content-Disposition header
         :param disposition_type:  Content-Disposition type - e.g. "attachment" or "inline"
 
         :return: S3 Key
         """
-        path = path.lstrip('/')
-
-        self._move_existing(path, move_prefix)
-
-        key = self.bucket.new_key(path)
+        path = self._normalize_path(path)
         timestamp = timestamp or datetime.datetime.utcnow()
-        key.set_metadata('timestamp', timestamp.strftime(DATETIME_FORMAT))
-        headers = {'Content-Type': self._get_mimetype(key.name)}
         filesize = get_file_size(file_)
+
+        obj = self._bucket.Object(path)
+        extra_kwargs = {}
         if download_filename:
-            headers['Content-Disposition'] = '{}; filename="{}"'.format(
-                disposition_type, download_filename
-            ).encode('utf-8')
-        key.set_contents_from_file(
-            file_,
-            headers=headers
+            extra_kwargs["ContentDisposition"] = u'{}; filename="{}"'.format(
+                disposition_type,
+                # boto/aws can't cope with unicode here, but wants the ultimate result as a `str` in py3, so doing this
+                # to strip non-ascii chars..
+                text_type(download_filename).encode("ascii", errors="ignore").decode(),
+            )
+        obj.put(
+            ACL=acl,
+            Body=file_,
+            ContentType=self._get_mimetype(path),
+            # using a custom "timestamp" field allows us to manually override it if necessary
+            Metadata={"timestamp": timestamp.strftime(DATETIME_FORMAT)},
+            **extra_kwargs
         )
-        key.set_acl(acl)
         logger.info(
             "Uploaded file {filepath} of size {filesize} with acl {fileacl}",
             extra={
                 "filepath": path,
                 "filesize": filesize,
                 "fileacl": acl,
-            })
+            },
+        )
 
-        return key
+        return self._format_key(obj)
+
+    @staticmethod
+    def _normalize_path(path):
+        return path.lstrip('/')
 
     def path_exists(self, path):
-        return bool(self.bucket.get_key(path))
+        path = self._normalize_path(path)
+        return self._get_key(path) is not None
 
     def get_signed_url(self, path, expires_in=30):
         """Create a signed S3 document URL
@@ -80,77 +93,85 @@ class S3(object):
         :return: signed URL or ``None`` if object was not found
 
         """
+        path = self._normalize_path(path)
+        if self.path_exists(path):
+            return self._resource.meta.client.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": self._bucket.name,
+                    "Key": path,
+                },
+                ExpiresIn=expires_in,
+            )
 
-        key = self.bucket.get_key(path)
-        if key:
-            return key.generate_url(expires_in)
+    def _get_key(self, path):
+        path = self._normalize_path(path)
+        try:
+            obj = self._bucket.Object(path)
+            obj.load()
+        except ClientError:
+            return None
+        return obj
 
     def get_key(self, path):
-        key = self.bucket.get_key(path)
-        if key:
-            return self._format_key(key, False, key.get_metadata('timestamp'))
+        path = self._normalize_path(path)
+        obj = self._get_key(path)
+        return obj and self._format_key(obj)
 
     def delete_key(self, path):
-        self._move_existing(path, None)
-        self.bucket.delete_key(path)
+        path = self._normalize_path(path)
+        self._bucket.Object(path).delete()
 
     def list(self, prefix='', delimiter='', load_timestamps=False):
         """
-        return a list of file keys (ordered by last_modified date) from an s3 bucket
+        return a list of file keys (ordered by last_modified date if load_timestamps is True) from an s3 bucket
 
         Prefix & Delimiter: http://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
-        :param prefix:         filter by files whose names begin with the prefix
-        :param delimiter:      filter out files whose names contain the delimiter
-        :param load_timestamp: by default custom timestamps are not loaded as they require an extra API call.
-                               If you need to show the timestamp set this to True.
+        :param prefix:          filter by files whose names begin with the prefix
+        :param delimiter:       filter out files whose names contain the delimiter
+        :param load_timestamps: by default custom timestamps are not loaded as they require an extra API call.
+                                if you need to show the timestamp set this to True.
         :return: list
         """
-        # http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.bucket.Bucket.list
-        list_of_keys = self.bucket.list(prefix, delimiter)
-        return sorted([
-            self._format_key(key, load_timestamps)
-            for key in list_of_keys
-            if not (key.size == 0 and key.name[-1] == '/')
-        ], key=lambda key: key['last_modified'])
+        prefix = self._normalize_path(prefix)
+        return sorted((
+            self._format_key(obj_s, with_timestamp=load_timestamps)
+            for obj_s in self._bucket.objects.filter(Prefix=prefix, Delimiter=delimiter)
+            if not (obj_s.size == 0 and obj_s.key[-1] == '/')
+        ), key=lambda obj_s: (obj_s.get("last_modified") or "", obj_s["path"],))
 
-    def _format_key(self, key, load_timestamps, timestamp=None):
+    def _format_key(self, obj, with_timestamp=True):
         """
-        transform a boto s3 Key object into a (simpler) dict
+        Transform a boto3 s3 Object or ObjectSummary object into a (simpler, implementation-abstracted) dict
 
-        :param key:            http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.key.Key
-        :param load_timestamp: by default custom timestamps are not loaded as they require an extra API call.
-                               If you need to show the timestamp set this to True.
+        :param obj:            either a boto3 s3 Object or ObjectSummary
+        :param with_timestamp: by default our custom timestamps are not loaded as they require an extra API call.
+                               if you need to show the timestamp set this to True.
         :return:    dict
         """
-        filename, ext = os.path.splitext(os.path.basename(key.name))
-        if load_timestamps:
-            key = self.bucket.get_key(key.name)
-            timestamp = key.get_metadata('timestamp')
+        filename, ext = os.path.splitext(os.path.basename(obj.key))
 
-        timestamp = timestamp or key.last_modified
-        timestamp = parse_time(timestamp)
+        if with_timestamp and hasattr(obj, "Object"):
+            # obj is presumably an ObjectSummary, but we'll need an Object if we want the timestamp, which should get
+            # auto-fetched when the attribute is accessed
+            obj = obj.Object()
 
-        return {
-            'path': key.name,
+        keydict = {
+            'path': obj.key,
             'filename': filename,
             'ext': ext[1:],
-            'last_modified': timestamp.strftime(DATETIME_FORMAT),
-            'size': key.size
+            # ObjectSummary has .size, Object has .content_length
+            'size': obj.size if hasattr(obj, "size") else obj.content_length,
         }
-
-    def _move_existing(self, existing_path, move_prefix=None):
-        if move_prefix is None:
-            move_prefix = default_move_prefix()
-
-        if self.bucket.get_key(existing_path):
-            path, name = os.path.split(existing_path)
-            self.bucket.copy_key(
-                os.path.join(path, '{}-{}'.format(move_prefix, name)),
-                self.bucket_name,
-                existing_path
+        if with_timestamp:
+            keydict["last_modified"] = (
+                obj.metadata.get("timestamp") and parse_time(obj.metadata["timestamp"]).strftime(DATETIME_FORMAT)
             )
 
-    def _get_mimetype(self, filename):
+        return keydict
+
+    @staticmethod
+    def _get_mimetype(filename):
         mimetype, _ = mimetypes.guess_type(filename)
         return mimetype
 
@@ -167,7 +188,3 @@ def get_file_size(file_):
     # see it's like nothing happened, right?
 
     return size
-
-
-def default_move_prefix():
-    return datetime.datetime.utcnow().isoformat()

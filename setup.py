@@ -27,7 +27,7 @@ setup(
          'Flask-Script==2.0.5',
          'Flask-WTF==0.12',
          'Flask>=0.10',
-         'boto==2.38.0',
+         'boto3==1.4.4',
          'contextlib2==0.4.0',
          'cryptography==1.6',
          'inflection==0.2.1',

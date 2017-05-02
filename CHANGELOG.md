@@ -9,6 +9,17 @@ PR: [#306](https://github.com/alphagov/digitalmarketplace-utils/pull/306)
 
 ### What changed
 
+`S3` was ported to use `boto3` and in the process changed muchly.
+
+- The constructor takes a `region` kwarg (expecting an aws region name) instead of an explicit `host` kwarg.
+- `S3.bucket` is no longer exposed to applications (because using it breaks any boto api abstraction we pretend to have). Places where it was "needed" should instead have the missing required functionality added to `S3`.
+- `S3.bucket_name` is now a property.
+- `S3.save()` now returns a "key dict" (the same as e.g. `S3.get_key()`) as opposed to a boto `Key` object. Again, this is to provide us with api abstraction.
+- `S3.list()`'s returned "key dict"s won't include a `last_modified` parameter at all if `load_timestamps=False` (instead of including a potentially misleading value)
+- `S3.list()` called with `load_timestamps=False` will also return its results in an arbitrary order (instead of a potentially misleading one)
+- The "move existing" mechanism is now gone in favour of versioned buckets.
+- The `s3` module *does* import & expose `ClientError`, which *can* be used as the equivalent of boto2's `S3ResponseError`, but be aware that in using it you give up any pretense at boto version independence.
+
 (not that I could find any external code that used it) `get_file_size_up_to_maximum` is now `get_file_size`, which is a far more sensible way of presenting the interface given the calling code is going to have to compare the result against `FILE_SIZE_LIMIT` anyway
 
 
