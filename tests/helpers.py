@@ -2,15 +2,25 @@ from datetime import datetime
 import mock
 
 
+from six import BytesIO
+
+
 class IsDatetime(object):
     def __eq__(self, other):
         return isinstance(other, datetime)
 
 
-def mock_file(filename, length, name=None):
-    mock_file = mock.MagicMock()
-    mock_file.read.return_value = '*' * length
-    mock_file.filename = filename
-    mock_file.name = name
+class MockFile(BytesIO):
+    def __init__(self, initial=b"", filename="", name=""):
+        # BytesIO on py2 is an old-style class (yeah, i know...)
+        BytesIO.__init__(self, initial)
+        self._name = name
+        self._filename = filename
 
-    return mock_file
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def filename(self):
+        return self._filename

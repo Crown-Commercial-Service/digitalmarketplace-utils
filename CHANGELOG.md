@@ -2,6 +2,16 @@
 
 Records breaking changes from major version bumps
 
+
+## 27.0.0
+
+PR: [#306](https://github.com/alphagov/digitalmarketplace-utils/pull/306)
+
+### What changed
+
+(not that I could find any external code that used it) `get_file_size_up_to_maximum` is now `get_file_size`, which is a far more sensible way of presenting the interface given the calling code is going to have to compare the result against `FILE_SIZE_LIMIT` anyway
+
+
 ## 26.0.0
 
 PR: [#307](https://github.com/alphagov/digitalmarketplace-utils/pull/307)
@@ -20,6 +30,7 @@ framework = framework_helpers.get_latest_live_framework(all_frameworks, 'g-cloud
 for lot in framework['lots']:
     ...
 ```
+
 
 ## 25.0.0
 

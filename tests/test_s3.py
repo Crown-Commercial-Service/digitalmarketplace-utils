@@ -1,10 +1,13 @@
 import datetime
+import sys
 
 import mock
 import pytest
 from freezegun import freeze_time
-from helpers import mock_file
-from dmutils.s3 import S3, get_file_size_up_to_maximum
+from six import BytesIO
+
+from dmutils.s3 import S3, get_file_size
+from helpers import MockFile
 
 
 class TestS3Uploader(object):
@@ -147,7 +150,7 @@ class TestS3Uploader(object):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
+        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'))
         assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
     @freeze_time('2015-10-10')
@@ -155,7 +158,7 @@ class TestS3Uploader(object):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
+        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'))
 
         mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
             'timestamp', "2015-10-10T00:00:00.000000Z")
@@ -165,7 +168,7 @@ class TestS3Uploader(object):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123),
+        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'),
                                timestamp=datetime.datetime(2015, 10, 11))
 
         mock_bucket.s3_key_mock.set_metadata.assert_called_once_with(
@@ -175,7 +178,7 @@ class TestS3Uploader(object):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123))
+        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'))
         assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
@@ -186,7 +189,7 @@ class TestS3Uploader(object):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('folder/test-file.pdf', mock_file('blah', 123), download_filename='new-test-file.pdf')
+        S3('test-bucket').save('folder/test-file.pdf', MockFile("*"*123, 'blah'), download_filename='new-test-file.pdf')
         assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
         mock_bucket.s3_key_mock.set_contents_from_file.assert_called_with(
@@ -201,7 +204,7 @@ class TestS3Uploader(object):
 
         S3('test-bucket').save(
             'folder/test-file.pdf',
-            mock_file('blah', 123),
+            MockFile("*"*123, 'blah'),
             download_filename='new-test-file.pdf',
             disposition_type='chilled-out'
         )
@@ -219,7 +222,7 @@ class TestS3Uploader(object):
 
         S3('test-bucket').save(
             'folder/test-file.pdf',
-            mock_file('blah', 123),
+            MockFile("*"*123, 'blah'),
             disposition_type='manic'
         )
         assert mock_bucket.keys == set(['folder/test-file.pdf'])
@@ -233,7 +236,7 @@ class TestS3Uploader(object):
         mock_bucket = FakeBucket()
         self.s3_mock.get_bucket.return_value = mock_bucket
 
-        S3('test-bucket').save('/folder/test-file.pdf', mock_file('blah', 123))
+        S3('test-bucket').save('/folder/test-file.pdf', MockFile("*"*123, 'blah'))
         assert mock_bucket.keys == set(['folder/test-file.pdf'])
 
     def test_default_move_prefix_is_datetime(self):
@@ -245,7 +248,7 @@ class TestS3Uploader(object):
                                mock.Mock(wraps=datetime.datetime)) as patched:
             patched.utcnow.return_value = now
             S3('test-bucket').save(
-                'folder/test-file.pdf', mock_file('blah', 123),
+                'folder/test-file.pdf', MockFile("*"*123, 'blah'),
             )
 
             assert mock_bucket.keys == set([
@@ -258,7 +261,7 @@ class TestS3Uploader(object):
         self.s3_mock.get_bucket.return_value = mock_bucket
 
         S3('test-bucket').save(
-            'folder/test-file.pdf', mock_file('blah', 123),
+            'folder/test-file.pdf', MockFile("*"*123, 'blah'),
             move_prefix='OLD'
         )
 
@@ -337,9 +340,26 @@ class FakeKey(object):
         return self.timestamp if key == 'timestamp' and self.timestamp else None
 
 
-def test_get_file_size_just_below_maximum():
-    assert get_file_size_up_to_maximum(mock_file('', 5399999)) == 5399999
+def test_get_file_size_binary_file():
+    test_file = BytesIO(b"*"*5399999)
+    # put fd somewhere interesting
+    test_file.seek(234)
+
+    assert get_file_size(test_file) == 5399999
+    assert test_file.tell() == 234
 
 
-def test_get_file_size_just_above_maximum():
-    assert get_file_size_up_to_maximum(mock_file('', 5400001)) == 5400001
+@pytest.mark.skipif(sys.version_info < (3,0), reason="Only relevant to Py3")
+def test_get_file_size_text_file():
+    from io import TextIOWrapper
+    test_inner_file = BytesIO()
+    test_file = TextIOWrapper(test_inner_file, encoding="utf-8")
+    test_file.write(u"\u0001F3A9 "*123)
+    test_file.seek(0)
+    # read 9 *unicode chars* to advance fd to somewhere interesting
+    test_file.read(9)
+
+    previous_pos = test_file.tell()
+
+    assert get_file_size(test_file) == 738
+    assert test_file.tell() == previous_pos

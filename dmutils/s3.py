@@ -23,14 +23,14 @@ class S3(object):
         self.bucket_name = bucket_name
         self.bucket = conn.get_bucket(bucket_name)
 
-    def save(self, path, file, acl='public-read', move_prefix=None, timestamp=None, download_filename=None,
+    def save(self, path, file_, acl='public-read', move_prefix=None, timestamp=None, download_filename=None,
              disposition_type='attachment'):
         """Save a file in an S3 bucket
 
         canned ACL list: https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
 
         :param path:              location in S3 bucket at which to save the file
-        :param file:              file object to be saved in S3
+        :param file_:             file object to be saved in S3
         :param acl:               S3 canned ACL
         :param move_prefix:       Prefix to give to existing file when moving it out of the way
         :param timestamp:         Timestamp to set for this file rather than using utcnow
@@ -44,16 +44,16 @@ class S3(object):
         self._move_existing(path, move_prefix)
 
         key = self.bucket.new_key(path)
-        filesize = get_file_size_up_to_maximum(file)
         timestamp = timestamp or datetime.datetime.utcnow()
         key.set_metadata('timestamp', timestamp.strftime(DATETIME_FORMAT))
         headers = {'Content-Type': self._get_mimetype(key.name)}
+        filesize = get_file_size(file_)
         if download_filename:
             headers['Content-Disposition'] = '{}; filename="{}"'.format(
                 disposition_type, download_filename
             ).encode('utf-8')
         key.set_contents_from_file(
-            file,
+            file_,
             headers=headers
         )
         key.set_acl(acl)
@@ -155,9 +155,16 @@ class S3(object):
         return mimetype
 
 
-def get_file_size_up_to_maximum(file_contents):
-    size = len(file_contents.read(FILE_SIZE_LIMIT))
-    file_contents.seek(0)
+def get_file_size(file_):
+    if hasattr(file_, "buffer"):
+        # presumably a TextIO object - we want to deal with things on a byte-level though...
+        file_ = file_.buffer
+
+    original_pos = file_.tell()
+    file_.seek(0, 2)
+    size = file_.tell()
+    file_.seek(original_pos)
+    # see it's like nothing happened, right?
 
     return size
 
