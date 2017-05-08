@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from flask import Flask
 import tempfile
 import logging
 try:
@@ -18,10 +19,10 @@ def test_request_id_filter_not_in_app_context():
     assert RequestIdFilter().request_id == 'no-request-id'
 
 
-def test_formatter_request_id(app_with_logging):
+def test_formatter_request_id(app):
     headers = {'DM-Request-Id': 'generated'}
-    request_id.init_app(app_with_logging)  # set CustomRequest class
-    with app_with_logging.test_request_context('/', headers=headers):
+    request_id.init_app(app)  # set CustomRequest class
+    with app.test_request_context('/', headers=headers):
         assert RequestIdFilter().request_id == 'generated'
 
 
@@ -35,11 +36,29 @@ def test_init_app_adds_stream_handler_without_log_path(app):
 
     assert len(app.logger.handlers) == 1
     assert isinstance(app.logger.handlers[0], logging.StreamHandler)
+    assert isinstance(app.logger.handlers[0].formatter, JSONFormatter)
+
+
+def test_init_app_adds_file_handler_with_log_path(app):
+    with tempfile.NamedTemporaryFile() as f:
+        app.config['DM_LOG_PATH'] = f.name
+        init_app(app)
+
+        assert len(app.logger.handlers) == 1
+        assert isinstance(app.logger.handlers[0], logging.FileHandler)
+        assert isinstance(app.logger.handlers[0].formatter, JSONFormatter)
+
+
+def test_init_app_adds_stream_handler_with_plain_text_format_when_config_env_set(app):
+    app.config['DM_PLAIN_TEXT_LOGS'] = True
+    init_app(app)
+
+    assert len(app.logger.handlers) == 1
+    assert isinstance(app.logger.handlers[0], logging.StreamHandler)
+    assert isinstance(app.logger.handlers[0].formatter, CustomLogFormatter)
 
 
 def test_app_after_request_logs_responses_with_info_level(app):
-    init_app(app)
-
     # since app.logger is a read-only property we need to patch the Flask class
     with mock.patch('flask.Flask.logger') as logger:
         app.test_client().get('/')
@@ -56,8 +75,6 @@ def test_app_after_request_logs_5xx_responses_with_error_level(app):
     def error_route():
         return 'error', 500
 
-    init_app(app)
-
     # since app.logger is a read-only property we need to patch the Flask class
     with mock.patch('flask.Flask.logger') as logger:
         app.test_client().get('/')
@@ -67,18 +84,6 @@ def test_app_after_request_logs_5xx_responses_with_error_level(app):
             '{method} {url} {status}',
             extra={'url': u'http://localhost/', 'status': 500, 'method': 'GET'}
         )
-
-
-def test_init_app_adds_file_handlers_with_log_path(app):
-    with tempfile.NamedTemporaryFile() as f:
-        app.config['DM_LOG_PATH'] = f.name
-        init_app(app)
-
-        assert len(app.logger.handlers) == 2
-        assert isinstance(app.logger.handlers[0], logging.FileHandler)
-        assert isinstance(app.logger.handlers[0].formatter, CustomLogFormatter)
-        assert isinstance(app.logger.handlers[1], logging.FileHandler)
-        assert isinstance(app.logger.handlers[1].formatter, JSONFormatter)
 
 
 class TestJSONFormatter(object):

@@ -83,7 +83,7 @@ def init_manager(application, port, extra_directories=()):
 
     extra_files = list(get_extra_files(extra_directories))
 
-    print("Watching {} extra files".format(len(extra_files)))
+    logging.logger.debug("Watching {} extra files".format(len(extra_files)))
 
     manager.add_command(
         "runserver",

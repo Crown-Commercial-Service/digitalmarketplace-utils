@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 def init_app(app):
     app.config.setdefault('DM_LOG_LEVEL', 'INFO')
     app.config.setdefault('DM_APP_NAME', 'none')
-    app.config.setdefault('DM_LOG_PATH', None)
 
     @app.after_request
     def after_request(response):
@@ -37,10 +36,10 @@ def init_app(app):
 
     del app.logger.handlers[:]
 
-    handlers = get_handlers(app)
+    handler = get_handler(app)
     loglevel = logging.getLevelName(app.config['DM_LOG_LEVEL'])
     loggers = [app.logger, logging.getLogger('dmutils'), logging.getLogger('dmapiclient')]
-    for logger, handler in product(loggers, handlers):
+    for logger in loggers:
         logger.addHandler(handler)
         logger.setLevel(loglevel)
 
@@ -56,23 +55,18 @@ def configure_handler(handler, app, formatter):
     return handler
 
 
-def get_handlers(app):
-    handlers = []
-    standard_formatter = CustomLogFormatter(LOG_FORMAT, TIME_FORMAT)
-    json_formatter = JSONFormatter(LOG_FORMAT, TIME_FORMAT)
-
-    # Log to files if the path is set, otherwise log to stderr
-    if app.config['DM_LOG_PATH']:
-        handler = logging.FileHandler(app.config['DM_LOG_PATH'])
-        handlers.append(configure_handler(handler, app, standard_formatter))
-
-        handler = logging.FileHandler(app.config['DM_LOG_PATH'] + '.json')
-        handlers.append(configure_handler(handler, app, json_formatter))
+def get_handler(app):
+    if app.config.get('DM_PLAIN_TEXT_LOGS'):
+        formatter = CustomLogFormatter(LOG_FORMAT, TIME_FORMAT)
     else:
-        handler = logging.StreamHandler(sys.stderr)
-        handlers.append(configure_handler(handler, app, standard_formatter))
+        formatter = JSONFormatter(LOG_FORMAT, TIME_FORMAT)
 
-    return handlers
+    if app.config.get('DM_LOG_PATH'):
+        handler = logging.FileHandler(app.config['DM_LOG_PATH'])
+    else:
+        handler = logging.StreamHandler(sys.stdout)
+
+    return configure_handler(handler, app, formatter)
 
 
 class AppNameFilter(logging.Filter):
