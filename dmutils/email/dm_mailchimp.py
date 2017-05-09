@@ -19,7 +19,7 @@ class DMMailChimpClient(object):
 
     @staticmethod
     def get_email_hash(email_address):
-        return md5(email_address).hexdigest()
+        return md5(email_address.lower()).hexdigest()
 
     def create_campaign(self, campaign_data):
         try:

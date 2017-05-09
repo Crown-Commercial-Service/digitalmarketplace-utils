@@ -100,3 +100,8 @@ def test_subscribe_email_to_list(get_email_hash):
 
 def test_get_email_hash():
     assert DMMailChimpClient.get_email_hash("example@example.com") == '23463b99b62a72f26ed677cc556c44e8'
+
+
+def test_get_email_hash_lowers():
+    """Email must be lowercased before hashing as per api documentation."""
+    DMMailChimpClient.get_email_hash("foo@EXAMPLE.com") == DMMailChimpClient.get_email_hash("foo@example.com")
