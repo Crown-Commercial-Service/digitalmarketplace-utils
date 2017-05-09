@@ -3,6 +3,7 @@
 
 from mailchimp3 import MailChimp
 from requests.exceptions import RequestException
+from hashlib import md5
 
 
 class DMMailChimpClient(object):
@@ -43,6 +44,25 @@ class DMMailChimpClient(object):
         try:
             self.client.campaigns.actions.send(campaign_id)
             return True
+        except RequestException as e:
+            self.logger.error(
+                "Mailchimp failed to send campaign id '{0}'".format(campaign_id),
+                extra={"error": str(e)}
+            )
+        return False
+
+    def subscribe_email_to_list(self, list_id, email_address):
+        """ Will subscribe email address to list if they do not already exist in that list else do nothing"""
+        hashed_email = md5(email_address).hexdigest()
+        try:
+            return self.client.lists.members.create_or_update(
+                list_id,
+                hashed_email,
+                {
+                    "email_address": email_address,
+                    "status_if_new": "subscribed"
+                }
+            )
         except RequestException as e:
             self.logger.error(
                 "Mailchimp failed to send campaign id '{0}'".format(campaign_id),

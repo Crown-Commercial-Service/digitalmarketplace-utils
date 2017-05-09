@@ -76,3 +76,22 @@ def test_log_error_message_if_error_sending_campaign():
             error.assert_called_once_with(
                 "Mailchimp failed to send campaign id '1'", extra={"error": "error sending"}
             )
+
+
+def test_subscribe_email_to_list():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+    with mock.patch.object(
+            dm_mailchimp_client.client.lists.members, 'create_or_update', autospec=True) as create_or_update:
+
+        create_or_update.return_value = {"response": "data"}
+        res = dm_mailchimp_client.subscribe_email_to_list('list_id', 'example@example.com')
+
+        assert res == {"response": "data"}
+        create_or_update.assert_called_once_with(
+            'list_id',
+            '23463b99b62a72f26ed677cc556c44e8',
+            {
+                "email_address": "example@example.com",
+                "status_if_new": "subscribed"
+            }
+        )
