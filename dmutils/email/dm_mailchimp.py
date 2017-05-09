@@ -17,6 +17,10 @@ class DMMailChimpClient(object):
         self.client = MailChimp(mailchimp_username, mailchimp_api_key)
         self.logger = logger
 
+    @staticmethod
+    def get_email_hash(email_address):
+        return md5(email_address).hexdigest()
+
     def create_campaign(self, campaign_data):
         try:
             campaign = self.client.campaigns.create(campaign_data)
@@ -53,7 +57,7 @@ class DMMailChimpClient(object):
 
     def subscribe_email_to_list(self, list_id, email_address):
         """ Will subscribe email address to list if they do not already exist in that list else do nothing"""
-        hashed_email = md5(email_address).hexdigest()
+        hashed_email = self.get_email_hash(email_address)
         try:
             return self.client.lists.members.create_or_update(
                 list_id,
