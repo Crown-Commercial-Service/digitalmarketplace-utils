@@ -117,6 +117,16 @@ def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash):
             )
 
 
+def test_subscribe_new_emails_to_list():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+    with mock.patch.object(dm_mailchimp_client, 'subscribe_email_to_list',  autospec=True):
+        res = dm_mailchimp_client.subscribe_new_emails_to_list('list_id', ['email1@example.com', 'email2@example.com'])
+
+        assert res is True
+        calls = [mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')]
+        dm_mailchimp_client.subscribe_email_to_list.assert_has_calls(calls)
+
+
 def test_get_email_hash():
     assert DMMailChimpClient.get_email_hash("example@example.com") == '23463b99b62a72f26ed677cc556c44e8'
 

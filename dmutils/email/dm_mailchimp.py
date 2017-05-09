@@ -76,3 +76,8 @@ class DMMailChimpClient(object):
                 extra={"error": str(e)}
             )
         return False
+
+    def subscribe_new_emails_to_list(self, list_id, email_addresses):
+        for email_address in email_addresses:
+            self.subscribe_email_to_list(list_id, email_address)
+        return True
