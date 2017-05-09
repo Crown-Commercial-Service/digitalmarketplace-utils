@@ -78,6 +78,8 @@ class DMMailChimpClient(object):
         return False
 
     def subscribe_new_emails_to_list(self, list_id, email_addresses):
+        success = True
         for email_address in email_addresses:
-            self.subscribe_new_email_to_list(list_id, email_address)
-        return True
+            if not self.subscribe_new_email_to_list(list_id, email_address):
+                success = False
+        return success

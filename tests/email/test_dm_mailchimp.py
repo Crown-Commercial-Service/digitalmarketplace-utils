@@ -121,10 +121,22 @@ def test_subscribe_new_emails_to_list():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
     with mock.patch.object(dm_mailchimp_client, 'subscribe_new_email_to_list',  autospec=True):
         res = dm_mailchimp_client.subscribe_new_emails_to_list('list_id', ['email1@example.com', 'email2@example.com'])
+        calls = [mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')]
 
         assert res is True
-        calls = [mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')]
         dm_mailchimp_client.subscribe_new_email_to_list.assert_has_calls(calls)
+
+
+def test_subscribe_new_emails_to_list_tries_all_emails_returns_false_on_error():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+    with mock.patch.object(
+            dm_mailchimp_client, 'subscribe_new_email_to_list', autospec=True) as subscribe_new_email_to_list:
+        subscribe_new_email_to_list.side_effect = [False, True]
+        res = dm_mailchimp_client.subscribe_new_emails_to_list('list_id', ['foo', 'email2@example.com'])
+        calls = [mock.call('list_id', 'foo'), mock.call('list_id', 'email2@example.com')]
+
+        assert res is False
+        subscribe_new_email_to_list.assert_has_calls(calls)
 
 
 def test_get_email_hash():
