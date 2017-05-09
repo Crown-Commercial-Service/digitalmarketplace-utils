@@ -55,7 +55,7 @@ class DMMailChimpClient(object):
             )
         return False
 
-    def subscribe_email_to_list(self, list_id, email_address):
+    def subscribe_new_email_to_list(self, list_id, email_address):
         """ Will subscribe email address to list if they do not already exist in that list else do nothing"""
         hashed_email = self.get_email_hash(email_address)
         try:
@@ -79,5 +79,5 @@ class DMMailChimpClient(object):
 
     def subscribe_new_emails_to_list(self, list_id, email_addresses):
         for email_address in email_addresses:
-            self.subscribe_email_to_list(list_id, email_address)
+            self.subscribe_new_email_to_list(list_id, email_address)
         return True
