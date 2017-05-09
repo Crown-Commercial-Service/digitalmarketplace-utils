@@ -69,7 +69,10 @@ class DMMailChimpClient(object):
             )
         except RequestException as e:
             self.logger.error(
-                "Mailchimp failed to send campaign id '{0}'".format(campaign_id),
+                "Mailchimp failed to add user ({}) to list ({})".format(
+                    hashed_email,
+                    list_id
+                ),
                 extra={"error": str(e)}
             )
         return False

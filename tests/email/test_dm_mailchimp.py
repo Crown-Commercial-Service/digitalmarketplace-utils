@@ -98,6 +98,25 @@ def test_subscribe_email_to_list(get_email_hash):
         )
 
 
+@mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash):
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+    with mock.patch.object(
+            dm_mailchimp_client.client.lists.members, 'create_or_update',  autospec=True) as create_or_update:
+        create_or_update.side_effect = RequestException("error sending")
+        with mock.patch.object(dm_mailchimp_client.logger, 'error', autospec=True) as error:
+            res = dm_mailchimp_client.subscribe_email_to_list('list_id', 'example@example.com')
+
+            assert res is False
+            error.assert_called_once_with(
+                "Mailchimp failed to add user ({}) to list ({})".format(
+                    'foo',
+                    'list_id'
+                ),
+                extra={"error": "error sending"}
+            )
+
+
 def test_get_email_hash():
     assert DMMailChimpClient.get_email_hash("example@example.com") == '23463b99b62a72f26ed677cc556c44e8'
 
