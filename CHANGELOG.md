@@ -2,6 +2,25 @@
 
 Records breaking changes from major version bumps
 
+## 26.0.0
+
+PR: [#307](https://github.com/alphagov/digitalmarketplace-utils/pull/307)
+
+### What changed
+
+The harded-coded list `formats.LOTS`, that applied to G6, G7 and G8, has been removed, in
+favour of getting the lots from the API. Related functions have also been removed: `get_label_for_lot_param`
+can be replaced by `lot['name']`, and `lot_to_lot_case` is no longer used.
+
+### Example app code
+```
+all_frameworks = data_api_client.find_frameworks().get('frameworks')
+framework = framework_helpers.get_latest_live_framework(all_frameworks, 'g-cloud')
+
+for lot in framework['lots']:
+    ...
+```
+
 ## 25.0.0
 
 PR: [#302](https://github.com/alphagov/digitalmarketplace-utils/pull/302)
