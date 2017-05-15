@@ -120,6 +120,7 @@ def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash):
 def test_subscribe_new_emails_to_list():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
     with mock.patch.object(dm_mailchimp_client, 'subscribe_new_email_to_list',  autospec=True):
+        dm_mailchimp_client.subscribe_new_email_to_list.return_value = True
         res = dm_mailchimp_client.subscribe_new_emails_to_list('list_id', ['email1@example.com', 'email2@example.com'])
         calls = [mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')]
 
