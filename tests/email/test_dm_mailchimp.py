@@ -4,6 +4,7 @@ import mock
 
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from requests import RequestException
+from logging import Logger
 
 
 def test_create_campaign():
@@ -41,18 +42,18 @@ def test_set_campaign_content():
         dm_mailchimp_client.client.campaigns.content.update.assert_called_once_with(campaign_id, html_content)
 
 
-def test_log_error_message_if_error_setting_campaign_content():
-    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+@mock.patch("logging.Logger", autospec=True)
+def test_log_error_message_if_error_setting_campaign_content(logger):
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
     with mock.patch.object(dm_mailchimp_client.client.campaigns.content, 'update', autospec=True) as update:
         update.side_effect = RequestException("error message")
 
-        with mock.patch.object(dm_mailchimp_client.logger, 'error', autospec=True) as error:
-            res = dm_mailchimp_client.set_campaign_content('1', {"html": "some html"})
+        res = dm_mailchimp_client.set_campaign_content('1', {"html": "some html"})
 
-            assert res is False
-            error.assert_called_once_with(
-                "Mailchimp failed to set content for campaign id '1'", extra={"error": "error message"}
-            )
+        assert res is False
+        logger.error.assert_called_once_with(
+            "Mailchimp failed to set content for campaign id '1'", extra={"error": "error message"}
+        )
 
 
 def test_send_campaign():
@@ -65,17 +66,18 @@ def test_send_campaign():
         send.assert_called_once_with(campaign_id)
 
 
-def test_log_error_message_if_error_sending_campaign():
-    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+@mock.patch("logging.Logger", autospec=True)
+def test_log_error_message_if_error_sending_campaign(logger):
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
     with mock.patch.object(dm_mailchimp_client.client.campaigns.actions, 'send',  autospec=True) as send:
         send.side_effect = RequestException("error sending")
-        with mock.patch.object(dm_mailchimp_client.logger, 'error', autospec=True) as error:
-            res = dm_mailchimp_client.send_campaign("1")
 
-            assert res is False
-            error.assert_called_once_with(
-                "Mailchimp failed to send campaign id '1'", extra={"error": "error sending"}
-            )
+        res = dm_mailchimp_client.send_campaign("1")
+
+        assert res is False
+        logger.error.assert_called_once_with(
+            "Mailchimp failed to send campaign id '1'", extra={"error": "error sending"}
+        )
 
 
 @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
@@ -98,23 +100,23 @@ def test_subscribe_new_email_to_list(get_email_hash):
         )
 
 
+@mock.patch("logging.Logger", autospec=True)
 @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash):
-    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash, logger):
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
     with mock.patch.object(
             dm_mailchimp_client.client.lists.members, 'create_or_update',  autospec=True) as create_or_update:
-        create_or_update.side_effect = RequestException("error sending")
-        with mock.patch.object(dm_mailchimp_client.logger, 'error', autospec=True) as error:
-            res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+        response = mock.Mock()
+        response.json.return_value = "Unexpected error."
+        create_or_update.side_effect = RequestException("error sending", response=response)
 
-            assert res is False
-            error.assert_called_once_with(
-                "Mailchimp failed to add user ({}) to list ({})".format(
-                    'foo',
-                    'list_id'
-                ),
-                extra={"error": "error sending"}
-            )
+        res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+        assert res is False
+        logger.error.assert_called_once_with(
+            "Mailchimp failed to add user (foo) to list (list_id)",
+            extra={"error": "error sending"}
+        )
 
 
 def test_subscribe_new_emails_to_list():
