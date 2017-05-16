@@ -68,6 +68,19 @@ class DMMailChimpClient(object):
                 }
             )
         except RequestException as e:
+            # As defined in mailchimp API documentation, this particular error message may arise if a user has requested
+            # mailchimp to never add them to mailchimp lists. In this case, we resort to allowing a failed API call (but
+            # log) as a user of this method would unlikely be able to do anything as we have no control over this
+            # behaviour.
+            if "looks fake or invalid, please enter a real email address." in e.response.json()["detail"]:
+                self.logger.error(
+                    "Expected error: Mailchimp failed to add user ({}) to list ({}). API error: The email address looks fake or invalid, please enter a real email address.".format(  # noqa
+                        hashed_email,
+                        list_id
+                    ),
+                    extra={"error": str(e)}
+                )
+                return True
             self.logger.error(
                 "Mailchimp failed to add user ({}) to list ({})".format(
                     hashed_email,
@@ -75,7 +88,7 @@ class DMMailChimpClient(object):
                 ),
                 extra={"error": str(e)}
             )
-        return False
+            return False
 
     def subscribe_new_emails_to_list(self, list_id, email_addresses):
         success = True
