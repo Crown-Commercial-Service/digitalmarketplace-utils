@@ -4,6 +4,7 @@
 from mailchimp3 import MailChimp
 from requests.exceptions import RequestException
 from hashlib import md5
+import six
 
 
 class DMMailChimpClient(object):
@@ -19,7 +20,9 @@ class DMMailChimpClient(object):
 
     @staticmethod
     def get_email_hash(email_address):
-        return md5(email_address.lower()).hexdigest()
+        """md5 hashing of lower cased emails has been chosen by mailchimp to identify email addresses"""
+        formatted_email_address = six.text_type(email_address.lower()).encode('utf-8')
+        return md5(formatted_email_address).hexdigest()
 
     def create_campaign(self, campaign_data):
         try:
