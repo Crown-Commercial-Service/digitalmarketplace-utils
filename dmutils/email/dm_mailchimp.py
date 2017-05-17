@@ -99,3 +99,7 @@ class DMMailChimpClient(object):
             if not self.subscribe_new_email_to_list(list_id, email_address):
                 success = False
         return success
+
+    def get_email_addresses_from_list(self, list_id):
+        member_data = self.client.lists.members.all(list_id, get_all=True)
+        return [member["email_address"] for member in member_data["members"]]

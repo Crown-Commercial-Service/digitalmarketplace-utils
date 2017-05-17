@@ -168,3 +168,21 @@ def test_get_email_hash():
 def test_get_email_hash_lowers():
     """Email must be lowercased before hashing as per api documentation."""
     DMMailChimpClient.get_email_hash("foo@EXAMPLE.com") == DMMailChimpClient.get_email_hash("foo@example.com")
+
+
+def test_get_email_addresses_from_list():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+    with mock.patch.object(
+            dm_mailchimp_client.client.lists.members, 'all', autospec=True) as all_members:
+
+        all_members.return_value = {"members": [
+            {"email_address": "user1@example.com"},
+            {"email_address": "user2@example.com"}
+        ]}
+        res = dm_mailchimp_client.get_email_addresses_from_list('list_id')
+
+        assert res == ["user1@example.com", "user2@example.com"]
+        all_members.assert_called_once_with(
+            'list_id',
+            get_all=True
+        )
