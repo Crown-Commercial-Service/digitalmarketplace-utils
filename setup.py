@@ -31,6 +31,7 @@ setup(
          'contextlib2==0.4.0',
          'cryptography==1.6',
          'inflection==0.2.1',
+         'mailchimp3==2.0.11',
          'mandrill==1.0.57',
          'monotonic==0.3',
          'notifications-python-client==4.1.0',
