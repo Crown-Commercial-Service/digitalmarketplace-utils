@@ -15,7 +15,7 @@ class DMMailChimpClient(object):
         mailchimp_api_key,
         logger
     ):
-        self.client = MailChimp(mailchimp_username, mailchimp_api_key)
+        self._client = MailChimp(mailchimp_username, mailchimp_api_key)
         self.logger = logger
 
     @staticmethod
@@ -26,7 +26,7 @@ class DMMailChimpClient(object):
 
     def create_campaign(self, campaign_data):
         try:
-            campaign = self.client.campaigns.create(campaign_data)
+            campaign = self._client.campaigns.create(campaign_data)
             return campaign['id']
         except RequestException as e:
             self.logger.error(
@@ -39,7 +39,7 @@ class DMMailChimpClient(object):
 
     def set_campaign_content(self, campaign_id, content_data):
         try:
-            return self.client.campaigns.content.update(campaign_id, content_data)
+            return self._client.campaigns.content.update(campaign_id, content_data)
         except RequestException as e:
             self.logger.error(
                 "Mailchimp failed to set content for campaign id '{0}'".format(campaign_id),
@@ -49,7 +49,7 @@ class DMMailChimpClient(object):
 
     def send_campaign(self, campaign_id):
         try:
-            self.client.campaigns.actions.send(campaign_id)
+            self._client.campaigns.actions.send(campaign_id)
             return True
         except RequestException as e:
             self.logger.error(
@@ -62,7 +62,7 @@ class DMMailChimpClient(object):
         """ Will subscribe email address to list if they do not already exist in that list else do nothing"""
         hashed_email = self.get_email_hash(email_address)
         try:
-            return self.client.lists.members.create_or_update(
+            return self._client.lists.members.create_or_update(
                 list_id,
                 hashed_email,
                 {
@@ -101,5 +101,5 @@ class DMMailChimpClient(object):
         return success
 
     def get_email_addresses_from_list(self, list_id):
-        member_data = self.client.lists.members.all(list_id, get_all=True)
+        member_data = self._client.lists.members.all(list_id, get_all=True)
         return [member["email_address"] for member in member_data["members"]]

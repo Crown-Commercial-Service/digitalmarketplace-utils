@@ -9,7 +9,7 @@ from logging import Logger
 
 def test_create_campaign():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', 'logger')
-    with mock.patch.object(dm_mailchimp_client.client.campaigns, 'create', autospec=True) as create:
+    with mock.patch.object(dm_mailchimp_client._client.campaigns, 'create', autospec=True) as create:
         create.return_value = {"id": "100"}
         res = dm_mailchimp_client.create_campaign({"example": "data"})
 
@@ -19,7 +19,7 @@ def test_create_campaign():
 
 def test_log_error_message_if_error_creating_campaign():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
-    with mock.patch.object(dm_mailchimp_client.client.campaigns, 'create', autospec=True) as create:
+    with mock.patch.object(dm_mailchimp_client._client.campaigns, 'create', autospec=True) as create:
         create.side_effect = RequestException("error message")
         with mock.patch.object(dm_mailchimp_client.logger, 'error', autospec=True) as error:
             res = dm_mailchimp_client.create_campaign({"example": "data", 'settings': {'title': 'Foo'}})
@@ -32,20 +32,20 @@ def test_log_error_message_if_error_creating_campaign():
 
 def test_set_campaign_content():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', 'logger')
-    with mock.patch.object(dm_mailchimp_client.client.campaigns.content, 'update', autospec=True) as update:
+    with mock.patch.object(dm_mailchimp_client._client.campaigns.content, 'update', autospec=True) as update:
         campaign_id = '1'
         html_content = {'html': '<p>One or two words</p>'}
         update.return_value = html_content
         res = dm_mailchimp_client.set_campaign_content(campaign_id, html_content)
 
         assert res == html_content
-        dm_mailchimp_client.client.campaigns.content.update.assert_called_once_with(campaign_id, html_content)
+        dm_mailchimp_client._client.campaigns.content.update.assert_called_once_with(campaign_id, html_content)
 
 
 @mock.patch("logging.Logger", autospec=True)
 def test_log_error_message_if_error_setting_campaign_content(logger):
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
-    with mock.patch.object(dm_mailchimp_client.client.campaigns.content, 'update', autospec=True) as update:
+    with mock.patch.object(dm_mailchimp_client._client.campaigns.content, 'update', autospec=True) as update:
         update.side_effect = RequestException("error message")
 
         res = dm_mailchimp_client.set_campaign_content('1', {"html": "some html"})
@@ -59,7 +59,7 @@ def test_log_error_message_if_error_setting_campaign_content(logger):
 def test_send_campaign():
     campaign_id = "1"
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
-    with mock.patch.object(dm_mailchimp_client.client.campaigns.actions, 'send', autospec=True) as send:
+    with mock.patch.object(dm_mailchimp_client._client.campaigns.actions, 'send', autospec=True) as send:
         res = dm_mailchimp_client.send_campaign(campaign_id)
 
         assert res is True
@@ -69,7 +69,7 @@ def test_send_campaign():
 @mock.patch("logging.Logger", autospec=True)
 def test_log_error_message_if_error_sending_campaign(logger):
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
-    with mock.patch.object(dm_mailchimp_client.client.campaigns.actions, 'send',  autospec=True) as send:
+    with mock.patch.object(dm_mailchimp_client._client.campaigns.actions, 'send',  autospec=True) as send:
         send.side_effect = RequestException("error sending")
 
         res = dm_mailchimp_client.send_campaign("1")
@@ -84,7 +84,7 @@ def test_log_error_message_if_error_sending_campaign(logger):
 def test_subscribe_new_email_to_list(get_email_hash):
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
     with mock.patch.object(
-            dm_mailchimp_client.client.lists.members, 'create_or_update', autospec=True) as create_or_update:
+            dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
 
         create_or_update.return_value = {"response": "data"}
         res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
@@ -105,7 +105,7 @@ def test_subscribe_new_email_to_list(get_email_hash):
 def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash, logger):
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
     with mock.patch.object(
-            dm_mailchimp_client.client.lists.members, 'create_or_update',  autospec=True) as create_or_update:
+            dm_mailchimp_client._client.lists.members, 'create_or_update',  autospec=True) as create_or_update:
         response = mock.Mock()
         response.json.return_value = {"detail": "Unexpected error."}
         create_or_update.side_effect = RequestException("error sending", response=response)
@@ -124,7 +124,7 @@ def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash, lo
 def test_returns_true_if_expected_error_subscribing_email_to_list(get_email_hash, logger):
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
     with mock.patch.object(
-            dm_mailchimp_client.client.lists.members, 'create_or_update',  autospec=True) as create_or_update:
+            dm_mailchimp_client._client.lists.members, 'create_or_update',  autospec=True) as create_or_update:
         response = mock.Mock()
         response.json.return_value = {"detail": "foo looks fake or invalid, please enter a real email address."}
         create_or_update.side_effect = RequestException("error sending", response=response)
@@ -173,7 +173,7 @@ def test_get_email_hash_lowers():
 def test_get_email_addresses_from_list():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
     with mock.patch.object(
-            dm_mailchimp_client.client.lists.members, 'all', autospec=True) as all_members:
+            dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
 
         all_members.return_value = {"members": [
             {"email_address": "user1@example.com"},
