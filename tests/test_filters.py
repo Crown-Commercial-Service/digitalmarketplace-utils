@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from flask import Markup
 
-from dmutils.filters import format_links, nbsp, smartjoin
+from dmutils.filters import capitalize_first, format_links, nbsp, smartjoin
 
 
 def test_smartjoin_for_more_than_one_item():
@@ -93,3 +93,26 @@ def test_nbsp_with_markup():
     expected = Markup('foo&nbsp;bar&nbsp;baz&nbsp;<script>')
     result = nbsp(text)
     assert result == expected
+
+
+def test_capitalise_first_for_strings():
+    assert capitalize_first('lowercase') == 'Lowercase'
+    assert capitalize_first('UPPERCASE') == 'UPPERCASE'
+    assert capitalize_first('_lower') == '_lower'
+    assert capitalize_first('cAMELcASE??') == 'CAMELcASE??'
+
+
+def test_capitalize_first_for_short_strings():
+    assert capitalize_first('') == ''
+    assert capitalize_first('a') == 'A'
+    assert capitalize_first('B') == 'B'
+    assert capitalize_first('+') == '+'
+
+
+def test_capitalize_first_for_non_strings():
+    assert capitalize_first(5) == 5
+    assert capitalize_first(None) is None
+    assert capitalize_first(True) is True
+    assert capitalize_first(False) is False
+    assert capitalize_first(['list', 'of', 'strings']) == ['list', 'of', 'strings']
+    assert capitalize_first({"this": "thing"}) == {"this": "thing"}
