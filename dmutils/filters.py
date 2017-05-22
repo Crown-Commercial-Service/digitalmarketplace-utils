@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import re
 from flask import Markup, escape
+from six import string_types
 
 
 def smartjoin(input):
@@ -50,3 +51,14 @@ def nbsp(text):
     {{ "some text and <html>"|marksafe|nbsp }}"""
     text = escape(text)
     return text.replace(' ', Markup('&nbsp;'))
+
+
+def capitalize_first(maybe_text):
+    """If it's a string capitalise the first character
+
+    :param maybe_text: Could be anything
+    :return: If maybe_text is a string it will be returned with an initial capital letter, otherwise unchanged
+    """
+    return maybe_text[0].capitalize() + maybe_text[1:] \
+        if maybe_text and isinstance(maybe_text, string_types) \
+        else maybe_text

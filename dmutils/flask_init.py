@@ -47,6 +47,7 @@ def init_app(
         return response
 
     # Make filters accessible in templates.
+    application.add_template_filter(filters.capitalize_first)
     application.add_template_filter(filters.format_links)
     application.add_template_filter(filters.nbsp)
     application.add_template_filter(filters.smartjoin)
