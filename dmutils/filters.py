@@ -54,14 +54,15 @@ def nbsp(text):
 
 
 def capitalize_first(maybe_text):
-    """If it's a string capitalise the first character
+    """If it's a string capitalise the first character, unless it looks like a URL
 
     :param maybe_text: Could be anything
     :return: If maybe_text is a string it will be returned with an initial capital letter, otherwise unchanged
     """
     if maybe_text and isinstance(maybe_text, string_types):
-        return maybe_text[0].capitalize() + maybe_text[1:]
+        if not maybe_text.startswith('http'):
+            return maybe_text[0].capitalize() + maybe_text[1:]
     elif isinstance(maybe_text, (list, tuple)):
         return [capitalize_first(item) for item in maybe_text]
-    else:
-        return maybe_text
+
+    return maybe_text

@@ -116,4 +116,5 @@ def test_capitalize_first_for_non_strings():
     assert capitalize_first(False) is False
     assert capitalize_first(['list', 'of', 'strings']) == ['List', 'Of', 'Strings']
     assert capitalize_first([{'list': 'of'}, 'things']) == [{'list': 'of'}, 'Things']
-    assert capitalize_first({"this": "thing"}) == {"this": "thing"}
+    assert capitalize_first({'this': 'thing'}) == {'this': 'thing'}
+    assert capitalize_first('https://www.example.com') == 'https://www.example.com'
