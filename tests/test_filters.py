@@ -114,5 +114,6 @@ def test_capitalize_first_for_non_strings():
     assert capitalize_first(None) is None
     assert capitalize_first(True) is True
     assert capitalize_first(False) is False
-    assert capitalize_first(['list', 'of', 'strings']) == ['list', 'of', 'strings']
+    assert capitalize_first(['list', 'of', 'strings']) == ['List', 'Of', 'Strings']
+    assert capitalize_first([{'list': 'of'}, 'things']) == [{'list': 'of'}, 'Things']
     assert capitalize_first({"this": "thing"}) == {"this": "thing"}
