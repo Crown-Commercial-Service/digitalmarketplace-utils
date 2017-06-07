@@ -5,10 +5,8 @@ from datetime import datetime
 
 import mock
 import pytest
-import six
 from cryptography import fernet
 from freezegun import freeze_time
-from itsdangerous import URLSafeTimedSerializer
 from mandrill import Error
 
 from dmutils.config import init_app

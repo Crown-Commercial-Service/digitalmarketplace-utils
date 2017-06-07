@@ -5,7 +5,6 @@ import json
 import struct
 from datetime import datetime
 
-import itsdangerous
 import six
 from cryptography import fernet
 from flask import current_app
