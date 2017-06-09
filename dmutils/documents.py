@@ -132,7 +132,8 @@ def upload_service_documents(uploader, upload_type, documents_url, service, requ
     return files, errors
 
 
-# the following file-size-related functions are slightly absurd. legacy.
+# some of the more... seemingly oddly specific functions here are apparently referenced by validators, hence their
+# existence
 
 
 def file_is_not_empty(file_contents):
