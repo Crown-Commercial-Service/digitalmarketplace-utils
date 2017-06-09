@@ -19,7 +19,7 @@ PR: [#306](https://github.com/alphagov/digitalmarketplace-utils/pull/306)
 - `S3.save()` no longer accepts a `move_prefix` argument
 - `S3.list()`'s returned "key dict"s won't include a `last_modified` parameter at all if `load_timestamps=False` (instead of including a potentially misleading value)
 - `S3.list()` called with `load_timestamps=False` will also return its results in an arbitrary order (instead of a potentially misleading one)
-- The `s3` module *does* import & expose `ClientError`, which *can* be used as the equivalent of boto2's `S3ResponseError`, but be aware that in using it you give up any pretense at boto version independence.
+- The `s3` module *does* still expose a `S3ResponseError`, but it is a relabelled boto3 `ClientError`, in a slightly odd gesture to backwards compatibility with consumers that were using that. `ClientError` is raised by boto3 in broadly similar situations to those where boto2 would raise `S3ResponseError`.
 
 (not that I could find any external code that used it) `get_file_size_up_to_maximum` is now `get_file_size`, which is a far more sensible way of presenting the interface given the calling code is going to have to compare the result against `FILE_SIZE_LIMIT` anyway
 

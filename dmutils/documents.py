@@ -7,7 +7,7 @@ try:
 except ImportError:
     import urllib.parse as urlparse
 
-from .s3 import ClientError, get_file_size, FILE_SIZE_LIMIT
+from .s3 import S3ResponseError, get_file_size, FILE_SIZE_LIMIT
 
 
 BAD_SUPPLIER_NAME_CHARACTERS = ['#', '%', '&', '{', '}', '\\', '<', '>', '*', '?', '/', '$',
@@ -94,7 +94,7 @@ def upload_document(uploader, upload_type, documents_url, service, field, file_c
 
     try:
         uploader.save(file_path, file_contents, acl=acl)
-    except ClientError:
+    except S3ResponseError:
         return False
 
     full_url = urlparse.urljoin(

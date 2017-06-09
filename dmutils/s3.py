@@ -7,8 +7,9 @@ import logging
 from dateutil.parser import parse as parse_time
 from six import text_type
 
-# import this and catch it if you like but doing so you give up any pretense at boto version independence.
-from botocore.exceptions import ClientError
+# a bit of a lie here - retains compatibility with consumers that were importing boto2's S3ResponseError from here. this
+# is the exception boto3 raises in (mostly) the same situations.
+from botocore.exceptions import ClientError as S3ResponseError
 
 from .formats import DATETIME_FORMAT
 
@@ -109,7 +110,7 @@ class S3(object):
         try:
             obj = self._bucket.Object(path)
             obj.load()
-        except ClientError:
+        except S3ResponseError:
             return None
         return obj
 

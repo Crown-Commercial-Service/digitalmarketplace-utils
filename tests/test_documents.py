@@ -6,7 +6,7 @@ import pytest
 from freezegun import freeze_time
 
 from helpers import MockFile
-from dmutils.s3 import ClientError
+from botocore.exceptions import ClientError
 
 from dmutils.documents import (
     generate_file_name, get_extension,
