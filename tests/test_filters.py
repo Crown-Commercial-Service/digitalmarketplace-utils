@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import mock
+
 from flask import Markup
 
-from dmutils.filters import capitalize_first, format_links, nbsp, smartjoin
+from dmutils.filters import capitalize_first, format_links, nbsp, smartjoin, preserve_line_breaks
 
 
 def test_smartjoin_for_more_than_one_item():
@@ -118,3 +120,12 @@ def test_capitalize_first_for_non_strings():
     assert capitalize_first([{'list': 'of'}, 'things']) == [{'list': 'of'}, 'Things']
     assert capitalize_first({'this': 'thing'}) == {'this': 'thing'}
     assert capitalize_first('https://www.example.com') == 'https://www.example.com'
+
+
+def test_preserve_line_breaks():
+    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n') == '<br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n\r\n') == '<br><br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n \r\n \r\n') == '<br><br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n\r\n\r\n\r\n\r\n\r\n') == '<br><br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=False), '') == ''
+    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n<h2>') == '<br>&lt;h2&gt;'
