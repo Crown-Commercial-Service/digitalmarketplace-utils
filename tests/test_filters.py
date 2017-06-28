@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import mock
+import pytest
 
 from flask import Markup
 
@@ -122,10 +123,16 @@ def test_capitalize_first_for_non_strings():
     assert capitalize_first('https://www.example.com') == 'https://www.example.com'
 
 
-def test_preserve_line_breaks():
-    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n') == '<br>'
-    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n\r\n') == '<br><br>'
-    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n \r\n \r\n') == '<br><br>'
-    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n\r\n\r\n\r\n\r\n\r\n') == '<br><br>'
-    assert preserve_line_breaks(mock.Mock(autoescape=False), '') == ''
-    assert preserve_line_breaks(mock.Mock(autoescape=False), '\r\n<h2>') == '<br>&lt;h2&gt;'
+@pytest.mark.parametrize("bool", (False, True,))  # Shouldn't matter
+def test_preserve_line_breaks(bool):
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n', 'textbox_large') == '<br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n\r\n', 'textbox_large') == '<br><br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n \r\n \r\n', 'textbox_large') == '<br><br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n\r\n\r\n\r\n\r\n\r\n', 'textbox_large') == '<br><br>'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '', 'textbox_large') == ''
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n<h2>', 'textbox_large') == '<br>&lt;h2&gt;'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), 'You’ll be working', 'textbox_large') == 'You’ll be working'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '\n', 'textbox_large') == '\n'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n', 'not_textbox_large') == '\r\n'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool),
+                                '\r\n\r\n  \r\n\r\n  \r\n\r\n', 'textbox_large') == '<br><br>'

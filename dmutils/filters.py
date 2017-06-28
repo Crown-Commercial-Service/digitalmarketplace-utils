@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import re
-from flask import Markup, escape
 from six import string_types
 from jinja2 import evalcontextfilter, Markup, escape
 
@@ -69,17 +68,18 @@ def capitalize_first(maybe_text):
     return maybe_text
 
 # find repeated sequences of '\r\n\', optionally separated by a space character
-_multiple_newlines_re = re.compile(r'(\r\n ?){2,}')
+_multiple_newlines_re = re.compile(r'(\r\n *){2,}')
 # find \r\n sequences
 _single_newline_re = re.compile(r'(\r\n)')
 
 
 @evalcontextfilter
-def preserve_line_breaks(eval_ctx, value, question_type=None):
+def preserve_line_breaks(eval_ctx, value, question_type):
     if question_type and question_type != 'textbox_large':
         return value
 
-    value = str(escape(value))
+    # Turn potential markdown objects into string
+    value = '{}'.format(escape(value))
 
     # limit sequences of "\r\n\r\n ..."s to two
     value = _multiple_newlines_re.sub(u'\r\n\r\n', value)
