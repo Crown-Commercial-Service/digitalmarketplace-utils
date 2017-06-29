@@ -67,7 +67,7 @@ def capitalize_first(maybe_text):
 
     return maybe_text
 
-# find repeated sequences of '\r\n\', optionally separated by a space character
+# find repeated sequences of '\r\n\', optionally separated by other non-newline whitespace space characters
 _multiple_newlines_re = re.compile(r'(\r\n[ \t\f\v]*){2,}')
 # find \r\n sequences
 _single_newline_re = re.compile(r'(\r\n)')
@@ -76,7 +76,8 @@ _single_newline_re = re.compile(r'(\r\n)')
 @evalcontextfilter
 def preserve_line_breaks(eval_ctx, value):
 
-    # Turn potential markdown objects into string
+    # `escape()` returns Markdown objects in python2
+    # We want to cast the output value back into unicode strings
     value = u'{}'.format(escape(value))
 
     # limit sequences of "\r\n\r\n ..."s to two

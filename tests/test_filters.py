@@ -125,6 +125,7 @@ def test_capitalize_first_for_non_strings():
 
 @pytest.mark.parametrize("_autoescape", (False, True))
 def test_preserve_line_breaks(_autoescape):
+    # We expect the same output regardless of the eval context `autoescape` value
     eval_ctx_mock = mock.Mock(autoescape=_autoescape)
     assert preserve_line_breaks(eval_ctx_mock, '\r\n') == '<br>'
     assert preserve_line_breaks(eval_ctx_mock, '\r\n\r\n') == '<br><br>'
