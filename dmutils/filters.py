@@ -79,7 +79,7 @@ def preserve_line_breaks(eval_ctx, value, question_type):
         return value
 
     # Turn potential markdown objects into string
-    value = '{}'.format(escape(value))
+    value = u'{}'.format(escape(value))
 
     # limit sequences of "\r\n\r\n ..."s to two
     value = _multiple_newlines_re.sub(u'\r\n\r\n', value)

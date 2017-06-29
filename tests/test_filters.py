@@ -131,8 +131,9 @@ def test_preserve_line_breaks(bool):
     assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n\r\n\r\n\r\n\r\n\r\n', 'textbox_large') == '<br><br>'
     assert preserve_line_breaks(mock.Mock(autoescape=bool), '', 'textbox_large') == ''
     assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n<h2>', 'textbox_large') == '<br>&lt;h2&gt;'
-    assert preserve_line_breaks(mock.Mock(autoescape=bool), 'You’ll be working', 'textbox_large') == 'You’ll be working'
     assert preserve_line_breaks(mock.Mock(autoescape=bool), '\n', 'textbox_large') == '\n'
     assert preserve_line_breaks(mock.Mock(autoescape=bool), '\r\n', 'not_textbox_large') == '\r\n'
+    assert preserve_line_breaks(mock.Mock(autoescape=bool),
+                                'You’ll be eating 🍕', 'textbox_large') == 'You’ll be eating 🍕'
     assert preserve_line_breaks(mock.Mock(autoescape=bool),
                                 '\r\n\r\n  \r\n\r\n  \t\v \r\n\r\n', 'textbox_large') == '<br><br>'
