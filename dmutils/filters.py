@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import re
-from flask import Markup, escape
 from six import string_types
+from jinja2 import evalcontextfilter, Markup, escape
 
 
 def smartjoin(input):
@@ -66,3 +66,26 @@ def capitalize_first(maybe_text):
         return [capitalize_first(item) for item in maybe_text]
 
     return maybe_text
+
+# find repeated sequences of '\r\n\', optionally separated by other non-newline whitespace space characters
+_multiple_newlines_re = re.compile(r'(\r\n[ \t\f\v]*){2,}')
+# find \r\n sequences
+_single_newline_re = re.compile(r'(\r\n)')
+
+
+@evalcontextfilter
+def preserve_line_breaks(eval_ctx, value):
+
+    # `escape()` returns Markdown objects in python2
+    # We want to cast the output value back into unicode strings
+    value = u'{}'.format(escape(value))
+
+    # limit sequences of "\r\n\r\n ..."s to two
+    value = _multiple_newlines_re.sub(u'\r\n\r\n', value)
+
+    result = _single_newline_re.sub(u'<br>', value)
+
+    if eval_ctx.autoescape:
+        result = Markup(result)
+
+    return result

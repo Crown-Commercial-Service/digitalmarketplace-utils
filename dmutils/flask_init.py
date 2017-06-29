@@ -51,6 +51,7 @@ def init_app(
     application.add_template_filter(filters.format_links)
     application.add_template_filter(filters.nbsp)
     application.add_template_filter(filters.smartjoin)
+    application.add_template_filter(filters.preserve_line_breaks)
     # Make select formats available in templates.
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)

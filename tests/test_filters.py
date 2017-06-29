@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import mock
+import pytest
+
 from flask import Markup
 
-from dmutils.filters import capitalize_first, format_links, nbsp, smartjoin
+from dmutils.filters import capitalize_first, format_links, nbsp, smartjoin, preserve_line_breaks
 
 
 def test_smartjoin_for_more_than_one_item():
@@ -118,3 +121,18 @@ def test_capitalize_first_for_non_strings():
     assert capitalize_first([{'list': 'of'}, 'things']) == [{'list': 'of'}, 'Things']
     assert capitalize_first({'this': 'thing'}) == {'this': 'thing'}
     assert capitalize_first('https://www.example.com') == 'https://www.example.com'
+
+
+@pytest.mark.parametrize("_autoescape", (False, True))
+def test_preserve_line_breaks(_autoescape):
+    # We expect the same output regardless of the eval context `autoescape` value
+    eval_ctx_mock = mock.Mock(autoescape=_autoescape)
+    assert preserve_line_breaks(eval_ctx_mock, '\r\n') == '<br>'
+    assert preserve_line_breaks(eval_ctx_mock, '\r\n\r\n') == '<br><br>'
+    assert preserve_line_breaks(eval_ctx_mock, '\r\n \r\n \r\n') == '<br><br>'
+    assert preserve_line_breaks(eval_ctx_mock, '\r\n\r\n\r\n\r\n\r\n\r\n') == '<br><br>'
+    assert preserve_line_breaks(eval_ctx_mock, '') == ''
+    assert preserve_line_breaks(eval_ctx_mock, '\r\n<h2>') == '<br>&lt;h2&gt;'
+    assert preserve_line_breaks(eval_ctx_mock, '\n') == '\n'
+    assert preserve_line_breaks(eval_ctx_mock, 'You’ll be eating 🍕') == 'You’ll be eating 🍕'
+    assert preserve_line_breaks(eval_ctx_mock, '\r\n\r\n  \r\n\r\n  \t\v \r\n\r\n') == '<br><br>'
