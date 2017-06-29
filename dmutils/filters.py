@@ -74,9 +74,7 @@ _single_newline_re = re.compile(r'(\r\n)')
 
 
 @evalcontextfilter
-def preserve_line_breaks(eval_ctx, value, question_type):
-    if question_type and question_type != 'textbox_large':
-        return value
+def preserve_line_breaks(eval_ctx, value):
 
     # Turn potential markdown objects into string
     value = u'{}'.format(escape(value))
