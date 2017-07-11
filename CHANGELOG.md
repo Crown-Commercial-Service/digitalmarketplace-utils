@@ -24,6 +24,18 @@ PR: [#306](https://github.com/alphagov/digitalmarketplace-utils/pull/306)
 (not that I could find any external code that used it) `get_file_size_up_to_maximum` is now `get_file_size`, which is a far more sensible way of presenting the interface given the calling code is going to have to compare the result against `FILE_SIZE_LIMIT` anyway
 
 ### Example app changes
+Old:
+```
+# get_key used to return None if path param was None
+ 
+key = some_bucket.get_key(path_that_might_be_none)
+```
+New:
+```
+# get_key will now raise an error if path param is None
+ 
+key = some_bucket.get_key(path_that_might_be_none) if path_that_might_be_none else None
+```
 
 Old:
 ```
