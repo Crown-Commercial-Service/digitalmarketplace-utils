@@ -29,7 +29,7 @@ setup(
          'Flask>=0.10',
          'boto3==1.4.4',
          'contextlib2==0.4.0',
-         'cryptography==1.6',
+         'cryptography==1.9',
          'inflection==0.2.1',
          'mailchimp3==2.0.11',
          'mandrill==1.0.57',
