@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from dmutils.formats import (
-    timeformat, shortdateformat, dateformat, datetimeformat, datetodatetimeformat
+    timeformat, shortdateformat, dateformat, datetimeformat, datetodatetimeformat,
+    utcdatetimeformat
 )
 import pytz
 from datetime import datetime
@@ -64,16 +65,39 @@ def test_dateformat():
 
 def test_datetimeformat():
     cases = [
-        (datetime(2012, 11, 10, 9, 8, 7, 6), "Saturday 10 November 2012 at 09:08"),
-        ("2012-11-10T09:08:07.0Z", "Saturday 10 November 2012 at 09:08"),
-        (datetime(2012, 8, 10, 9, 8, 7, 6), "Friday 10 August 2012 at 10:08"),
-        ("2012-08-10T09:08:07.0Z", "Friday 10 August 2012 at 10:08"),
-        (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "Friday 10 August 2012 at 10:08"),
-        (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), "Wednesday 1 August 2012 at 10:08"),
+        (datetime(2012, 11, 10, 9, 8, 7, 6), "Saturday 10 November 2012 at 9:08am"),
+        ("2012-11-10T09:08:07.0Z", "Saturday 10 November 2012 at 9:08am"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6), "Friday 10 August 2012 at 10:08am"),
+        ("2012-08-10T09:08:07.0Z", "Friday 10 August 2012 at 10:08am"),
+        (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "Friday 10 August 2012 at 10:08am"),
+        (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), "Wednesday 1 August 2012 at 10:08am"),
+        (datetime(2012, 8, 1, 22, 59, 7, 6, tzinfo=pytz.utc), "Wednesday 1 August 2012 at 11:59pm"),
+        # Daylight savings edge case
+        (datetime(2012, 3, 25, 0, 59, 7, 6, tzinfo=pytz.utc), "Sunday 25 March 2012 at 12:59am"),
+        (datetime(2012, 3, 25, 1, 59, 7, 6, tzinfo=pytz.utc), "Sunday 25 March 2012 at 2:59am"),
+        # Fall back to default if no valid date supplied
+        (None, None),
     ]
 
     def check_datetimeformat(dt, formatted_datetime):
         assert datetimeformat(dt) == formatted_datetime
+
+    for dt, formatted_datetime in cases:
+        yield check_datetimeformat, dt, formatted_datetime
+
+
+def test_utcdatetimeformat():
+    cases = [
+        # UTC+00 date: display as normal
+        (datetime(2012, 3, 24, 23, 59, 7, 6, tzinfo=pytz.utc), "Saturday 24 March 2012 at 11:59pm"),
+        # UTC+01 date: force to UTC+00 if date would rollover to the next day
+        (datetime(2012, 3, 25, 23, 59, 7, 6, tzinfo=pytz.utc), "Sunday 25 March 2012 at 11:59pm"),
+        # Fall back to default if no valid date supplied
+        (None, None),
+    ]
+
+    def check_datetimeformat(dt, formatted_datetime):
+        assert utcdatetimeformat(dt) == formatted_datetime
 
     for dt, formatted_datetime in cases:
         yield check_datetimeformat, dt, formatted_datetime
