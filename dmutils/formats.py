@@ -22,12 +22,20 @@ def dateformat(value, default_value=None):
     return _format_date(value, default_value, DISPLAY_DATE_FORMAT, localize=False)
 
 
-def datetimeformat(value, default_value=None):
+def datetimeformat(value, default_value=None, localize=True):
     # en_GB locale uses uppercase AM/PM which contravenes our style guide
-    formatted_date = _format_date(value, default_value, DISPLAY_DATETIME_FORMAT)
+    formatted_date = _format_date(value, default_value, DISPLAY_DATETIME_FORMAT, localize=localize)
     if formatted_date:
         return formatted_date.replace('AM', 'am').replace('PM', 'pm').replace(" 0", " ")
     return formatted_date
+
+
+def utcdatetimeformat(value, default_value=None):
+    local_format = datetimeformat(value, default_value)
+    if local_format and "12:59am" in local_format:
+        # Force UTC+00 if the date has rolled over to the next day
+        return datetimeformat(value, default_value, localize=False)
+    return local_format
 
 
 def datetodatetimeformat(value):
