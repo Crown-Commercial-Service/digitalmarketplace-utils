@@ -4,8 +4,8 @@ VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo $$(pwd)/venv || echo $$V
 virtualenv:
 	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv -p python3 venv || true
 
-requirements_for_test: virtualenv requirements_for_test.txt
-	${VIRTUALENV_ROOT}/bin/pip install -r requirements_for_test.txt
+requirements-dev: virtualenv requirements-dev.txt
+	${VIRTUALENV_ROOT}/bin/pip install -r requirements-dev.txt
 
 test: show_environment test_pep8 test_python
 
@@ -19,4 +19,4 @@ show_environment:
 	@echo "Environment variables in use:"
 	@env | grep DM_ || true
 
-.PHONY: virtualenv requirements_for_test test_pep8 test_python show_environment
+.PHONY: virtualenv requirements-dev test_pep8 test_python show_environment
