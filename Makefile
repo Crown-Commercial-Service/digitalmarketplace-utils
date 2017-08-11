@@ -2,7 +2,7 @@ SHELL := /bin/bash
 VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo $$(pwd)/venv || echo $$VIRTUAL_ENV)
 
 virtualenv:
-	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv venv || true
+	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv -p python3 venv || true
 
 requirements_for_test: virtualenv requirements_for_test.txt
 	${VIRTUALENV_ROOT}/bin/pip install -r requirements_for_test.txt
