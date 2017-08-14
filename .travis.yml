@@ -1,9 +1,9 @@
 language: python
 python:
   - "2.7"
-  - "3.4"
+  - "3.6"
 install:
-  - pip install -r requirements_for_test.txt
+  - pip install -r requirements-dev.txt
 script:
   - ./scripts/run_tests.sh --cov=dmutils --cov-report=term-missing
 after_success:
