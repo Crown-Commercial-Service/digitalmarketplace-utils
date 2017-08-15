@@ -45,6 +45,18 @@ def test_format_link_with_text():
     assert format_links(text) == formatted_text
 
 
+def test_format_link_handles_markup_objects_with_protocol():
+    text = Markup('<td class="summary-item-field">\n\n<span>Hurray - http://www.example.com is great</span></td>')
+    formatted_text = Markup('<td class="summary-item-field">\n\n<span>Hurray - <a href="http://www.example.com" class="break-link" rel="external">http://www.example.com</a> is great</span></td>')  # noqa
+    assert format_links(text) == formatted_text
+
+
+def test_format_link_handles_markup_objects_without_protocol():
+    text = Markup('<td class="summary-item-field">\n\n<span>Hurray - www.example.com is great</span></td>')
+    formatted_text = Markup('<td class="summary-item-field">\n\n<span>Hurray - <span class="break-link">www.example.com</span> is great</span></td>')  # noqa
+    assert format_links(text) == formatted_text
+
+
 def test_format_link_and_text_escapes_extra_html():
     text = 'This is the <strong>link</strong>: http://www.example.com'
     formatted_text = 'This is the &lt;strong&gt;link&lt;/strong&gt;: <a href="http://www.example.com" class="break-link" rel="external">http://www.example.com</a>'  # noqa
