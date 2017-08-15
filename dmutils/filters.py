@@ -15,17 +15,24 @@ def smartjoin(input):
 
 
 def format_links(text):
+    """
+    Filter that searches a given string (or other string-like object) for any URIs
+    and wraps them with either an anchor link or a span, depending on whether the link contains a valid protocol.
+    Python3's re library returns matches with type string rather than the arg's type, which
+    causes problems for Markup() objects containing tags to be escaped later. Therefore
+    we need to cast the matches and formatted links back to the original type before returning the value.
+    """
     url_match = re.compile(r"""(
                                 (?:https?://|www\.)    # start with http:// or www.
                                 (?:[^\s<>"'/?#]+)      # domain doesn't have these characters
                                 (?:[^\s<>"']+)         # post-domain part of URL doesn't have these characters
                                 [^\s<>,"'\.]           # no dot at end
                                 )""", re.X)
-    matched_urls = url_match.findall(text)
+    matched_urls = [type(text)(substr) for substr in url_match.findall(text)]
     if matched_urls:
         link = '<a href="{0}" class="break-link" rel="external">{0}</a>'
         plaintext_link = '<span class="break-link">{0}</span>'
-        text_array = url_match.split(text)
+        text_array = [type(text)(substr) for substr in url_match.split(text)]
         formatted_text_array = []
         for partial_text in text_array:
             if partial_text in matched_urls:
