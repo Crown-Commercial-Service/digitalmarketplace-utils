@@ -2,6 +2,28 @@
 
 Records breaking changes from major version bumps
 
+## 28.0.0
+
+PR:
+
+### What changed
+
+`decode_invitation_token()` will now return a dict with data if the token is expired, rather than just returning `None`. If the token is invalid it will still return `None`.
+The data it returns is `{ 'expired': True, 'role': '<user role from token>' }`. This is useful when creating new users as we still capture the role if the token is invalid, and render appropriate helpful templates.
+
+### Example app changes
+Old:
+```
+if token is None:
+    return render_template('generic-error-page.html')
+```
+New:
+```
+if token is None:
+    return render_template('invalid-token-error-page.html')
+elif token.get('expired'):
+    return render_template('create-{}-user-error-page.html'.format(token['role']))
+```
 
 ## 27.0.0
 
@@ -27,13 +49,13 @@ PR: [#306](https://github.com/alphagov/digitalmarketplace-utils/pull/306)
 Old:
 ```
 # get_key used to return None if path param was None
- 
+
 key = some_bucket.get_key(path_that_might_be_none)
 ```
 New:
 ```
 # get_key will now raise an error if path param is None
- 
+
 key = some_bucket.get_key(path_that_might_be_none) if path_that_might_be_none else None
 ```
 

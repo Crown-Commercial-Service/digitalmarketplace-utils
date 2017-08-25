@@ -179,7 +179,26 @@ def decode_invitation_token(encoded_token):
             SEVEN_DAYS_IN_SECONDS
         )
         return token
-    except fernet.InvalidToken as e:
-        current_app.logger.info("Invitation reset attempt with expired token. error {error}",
-                                extra={'error': six.text_type(e)})
-        return None
+
+    except fernet.InvalidToken as error:
+        try:
+            token, _ = decode_token(
+                encoded_token,
+                current_app.config['SHARED_EMAIL_KEY'],
+                current_app.config['INVITE_EMAIL_SALT'],
+                None
+            )
+
+            current_app.logger.info("Invitation reset attempt with expired token. error {error}",
+                                    extra={'error': six.text_type(error)})
+
+            return {
+                'expired': True,
+                'role': token['role']
+            }
+
+        except fernet.InvalidToken as invalid_token_error:
+            current_app.logger.info("Invitation reset attempt with invalid token. error {invalid_token_error}",
+                                    extra={'error': six.text_type(invalid_token_error)})
+
+            return None
