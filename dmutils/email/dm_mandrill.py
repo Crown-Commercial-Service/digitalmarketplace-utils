@@ -193,7 +193,7 @@ def decode_invitation_token(encoded_token):
                                     extra={'error': six.text_type(error)})
 
             return {
-                'expired': True,
+                'error': 'token_expired',
                 'role': token['role']
             }
 
@@ -201,4 +201,4 @@ def decode_invitation_token(encoded_token):
             current_app.logger.info("Invitation reset attempt with invalid token. error {invalid_token_error}",
                                     extra={'error': six.text_type(invalid_token_error)})
 
-            return None
+            return {'error': 'token_invalid'}
