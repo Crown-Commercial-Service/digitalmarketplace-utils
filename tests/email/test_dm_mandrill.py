@@ -297,18 +297,18 @@ def test_decode_invitation_token_decodes_ok(email_app):
         assert decode_invitation_token(token) == data
 
 
-def test_decode_invitation_token_does_not_work_if_bad_token(email_app):
+def test_decode_invitation_token_returns_an_error_if_token_invalid(email_app):
     with email_app.app_context():
         data = {'email_address': 'test-user@email.com', 'supplier_name': 'A. Supplier', 'role': 'supplier'}
         token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])[1:]
 
-        assert decode_invitation_token(token) is None
+        assert decode_invitation_token(token) == {'error': 'token_invalid'}
 
 
-def test_decode_invitation_token_returns_expired_true_and_role_if_token_expired(email_app):
+def test_decode_invitation_token_returns_an_error_and_role_if_token_expired(email_app):
     with freeze_time('2015-01-02 03:04:05'):
         data = {'email_address': 'test-user@email.com', 'supplier_name': 'A. Supplier', 'role': 'supplier'}
         token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])
     with email_app.app_context():
 
-        assert decode_invitation_token(token) == {'expired': True, 'role': 'supplier'}
+        assert decode_invitation_token(token) == {'error': 'token_expired', 'role': 'supplier'}
