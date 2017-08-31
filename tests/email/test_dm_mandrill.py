@@ -292,14 +292,24 @@ def test_decode_password_reset_token_does_not_work_if_password_changed_later_tha
 def test_decode_invitation_token_decodes_ok(email_app):
     with email_app.app_context():
         # works with arbitrary fields
-        data = {'email_address': 'test-user@email.com', 'supplier_id': 1234, 'foo': 'bar', 'role': 'supplier'}
+        data = {
+            'email_address': 'test-user@email.com',
+            'supplier_id': 1234,
+            'foo': 'bar',
+            'role': 'supplier'
+        }
         token = generate_token(data, 'Key', 'Salt')
         assert decode_invitation_token(token) == data
 
 
 def test_decode_invitation_token_returns_an_error_if_token_invalid(email_app):
     with email_app.app_context():
-        data = {'email_address': 'test-user@email.com', 'supplier_name': 'A. Supplier', 'role': 'supplier'}
+        data = {
+            'email_address': 'test-user@email.com',
+            'supplier_id': 1234,
+            'supplier_name': 'A. Supplier',
+            'role': 'supplier'
+        }
         token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])[1:]
 
         assert decode_invitation_token(token) == {'error': 'token_invalid'}
@@ -307,8 +317,69 @@ def test_decode_invitation_token_returns_an_error_if_token_invalid(email_app):
 
 def test_decode_invitation_token_returns_an_error_and_role_if_token_expired(email_app):
     with freeze_time('2015-01-02 03:04:05'):
-        data = {'email_address': 'test-user@email.com', 'supplier_name': 'A. Supplier', 'role': 'supplier'}
+        data = {
+            'email_address': 'test-user@email.com',
+            'supplier_id': 1234,
+            'supplier_name': 'A. Supplier',
+            'role': 'supplier'
+        }
         token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])
     with email_app.app_context():
 
         assert decode_invitation_token(token) == {'error': 'token_expired', 'role': 'supplier'}
+
+
+def test_decode_invitation_token_adds_the_role_key_to_old_style_buyer_tokens(email_app):
+    data = {'email_address': 'test-user@email.com'}
+    token = generate_token(data, 'Key', 'Salt')
+
+    with email_app.app_context():
+        assert decode_invitation_token(token) == {
+            'email_address': 'test-user@email.com',
+            'role': 'buyer'
+        }
+
+
+def test_decode_invitation_token_adds_the_role_key_to_old_style_supplier_tokens(email_app):
+    data = {
+        'email_address': 'test-user@email.com',
+        'supplier_id': 1234,
+        'supplier_name': 'A. Supplier',
+    }
+    token = generate_token(data, 'Key', 'Salt')
+
+    with email_app.app_context():
+        assert decode_invitation_token(token) == {
+            'email_address': 'test-user@email.com',
+            'supplier_id': 1234,
+            'supplier_name': 'A. Supplier',
+            'role': 'supplier'
+        }
+
+
+def test_decode_invitation_token_adds_the_role_key_to_expired_old_style_buyer_tokens(email_app):
+    with freeze_time('2015-01-02 03:04:05'):
+        data = {'email_address': 'test-user@email.com'}
+        token = generate_token(data, 'Key', 'Salt')
+
+    with email_app.app_context():
+        assert decode_invitation_token(token) == {
+            'error': 'token_expired',
+            'role': 'buyer'
+        }
+
+
+def test_decode_invitation_token_adds_the_role_key_to_expired_old_style_supplier_tokens(email_app):
+    with freeze_time('2015-01-02 03:04:05'):
+        data = {
+            'email_address': 'test-user@email.com',
+            'supplier_id': 1234,
+            'supplier_name': 'A. Supplier',
+        }
+        token = generate_token(data, 'Key', 'Salt')
+
+    with email_app.app_context():
+        assert decode_invitation_token(token) == {
+            'error': 'token_expired',
+            'role': 'supplier'
+        }
