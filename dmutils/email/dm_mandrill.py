@@ -178,6 +178,10 @@ def decode_invitation_token(encoded_token):
             current_app.config['INVITE_EMAIL_SALT'],
             SEVEN_DAYS_IN_SECONDS
         )
+        if 'role' not in token:
+            token.update({
+                'role': 'supplier' if token.get('supplier_id') else 'buyer'
+            })
         return token
 
     except fernet.InvalidToken as error:
@@ -194,7 +198,7 @@ def decode_invitation_token(encoded_token):
 
             return {
                 'error': 'token_expired',
-                'role': token['role']
+                'role': token.get('role') or ('supplier' if token.get('supplier_id') else 'buyer')
             }
 
         except fernet.InvalidToken as invalid_token_error:
