@@ -7,8 +7,12 @@ from wtforms.validators import Regexp
 
 class StripWhitespaceStringField(StringField):
     def __init__(self, label=None, **kwargs):
-
-        kwargs['filters'] = kwargs.get('filters', []) + [strip_whitespace]
+        kwargs['filters'] = tuple(chain(
+            kwargs.get('filters', ()),
+            (
+                strip_whitespace,
+            ),
+        ))
         super(StringField, self).__init__(label, **kwargs)
 
 
