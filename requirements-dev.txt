@@ -8,3 +8,5 @@ pep8==1.6.2
 pytest==2.8.7
 pytest-cov==2.2.0
 python-coveralls==2.5.0
+Flask==0.10.1
+Flask-WTF==0.12
