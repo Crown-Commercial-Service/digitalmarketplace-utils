@@ -8,8 +8,23 @@ PR:
 
 ### What changed
 
-`decode_invitation_token()` will now return a dict with data if the token is expired, rather than just returning `None`. If the token is invalid it will still return `None`.
-The data it returns is `{ 'expired': True, 'role': '<user role from token>' }`. This is useful when creating new users as we still capture the role if the token is invalid, and render appropriate helpful templates.
+`decode_invitation_token()` will now return a dict with an error message if the token is invalid or expired. If expired, the dict will also contain the user role that the token was generated for. This is useful when creating new users as we can use the role to render useful, role specific templates even if the token is expired.
+
+### Example return dicts
+Invalid token:
+```
+    {
+      'error': 'token_invalid'
+    }
+```
+
+Expired token:
+```
+  {
+    'error': 'token_expired',
+    'role': 'supplier'
+  }
+```
 
 ### Example app changes
 Old:
@@ -19,9 +34,9 @@ if token is None:
 ```
 New:
 ```
-if token is None:
+if token.get('error') == 'token_invalid':
     return render_template('invalid-token-error-page.html')
-elif token.get('expired'):
+elif token.get('error') == 'token_expired':
     return render_template('create-{}-user-error-page.html'.format(token['role']))
 ```
 
