@@ -17,13 +17,11 @@ class StripWhitespaceStringField(StringField):
 
 
 class EmailField(StripWhitespaceStringField):
-    _email_re = re.compile(r"^[^@\s]+@[^@\.\s]+(\.[^@\.\s]+)+$")
-
     def __init__(self, label=None, **kwargs):
         kwargs["validators"] = tuple(chain(
             kwargs.pop("validators", ()),
             (
-                Regexp(self._email_re, message="Please enter a valid email address"),
+                EmailValidator(),
             ),
         ))
         super(EmailField, self).__init__(label, **kwargs)
@@ -33,3 +31,11 @@ def strip_whitespace(value):
     if value is not None and hasattr(value, 'strip'):
         return value.strip()
     return value
+
+
+class EmailValidator(Regexp):
+    _email_re = re.compile(r"^[^@\s]+@[^@\.\s]+(\.[^@\.\s]+)+$")
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("message", "Please enter a valid email address.")
+        return super(EmailValidator, self).__init__(self._email_re, **kwargs)

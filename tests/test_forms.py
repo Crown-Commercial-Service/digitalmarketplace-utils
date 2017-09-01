@@ -98,3 +98,14 @@ class TestEmailFieldCombination(object):
                 optional_field_email != self._invalid_address and
                 unspecified_field_email == self._valid_address
             )
+
+            if required_field_email == self._invalid_address:
+                assert form.errors["required_email"] == ["Please enter a valid email address."]
+            elif required_field_email == "":
+                assert form.errors["required_email"] == ["No really, we want this"]
+
+            if optional_field_email == self._invalid_address:
+                assert form.errors["optional_email"] == ["Please enter a valid email address."]
+
+            if unspecified_field_email in (self._invalid_address, ""):
+                assert form.errors["unspecified_email"] == ["Please enter a valid email address."]
