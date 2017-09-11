@@ -222,7 +222,7 @@ class TestDMNotifyClient(object):
         """Trigger identical emails and make sure only one is sent!"""
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
             with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
-                send_email_notification_mock.return_value = True
+                send_email_notification_mock.return_value = {'id': 'example-id'}
                 get_all_notifications_mock.return_value = {"notifications": []}
                 dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=False)
                 dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=False)

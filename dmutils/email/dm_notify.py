@@ -117,9 +117,10 @@ class DMNotifyClient(object):
             raise EmailError(str(e))
         self._update_cache(reference)
         self.logger.info(
-            "Sent {email_address} email with ref {ref} (template {template_id}) through Notify",
+            "Sent email with ref {ref} to {email_address} (id: {notify_id}, template: {template_id}) through Notify",
             extra=dict(
                 email_address=hash_string(email_address),
+                notify_id=response['id'],
                 template_id=template_id,
                 ref=reference,
             ),
