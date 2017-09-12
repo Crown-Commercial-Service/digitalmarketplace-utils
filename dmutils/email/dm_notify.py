@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Digital Marketplace Notify integration."""
-from collections import OrderedDict
-
 from flask import current_app
 from notifications_python_client import NotificationsAPIClient
 from notifications_python_client.errors import HTTPError
@@ -96,11 +94,11 @@ class DMNotifyClient(object):
         reference = reference or self.get_reference(email_address, template_id, personalisation)
         if not allow_resend and self.has_been_sent(reference):
             self.logger.info(
-                "Email with ref {ref} (template {template_id}) has already been sent to {email_address} through Notify",
+                "Email {reference} (template {template_id}) has already been sent to {email_address} through Notify",
                 extra=dict(
                     email_address=hash_string(email_address),
                     template_id=template_id,
-                    ref=reference,
+                    reference=reference,
                 ),
             )
             return
@@ -116,12 +114,12 @@ class DMNotifyClient(object):
             raise EmailError(str(e))
         self._update_cache(reference)
         self.logger.info(
-            "Sent email with ref {ref} to {email_address} (id: {notify_id}, template: {template_id}) through Notify",
+            "Sent email {reference} to {email_address} (id: {notify_id}, template: {template_id}) through Notify",
             extra=dict(
                 email_address=hash_string(email_address),
                 notify_id=response['id'],
                 template_id=template_id,
-                ref=reference,
+                reference=reference,
             ),
         )
         return response
