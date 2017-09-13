@@ -110,6 +110,18 @@ class TestDMNotifyClient(object):
                 reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
             )
 
+    def test_send_email_with_external_reference(self, dm_notify_client, notify_send_email):
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+            email_mock.return_value = notify_send_email
+            dm_notify_client.send_email(self.email_address, self.template_id, reference='abc')
+
+            email_mock.assert_called_with(
+                self.email_address,
+                self.template_id,
+                personalisation=None,
+                reference='abc'
+            )
+
     def test_personalisation_passed(self, dm_notify_client, notify_send_email):
         """Assert the expected existence of personalisation."""
         personalisation = {u'f\u00a3oo': u'bar\u00a3'}
@@ -222,7 +234,7 @@ class TestDMNotifyClient(object):
         """Trigger identical emails and make sure only one is sent!"""
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
             with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
-                send_email_notification_mock.return_value = True
+                send_email_notification_mock.return_value = {'id': 'example-id'}
                 get_all_notifications_mock.return_value = {"notifications": []}
                 dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=False)
                 dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=False)

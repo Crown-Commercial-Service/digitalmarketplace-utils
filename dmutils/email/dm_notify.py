@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Digital Marketplace Notify integration."""
-from collections import OrderedDict
-
 from flask import current_app
 from notifications_python_client import NotificationsAPIClient
 from notifications_python_client.errors import HTTPError
@@ -52,14 +50,13 @@ class DMNotifyClient(object):
         return reference in self.get_delivered_references()
 
     @staticmethod
-    def get_reference(email_address, template_id, personalisation=None, **kwargs):
+    def get_reference(email_address, template_id, personalisation=None):
         """
         Method to return the standard reference given the variables the email is sent with.
 
         :param email_address: Emails recipient
         :param template_id: Emails template ID on Notify
         :param personalisation: Template parameters
-        :param kwargs: Extra data passed to the reference eg. {'notes': 'Manual resend'}
         :return: Hashed string 'reference' to be passed to client.send_email_notification or self.send_email
         """
         personalisation_string = u','.join(
@@ -84,7 +81,7 @@ class DMNotifyClient(object):
             messages.append(message_string.format(**format_kwargs))
         return message_prefix + u', '.join(messages)
 
-    def send_email(self, email_address, template_id, personalisation=None, allow_resend=True):
+    def send_email(self, email_address, template_id, personalisation=None, allow_resend=True, reference=None):
         """
         Method to send an email using the Notify api.
 
@@ -94,14 +91,14 @@ class DMNotifyClient(object):
         :param allow_resend: if False instantiate the delivered reference cache and ensure we are not sending duplicates
         :return: response from the api. For more information see https://github.com/alphagov/notifications-python-client
         """
-        reference = self.get_reference(email_address, template_id, personalisation)
+        reference = reference or self.get_reference(email_address, template_id, personalisation)
         if not allow_resend and self.has_been_sent(reference):
             self.logger.info(
-                "Email with ref {ref} (template {template_id}) has already been sent to {email_address} through Notify",
+                "Email {reference} (template {template_id}) has already been sent to {email_address} through Notify",
                 extra=dict(
                     email_address=hash_string(email_address),
                     template_id=template_id,
-                    ref=reference,
+                    reference=reference,
                 ),
             )
             return
@@ -117,11 +114,12 @@ class DMNotifyClient(object):
             raise EmailError(str(e))
         self._update_cache(reference)
         self.logger.info(
-            "Sent {email_address} email with ref {ref} (template {template_id}) through Notify",
+            "Sent email {reference} to {email_address} (id: {notify_id}, template: {template_id}) through Notify",
             extra=dict(
                 email_address=hash_string(email_address),
+                notify_id=response['id'],
                 template_id=template_id,
-                ref=reference,
+                reference=reference,
             ),
         )
         return response
