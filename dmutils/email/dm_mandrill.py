@@ -202,7 +202,7 @@ def decode_invitation_token(encoded_token):
             }
 
         except fernet.InvalidToken as invalid_token_error:
-            current_app.logger.info("Invitation reset attempt with invalid token. error {invalid_token_error}",
+            current_app.logger.info("Invitation reset attempt with invalid token. error {error}",
                                     extra={'error': six.text_type(invalid_token_error)})
 
             return {'error': 'token_invalid'}
