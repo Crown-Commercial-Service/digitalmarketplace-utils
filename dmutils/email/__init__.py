@@ -6,3 +6,4 @@ from dmutils.email.tokens import (
 
 from .exceptions import EmailError
 from .dm_notify import DMNotifyClient
+from .invite_user import InviteUser
