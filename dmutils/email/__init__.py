@@ -6,3 +6,4 @@ from dmutils.email.tokens import (
 
 from .exceptions import EmailError
 from .dm_notify import DMNotifyClient
+from .user_account_email import send_user_account_email
