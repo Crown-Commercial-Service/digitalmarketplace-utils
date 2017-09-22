@@ -36,7 +36,7 @@ class TestSendUserAccountEmail():
                 'buyer',
                 'test@example.gov.uk',
                 current_app.config['NOTIFY_TEMPLATES']['create_user_account']
-             )
+            )
 
             notify_client_mock.send_email.assert_called_once_with(
                 'test@example.gov.uk',
@@ -75,7 +75,7 @@ class TestSendUserAccountEmail():
                     'user': 'Digital Marketplace Team',
                     'supplier': 'Digital Marketplace'
                 }
-             )
+            )
 
             notify_client_mock.send_email.assert_called_once_with(
                 'test@example.gov.uk',
@@ -102,7 +102,7 @@ class TestSendUserAccountEmail():
                 'buyer',
                 'test@example.gov.uk',
                 current_app.config['NOTIFY_TEMPLATES']['create_user_account']
-             )
+            )
 
             current_app.logger.error.assert_called_once_with(
                 "{code}: Create user email for email_hash {email_hash} failed to send. Error: {error}",
