@@ -102,6 +102,7 @@ class DMMailChimpClient(object):
                 success = False
         return success
 
+    @timeout_retry
     def get_email_addresses_from_list(self, list_id):
         member_data = self._client.lists.members.all(list_id, get_all=True)
         return [member["email_address"] for member in member_data["members"]]
