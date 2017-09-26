@@ -4,7 +4,6 @@ from flask import session, current_app
 
 from dmutils.config import init_app
 from dmutils.email import send_user_account_email, EmailError
-from dmutils.email.tokens import decode_invitation_token
 from dmutils.external import external as external_blueprint
 
 
@@ -57,11 +56,6 @@ class TestSendUserAccountEmail():
             generate_token.return_value = 'mocked-token'
             notify_client_mock = mock.Mock()
             DMNotifyClient.return_value = notify_client_mock
-
-            token_data = {
-                'role': 'supplier',
-                'email_address': 'test@example.gov.uk'
-            }
 
             send_user_account_email(
                 'supplier',

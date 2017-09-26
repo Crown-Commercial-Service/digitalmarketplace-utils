@@ -1,7 +1,7 @@
 from itertools import product
 
 from flask.ext.wtf import Form
-from wtforms.validators import ValidationError, DataRequired, Optional
+from wtforms.validators import DataRequired, Optional
 from werkzeug.datastructures import ImmutableMultiDict
 import pytest
 

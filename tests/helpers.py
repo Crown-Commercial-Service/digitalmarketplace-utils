@@ -1,7 +1,4 @@
 from datetime import datetime
-import mock
-
-
 from six import BytesIO
 
 

@@ -169,7 +169,7 @@ class TestDMNotifyClient(object):
 
     def test_cache_not_instantiated_with_allow_resend(self, dm_notify_client):
         """The cache shouldn't be touched until we pass `allow_resend=False` to `send_email`."""
-        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification'):
             assert dm_notify_client._sent_references_cache is None
             dm_notify_client.send_email(self.email_address, self.template_id)
             assert dm_notify_client._sent_references_cache is None

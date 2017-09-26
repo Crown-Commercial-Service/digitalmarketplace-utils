@@ -1,8 +1,7 @@
 # coding: utf-8
-import pytest
-import mock
-import workdays
 import datetime
+import mock
+
 import dmutils.dates as dates_package
 
 
