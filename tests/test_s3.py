@@ -254,17 +254,8 @@ class TestS3Uploader(object):
     ))
     @freeze_time('2016-10-02')
     def test_save_file(
-        self,
-        empty_bucket,
-        path,
-        expected_path,
-        expected_ct,
-        expected_filename,
-        expected_ext,
-        timestamp,
-        expected_timestamp,
-        download_filename,
-        expected_cd,
+        self, empty_bucket, path, expected_path, expected_ct, expected_filename, expected_ext, timestamp,
+        expected_timestamp, download_filename, expected_cd
     ):
         returned_key_dict = S3("dear-liza").save(
             path,
