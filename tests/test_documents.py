@@ -64,7 +64,7 @@ class TestValidateDocuments(unittest.TestCase):
     def test_filter_empty_files(self):
         file1 = MockFile(b"*", 'file1')
         file2 = MockFile(b"", 'file2')
-        file3 = MockFile(b"*"*10, 'file3')
+        file3 = MockFile(b"*" * 10, 'file3')
         self.assertEquals(
             filter_empty_files({'f1': file1, 'f2': file2, 'f3': file3}),
             {'f1': file1, 'f3': file3}
@@ -74,7 +74,7 @@ class TestValidateDocuments(unittest.TestCase):
         self.assertTrue(file_is_less_than_5mb(MockFile(b"*", 'file1')))
 
     def test_file_is_more_than_5mb(self):
-        self.assertFalse(file_is_less_than_5mb(MockFile(b"*"*5400001, 'file1')))
+        self.assertFalse(file_is_less_than_5mb(MockFile(b"*" * 5400001, 'file1')))
 
     def test_file_is_open_document_format(self):
         self.assertTrue(file_is_open_document_format(MockFile(b"*", 'file1.pdf')))
@@ -114,20 +114,20 @@ class TestValidateDocuments(unittest.TestCase):
 
     def test_validate_documents_not_less_than_5mb(self):
         self.assertEqual(
-            validate_documents({'file1': MockFile(b"*"*5400001, 'file1.pdf')}),
+            validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.pdf')}),
             {'file1': 'file_is_less_than_5mb'}
         )
 
     def test_validate_documents_not_open_document_above_5mb(self):
         self.assertEqual(
-            validate_documents({'file1': MockFile(b"*"*5400001, 'file1.doc')}),
+            validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.doc')}),
             {'file1': 'file_is_open_document_format'}
         )
 
     def test_validate_multiple_documents(self):
         self.assertEqual(
             validate_documents({
-                'file1': MockFile(b"*"*5400001, 'file1.pdf'),
+                'file1': MockFile(b"*" * 5400001, 'file1.pdf'),
                 'file2': MockFile(b"*", 'file1.pdf'),
                 'file3': MockFile(b"*", 'file1.doc'),
             }),
@@ -249,7 +249,7 @@ class TestUploadServiceDocuments(object):
         self.documents_url = 'http://localhost'
 
     def test_upload_service_documents(self):
-        request_files = {'pricingDocumentURL': MockFile(b"*"*100, 'q1.pdf')}
+        request_files = {'pricingDocumentURL': MockFile(b"*" * 100, 'q1.pdf')}
 
         with freeze_time('2015-10-04 14:36:05'):
             files, errors = upload_service_documents(
@@ -263,7 +263,7 @@ class TestUploadServiceDocuments(object):
         assert len(errors) == 0
 
     def test_upload_private_service_documents(self):
-        request_files = {'pricingDocumentURL': MockFile(b"*"*100, 'q1.pdf')}
+        request_files = {'pricingDocumentURL': MockFile(b"*" * 100, 'q1.pdf')}
 
         with freeze_time('2015-10-04 14:36:05'):
             files, errors = upload_service_documents(
@@ -288,7 +288,7 @@ class TestUploadServiceDocuments(object):
         assert len(errors) == 0
 
     def test_only_files_in_section_are_uploaded(self):
-        request_files = {'serviceDefinitionDocumentURL': MockFile(b"*"*100, 'q1.pdf')}
+        request_files = {'serviceDefinitionDocumentURL': MockFile(b"*" * 100, 'q1.pdf')}
 
         files, errors = upload_service_documents(
             self.uploader, 'documents', self.documents_url, self.service,
@@ -298,7 +298,7 @@ class TestUploadServiceDocuments(object):
         assert len(errors) == 0
 
     def test_upload_with_validation_errors(self):
-        request_files = {'pricingDocumentURL': MockFile(b"*"*100, 'q1.bad')}
+        request_files = {'pricingDocumentURL': MockFile(b"*" * 100, 'q1.bad')}
 
         files, errors = upload_service_documents(
             self.uploader, 'documents', self.documents_url, self.service,

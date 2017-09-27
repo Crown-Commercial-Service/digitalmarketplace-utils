@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import logging
 import sys
 import re
-from itertools import product
 
 from flask import request, current_app
 from flask.ctx import has_request_context

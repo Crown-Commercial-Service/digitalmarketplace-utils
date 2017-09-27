@@ -60,13 +60,12 @@ def bucket_with_weird_file(request, empty_bucket):
     if timestamp is not None:
         metadata["timestamp"] = timestamp
 
-    bucket = empty_bucket
     obj = empty_bucket.Object(".!!!.dear.pdf")
 
     # note how none of these file properties match each other
 
     obj.put(
-        Body=(u"\u00a3"*13).encode("utf-8"),
+        Body=(u"\u00a3" * 13).encode("utf-8"),
         Metadata=metadata,
         ContentType="image/jpeg",
         ContentDisposition='attachment; filename="blahs_on_blahs.png"',
@@ -79,9 +78,9 @@ def bucket_with_multiple_files(request, empty_bucket):
     bucket = empty_bucket
     for i in range(5):
         empty_bucket.Object("with/A{}/paper.dear.odt".format(i)).put(
-            Body=b"abcdefgh"*(i+1),
+            Body=b"abcdefgh" * (i + 1),
             Metadata={
-                "timestamp": datetime.datetime(2014, 10, ((i*11) % 28)+1).strftime(DATETIME_FORMAT),
+                "timestamp": datetime.datetime(2014, 10, ((i * 11) % 28) + 1).strftime(DATETIME_FORMAT),
             } if i != 3 else {},
         )
     # a "directory" which shouldn't show up in listings
@@ -255,18 +254,9 @@ class TestS3Uploader(object):
     ))
     @freeze_time('2016-10-02')
     def test_save_file(
-            self,
-            empty_bucket,
-            path,
-            expected_path,
-            expected_ct,
-            expected_filename,
-            expected_ext,
-            timestamp,
-            expected_timestamp,
-            download_filename,
-            expected_cd,
-            ):
+        self, empty_bucket, path, expected_path, expected_ct, expected_filename, expected_ext, timestamp,
+        expected_timestamp, download_filename, expected_cd
+    ):
         returned_key_dict = S3("dear-liza").save(
             path,
             file_=BytesIO(b"one two three"),
@@ -328,7 +318,7 @@ class TestS3Uploader(object):
 
 
 def test_get_file_size_binary_file():
-    test_file = BytesIO(b"*"*5399999)
+    test_file = BytesIO(b"*" * 5399999)
     # put fd somewhere interesting
     test_file.seek(234)
 
@@ -341,7 +331,7 @@ def test_get_file_size_text_file():
     from io import TextIOWrapper
     test_inner_file = BytesIO()
     test_file = TextIOWrapper(test_inner_file, encoding="utf-8")
-    test_file.write(u"\u0001F3A9 "*123)
+    test_file.write(u"\u0001F3A9 " * 123)
     test_file.seek(0)
     # read 9 *unicode chars* to advance fd to somewhere interesting
     test_file.read(9)
