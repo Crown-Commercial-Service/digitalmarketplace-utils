@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the Digital Marketplace MailChimp integration."""
 import mock
+import pytest
+
+from requests import RequestException
+from requests.exceptions import HTTPError
 
 from dmutils.email.dm_mailchimp import DMMailChimpClient
-from requests import RequestException
 
 
 def test_create_campaign():
@@ -171,8 +174,7 @@ def test_get_email_hash_lowers():
 
 def test_get_email_addresses_from_list():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
-    with mock.patch.object(
-            dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
+    with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
 
         all_members.return_value = {"members": [
             {"email_address": "user1@example.com"},
@@ -185,3 +187,37 @@ def test_get_email_addresses_from_list():
             'list_id',
             get_all=True
         )
+
+
+def test_default_timeout_retry_performs_no_retries():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+    with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
+        all_members.side_effect = HTTPError(response=mock.Mock(status_code=504))
+        with pytest.raises(HTTPError):
+            dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
+        assert all_members.mock_calls == [mock.call('a_list_id', get_all=True)]
+
+
+def test_timeout_retry_performs_retries():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock(), retries=2)
+    with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
+        all_members.side_effect = HTTPError(response=mock.Mock(status_code=504))
+        with pytest.raises(HTTPError):
+            dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
+        assert all_members.mock_calls == [
+            mock.call('a_list_id', get_all=True),
+            mock.call('a_list_id', get_all=True),
+            mock.call('a_list_id', get_all=True)
+        ]
+
+
+def test_success_does_not_perform_retry():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock(), retries=2)
+    with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
+        all_members.return_value = {
+            'members': [{'email_address': 'test1@test.com'}, {'email_address': 'test2@test.com'}]
+        }
+        dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
+        assert all_members.mock_calls == [
+            mock.call('a_list_id', get_all=True)
+        ]

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Digital Marketplace MailChimp integration."""
 
-from mailchimp3 import MailChimp
-from requests.exceptions import RequestException
-from hashlib import md5
 import six
+
+from hashlib import md5
+from requests.exceptions import RequestException, HTTPError
+
+from mailchimp3 import MailChimp
 
 
 class DMMailChimpClient(object):
@@ -13,16 +15,32 @@ class DMMailChimpClient(object):
         self,
         mailchimp_username,
         mailchimp_api_key,
-        logger
+        logger,
+        retries=0
     ):
         self._client = MailChimp(mailchimp_username, mailchimp_api_key)
         self.logger = logger
+        self.retries = retries
 
     @staticmethod
     def get_email_hash(email_address):
         """md5 hashing of lower cased emails has been chosen by mailchimp to identify email addresses"""
         formatted_email_address = six.text_type(email_address.lower()).encode('utf-8')
         return md5(formatted_email_address).hexdigest()
+
+    def timeout_retry(method):
+        def wrapper(self, *args, **kwargs):
+            for i in range(1 + self.retries):
+                try:
+                    return method(self, *args, **kwargs)
+                except HTTPError as e:
+                    exception = e
+                    if exception.response.status_code == 504:
+                        continue
+                    raise exception
+            raise exception
+
+        return wrapper
 
     def create_campaign(self, campaign_data):
         try:
@@ -102,6 +120,7 @@ class DMMailChimpClient(object):
                 success = False
         return success
 
+    @timeout_retry
     def get_email_addresses_from_list(self, list_id):
         member_data = self._client.lists.members.all(list_id, get_all=True)
         return [member["email_address"] for member in member_data["members"]]
