@@ -35,6 +35,7 @@ setup(
          'mandrill==1.0.57',
          'monotonic==0.3',
          'notifications-python-client==4.1.0',
+         'odfpy==1.3.3',
          'python-json-logger==0.1.4',
          'pytz==2015.4',
          'pyyaml==3.11',

@@ -18,9 +18,9 @@ class _StringPipe(object):
         return retval
 
 
-def iter_csv(row_iter):
+def iter_csv(row_iter, **kwargs):
     pipe = _StringPipe()
-    writer = unicodecsv.writer(pipe)
+    writer = unicodecsv.writer(pipe, **kwargs)
     for row in row_iter:
         writer.writerow(row)
         yield pipe.read()
