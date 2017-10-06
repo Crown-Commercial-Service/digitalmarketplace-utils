@@ -11,7 +11,7 @@ import mock
 
 from dmutils import request_id
 from dmutils.logging import init_app, RequestIdFilter, JSONFormatter, CustomLogFormatter
-from dmutils.logging import LOG_FORMAT, TIME_FORMAT
+from dmutils.logging import LOG_FORMAT
 
 
 def test_request_id_filter_not_in_app_context():
@@ -97,7 +97,7 @@ class TestJSONFormatter(object):
         return logger, buffer
 
     def setup(self):
-        self.formatter = JSONFormatter(LOG_FORMAT, TIME_FORMAT)
+        self.formatter = JSONFormatter(LOG_FORMAT)
         self.logger, self.buffer = self._create_logger('logging-test', self.formatter)
         self.dmlogger, self.dmbuffer = self._create_logger('dmutils', self.formatter)
 
@@ -157,7 +157,7 @@ class TestCustomLogFormatter(object):
         return logger, buffer
 
     def setup(self):
-        self.formatter = CustomLogFormatter(LOG_FORMAT, TIME_FORMAT)
+        self.formatter = CustomLogFormatter(LOG_FORMAT)
         self.logger, self.buffer = self._create_logger('logging-test', self.formatter)
         self.dmlogger, self.dmbuffer = self._create_logger('dmutils', self.formatter)
 

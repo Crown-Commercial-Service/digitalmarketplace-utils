@@ -10,7 +10,6 @@ from pythonjsonlogger.jsonlogger import JsonFormatter as BaseJSONFormatter
 
 LOG_FORMAT = '%(asctime)s %(app_name)s %(name)s %(levelname)s ' \
              '%(request_id)s "%(message)s" [in %(pathname)s:%(lineno)d]'
-TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +55,9 @@ def configure_handler(handler, app, formatter):
 
 def get_handler(app):
     if app.config.get('DM_PLAIN_TEXT_LOGS'):
-        formatter = CustomLogFormatter(LOG_FORMAT, TIME_FORMAT)
+        formatter = CustomLogFormatter(LOG_FORMAT)
     else:
-        formatter = JSONFormatter(LOG_FORMAT, TIME_FORMAT)
+        formatter = JSONFormatter(LOG_FORMAT)
 
     if app.config.get('DM_LOG_PATH'):
         handler = logging.FileHandler(app.config['DM_LOG_PATH'])
