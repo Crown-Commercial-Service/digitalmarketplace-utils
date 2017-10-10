@@ -2,6 +2,26 @@
 
 Records breaking changes from major version bumps
 
+## 29.0.0
+
+PR: [#339](https://github.com/alphagov/digitalmarketplace-utils/pull/339)
+
+### What changed
+
+Log time format has changed, so the library update has to be bundled with the
+new base docker image version or AWS logs agent will fail to pick up the correct
+log event timestamps.
+
+### Example app changes
+Old Dockerfile:
+```
+FROM digitalmarketplace/base-api:2.0.1
+```
+New Dockerfile:
+```
+FROM digitalmarketplace/base-api:2.0.5
+```
+
 ## 28.0.0
 
 PR:
