@@ -2,6 +2,46 @@
 
 Records breaking changes from major version bumps
 
+## 30.0.0
+
+PR: [#341](https://github.com/alphagov/digitalmarketplace-utils/pull/341)
+
+### What changed
+
+We don't need to add the user role to tokens when decoding them since now we're using the "send_user_account_email" function to create tokens and the user role should be passed in to that function.
+
+### Example app changes
+
+Old token creation:
+```
+token = generate_token(
+    {
+        "role": "supplier",
+        "supplier_id": 1234,
+        "supplier_name": "Supplier Name",
+        "email_address": "supplier@example.com"
+    },
+    current_app.config['SHARED_EMAIL_KEY'],
+    current_app.config['INVITE_EMAIL_SALT']
+)
+```
+New token creation:
+```
+send_user_account_email(
+    'supplier',
+    "murilo@example.com",
+    current_app.config['NOTIFY_TEMPLATES']['invite_contributor'],
+    extra_token_data={
+        'supplier_id': 1234,
+        'supplier_name': "Supplier Name"
+    },
+    personalisation={
+        'user': "Name",
+        'supplier': "Supplier Name"
+    }
+)
+```
+
 ## 29.0.0
 
 PR: [#339](https://github.com/alphagov/digitalmarketplace-utils/pull/339)
