@@ -2,6 +2,16 @@
 
 Records breaking changes from major version bumps
 
+## 31.0.0
+
+PR: [#343](https://github.com/alphagov/digitalmarketplace-utils/pull/343)
+
+Major version bump because we require users of this library to upgrade
+to a version of the odfpy that is not in pypi.
+
+ACTION: update your `requirements-app.txt`, copying the github URI in this
+repo's `requirements.txt`.
+
 ## 30.0.0
 
 PR: [#341](https://github.com/alphagov/digitalmarketplace-utils/pull/341)

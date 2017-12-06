@@ -1,1 +1,2 @@
+git+https://github.com/alphagov/odfpy.git@ee4482a#egg=odfpy==1.3.6dev
 -e .
