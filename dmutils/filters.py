@@ -74,6 +74,7 @@ def capitalize_first(maybe_text):
 
     return maybe_text
 
+
 # find repeated sequences of '\r\n\', optionally separated by other non-newline whitespace space characters
 _multiple_newlines_re = re.compile(r'(\r\n[ \t\f\v]*){2,}')
 # find \r\n sequences
