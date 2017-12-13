@@ -107,7 +107,7 @@ class CustomLogFormatter(logging.Formatter):
 
         try:
             msg = msg.format(**record.__dict__)
-        except:
+        except:  # noqa
             # We know that KeyError, ValueError and IndexError are all possible things that can go
             # wrong here - there is no guarantee that the message passed into the logger is
             # actually suitable to be used as a format string. This is particularly so where an
