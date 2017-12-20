@@ -1,7 +1,7 @@
 import os
 from flask_featureflags.contrib.inline import InlineFeatureFlag
 from . import config, logging, proxy_fix, request_id, formats, filters
-from flask.ext.script import Manager, Server
+from flask_script import Manager, Server
 
 
 def init_app(
