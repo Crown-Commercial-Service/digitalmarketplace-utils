@@ -9,6 +9,11 @@ external = Blueprint('external', __name__)
 def get_brief_by_id(framework_framework, brief_id):
     raise NotImplementedError()
 
+
+@external.route('/help')
+def help():
+    raise NotImplementedError()
+
 # Supplier frontend
 
 
