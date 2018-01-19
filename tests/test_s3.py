@@ -51,41 +51,43 @@ def bucket_with_file(request, empty_bucket):
 
 @pytest.yield_fixture(params=(
     # tuples of (timestamp, expected_returned_timestamp)
-    (" 6th May 2011, 17:03", "2011-05-06T17:03:00.000000Z",),  # abitrarily formatted timestamp
-    (None, None,),
+    (" 6th May 2011, 17:03", "2011-05-06T17:03:00.000000Z",),  # arbitrarily formatted timestamp
+    (None, "2018-01-25T00:00:00.000000Z",),  # timestamp metadata not set, so should return last_modified of object
 ))
 def bucket_with_weird_file(request, empty_bucket):
-    timestamp, expected_returned_timestamp = request.param
-    metadata = {}
-    if timestamp is not None:
-        metadata["timestamp"] = timestamp
+    with freeze_time('2018-01-25'):
+        timestamp, expected_returned_timestamp = request.param
+        metadata = {}
+        if timestamp is not None:
+            metadata["timestamp"] = timestamp
 
-    obj = empty_bucket.Object(".!!!.dear.pdf")
+        obj = empty_bucket.Object(".!!!.dear.pdf")
 
-    # note how none of these file properties match each other
+        # note how none of these file properties match each other
 
-    obj.put(
-        Body=(u"\u00a3" * 13).encode("utf-8"),
-        Metadata=metadata,
-        ContentType="image/jpeg",
-        ContentDisposition='attachment; filename="blahs_on_blahs.png"',
-    )
-    yield {"expected_returned_timestamp": expected_returned_timestamp}
+        obj.put(
+            Body=(u"\u00a3" * 13).encode("utf-8"),
+            Metadata=metadata,
+            ContentType="image/jpeg",
+            ContentDisposition='attachment; filename="blahs_on_blahs.png"',
+        )
+        yield {"expected_returned_timestamp": expected_returned_timestamp}
 
 
 @pytest.yield_fixture
 def bucket_with_multiple_files(request, empty_bucket):
-    bucket = empty_bucket
-    for i in range(5):
-        empty_bucket.Object("with/A{}/paper.dear.odt".format(i)).put(
-            Body=b"abcdefgh" * (i + 1),
-            Metadata={
-                "timestamp": datetime.datetime(2014, 10, ((i * 11) % 28) + 1).strftime(DATETIME_FORMAT),
-            } if i != 3 else {},
-        )
-    # a "directory" which shouldn't show up in listings
-    empty_bucket.Object("with/").put(Body=b"")
-    yield bucket
+    with freeze_time('2014-09-30'):
+        bucket = empty_bucket
+        for i in range(5):
+            empty_bucket.Object("with/A{}/paper.dear.odt".format(i)).put(
+                Body=b"abcdefgh" * (i + 1),
+                Metadata={
+                    "timestamp": datetime.datetime(2014, 10, ((i * 11) % 28) + 1).strftime(DATETIME_FORMAT),
+                } if i != 3 else {},
+            )
+        # a "directory" which shouldn't show up in listings
+        empty_bucket.Object("with/").put(Body=b"")
+        yield bucket
 
 
 @pytest.mark.usefixtures("s3_mock")
@@ -188,7 +190,7 @@ class TestS3Uploader(object):
                 "filename": "paper.dear",
                 "ext": "odt",
                 "size": 32,
-                "last_modified": None,
+                "last_modified": "2014-09-30T00:00:00.000000Z",
             },
             {
                 "path": "with/A0/paper.dear.odt",

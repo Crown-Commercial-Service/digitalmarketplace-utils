@@ -165,9 +165,11 @@ class S3(object):
             'size': obj.size if hasattr(obj, "size") else obj.content_length,
         }
         if with_timestamp:
+            # First look for custom "timestamp" metadata field that is explicitly set by our S3 uploader
+            # fall back to AWS's "last_modified" if this doesn't exist
             keydict["last_modified"] = (
-                obj.metadata.get("timestamp") and parse_time(obj.metadata["timestamp"]).strftime(DATETIME_FORMAT)
-            )
+                (obj.metadata.get("timestamp") and parse_time(obj.metadata["timestamp"])) or obj.last_modified
+            ).strftime(DATETIME_FORMAT)
 
         return keydict
 
