@@ -28,7 +28,7 @@ def help():
 # Supplier frontend
 
 @external.route('/suppliers')
-def dashboard():
+def supplier_dashboard():
     raise NotImplementedError()
 
 
