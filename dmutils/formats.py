@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 import pytz
+import re
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
 DISPLAY_SHORT_DATE_FORMAT = '%-d %B'
 DISPLAY_DATE_FORMAT = '%A %-d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
-DISPLAY_DATETIME_FORMAT = '%A %-d %B %Y at %I:%M%p'
+DISPLAY_DATETIME_FORMAT = '%A %-d %B %Y at %I:%M%p %Z'
 
 
 def timeformat(value, default_value=None):
@@ -40,8 +41,8 @@ def utcdatetimeformat(value, default_value=None):
     if local_format:
         if "11:59pm" not in local_format:
             # Force UTC+00 if the date has rolled over to the next day and append timezone
-            return "{} GMT".format(datetimeformat(value, default_value, localize=False))
-        return "{} GMT".format(local_format)
+            return _use_gmt_timezone(datetimeformat(value, default_value, localize=False))
+        return _use_gmt_timezone(local_format)
     return None
 
 
@@ -54,6 +55,10 @@ def datetodatetimeformat(value):
 
 
 EUROPE_LONDON = pytz.timezone("Europe/London")
+
+
+def _use_gmt_timezone(date_string):
+    return re.sub(r"UTC|BST", "GMT", date_string)
 
 
 def _format_date(value, default_value, fmt, localize=True):
