@@ -19,7 +19,7 @@ def timeformat(value, default_value=None):
     "timeformat" is used in summary tables where space is tight and times are shown on their own line.
     Currently (Jan 2018) only used in admin app tables.
     """
-    return _format_date(value, default_value, DISPLAY_TIME_FORMAT)
+    return _format_date(value, default_value, DISPLAY_TIME_FORMAT, localize=False)
 
 
 def shortdateformat(value, default_value=None):

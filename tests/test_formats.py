@@ -11,10 +11,10 @@ import pytest
 @pytest.mark.parametrize("dt, formatted_time", (
     (datetime(2012, 11, 10, 9, 8, 7, 6), "09:08:07"),
     ("2012-11-10T09:08:07.0Z", "09:08:07"),
-    (datetime(2012, 8, 10, 9, 8, 7, 6), "10:08:07"),
-    ("2012-08-12T12:12:12.0Z", "13:12:12"),
-    (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "10:08:07"),
-    (datetime(2012, 8, 10, 0, 8, 7, 6, tzinfo=pytz.utc), "01:08:07"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6), "09:08:07"),  # Time is UTC/GMT despite it being summer time
+    ("2012-08-12T12:12:12.0Z", "12:12:12"),  # Time is UTC/GMT despite it being summer time
+    (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "09:08:07"),  # Time is UTC/GMT despite it being summer time
+    (datetime(2012, 8, 10, 0, 8, 7, 6, tzinfo=pytz.utc), "00:08:07"),  # Time is UTC/GMT despite it being summer time
 ))
 def test_timeformat(dt, formatted_time):
     assert timeformat(dt) == formatted_time
