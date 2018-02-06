@@ -72,8 +72,8 @@ def upload_document(uploader, upload_type, documents_url, service, field, file_c
     :param field: name of the service field that the document URL is saved to,
                   used to generate the document name
     :param file_contents: attached file object
-    :param public: if True, set file permission to 'public-read'. Otherwise file
-                   is private.
+    :param public: if True, set file permission to 'public-read'. Otherwise 'bucket-owner-full-control',
+                   which is private to the object owner and bucket owner.
 
     :return: generated document URL or ``False`` if document upload
              failed
@@ -90,7 +90,7 @@ def upload_document(uploader, upload_type, documents_url, service, field, file_c
         file_contents.filename
     )
 
-    acl = 'public-read' if public else 'private'
+    acl = 'public-read' if public else 'bucket-owner-full-control'
 
     try:
         uploader.save(file_path, file_contents, acl=acl)

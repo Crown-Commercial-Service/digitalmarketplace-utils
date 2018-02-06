@@ -179,7 +179,7 @@ class TestUploadDocument(unittest.TestCase):
         uploader.save.assert_called_once_with(
             'g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf',
             mock.ANY,
-            acl='private'
+            acl='bucket-owner-full-control'
         )
 
     def test_document_upload_s3_error(self):
@@ -272,7 +272,10 @@ class TestUploadServiceDocuments(object):
                 public=False)
 
         self.uploader.save.assert_called_with(
-            'g-cloud-7/documents/12345/654321-pricing-document-2015-10-04-1436.pdf', mock.ANY, acl='private')
+            'g-cloud-7/documents/12345/654321-pricing-document-2015-10-04-1436.pdf',
+            mock.ANY,
+            acl='bucket-owner-full-control'
+        )
 
         assert 'pricingDocumentURL' in files
         assert len(errors) == 0
