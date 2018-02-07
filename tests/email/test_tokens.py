@@ -112,41 +112,54 @@ def test_decrypt_token_ok_for_known_good_token():
     assert data == ({'email': 'test@example.com', 'user': 123}, datetime(2016, 1, 1, 12, 0, 0))
 
 
-def test_decode_password_reset_token_ok_for_good_token(email_app, data_api_client, password_reset_token):
-    with email_app.app_context():
-        token = generate_token(password_reset_token, 'Secret', 'PassSalt')
-        assert decode_password_reset_token(token, data_api_client) == password_reset_token
-    data_api_client.get_user.assert_called_once_with(123)
+class BaseDecodePasswordResetToken(object):
+    def test_decode_password_reset_token_ok_for_good_token(self, email_app, data_api_client, password_reset_token):
+        with email_app.app_context():
+            token = generate_token(password_reset_token, self.key, 'PassSalt')
+            assert decode_password_reset_token(token, data_api_client) == password_reset_token
+        data_api_client.get_user.assert_called_once_with(123)
 
+    def test_decode_password_reset_token_does_not_work_if_bad_token(
+        self, email_app, data_api_client, password_reset_token
+    ):
+        token = generate_token(password_reset_token, self.key, 'PassSalt')[1:]
 
-def test_decode_password_reset_token_does_not_work_if_bad_token(email_app, data_api_client, password_reset_token):
-    token = generate_token(password_reset_token, 'Secret', 'PassSalt')[1:]
-
-    with email_app.app_context():
-        assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
-
-
-def test_decode_password_reset_token_does_not_work_if_token_expired(email_app, data_api_client, password_reset_token):
-    with freeze_time('2015-01-02 03:04:05'):
-        # Token was generated a year before current time
-        token = generate_token(password_reset_token, 'Secret', 'PassSalt')
-
-    with freeze_time('2016-01-02 03:04:05'):
         with email_app.app_context():
             assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
+    def test_decode_password_reset_token_does_not_work_if_token_expired(
+        self, email_app, data_api_client, password_reset_token
+    ):
+        with freeze_time('2015-01-02 03:04:05'):
+            # Token was generated a year before current time
+            token = generate_token(password_reset_token, self.key, 'PassSalt')
 
-def test_decode_password_reset_token_does_not_work_if_password_changed_later_than_token(
-    email_app, data_api_client, password_reset_token
-):
-    with freeze_time('2016-01-01T11:00:00.30Z'):
-        # Token was generated an hour earlier than password was changed
-        token = generate_token(password_reset_token, 'Secret', 'PassSalt')
+        with freeze_time('2016-01-02 03:04:05'):
+            with email_app.app_context():
+                assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
-    with freeze_time('2016-01-01T13:00:00.30Z'):
-        # Token is two hours old; password was changed an hour ago
-        with email_app.app_context():
-            assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
+    def test_decode_password_reset_token_does_not_work_if_password_changed_later_than_token(
+        self, email_app, data_api_client, password_reset_token
+    ):
+        with freeze_time('2016-01-01T11:00:00.30Z'):
+            # Token was generated an hour earlier than password was changed
+            token = generate_token(password_reset_token, self.key, 'PassSalt')
+
+        with freeze_time('2016-01-01T13:00:00.30Z'):
+            # Token is two hours old; password was changed an hour ago
+            with email_app.app_context():
+                assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
+
+
+class TestDecodePasswordResetTokenUsingSecretKey(BaseDecodePasswordResetToken):
+    # Key for which old password reset tokens exist that we must support for 1 day minimum of backwards compatability
+    # before this support can be removed
+    key = "Secret"  # app.config['SECRET_KEY'] in our `email_app` fixture
+
+
+class TestDecodePasswordResetTokenUsingSharedEmailKey(BaseDecodePasswordResetToken):
+    # Key for which we will be issuing password reset tokens going ahead
+    key = "Key"  # app.config['SHARED_EMAIL_KEY'] in our `email_app` fixture
 
 
 def test_decode_invitation_token_decodes_ok(email_app):
