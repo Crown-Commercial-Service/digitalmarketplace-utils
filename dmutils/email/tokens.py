@@ -104,20 +104,9 @@ def decode_password_reset_token(token, data_api_client):
             current_app.config["RESET_PASSWORD_SALT"],
             ONE_DAY_IN_SECONDS,
         )
-    except fernet.InvalidToken:
-        try:
-            # We used to issue tokens with `current_app.config["SECRET_KEY"]` as our key, so we maintain backwards
-            # compatability with them for a short period (1 day) to allow for both type of tokens to be valid until the
-            # older ones have expired and can remove the support for tokens using `current_app.config["SECRET_KEY"]`
-            decoded, token_timestamp = decode_token(
-                token,
-                current_app.config["SECRET_KEY"],
-                current_app.config["RESET_PASSWORD_SALT"],
-                ONE_DAY_IN_SECONDS,
-            )
-        except fernet.InvalidToken as e:
-            current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
-            return {'error': 'token_invalid'}
+    except fernet.InvalidToken as e:
+        current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
+        return {'error': 'token_invalid'}
 
     user = data_api_client.get_user(decoded["user"])
     user_last_changed_password_at = datetime.strptime(

@@ -2,6 +2,13 @@
 
 Records breaking changes from major version bumps
 
+## 32.0.0
+
+PR: [#355](https://github.com/alphagov/digitalmarketplace-utils/pull/355)
+
+Drops support for `decode_password_reset_token` to allow tokens generated with `current_app.config["SECRET_KEY"]`
+as the key. We now only support reset password tokens generated with `current_app.config["SHARED_EMAIL_KEY"]`.
+
 ## 31.0.0
 
 PR: [#343](https://github.com/alphagov/digitalmarketplace-utils/pull/343)
