@@ -2,6 +2,13 @@
 
 Records breaking changes from major version bumps
 
+## 33.0.0
+
+Reverting our usage of an interim alphagov fork of odfpy now that our patch has been merged into master and released.
+1
+ACTION: update your `requirements-app.txt`, removing the alphagov odfpy
+github URI (if present).
+
 ## 32.0.0
 
 PR: [#355](https://github.com/alphagov/digitalmarketplace-utils/pull/355)
