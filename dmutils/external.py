@@ -59,6 +59,11 @@ def render_login():
     raise NotImplementedError()
 
 
+@external.route('/user/logout', methods=["POST"])
+def user_logout():
+    raise NotImplementedError()
+
+
 # Briefs frontend
 
 @external.route('/buyers')
