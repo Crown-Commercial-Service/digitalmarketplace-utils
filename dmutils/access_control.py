@@ -6,13 +6,16 @@ ROLES = {
     'buyer': {
         'loginRequiredMessage': Markup("You must log in with a buyer account to see this page."),
     },
+    'supplier': {
+        'loginRequiredMessage': Markup("You must log in with a supplier account to see this page."),
+    },
 }
 
 
 @login_required
 def require_login(role):
     """
-    Shared function to limit access to a view by role. Intended to be used with Application.before_request
+    Shared function to limit access to a view by role. Can be used with Application.before_request
     or Blueprint.before_request, for example:
         some_blueprint.before_request(functools.partial(require_login, role='buyer'))
     :param role: string, e.g. admin, buyer, supplier
