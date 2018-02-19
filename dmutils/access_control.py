@@ -24,4 +24,3 @@ def require_login(role):
     if current_user.is_authenticated() and current_user.role != role:
         flash(ROLES[role]['loginRequiredMessage'], 'error')
         return current_app.login_manager.unauthorized()
-
