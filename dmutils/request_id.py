@@ -12,7 +12,7 @@ class RequestIdRequestMixin(object):
     @property
     def trace_id(self):
         if not hasattr(self, "_trace_id"):
-            self._trace_id = self._get_first_header(current_app.config['DM_TRACE_ID_HEADERS']) or str(uuid.uuid4())
+            self._trace_id = self._get_first_header(current_app.config['DM_TRACE_ID_HEADERS']) or str(uuid.uuid4().hex)
         return self._trace_id
 
     @property

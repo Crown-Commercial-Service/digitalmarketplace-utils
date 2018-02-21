@@ -6,6 +6,9 @@ import pytest
 from dmutils.request_id import init_app as request_id_init_app
 
 
+_GENERATED_TRACE_VALUE = "di5ea5e5deadbeefbaadf00dabadcafe"
+
+
 _trace_id_related_params = (
     (
         # extra_config
@@ -58,15 +61,15 @@ _trace_id_related_params = (
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "",
         },
         (),
-        "generated",
+        _GENERATED_TRACE_VALUE,
         True,
         {
-            "DM-REQUEST-ID": "generated",
-            "X-B3-TraceId": "generated",
+            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "X-B3-TraceId": _GENERATED_TRACE_VALUE,
         },
         {
-            "DM-REQUEST-ID": "generated",
-            "X-B3-TraceId": "generated",
+            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "X-B3-TraceId": _GENERATED_TRACE_VALUE,
         },
     ),
     (
@@ -75,15 +78,15 @@ _trace_id_related_params = (
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "DOWNSTREAM-REQUEST-ID",
         },
         (),
-        "generated",
+        _GENERATED_TRACE_VALUE,
         True,
         {
-            "DM-REQUEST-ID": "generated",
-            "DOWNSTREAM-REQUEST-ID": "generated",
+            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
         {
-            "DM-REQUEST-ID": "generated",
-            "DOWNSTREAM-REQUEST-ID": "generated",
+            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
     ),
     (
@@ -94,15 +97,15 @@ _trace_id_related_params = (
         (
             ("x-b3-traceid", "H. M. S. Belleisle",),  # should be ignored as default header name has been overwritten
         ),
-        "generated",
+        _GENERATED_TRACE_VALUE,
         True,
         {
-            "DM-Request-ID": "generated",
-            "DOWNSTREAM-REQUEST-ID": "generated",
+            "DM-Request-ID": _GENERATED_TRACE_VALUE,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
         {
-            "DM-Request-ID": "generated",
-            "DOWNSTREAM-REQUEST-ID": "generated",
+            "DM-Request-ID": _GENERATED_TRACE_VALUE,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
     ),
     (
@@ -116,15 +119,15 @@ _trace_id_related_params = (
             ("DM-REQUEST-ID", "from-header",),
             ("DOWNSTREAM-REQUEST-ID", "from-downstream",),
         ),
-        "generated",
+        _GENERATED_TRACE_VALUE,
         True,
         {
-            "x-tommy-caffrey": "generated",
-            "y-jacky-caffrey": "generated",
+            "x-tommy-caffrey": _GENERATED_TRACE_VALUE,
+            "y-jacky-caffrey": _GENERATED_TRACE_VALUE,
         },
         {
-            "x-tommy-caffrey": "generated",
-            "y-jacky-caffrey": "generated",
+            "x-tommy-caffrey": _GENERATED_TRACE_VALUE,
+            "y-jacky-caffrey": _GENERATED_TRACE_VALUE,
         },
     ),
     (
@@ -300,7 +303,7 @@ def test_request_header(
     app.config.update(extra_config)
     request_id_init_app(app)
 
-    uuid4_mock.return_value = "generated"
+    uuid4_mock.return_value = mock.Mock(hex=_GENERATED_TRACE_VALUE)
 
     with app.test_request_context(headers=extra_req_headers):
         assert request.request_id == request.trace_id == expected_trace_id
@@ -341,7 +344,7 @@ def test_response_headers_regular_response(
     request_id_init_app(app)
     client = app.test_client()
 
-    uuid4_mock.return_value = "generated"
+    uuid4_mock.return_value = mock.Mock(hex=_GENERATED_TRACE_VALUE)
 
     with app.app_context():
         response = client.get('/', headers=extra_req_headers)
@@ -381,7 +384,7 @@ def test_response_headers_error_response(
     request_id_init_app(app)
     client = app.test_client()
 
-    uuid4_mock.return_value = "generated"
+    uuid4_mock.return_value = mock.Mock(hex=_GENERATED_TRACE_VALUE)
 
     @app.route('/')
     def error_route():
