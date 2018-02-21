@@ -325,7 +325,7 @@ def test_request_header(
     _param_combinations,
 )
 @mock.patch('dmutils.request_id.uuid.uuid4', autospec=True)
-def test_request_id_is_set_on_response(
+def test_response_headers_regular_response(
     uuid4_mock,
     app,
     extra_config,
@@ -365,7 +365,7 @@ def test_request_id_is_set_on_response(
     _param_combinations,
 )
 @mock.patch('dmutils.request_id.uuid.uuid4', autospec=True)
-def test_request_id_is_set_on_error_response(
+def test_response_headers_error_response(
     uuid4_mock,
     app,
     extra_config,
