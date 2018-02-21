@@ -88,18 +88,20 @@ _trace_id_related_params = (
     ),
     (
         {
-            "DM_REQUEST_ID_HEADER": "DM-REQUEST-ID",
+            # not setting DM_REQUEST_ID_HEADER should cause it to fall back to the default, DM-Request-ID
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "DOWNSTREAM-REQUEST-ID",
         },
-        (),
+        (
+            ("x-b3-traceid", "H. M. S. Belleisle",),  # should be ignored as default header name has been overwritten
+        ),
         "generated",
         True,
         {
-            "DM-REQUEST-ID": "generated",
+            "DM-Request-ID": "generated",
             "DOWNSTREAM-REQUEST-ID": "generated",
         },
         {
-            "DM-REQUEST-ID": "generated",
+            "DM-Request-ID": "generated",
             "DOWNSTREAM-REQUEST-ID": "generated",
         },
     ),
