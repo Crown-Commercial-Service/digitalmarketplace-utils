@@ -11,18 +11,32 @@ class RequestIdRequestMixin(object):
 
     @property
     def trace_id(self):
+        """
+            The "trace id" (in zipkin terms) assigned to this request. If one was set in the request header, that will
+            be used. Failing that, this will be an id we've generated and assigned ourselves.
+        """
         if not hasattr(self, "_trace_id"):
             self._trace_id = self._get_first_header(current_app.config['DM_TRACE_ID_HEADERS']) or str(uuid.uuid4().hex)
         return self._trace_id
 
     @property
     def span_id(self):
+        """
+            The "span id" (in zipkin terms) set in this request's header, if present (None otherwise)
+        """
         if not hasattr(self, "_span_id"):
+            # note how we don't generate an id of our own. not being supplied a span id implies that we are running in
+            # an environment with no span-id-aware request router, and thus would have no intermediary to prevent the
+            # propagation of our span id all the way through all our onwards requests much like trace id. and the point
+            # of span id is to assign identifiers to each individual request.
             self._span_id = self._get_first_header(current_app.config['DM_SPAN_ID_HEADERS'])
         return self._span_id
 
     @property
     def parent_span_id(self):
+        """
+            The "parent span id" (in zipkin terms) set in this request's header, if present (None otherwise)
+        """
         if not hasattr(self, "_parent_span_id"):
             self._parent_span_id = self._get_first_header(current_app.config['DM_PARENT_SPAN_ID_HEADERS'])
         return self._parent_span_id
