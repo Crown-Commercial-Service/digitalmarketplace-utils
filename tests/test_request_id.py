@@ -37,133 +37,174 @@ _trace_id_related_params = (
         },
     ),
     (
+        # extra_config
         {
             "DM_REQUEST_ID_HEADER": "DM-REQUEST-ID",
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "DOWNSTREAM-REQUEST-ID",
         },
+        # extra_req_headers
         (
             ("DOWNSTREAM-REQUEST-ID", "from-downstream",),
         ),
+        # expected_trace_id
         "from-downstream",
         False,
+        # expected_onwards_req_headers
         {
             "DM-REQUEST-ID": "from-downstream",
             "DOWNSTREAM-REQUEST-ID": "from-downstream",
         },
+        # expected_resp_headers
         {
             "DM-REQUEST-ID": "from-downstream",
             "DOWNSTREAM-REQUEST-ID": "from-downstream",
         },
     ),
     (
+        # extra_config
         {
             "DM_REQUEST_ID_HEADER": "DM-REQUEST-ID",
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "",
         },
+        # extra_req_headers
         (),
+        # expected_trace_id
         _GENERATED_TRACE_VALUE,
+        # expect_uuid_call
         True,
+        # expected_onwards_req_headers
         {
             "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
             "X-B3-TraceId": _GENERATED_TRACE_VALUE,
         },
+        # expected_resp_headers
         {
             "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
             "X-B3-TraceId": _GENERATED_TRACE_VALUE,
         },
     ),
     (
+        # extra_config
         {
             "DM_REQUEST_ID_HEADER": "DM-REQUEST-ID",
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "DOWNSTREAM-REQUEST-ID",
         },
+        # extra_req_headers
         (),
+        # expected_trace_id
         _GENERATED_TRACE_VALUE,
+        # expect_uuid_call
         True,
+        # expected_onwards_req_headers
         {
             "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
             "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
+        # expected_resp_headers
         {
             "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
             "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
     ),
     (
+        # extra_config
         {
             # not setting DM_REQUEST_ID_HEADER should cause it to fall back to the default, DM-Request-ID
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "DOWNSTREAM-REQUEST-ID",
         },
+        # extra_req_headers
         (
             ("x-b3-traceid", "H. M. S. Belleisle",),  # should be ignored as default header name has been overwritten
         ),
+        # expected_trace_id
         _GENERATED_TRACE_VALUE,
+        # expect_uuid_call
         True,
+        # expected_onwards_req_headers
         {
             "DM-Request-ID": _GENERATED_TRACE_VALUE,
             "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
+        # expected_resp_headers
         {
             "DM-Request-ID": _GENERATED_TRACE_VALUE,
             "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
     ),
     (
+        # extra_config
         {
             "DM_TRACE_ID_HEADERS": ("x-tommy-caffrey", "y-jacky-caffrey",),
             "DM_REQUEST_ID_HEADER": "DM-REQUEST-ID",
             "DM_DOWNSTREAM_REQUEST_ID_HEADER": "DOWNSTREAM-REQUEST-ID",
         },
+        # extra_req_headers
         (
             # these should both be ignored because of the presence of the DM_TRACE_ID_HEADERS setting
             ("DM-REQUEST-ID", "from-header",),
             ("DOWNSTREAM-REQUEST-ID", "from-downstream",),
         ),
+        # expected_trace_id
         _GENERATED_TRACE_VALUE,
+        # expect_uuid_call
         True,
+        # expected_onwards_req_headers
         {
             "x-tommy-caffrey": _GENERATED_TRACE_VALUE,
             "y-jacky-caffrey": _GENERATED_TRACE_VALUE,
         },
+        # expected_resp_headers
         {
             "x-tommy-caffrey": _GENERATED_TRACE_VALUE,
             "y-jacky-caffrey": _GENERATED_TRACE_VALUE,
         },
     ),
     (
+        # extra_config
         {
             "DM_TRACE_ID_HEADERS": ("x-tommy-caffrey", "y-jacky-caffrey",),
         },
+        # extra_req_headers
         (
             ("y-jacky-caffrey", "jacky-header-value",),
             ("x-tommy-caffrey", "tommy-header-value",),
         ),
+        # expected_trace_id
         "tommy-header-value",
+        # expect_uuid_call
         False,
+        # expected_onwards_req_headers
         {
             "x-tommy-caffrey": "tommy-header-value",
             "y-jacky-caffrey": "tommy-header-value",
         },
+        # expected_resp_headers
         {
             "x-tommy-caffrey": "tommy-header-value",
             "y-jacky-caffrey": "tommy-header-value",
         },
     ),
     (
+        # extra_config
         {
             "DM_REQUEST_ID_HEADER": "DM-REQUEST-ID",
             # not setting DM_DOWNSTREAM_REQUEST_ID_HEADER should cause it to fall back to the default, X-B3-TraceId
         },
+        # extra_req_headers
         (
             ("x-kidneys", "pork",),
             ("x-b3-traceid", "Grilled Mutton",),
         ),
+        # expected_trace_id
         "Grilled Mutton",
+        # expect_uuid_call
         False,
+        # expected_onwards_req_headers
         {
             "DM-REQUEST-ID": "Grilled Mutton",
             "X-B3-TraceId": "Grilled Mutton",
         },
+        # expected_resp_headers
         {
             "DM-REQUEST-ID": "Grilled Mutton",
             "X-B3-TraceId": "Grilled Mutton",
@@ -188,19 +229,27 @@ _span_id_related_params = (
         },
     ),
     (
+        # extra_config
         {},
+        # extra_req_headers
         (),
+        # expected_span_id
         None,
+        # expected_onwards_req_headers
         {},
     ),
     (
+        # extra_config
         {
             "DM_SPAN_ID_HEADERS": ("barrels-and-boxes", "Bloomusalem",),
         },
+        # extra_req_headers
         (
             ("bloomusalem", "huge-pork-kidney",),
         ),
+        # expected_span_id
         "huge-pork-kidney",
+        # expected_onwards_req_headers
         {
             "barrels-and-boxes": "huge-pork-kidney",
             "Bloomusalem": "huge-pork-kidney",
@@ -222,17 +271,23 @@ _parent_span_id_related_params = (
         "colossal-edifice",
     ),
     (
+        # extra_config
         {},
+        # extra_req_headers
         (),
+        # expected_parent_span_id
         None,
     ),
     (
+        # extra_config
         {
             "DM_PARENT_SPAN_ID_HEADERS": ("Potato-Preservative",),
         },
+        # extra_req_headers
         (
             ("POTATO-PRESERVATIVE", "Plage and Pestilence",),
         ),
+        # expected_parent_span_id
         "Plage and Pestilence",
     ),
 )
