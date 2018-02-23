@@ -5,6 +5,11 @@ from flask import request, current_app
 
 
 class RequestIdRequestMixin(object):
+    """
+        A mixin intended for use against a flask Request class, implementing extraction (and partly generation) of
+        headers approximately according to the "zipkin" scheme https://github.com/openzipkin/b3-propagation
+    """
+
     @property
     def request_id(self):
         return self.trace_id
