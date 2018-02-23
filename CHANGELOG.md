@@ -2,6 +2,12 @@
 
 Records breaking changes from major version bumps
 
+## 34.0.0
+
+PR: [#360](https://github.com/alphagov/digitalmarketplace-utils/pull/360)
+
+Remove backwards compatibility for email importing. It is no longer required.
+
 ## 33.0.0
 
 Reverting our usage of an interim alphagov fork of odfpy now that our patch has been merged into master and released.
