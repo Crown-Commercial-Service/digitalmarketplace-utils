@@ -114,7 +114,7 @@ _trace_id_related_params = (
         },
         # extra_req_headers
         (
-            ("x-b3-traceid", "H. M. S. Belleisle",),  # should be ignored as default header name has been overwritten
+            ("X-B3-TraceId", "H. M. S. Belleisle",),  # should be ignored as default header name has been overwritten
         ),
         # expected_trace_id
         _GENERATED_TRACE_VALUE,
@@ -193,7 +193,7 @@ _trace_id_related_params = (
         # extra_req_headers
         (
             ("x-kidneys", "pork",),
-            ("x-b3-traceid", "Grilled Mutton",),
+            ("x-b3-traceid", "Grilled Mutton",),  # also checking header case-insensitivity here
         ),
         # expected_trace_id
         "Grilled Mutton",
@@ -219,7 +219,7 @@ _span_id_related_params = (
         {},
         # extra_req_headers
         (
-            ("x-b3-spanid", "Steak, kidney, liver, mashed",),
+            ("x-b3-spanid", "Steak, kidney, liver, mashed",),  # also checking header case-insensitivity here
         ),
         # expected_span_id
         "Steak, kidney, liver, mashed",
@@ -245,7 +245,7 @@ _span_id_related_params = (
         },
         # extra_req_headers
         (
-            ("bloomusalem", "huge-pork-kidney",),
+            ("bloomusalem", "huge-pork-kidney",),  # also checking header case-insensitivity here
         ),
         # expected_span_id
         "huge-pork-kidney",
@@ -285,7 +285,7 @@ _parent_span_id_related_params = (
         },
         # extra_req_headers
         (
-            ("POTATO-PRESERVATIVE", "Plage and Pestilence",),
+            ("POTATO-PRESERVATIVE", "Plage and Pestilence",),  # also checking header case-insensitivity here
         ),
         # expected_parent_span_id
         "Plage and Pestilence",
