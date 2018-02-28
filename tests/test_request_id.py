@@ -35,6 +35,8 @@ _trace_id_related_params = (
             "DM-REQUEST-ID": "from-header",
             "DOWNSTREAM-REQUEST-ID": "from-header",
         },
+        # expected_dm_request_id_header_final_value
+        "DM-REQUEST-ID",
     ),
     (
         # extra_config
@@ -59,6 +61,8 @@ _trace_id_related_params = (
             "DM-REQUEST-ID": "from-downstream",
             "DOWNSTREAM-REQUEST-ID": "from-downstream",
         },
+        # expected_dm_request_id_header_final_value
+        "DM-REQUEST-ID",
     ),
     (
         # extra_config
@@ -82,6 +86,8 @@ _trace_id_related_params = (
             "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
             "X-B3-TraceId": _GENERATED_TRACE_VALUE,
         },
+        # expected_dm_request_id_header_final_value
+        "DM-REQUEST-ID",
     ),
     (
         # extra_config
@@ -105,6 +111,8 @@ _trace_id_related_params = (
             "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
             "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
+        # expected_dm_request_id_header_final_value
+        "DM-REQUEST-ID",
     ),
     (
         # extra_config
@@ -130,6 +138,8 @@ _trace_id_related_params = (
             "DM-Request-ID": _GENERATED_TRACE_VALUE,
             "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
         },
+        # expected_dm_request_id_header_final_value
+        "DM-Request-ID",
     ),
     (
         # extra_config
@@ -158,6 +168,8 @@ _trace_id_related_params = (
             "x-tommy-caffrey": _GENERATED_TRACE_VALUE,
             "y-jacky-caffrey": _GENERATED_TRACE_VALUE,
         },
+        # expected_dm_request_id_header_final_value
+        "x-tommy-caffrey",
     ),
     (
         # extra_config
@@ -183,6 +195,8 @@ _trace_id_related_params = (
             "x-tommy-caffrey": "tommy-header-value",
             "y-jacky-caffrey": "tommy-header-value",
         },
+        # expected_dm_request_id_header_final_value
+        "x-tommy-caffrey",
     ),
     (
         # extra_config
@@ -209,6 +223,8 @@ _trace_id_related_params = (
             "DM-REQUEST-ID": "Grilled Mutton",
             "X-B3-TraceId": "Grilled Mutton",
         },
+        # expected_dm_request_id_header_final_value
+        "DM-REQUEST-ID",
     ),
 )
 
@@ -308,6 +324,7 @@ _param_combinations = tuple(
         # expected_onwards_req_headers
         dict(chain(t_expected_onwards_req_headers.items(), s_expected_onwards_req_headers.items(),)),
         expected_resp_headers,
+        expected_dm_request_id_header_final_value,
     ) for (
         t_extra_config,
         t_extra_req_headers,
@@ -316,6 +333,7 @@ _param_combinations = tuple(
         t_expected_onwards_req_headers,
         # so far only the trace_id should affect the response headers
         expected_resp_headers,
+        expected_dm_request_id_header_final_value,
     ), (
         s_extra_config,
         s_extra_req_headers,
@@ -339,6 +357,7 @@ _param_combinations = tuple(
         "expected_parent_span_id",
         "expected_onwards_req_headers",
         "expected_resp_headers",
+        "expected_dm_request_id_header_final_value",
     ),
     _param_combinations,
 )
@@ -354,9 +373,12 @@ def test_request_header(
     expected_parent_span_id,
     expected_onwards_req_headers,
     expected_resp_headers,  # unused here
+    expected_dm_request_id_header_final_value,
 ):
     app.config.update(extra_config)
     request_id_init_app(app)
+
+    assert app.config.get("DM_REQUEST_ID_HEADER") == expected_dm_request_id_header_final_value
 
     uuid4_mock.return_value = mock.Mock(hex=_GENERATED_TRACE_VALUE)
 
@@ -365,6 +387,7 @@ def test_request_header(
         assert request.span_id == expected_span_id
         assert request.parent_span_id == expected_parent_span_id
         assert request.get_onwards_request_headers() == expected_onwards_req_headers
+        assert app.config.get("DM_REQUEST_ID_HEADER") == expected_dm_request_id_header_final_value
 
     assert uuid4_mock.called is expect_uuid_call
 
@@ -379,6 +402,7 @@ def test_request_header(
         "expected_parent_span_id",
         "expected_onwards_req_headers",
         "expected_resp_headers",
+        "expected_dm_request_id_header_final_value",
     ),
     _param_combinations,
 )
@@ -394,6 +418,7 @@ def test_response_headers_regular_response(
     expected_parent_span_id,  # unused here
     expected_onwards_req_headers,  # unused here
     expected_resp_headers,
+    expected_dm_request_id_header_final_value,  # unused here
 ):
     app.config.update(extra_config)
     request_id_init_app(app)
@@ -419,6 +444,7 @@ def test_response_headers_regular_response(
         "expected_parent_span_id",
         "expected_onwards_req_headers",
         "expected_resp_headers",
+        "expected_dm_request_id_header_final_value",
     ),
     _param_combinations,
 )
@@ -434,6 +460,7 @@ def test_response_headers_error_response(
     expected_parent_span_id,  # unused here
     expected_onwards_req_headers,  # unused here
     expected_resp_headers,
+    expected_dm_request_id_header_final_value,  # unused here
 ):
     app.config.update(extra_config)
     request_id_init_app(app)

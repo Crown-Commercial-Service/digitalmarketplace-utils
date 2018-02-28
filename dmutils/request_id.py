@@ -101,6 +101,12 @@ def init_app(app):
     app.config.setdefault("DM_SPAN_ID_HEADERS", ("X-B3-SpanId",))
     app.config.setdefault("DM_PARENT_SPAN_ID_HEADERS", ("X-B3-ParentSpan",))
 
+    # we do something a little odd here now - back-populate the first value of DM_TRACE_ID_HEADERS back to the
+    # DM_REQUEST_ID_HEADER setting, because it turns out that some components (notably the apiclient) depend on that
+    # setting
+    if app.config.get("DM_TRACE_ID_HEADERS"):
+        app.config["DM_REQUEST_ID_HEADER"] = app.config["DM_TRACE_ID_HEADERS"][0]
+
     # dynamically define this class as we don't necessarily know how request_class may have already been modified by
     # another init_app
     class _RequestIdRequest(RequestIdRequestMixin, app.request_class):
