@@ -6,7 +6,7 @@ import pytest
 from dmutils.request_id import init_app as request_id_init_app
 
 
-_GENERATED_TRACE_VALUE = "di5ea5e5deadbeefbaadf00dabadcafe"
+_GENERATED_TRACE_VALUE = "d15ea5e5deadbeefbaadf00dabadcafe"
 
 
 _trace_id_related_params = (
