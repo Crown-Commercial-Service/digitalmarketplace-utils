@@ -13,6 +13,7 @@ in (with args; {
     shortName = "dm-utils";
     buildInputs = [
       pythonPackages.virtualenv
+      pkgs.git
     ] ++ pkgs.stdenv.lib.optionals forDev ([
       ] ++ pkgs.stdenv.lib.optionals pkgs.stdenv.isDarwin [
       ]
