@@ -5,7 +5,7 @@ from dmutils.user import user_has_role, User
 
 @pytest.fixture
 def user():
-    return User(123, 'test@example.com', 321, 'test supplier', False, True, "Name", 'supplier')
+    return User(123, 'test@example.com', 321, 'test supplier', 'micro', False, True, "Name", 'supplier')
 
 
 def test_user_has_role():
@@ -53,6 +53,7 @@ def test_User_from_json_with_supplier():
         'supplier': {
             'supplierId': 321,
             'name': 'test supplier',
+            'organisationSize': 'micro'
         }
     }})
     assert user.id == 123
@@ -61,6 +62,23 @@ def test_User_from_json_with_supplier():
     assert user.email_address == 'test@example.com'
     assert user.supplier_id == 321
     assert user.supplier_name == 'test supplier'
+    assert user.supplier_organisation_size == 'micro'
+
+
+def test_User_from_json_with_supplier_no_organisation_size():
+    supplier_user = User.from_json({'users': {
+        'id': 123,
+        'name': 'Name',
+        'role': 'supplier',
+        'emailAddress': 'test@example.com',
+        'locked': False,
+        'active': True,
+        'supplier': {
+            'supplierId': 321,
+            'name': 'test supplier'
+        }
+    }})
+    assert supplier_user.supplier_organisation_size is None
 
 
 def test_User_has_role(user_json):
