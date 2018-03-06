@@ -49,6 +49,7 @@ class User():
             'emailAddress': self.email_address,
             'supplierId': self.supplier_id,
             'supplierName': self.supplier_name,
+            'supplierOrganisationSize': self.supplier_organisation_size,
             'locked': self.locked,
         }
 
