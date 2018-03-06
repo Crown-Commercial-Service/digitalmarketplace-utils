@@ -5,7 +5,7 @@ from dmutils.user import user_has_role, User
 
 @pytest.fixture
 def user():
-    return User(123, 'test@example.com', 321, 'test supplier', False, True, "Name", 'supplier')
+    return User(123, 'test@example.com', 321, 'test supplier', 'micro', False, True, "Name", 'supplier')
 
 
 def test_user_has_role():
@@ -25,7 +25,7 @@ def test_user_has_role_returns_false_on_non_matching_role():
 
 
 def test_User_from_json():
-    user = User.from_json({'users': {
+    admin_user = User.from_json({'users': {
         'id': 123,
         'emailAddress': 'test@example.com',
         'locked': False,
@@ -34,16 +34,16 @@ def test_User_from_json():
         'role': 'admin',
     }})
 
-    assert user.id == 123
-    assert user.name == 'Name'
-    assert user.role == 'admin'
-    assert user.email_address == 'test@example.com'
-    assert not user.is_locked()
-    assert user.is_active()
+    assert admin_user.id == 123
+    assert admin_user.name == 'Name'
+    assert admin_user.role == 'admin'
+    assert admin_user.email_address == 'test@example.com'
+    assert not admin_user.is_locked()
+    assert admin_user.is_active()
 
 
 def test_User_from_json_with_supplier():
-    user = User.from_json({'users': {
+    supplier_user = User.from_json({'users': {
         'id': 123,
         'name': 'Name',
         'role': 'supplier',
@@ -53,38 +53,56 @@ def test_User_from_json_with_supplier():
         'supplier': {
             'supplierId': 321,
             'name': 'test supplier',
+            'organisationSize': 'micro'
         }
     }})
-    assert user.id == 123
-    assert user.name == 'Name'
-    assert user.role == 'supplier'
-    assert user.email_address == 'test@example.com'
-    assert user.supplier_id == 321
-    assert user.supplier_name == 'test supplier'
+    assert supplier_user.id == 123
+    assert supplier_user.name == 'Name'
+    assert supplier_user.role == 'supplier'
+    assert supplier_user.email_address == 'test@example.com'
+    assert supplier_user.supplier_id == 321
+    assert supplier_user.supplier_name == 'test supplier'
+    assert supplier_user.supplier_organisation_size == 'micro'
+
+
+def test_User_from_json_with_supplier_no_organisation_size():
+    supplier_user = User.from_json({'users': {
+        'id': 123,
+        'name': 'Name',
+        'role': 'supplier',
+        'emailAddress': 'test@example.com',
+        'locked': False,
+        'active': True,
+        'supplier': {
+            'supplierId': 321,
+            'name': 'test supplier'
+        }
+    }})
+    assert supplier_user.supplier_organisation_size is None
 
 
 def test_User_has_role(user_json):
-    user = User.from_json(user_json)
-    assert user.has_role('supplier')
-    assert not user.has_role('admin')
+    supplier_user = User.from_json(user_json)
+    assert supplier_user.has_role('supplier')
+    assert not supplier_user.has_role('admin')
 
 
 def test_User_has_any_role(user_json):
-    user = User.from_json(user_json)
-    assert user.has_any_role('supplier', 'other')
-    assert user.has_any_role('other', 'supplier')
-    assert not user.has_any_role('other', 'admin')
+    supplier_user = User.from_json(user_json)
+    assert supplier_user.has_any_role('supplier', 'other')
+    assert supplier_user.has_any_role('other', 'supplier')
+    assert not supplier_user.has_any_role('other', 'admin')
 
 
 def test_User_load_user(user_json):
     data_api_client = mock.Mock()
     data_api_client.get_user.return_value = user_json
 
-    user = User.load_user(data_api_client, 123)
+    loaded_user = User.load_user(data_api_client, 123)
 
     data_api_client.get_user.assert_called_once_with(user_id=123)
-    assert user is not None
-    assert user.id == 123
+    assert loaded_user is not None
+    assert loaded_user.id == 123
 
 
 def test_User_load_user_raises_ValueError_on_non_integer_user_id():

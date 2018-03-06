@@ -6,7 +6,7 @@ def user_has_role(user, role):
 
 
 class User():
-    def __init__(self, user_id, email_address, supplier_id, supplier_name,
+    def __init__(self, user_id, email_address, supplier_id, supplier_name, supplier_organisation_size,
                  locked, active, name, role):
         self.id = user_id
         self.email_address = email_address
@@ -14,6 +14,7 @@ class User():
         self.role = role
         self.supplier_id = supplier_id
         self.supplier_name = supplier_name
+        self.supplier_organisation_size = supplier_organisation_size
         self.locked = locked
         self.active = active
 
@@ -48,6 +49,7 @@ class User():
             'emailAddress': self.email_address,
             'supplierId': self.supplier_id,
             'supplierName': self.supplier_name,
+            'supplierOrganisationSize': self.supplier_organisation_size,
             'locked': self.locked,
         }
 
@@ -56,14 +58,17 @@ class User():
         user = user_json["users"]
         supplier_id = None
         supplier_name = None
+        supplier_organisation_size = None
         if "supplier" in user:
             supplier_id = user["supplier"]["supplierId"]
             supplier_name = user["supplier"]["name"]
+            supplier_organisation_size = user["supplier"].get("organisationSize")
         return User(
             user_id=user["id"],
             email_address=user['emailAddress'],
             supplier_id=supplier_id,
             supplier_name=supplier_name,
+            supplier_organisation_size=supplier_organisation_size,
             locked=user.get('locked', False),
             active=user.get('active', True),
             name=user['name'],
