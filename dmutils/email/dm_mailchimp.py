@@ -8,6 +8,8 @@ from requests.exceptions import RequestException, HTTPError
 
 from mailchimp3 import MailChimp
 
+PAGINATION_SIZE = 1000
+
 
 class DMMailChimpClient(object):
 
@@ -28,11 +30,11 @@ class DMMailChimpClient(object):
         formatted_email_address = six.text_type(email_address.lower()).encode('utf-8')
         return md5(formatted_email_address).hexdigest()
 
-    def timeout_retry(method):
-        def wrapper(self, *args, **kwargs):
+    def timeout_retry(self, method):
+        def wrapper(*args, **kwargs):
             for i in range(1 + self.retries):
                 try:
-                    return method(self, *args, **kwargs)
+                    return method(*args, **kwargs)
                 except HTTPError as e:
                     exception = e
                     if exception.response.status_code == 504:
@@ -120,7 +122,16 @@ class DMMailChimpClient(object):
                 success = False
         return success
 
-    @timeout_retry
-    def get_email_addresses_from_list(self, list_id):
-        member_data = self._client.lists.members.all(list_id, get_all=True)
-        return [member["email_address"] for member in member_data["members"]]
+    def get_email_addresses_from_list(self, list_id, pagination_size=1000):
+        email_addresses = []
+        offset = 0
+        while True:
+            member_data = self.timeout_retry(
+                self._client.lists.members.all
+            )(list_id, count=pagination_size, offset=offset)
+            if not member_data.get("members", None):
+                break
+            offset += pagination_size
+            email_addresses.extend(member["email_address"] for member in member_data["members"])
+
+        return email_addresses

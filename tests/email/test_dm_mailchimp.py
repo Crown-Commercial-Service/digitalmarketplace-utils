@@ -176,17 +176,26 @@ def test_get_email_addresses_from_list():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
     with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
 
-        all_members.return_value = {"members": [
-            {"email_address": "user1@example.com"},
-            {"email_address": "user2@example.com"}
-        ]}
+        all_members.side_effect = [
+            {
+                "members": [
+                    {"email_address": "user1@example.com"},
+                    {"email_address": "user2@example.com"},
+                ]
+            },
+            {
+                "members": []
+            },
+        ]
+
         res = dm_mailchimp_client.get_email_addresses_from_list('list_id')
 
         assert res == ["user1@example.com", "user2@example.com"]
-        all_members.assert_called_once_with(
-            'list_id',
-            get_all=True
-        )
+
+        assert all_members.call_args_list == [
+            mock.call('list_id', count=1000, offset=0),
+            mock.call('list_id', count=1000, offset=1000),
+        ]
 
 
 def test_default_timeout_retry_performs_no_retries():
@@ -195,7 +204,9 @@ def test_default_timeout_retry_performs_no_retries():
         all_members.side_effect = HTTPError(response=mock.Mock(status_code=504))
         with pytest.raises(HTTPError):
             dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
-        assert all_members.mock_calls == [mock.call('a_list_id', get_all=True)]
+        assert all_members.call_args_list == [
+            mock.call('a_list_id', count=1000, offset=0),
+        ]
 
 
 def test_timeout_retry_performs_retries():
@@ -205,19 +216,67 @@ def test_timeout_retry_performs_retries():
         with pytest.raises(HTTPError):
             dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
         assert all_members.mock_calls == [
-            mock.call('a_list_id', get_all=True),
-            mock.call('a_list_id', get_all=True),
-            mock.call('a_list_id', get_all=True)
+            mock.call('a_list_id', count=1000, offset=0),
+            mock.call('a_list_id', count=1000, offset=0),
+            mock.call('a_list_id', count=1000, offset=0),
         ]
 
 
 def test_success_does_not_perform_retry():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock(), retries=2)
     with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
-        all_members.return_value = {
-            'members': [{'email_address': 'test1@test.com'}, {'email_address': 'test2@test.com'}]
-        }
+        all_members.side_effect = [
+            {
+                "members": [
+                    {"email_address": "user1@example.com"},
+                    {"email_address": "user2@example.com"},
+                ]
+            },
+            {
+                "members": []
+            },
+        ]
         dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
         assert all_members.mock_calls == [
-            mock.call('a_list_id', get_all=True)
+            mock.call('a_list_id', count=1000, offset=0),
+            mock.call('a_list_id', count=1000, offset=1000),
+        ]
+
+
+def test_offset_increments_until_no_members():
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+    with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
+
+        all_members.side_effect = [
+            {"members": [{"email_address": "user1@example.com"}]},
+            {"members": [{"email_address": "user2@example.com"}]},
+            {"members": [{"email_address": "user3@example.com"}]},
+            {"members": [{"email_address": "user4@example.com"}]},
+            {"members": [{"email_address": "user5@example.com"}]},
+            {"members": [{"email_address": "user6@example.com"}]},
+            {"members": [{"email_address": "user7@example.com"}]},
+            {"members": []},
+        ]
+
+        res = dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
+
+        assert res == [
+            "user1@example.com",
+            "user2@example.com",
+            "user3@example.com",
+            "user4@example.com",
+            "user5@example.com",
+            "user6@example.com",
+            "user7@example.com",
+        ]
+
+        assert all_members.call_args_list == [
+            mock.call('a_list_id', count=1000, offset=0),
+            mock.call('a_list_id', count=1000, offset=1000),
+            mock.call('a_list_id', count=1000, offset=2000),
+            mock.call('a_list_id', count=1000, offset=3000),
+            mock.call('a_list_id', count=1000, offset=4000),
+            mock.call('a_list_id', count=1000, offset=5000),
+            mock.call('a_list_id', count=1000, offset=6000),
+            mock.call('a_list_id', count=1000, offset=7000),
         ]
