@@ -95,8 +95,8 @@ class DMMailChimpClient(object):
             # mailchimp to never add them to mailchimp lists. In this case, we resort to allowing a failed API call (but
             # log) as a user of this method would unlikely be able to do anything as we have no control over this
             # behaviour.
-            if getattr(e, "response", None) and (
-                "looks fake or invalid, please enter a real email address." in e.response.json()["detail"]
+            if getattr(e, "response", None) is not None and (
+                "looks fake or invalid, please enter a real email address." in e.response.json().get("detail", "")
             ):
                 self.logger.error(
                     "Expected error: Mailchimp failed to add user ({}) to list ({}). API error: The email address looks fake or invalid, please enter a real email address.".format(  # noqa

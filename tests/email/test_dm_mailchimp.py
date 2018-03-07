@@ -108,7 +108,8 @@ def test_log_error_message_if_error_subscribing_email_to_list(get_email_hash, lo
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
     with mock.patch.object(
             dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
-        response = mock.Mock()
+        # The 400 response from MailChimp is actually falsey
+        response = mock.MagicMock(__bool__=False)
         response.json.return_value = {"detail": "Unexpected error."}
         create_or_update.side_effect = RequestException("error sending", response=response)
 
@@ -127,7 +128,7 @@ def test_returns_true_if_expected_error_subscribing_email_to_list(get_email_hash
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
     with mock.patch.object(
             dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
-        response = mock.Mock()
+        response = mock.MagicMock(__bool__=False)
         response.json.return_value = {"detail": "foo looks fake or invalid, please enter a real email address."}
         create_or_update.side_effect = RequestException("error sending", response=response)
 
