@@ -400,6 +400,11 @@ def test_request_header(
         assert request.parent_span_id == expected_parent_span_id
         assert request.get_onwards_request_headers() == expected_onwards_req_headers
         assert app.config.get("DM_REQUEST_ID_HEADER") == expected_dm_request_id_header_final_value
+        assert request.get_extra_log_context() == {
+            "trace_id": expected_trace_id,
+            "span_id": expected_span_id,
+            "parent_span_id": expected_parent_span_id,
+        }
 
     assert uuid4_mock.called is expect_uuid_call
 

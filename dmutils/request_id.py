@@ -74,6 +74,16 @@ class RequestIdRequestMixin(object):
             ),
         ))
 
+    def get_extra_log_context(self):
+        """
+            extra attributes to be made available on a log record based on this request
+        """
+        return {
+            "trace_id": self.trace_id,
+            "span_id": self.span_id,
+            "parent_span_id": self.parent_span_id,
+        }
+
 
 class ResponseHeaderMiddleware(object):
     def __init__(self, app, trace_id_headers, span_id_headers):
