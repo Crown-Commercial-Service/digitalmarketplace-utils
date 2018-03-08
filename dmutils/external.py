@@ -64,6 +64,11 @@ def user_logout():
     raise NotImplementedError()
 
 
+@external.route('/user/notifications/user-research')
+def user_research_consent():
+    raise NotImplementedError()
+
+
 # Briefs frontend
 
 @external.route('/buyers')
