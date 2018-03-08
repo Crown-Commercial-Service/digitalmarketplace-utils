@@ -76,17 +76,26 @@ class RequestIdRequestMixin(object):
 
 
 class ResponseHeaderMiddleware(object):
-    def __init__(self, app, trace_id_headers):
+    def __init__(self, app, trace_id_headers, span_id_headers):
         self.app = app
         self.trace_id_headers = trace_id_headers
+        self.span_id_headers = span_id_headers
 
     def __call__(self, environ, start_response):
         def rewrite_response_headers(status, headers, exc_info=None):
-            headers = headers + [
-                (header_name, str(request.request_id),)
-                for header_name in self.trace_id_headers
-                if header_name not in dict(headers)
-            ]
+            lower_existing_header_names = frozenset(name.lower() for name, value in headers)
+            headers.extend(chain(
+                (
+                    (header_name, str(request.trace_id),)
+                    for header_name in self.trace_id_headers
+                    if header_name.lower() not in lower_existing_header_names
+                ),
+                (
+                    (header_name, str(request.span_id),)
+                    for header_name in self.span_id_headers
+                    if header_name.lower() not in lower_existing_header_names
+                ),
+            ))
 
             return start_response(status, headers, exc_info)
 
@@ -112,4 +121,8 @@ def init_app(app):
     class _RequestIdRequest(RequestIdRequestMixin, app.request_class):
         pass
     app.request_class = _RequestIdRequest
-    app.wsgi_app = ResponseHeaderMiddleware(app.wsgi_app, app.config['DM_TRACE_ID_HEADERS'])
+    app.wsgi_app = ResponseHeaderMiddleware(
+        app.wsgi_app,
+        app.config['DM_TRACE_ID_HEADERS'],
+        app.config['DM_SPAN_ID_HEADERS'],
+    )
