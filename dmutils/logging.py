@@ -11,6 +11,13 @@ from pythonjsonlogger.jsonlogger import JsonFormatter as BaseJSONFormatter
 LOG_FORMAT = '%(asctime)s %(app_name)s %(name)s %(levelname)s ' \
              '%(trace_id)s "%(message)s" [in %(pathname)s:%(lineno)d]'
 
+
+LOG_FORMAT_EXTRA_JSON_KEYS = (
+    "span_id",
+    "parent_span_id",
+)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,11 +60,15 @@ def configure_handler(handler, app, formatter):
     return handler
 
 
+def get_json_log_format():
+    return LOG_FORMAT + "".join(f" %({key})s" for key in LOG_FORMAT_EXTRA_JSON_KEYS)
+
+
 def get_handler(app):
     if app.config.get('DM_PLAIN_TEXT_LOGS'):
         formatter = CustomLogFormatter(LOG_FORMAT)
     else:
-        formatter = JSONFormatter(LOG_FORMAT)
+        formatter = JSONFormatter(get_json_log_format())
 
     if app.config.get('DM_LOG_PATH'):
         handler = logging.FileHandler(app.config['DM_LOG_PATH'])

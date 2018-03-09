@@ -12,7 +12,7 @@ import mock
 from flask import request
 
 from dmutils.logging import init_app, RequestExtraContextFilter, JSONFormatter, CustomLogFormatter
-from dmutils.logging import LOG_FORMAT
+from dmutils.logging import LOG_FORMAT, get_json_log_format
 
 
 def test_request_extra_context_filter_not_in_app_context():
@@ -116,7 +116,7 @@ class TestJSONFormatter(object):
         return logger, buffer
 
     def setup(self):
-        self.formatter = JSONFormatter(LOG_FORMAT)
+        self.formatter = JSONFormatter(get_json_log_format())
         self.logger, self.buffer = self._create_logger('logging-test', self.formatter)
         self.dmlogger, self.dmbuffer = self._create_logger('dmutils', self.formatter)
 
@@ -135,6 +135,10 @@ class TestJSONFormatter(object):
         assert 'trace_id' not in result
         assert 'application' in result
         assert 'app_name' not in result
+        assert 'spanId' in result
+        assert 'span_id' not in result
+        assert 'parentSpanId' in result
+        assert 'parent_span_id' not in result
 
     def test_log_type_is_set_to_application(self):
         self.logger.info("hello")
@@ -211,6 +215,12 @@ class TestCustomLogFormatter(object):
         result = self.buffer.getvalue()
 
         assert '"hello {bar}"' in result
+
+    def test_log_message_doesnt_include_json_extra_keys(self):
+        self.logger.info("hello {foo}", extra={'foo': 'bar', "span_id": "1234"})
+        result = self.buffer.getvalue()
+
+        assert '1234' not in result
 
     def test_failed_log_message_formatting_logs_an_error(self):
         self.logger.info("hello {barry}")
