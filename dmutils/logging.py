@@ -9,7 +9,7 @@ from flask.ctx import has_request_context
 from pythonjsonlogger.jsonlogger import JsonFormatter as BaseJSONFormatter
 
 LOG_FORMAT = '%(asctime)s %(app_name)s %(name)s %(levelname)s ' \
-             '%(request_id)s "%(message)s" [in %(pathname)s:%(lineno)d]'
+             '%(trace_id)s "%(message)s" [in %(pathname)s:%(lineno)d]'
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def configure_handler(handler, app, formatter):
     handler.setLevel(logging.getLevelName(app.config['DM_LOG_LEVEL']))
     handler.setFormatter(formatter)
     handler.addFilter(AppNameFilter(app.config['DM_APP_NAME']))
-    handler.addFilter(RequestIdFilter())
+    handler.addFilter(RequestExtraContextFilter())
 
     return handler
 
@@ -77,16 +77,15 @@ class AppNameFilter(logging.Filter):
         return record
 
 
-class RequestIdFilter(logging.Filter):
-    @property
-    def request_id(self):
-        if has_request_context() and hasattr(request, 'request_id'):
-            return request.request_id
-        else:
-            return 'no-request-id'
-
+class RequestExtraContextFilter(logging.Filter):
+    """
+        Filter which will pull extra context from the current request's `get_extra_log_context` method (if present)
+        and make this available on log records
+    """
     def filter(self, record):
-        record.request_id = self.request_id
+        if has_request_context() and callable(getattr(request, "get_extra_log_context", None)):
+            for key, value in request.get_extra_log_context().items():
+                setattr(record, key, value)
 
         return record
 
@@ -130,13 +129,17 @@ class JSONFormatter(BaseJSONFormatter):
         self._max_missing_key_attempts = max_missing_key_attempts
 
     def process_log_record(self, log_record):
-        rename_map = {
-            "asctime": "time",
-            "request_id": "requestId",
-            "app_name": "application",
-        }
-        for key, newkey in rename_map.items():
-            log_record[newkey] = log_record.pop(key)
+        for key, newkey in (
+            ("asctime", "time",),
+            ("trace_id", "requestId",),
+            ("span_id", "spanId",),
+            ("parent_span_id", "parentSpanId",),
+            ("app_name", "application",),
+        ):
+            try:
+                log_record[newkey] = log_record.pop(key)
+            except KeyError:
+                pass
 
         log_record['logType'] = "application"
 
