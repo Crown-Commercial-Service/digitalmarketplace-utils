@@ -42,6 +42,7 @@ def user_json():
             "supplier": {
                 "supplierId": 321,
                 "name": "test supplier",
-            }
+            },
+            "userResearchOptedIn": True,
         }
     }

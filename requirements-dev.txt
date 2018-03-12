@@ -13,4 +13,4 @@ python-coveralls==2.5.0
 Flask==0.10.1
 Flask-WTF==0.12
 
-git+https://github.com/alphagov/digitalmarketplace-test-utils.git@1.0.0#egg=digitalmarketplace-test-utils==1.0.0
+git+https://github.com/alphagov/digitalmarketplace-test-utils.git@1.2.0#egg=digitalmarketplace-test-utils==1.2.0

@@ -5,7 +5,7 @@ from dmutils.user import user_has_role, User
 
 @pytest.fixture
 def user():
-    return User(123, 'test@example.com', 321, 'test supplier', 'micro', False, True, "Name", 'supplier')
+    return User(123, 'test@example.com', 321, 'test supplier', 'micro', False, True, "Name", 'supplier', True)
 
 
 def test_user_has_role():
@@ -32,6 +32,7 @@ def test_User_from_json():
         'active': True,
         'name': 'Name',
         'role': 'admin',
+        "userResearchOptedIn": True
     }})
 
     assert admin_user.id == 123
@@ -40,6 +41,7 @@ def test_User_from_json():
     assert admin_user.email_address == 'test@example.com'
     assert not admin_user.is_locked()
     assert admin_user.is_active()
+    assert admin_user.user_research_opted_in
 
 
 def test_User_from_json_with_supplier():
@@ -54,7 +56,8 @@ def test_User_from_json_with_supplier():
             'supplierId': 321,
             'name': 'test supplier',
             'organisationSize': 'micro'
-        }
+        },
+        "userResearchOptedIn": True
     }})
     assert supplier_user.id == 123
     assert supplier_user.name == 'Name'
@@ -63,6 +66,7 @@ def test_User_from_json_with_supplier():
     assert supplier_user.supplier_id == 321
     assert supplier_user.supplier_name == 'test supplier'
     assert supplier_user.supplier_organisation_size == 'micro'
+    assert supplier_user.user_research_opted_in
 
 
 def test_User_from_json_with_supplier_no_organisation_size():
@@ -76,7 +80,8 @@ def test_User_from_json_with_supplier_no_organisation_size():
         'supplier': {
             'supplierId': 321,
             'name': 'test supplier'
-        }
+        },
+        "userResearchOptedIn": True
     }})
     assert supplier_user.supplier_organisation_size is None
 
@@ -167,3 +172,26 @@ def test_user_is_not_authenticated_if_locked(user):
     user.locked = True
 
     assert not user.is_authenticated()
+
+
+def test_user_research_opt_in(user_json):
+    user = User.from_json(user_json)
+    assert user.user_research_opted_in
+
+
+def test_user_research_not_opt_in():
+    user = User.from_json({'users': {
+        'id': 123,
+        'name': 'Name',
+        'role': 'supplier',
+        'emailAddress': 'test@example.com',
+        'locked': False,
+        'active': True,
+        'supplier': {
+            'supplierId': 321,
+            'name': 'test supplier',
+            'organisationSize': 'micro'
+        },
+        "userResearchOptedIn": False
+    }})
+    assert not user.user_research_opted_in
