@@ -7,7 +7,7 @@ def user_has_role(user, role):
 
 class User():
     def __init__(self, user_id, email_address, supplier_id, supplier_name, supplier_organisation_size,
-                 locked, active, name, role):
+                 locked, active, name, role, user_research_opted_in):
         self.id = user_id
         self.email_address = email_address
         self.name = name
@@ -17,6 +17,7 @@ class User():
         self.supplier_organisation_size = supplier_organisation_size
         self.locked = locked
         self.active = active
+        self.user_research_opted_in = user_research_opted_in
 
     def is_authenticated(self):
         return self.is_active()
@@ -51,6 +52,7 @@ class User():
             'supplierName': self.supplier_name,
             'supplierOrganisationSize': self.supplier_organisation_size,
             'locked': self.locked,
+            'userResearchOptedIn': self.user_research_opted_in,
         }
 
     @staticmethod
@@ -59,10 +61,12 @@ class User():
         supplier_id = None
         supplier_name = None
         supplier_organisation_size = None
+
         if "supplier" in user:
             supplier_id = user["supplier"]["supplierId"]
             supplier_name = user["supplier"]["name"]
             supplier_organisation_size = user["supplier"].get("organisationSize")
+
         return User(
             user_id=user["id"],
             email_address=user['emailAddress'],
@@ -72,7 +76,8 @@ class User():
             locked=user.get('locked', False),
             active=user.get('active', True),
             name=user['name'],
-            role=user['role']
+            role=user['role'],
+            user_research_opted_in=user.get('userResearchOptedIn')
         )
 
     @staticmethod

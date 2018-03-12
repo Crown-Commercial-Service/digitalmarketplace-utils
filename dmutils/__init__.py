@@ -4,4 +4,4 @@ from .flask_init import init_app, init_manager
 import flask_featureflags  # noqa
 
 
-__version__ = '34.4.0'
+__version__ = '34.5.0'
