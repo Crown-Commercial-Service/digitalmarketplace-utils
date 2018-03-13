@@ -3,3 +3,4 @@
 .cache
 venv*
 .hypothesis
+local.nix
