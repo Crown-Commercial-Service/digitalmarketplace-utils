@@ -26,6 +26,7 @@ def test_request_extra_context_filter_in_app_context(app):
         test_extra_log_context = {
             "poldy": "Old Ollebo, M. P.",
             "Dante": "Riordan",
+            "farthing": None,
         }
         # add a simple mock callable instead of using our full custom request implementation
         request.get_extra_log_context = mock.Mock(spec_set=[])
@@ -36,7 +37,13 @@ def test_request_extra_context_filter_in_app_context(app):
 
         assert request.get_extra_log_context.call_args_list == [()]  # a single zero-arg call
         # ...and the mock record should have all its values set appropriately
-        assert {k: getattr(result, k) for k in test_extra_log_context.keys()} == test_extra_log_context
+        assert {
+            k: getattr(result, k)
+            for k in test_extra_log_context.keys()
+        } == {
+            k: v or None
+            for k, v in test_extra_log_context.items()
+        }
 
 
 def test_request_extra_context_filter_no_method(app):
@@ -209,6 +216,12 @@ class TestCustomLogFormatter(object):
         result = self.buffer.getvalue()
 
         assert '"hello bar"' in result
+
+    def test_log_message_none_substituted(self):
+        self.logger.info("hello 123", extra={"app_name": None})
+        result = self.buffer.getvalue()
+
+        assert result.split()[2] == "-"
 
     def test_log_message_is_unchanged_if_fields_are_not_found(self):
         self.logger.info("hello {bar}")

@@ -104,15 +104,17 @@ class RequestExtraContextFilter(logging.Filter):
 class CustomLogFormatter(logging.Formatter):
     """Accepts a format string for the message and formats it with the extra fields"""
 
-    FORMAT_STRING_FIELDS_PATTERN = re.compile(r'\((.+?)\)', re.IGNORECASE)
+    FORMAT_STRING_FIELDS_PATTERN = re.compile(r'\((.+?)\)')
 
     def add_fields(self, record):
+        """Ensure all values found in our `fmt` have non-None entries in `record`"""
         for field in self.FORMAT_STRING_FIELDS_PATTERN.findall(self._fmt):
-            record.__dict__[field] = record.__dict__.get(field)
-        return record
+            # slightly clunky - this is so we catch explicitly-set Nones too and turn them into "-"
+            fetched_value = record.__dict__.get(field)
+            record.__dict__[field] = fetched_value if fetched_value is not None else "-"
 
     def format(self, record):
-        record = self.add_fields(record)
+        self.add_fields(record)
         msg = super(CustomLogFormatter, self).format(record)
 
         try:
