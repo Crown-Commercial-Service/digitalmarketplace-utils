@@ -5,6 +5,8 @@ import json
 import mock
 import os
 from collections import OrderedDict
+from itertools import product
+
 import pytest
 
 from dmutils.email.dm_notify import DMNotifyClient
@@ -13,12 +15,14 @@ from dmutils.email.dm_notify import DMNotifyClient
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
+_test_api_key = '1111111111' * 8
+
+
 @pytest.fixture
 def dm_notify_client(app):
     """Supply initialized client."""
     with app.app_context():
-        test_api_key = '1111111111' * 8
-        return DMNotifyClient(test_api_key)
+        return DMNotifyClient(_test_api_key)
 
 
 @pytest.fixture
@@ -109,6 +113,70 @@ class TestDMNotifyClient(object):
                 personalisation=None,
                 reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
             )
+
+    @pytest.mark.parametrize("redirect_app_config,redirect_constructor,expected_redirected_address", tuple(
+        (a, b, c) for (a, b), c in zip(
+            product(
+                (
+                    {  # 0
+                        "example.com": "bollope@do.om",
+                        "s.to.om": "ble@ph.en",
+                    },
+                    {  # 1
+                        "s.to.om": "ble@ph.en",
+                    },
+                    # 2
+                    None,
+                ),
+                (
+                    {  # 0
+                        "example.com": "moll@dopel.oob",
+                        "ble.ph.en": "s@to.om",
+                    },
+                    {  # 1
+                        "ble.ph.en": "s@to.om",
+                    },
+                    # 2
+                    None,
+                ),
+            ),
+            (
+                # None -> "no redirect" - should be same as self.email_address
+                "moll@dopel.oob",  # (0, 0,)
+                None,              # (0, 1,)
+                "bollope@do.om",   # (0, 2,)
+                "moll@dopel.oob",  # (1, 0,)
+                None,              # (1, 1,)
+                None,              # (1, 2,)
+                "moll@dopel.oob",  # (2, 0,)
+                None,              # (2, 1,)
+                None,              # (2, 2,)
+            )
+        )
+    ))
+    def test_send_email_replace_address_constructor(
+        self,
+        app,
+        notify_send_email,
+        redirect_app_config,
+        redirect_constructor,
+        expected_redirected_address,
+    ):
+        with app.app_context():
+            app.config["DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS"] = redirect_app_config
+            dm_notify_client = DMNotifyClient(_test_api_key, redirect_domains_to_address=redirect_constructor)
+
+            with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+                email_mock.return_value = notify_send_email
+                dm_notify_client.send_email(self.email_address, self.template_id)
+
+                email_mock.assert_called_with(
+                    expected_redirected_address if expected_redirected_address is not None else self.email_address,
+                    self.template_id,
+                    personalisation=None,
+                    # NOTE how reference is unaffected by any of this
+                    reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0=',
+                )
 
     def test_send_email_with_external_reference(self, dm_notify_client, notify_send_email):
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
@@ -245,3 +313,36 @@ class TestDMNotifyClient(object):
                     personalisation=None,
                     reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
                 )
+
+    def test_replacement_address_allows_resend(self):
+        """
+            Test the replacement_email_address mechanism doesn't make calls to different addresses look like resends.
+            Also tests behaviour when used outside a flask app context.
+        """
+        dm_notify_client = DMNotifyClient(
+            _test_api_key,
+            logger=mock.Mock(),
+            redirect_domains_to_address={"example.gov.uk": "ellpod@bomo.ol"},
+        )
+
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
+            with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
+                send_email_notification_mock.return_value = {'id': 'example-id'}
+                get_all_notifications_mock.return_value = {"notifications": []}
+                dm_notify_client.send_email("fatchuck@example.gov.uk", self.template_id, allow_resend=False)
+                dm_notify_client.send_email("cheek.chops@example.gov.uk", self.template_id, allow_resend=False)
+
+                assert send_email_notification_mock.call_args_list == [
+                    mock.call(
+                        "ellpod@bomo.ol",
+                        self.template_id,
+                        personalisation=None,
+                        reference="oq2Xi6D6ymviEtVK8Gr9I0675Q8KcjfAz3IO9sfX8a0="
+                    ),
+                    mock.call(
+                        "ellpod@bomo.ol",
+                        self.template_id,
+                        personalisation=None,
+                        reference='Q_0wRa57Pj4BEIWGop9gOLoxhkCsVMsE2UOZeOnZyas='
+                    ),
+                ]

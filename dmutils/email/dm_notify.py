@@ -18,11 +18,25 @@ class DMNotifyClient(object):
             self,
             govuk_notify_api_key,
             govuk_notify_base_url='https://api.notifications.service.gov.uk',
-            logger=None
+            logger=None,
+            redirect_domains_to_address=None,
     ):
-        """Set up logging and mail client."""
+        """
+            :param govuk_notify_api_key:
+            :param govuk_notify_base_url:
+            :param logger: logger to log progress to, taken from current_app if Falsey
+            :param redirect_domains_to_address: dictionary mapping email domain to redirected email address - emails
+                sent to a email with a domain in this mapping will instead be sent to the corresponding value set here.
+                if `redirect_domains_to_address` is `None` will fall back to looking for a
+                `DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS` setting in the current flask app's config (if available).
+        """
         self.logger = logger or current_app.logger
         self.client = self._client_class(govuk_notify_api_key, govuk_notify_base_url)
+        self._redirect_domains_to_address = (
+            current_app.config.get("DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS")
+            if current_app and redirect_domains_to_address is None else
+            redirect_domains_to_address
+        )
 
     def get_all_notifications(self, **kwargs):
         """Wrapper for notifications_python_client.notifications.NotificationsAPIClient::get_all_notifications"""
@@ -103,8 +117,17 @@ class DMNotifyClient(object):
             )
             return
         try:
+            # NOTE how the potential replacement of the email address happens *after* the has_been_sent check and
+            # reference generation
+            final_email_address = (
+                self._redirect_domains_to_address and self._redirect_domains_to_address.get(
+                    # splitting at rightmost @ should reliably give us the domain
+                    email_address.rsplit("@", 1)[-1].lower()
+                )
+            ) or email_address
+
             response = self.client.send_email_notification(
-                email_address,
+                final_email_address,
                 template_id,
                 personalisation=personalisation,
                 reference=reference,
