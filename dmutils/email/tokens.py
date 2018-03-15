@@ -4,7 +4,6 @@ import struct
 
 from datetime import datetime
 
-import six
 from cryptography import fernet
 from flask import current_app
 
@@ -105,7 +104,7 @@ def decode_password_reset_token(token, data_api_client):
             ONE_DAY_IN_SECONDS,
         )
     except fernet.InvalidToken as e:
-        current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
+        current_app.logger.info("Error changing password: {error}", extra={'error': str(e)})
         return {'error': 'token_invalid'}
 
     user = data_api_client.get_user(decoded["user"])
@@ -145,7 +144,7 @@ def decode_invitation_token(encoded_token):
             )
 
             current_app.logger.info("Invitation reset attempt with expired token. error {error}",
-                                    extra={'error': six.text_type(error)})
+                                    extra={'error': str(error)})
 
             return {
                 'error': 'token_expired',
@@ -154,6 +153,6 @@ def decode_invitation_token(encoded_token):
 
         except fernet.InvalidToken as invalid_token_error:
             current_app.logger.info("Invitation reset attempt with invalid token. error {error}",
-                                    extra={'error': six.text_type(invalid_token_error)})
+                                    extra={'error': str(invalid_token_error)})
 
             return {'error': 'token_invalid'}

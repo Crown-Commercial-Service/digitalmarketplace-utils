@@ -5,14 +5,12 @@ from flask import abort, request, Response
 from flask.views import View
 from io import BytesIO
 from odf.style import TextProperties, TableRowProperties, TableColumnProperties, TableCellProperties, FontFace
-import six
 
 from dmutils import csv_generator
 from dmutils import ods
 
 
-@six.add_metaclass(ABCMeta)
-class DownloadFileView(View):
+class DownloadFileView(View, metaclass=ABCMeta):
     """An abstract base class appropriate for subclassing in the frontend apps when the user needs to be able to
     download some data as a CSV or ODS file. All abstract methods must be implemented on the subclass (although example
     implementations are included here with the kind of return value expected); all other methods should be able to
@@ -164,8 +162,7 @@ class DownloadFileView(View):
         return response
 
 
-@six.add_metaclass(ABCMeta)
-class SimpleDownloadFileView(DownloadFileView):
+class SimpleDownloadFileView(DownloadFileView, metaclass=ABCMeta):
     """A slightly simplier version of the DownloadFileView where it is possible to have a single source of data
     for all download filetypes. If you want a fairly simple structure to your spreadsheet (in effect, a single sheet,
     with self-contained rows where cells don't span rows or columns), you can implement only `get_file_data_and_styles`

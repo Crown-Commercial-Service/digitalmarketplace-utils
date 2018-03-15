@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Digital Marketplace MailChimp integration."""
 
-import six
-
 from hashlib import md5
 from requests.exceptions import RequestException, HTTPError
 
@@ -27,7 +25,7 @@ class DMMailChimpClient(object):
     @staticmethod
     def get_email_hash(email_address):
         """md5 hashing of lower cased emails has been chosen by mailchimp to identify email addresses"""
-        formatted_email_address = six.text_type(email_address.lower()).encode('utf-8')
+        formatted_email_address = str(email_address.lower()).encode('utf-8')
         return md5(formatted_email_address).hexdigest()
 
     def timeout_retry(self, method):

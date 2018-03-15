@@ -5,7 +5,6 @@ import datetime
 import mimetypes
 import logging
 from dateutil.parser import parse as parse_time
-from six import text_type
 
 # a bit of a lie here - retains compatibility with consumers that were importing boto2's S3ResponseError from here. this
 # is the exception boto3 raises in (mostly) the same situations.
@@ -55,7 +54,7 @@ class S3(object):
                 disposition_type,
                 # boto/aws can't cope with unicode here, but wants the ultimate result as a `str` in py3, so doing this
                 # to strip non-ascii chars..
-                text_type(download_filename).encode("ascii", errors="ignore").decode(),
+                str(download_filename).encode("ascii", errors="ignore").decode(),
             )
         obj.put(
             ACL=acl,

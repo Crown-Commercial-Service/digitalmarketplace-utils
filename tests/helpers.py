@@ -1,5 +1,5 @@
 from datetime import datetime
-from six import BytesIO
+from io import BytesIO
 
 
 class IsDatetime(object):
@@ -9,8 +9,7 @@ class IsDatetime(object):
 
 class MockFile(BytesIO):
     def __init__(self, initial=b"", filename="", name=""):
-        # BytesIO on py2 is an old-style class (yeah, i know...)
-        BytesIO.__init__(self, initial)
+        super().__init__(initial)
         self._name = name
         self._filename = filename
 
