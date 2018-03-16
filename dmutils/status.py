@@ -35,7 +35,7 @@ def get_disk_space_status(low_disk_percent_threshold=5):
     instance is below the threshold and the integer percentage remaining disk space."""
     disk_stats = os.statvfs('/')
 
-    disk_free_percent = 100 - int(math.ceil(((disk_stats.f_bfree * 1.0) / disk_stats.f_blocks) * 100))
+    disk_free_percent = int(math.ceil(((disk_stats.f_bfree * 1.0) / disk_stats.f_blocks) * 100))
 
     return 'OK' if disk_free_percent >= low_disk_percent_threshold else 'LOW', disk_free_percent
 
