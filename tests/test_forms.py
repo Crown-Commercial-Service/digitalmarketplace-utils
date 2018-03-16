@@ -1,7 +1,7 @@
 from itertools import product
 
 from flask.ext.wtf import Form
-from wtforms.validators import DataRequired, Optional
+from wtforms.validators import DataRequired, Length, Optional
 from werkzeug.datastructures import ImmutableMultiDict
 import pytest
 
@@ -58,6 +58,38 @@ class TestEmailFieldFormat(object):
 
             assert form.validate()
             assert form.data["test_email"] == email_address.strip()
+
+    def test_default_email_length(self, app):
+        email_address = 'r' + 'e' * 498 + 'ally@long.com'  # 512 chars long
+        with app.app_context():
+            form = EmailFieldFormatTestForm(
+                formdata=ImmutableMultiDict((
+                    ("test_email", email_address,),
+                )),
+                csrf_enabled=False,
+            )
+
+            assert not form.validate()
+            assert form.errors == {'test_email': ['Please enter an email address under 512 characters.']}
+
+    def test_default_length_and_message_can_be_overridden(self, app):
+        class OverrideDefaultValidatorTestForm(Form):
+            test_email = EmailField(
+                "An Electronic Mailing Address",
+                validators=[Length(max=11, message='Only really short emails please')]
+            )
+
+        email_address = 'rlly@shrt.cm'  # 12 chars long
+        with app.app_context():
+            form = OverrideDefaultValidatorTestForm(
+                formdata=ImmutableMultiDict((
+                    ("test_email", email_address,),
+                )),
+                csrf_enabled=False,
+            )
+
+            assert not form.validate()
+            assert form.errors == {'test_email': ['Only really short emails please']}
 
 
 class EmailFieldCombinationTestForm(Form):

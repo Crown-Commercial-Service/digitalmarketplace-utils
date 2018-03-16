@@ -2,7 +2,7 @@ from itertools import chain
 import re
 
 from wtforms import StringField
-from wtforms.validators import Regexp
+from wtforms.validators import Regexp, Length
 
 
 class StripWhitespaceStringField(StringField):
@@ -22,6 +22,7 @@ class EmailField(StripWhitespaceStringField):
             kwargs.pop("validators", ()),
             (
                 EmailValidator(),
+                Length(max=511, message="Please enter an email address under 512 characters."),
             ),
         ))
         super(EmailField, self).__init__(label, **kwargs)
