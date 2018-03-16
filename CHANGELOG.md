@@ -2,6 +2,13 @@
 
 Records breaking changes from major version bumps
 
+## 35.0.0
+
+PR [#371](https://github.com/alphagov/digitalmarketplace-utils/pull/371)
+
+We are dropping support for Python 2, so any libraries that pull this in will need to make sure they are compatible
+with Python 3.
+
 ## 34.0.0
 
 PR: [#360](https://github.com/alphagov/digitalmarketplace-utils/pull/360)

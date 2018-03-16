@@ -5,8 +5,8 @@ import boto3
 from moto import mock_s3
 import pytest
 from freezegun import freeze_time
-from six import BytesIO
-from six.moves.urllib.parse import parse_qs, urlparse
+from io import BytesIO
+from urllib.parse import parse_qs, urlparse
 
 from dmutils.s3 import S3, get_file_size, default_region
 from dmutils.formats import DATETIME_FORMAT

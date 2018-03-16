@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import re
-from six import string_types
 from jinja2 import evalcontextfilter, Markup, escape
 
 
@@ -66,7 +65,7 @@ def capitalize_first(maybe_text):
     :param maybe_text: Could be anything
     :return: If maybe_text is a string it will be returned with an initial capital letter, otherwise unchanged
     """
-    if maybe_text and isinstance(maybe_text, string_types):
+    if maybe_text and isinstance(maybe_text, str):
         if not maybe_text.startswith('http'):
             return maybe_text[0].capitalize() + maybe_text[1:]
     elif isinstance(maybe_text, (list, tuple)):

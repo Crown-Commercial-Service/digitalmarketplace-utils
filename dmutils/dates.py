@@ -1,4 +1,3 @@
-from six import string_types
 from datetime import datetime, timedelta
 from workdays import workday
 
@@ -31,7 +30,7 @@ def _brief_is_from_api_(brief):
 
 
 def _brief_is_from_frontend_app_and_published_(brief):
-    return brief.get('publishedAt') and isinstance(brief.get('publishedAt'), string_types)
+    return brief.get('publishedAt') and isinstance(brief.get('publishedAt'), str)
 
 
 def _get_start_date_from_brief_api(brief):

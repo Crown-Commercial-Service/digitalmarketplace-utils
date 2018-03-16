@@ -1,6 +1,4 @@
-from builtins import str, bytes  # py2/3 compatible unicode-str
 from flask import Response
-import six
 from werkzeug.exceptions import BadRequest
 
 import mock
@@ -64,7 +62,7 @@ class TestDownloadFileView():
                        'row-default', 'row-tall', 'row-tall-optimal',
                        'cell-default', 'cell-header']
         for style_name in style_names:
-            assert spreadsheet._document.getStyleByName(six.text_type(style_name)) is not None
+            assert spreadsheet._document.getStyleByName(str(style_name)) is not None
 
     def test_create_response_csv(self):
         kwargs = {'filename': 'test'}
@@ -100,7 +98,7 @@ class TestDownloadFileView():
         # based on creation time, so let's test the cells themselves.
         assert type(res) == Response
         assert bytes(mimetype, encoding='utf-8') in res.get_data()
-        assert len(res.get_data()) >= 1700 and len(res.get_data()) <= 1800
+        assert 1700 <= len(res.get_data()) <= 1800
 
         sheet = spreadsheet._sheets['sheet']
         assert sheet.read_cell(0, 0) == 'Heading 1'
