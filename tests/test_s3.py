@@ -1,6 +1,7 @@
 import datetime
 import sys
 
+from botocore.exceptions import ClientError
 import boto3
 from moto import mock_s3
 import pytest
@@ -317,6 +318,27 @@ class TestS3Uploader(object):
             # moto currently has a py3 bug which makes this fail - the fix not yet upstream - perhaps next time you come
             # across this message try updating moto to the latest version and see if this works
             assert obj0.content_type == "application/pdf"
+
+    @freeze_time('2018-01-01')
+    def test_copy_existing_file(self, bucket_with_file):
+        target_key = "copy/straw.dear.pdf"
+        returned_key_dict = S3("dear-liza").copy(src_bucket="dear-liza", src_key="with/straw.dear.pdf",
+                                                 target_key=target_key)
+
+        assert returned_key_dict['path'] == target_key
+        assert returned_key_dict['size'] == 12
+        assert returned_key_dict['last_modified'] == "2005-04-03T02:01:00.000000Z"
+
+    @freeze_time('2018-01-01')
+    def test_copy_non_existent_file_raises(self, bucket_with_file):
+        with pytest.raises(ClientError):
+            S3("dear-liza").copy(src_bucket="dear-liza", src_key="with/non-existent-file", target_key="copy/fail.ure")
+
+    @freeze_time('2018-01-01')
+    def test_copy_to_existing_target_raises(self, bucket_with_file):
+        with pytest.raises(ValueError):
+            S3("dear-liza").copy(src_bucket="dear-liza", src_key="with/straw.dear.pdf",
+                                 target_key="with/straw.dear.pdf")
 
 
 def test_get_file_size_binary_file():
