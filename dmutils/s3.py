@@ -75,6 +75,37 @@ class S3(object):
 
         return self._format_key(obj)
 
+    def copy(self, src_bucket, src_key, target_key, acl=None):
+        """
+        Copy an object that already exists in S3 to a new key in this S3 instance's bucket. The copy will be private by
+        default so you need to update the ACL if you wish to have custom access. Doesn't update associated metadata.
+
+        :param src_bucket: The source bucket to look in for the original file.
+        :param src_key:    The source key to look for in the source bucket.
+        :param target_key: The key to store the copy under in the current bucket.
+        :param acl:        If provided, will set the ACL on the key.
+        :return:           S3 Key
+        :raises:           botocore.exceptions.ClientError if source file doesn't exist.
+        """
+        if self.path_exists(target_key):
+            raise ValueError('Target key already exists in S3.')
+
+        extra_args = {'ACL': acl} if acl else {}
+        self._bucket.copy(CopySource={"Bucket": src_bucket, "Key": src_key}, Key=target_key, ExtraArgs=extra_args)
+
+        logger.info(
+            "Created a copy of {src_bucket}/{src_key} at {target_bucket}/{target_key}{set_acl}",
+            extra={
+                "src_bucket": src_bucket,
+                "src_key": src_key,
+                "target_bucket": self.bucket_name,
+                "target_key": target_key,
+                "set_acl": f" with '{acl} ACL" if acl else ""
+            },
+        )
+
+        return self._format_key(self._bucket.Object(target_key))
+
     @staticmethod
     def _normalize_path(path):
         return path.lstrip('/')
