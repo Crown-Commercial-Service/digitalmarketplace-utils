@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the Digital Marketplace MailChimp integration."""
+import types
+
 import mock
 import pytest
 
@@ -173,7 +175,7 @@ def test_get_email_hash_lowers():
     DMMailChimpClient.get_email_hash("foo@EXAMPLE.com") == DMMailChimpClient.get_email_hash("foo@example.com")
 
 
-def test_get_email_addresses_from_list():
+def test_get_email_addresses_from_list_generates_emails():
     dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
     with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
 
@@ -191,11 +193,14 @@ def test_get_email_addresses_from_list():
 
         res = dm_mailchimp_client.get_email_addresses_from_list('list_id')
 
-        assert res == ["user1@example.com", "user2@example.com"]
+        assert isinstance(res, types.GeneratorType)
+        assert all_members.call_args_list == []
+
+        assert list(res) == ["user1@example.com", "user2@example.com"]
 
         assert all_members.call_args_list == [
-            mock.call('list_id', count=1000, offset=0),
-            mock.call('list_id', count=1000, offset=1000),
+            mock.call('list_id', count=100, offset=0),
+            mock.call('list_id', count=100, offset=100),
         ]
 
 
@@ -204,9 +209,9 @@ def test_default_timeout_retry_performs_no_retries():
     with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
         all_members.side_effect = HTTPError(response=mock.Mock(status_code=504))
         with pytest.raises(HTTPError):
-            dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
+            list(dm_mailchimp_client.get_email_addresses_from_list('a_list_id'))
         assert all_members.call_args_list == [
-            mock.call('a_list_id', count=1000, offset=0),
+            mock.call('a_list_id', count=100, offset=0),
         ]
 
 
@@ -215,11 +220,11 @@ def test_timeout_retry_performs_retries():
     with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
         all_members.side_effect = HTTPError(response=mock.Mock(status_code=504))
         with pytest.raises(HTTPError):
-            dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
+            list(dm_mailchimp_client.get_email_addresses_from_list('a_list_id'))
         assert all_members.mock_calls == [
-            mock.call('a_list_id', count=1000, offset=0),
-            mock.call('a_list_id', count=1000, offset=0),
-            mock.call('a_list_id', count=1000, offset=0),
+            mock.call('a_list_id', count=100, offset=0),
+            mock.call('a_list_id', count=100, offset=0),
+            mock.call('a_list_id', count=100, offset=0),
         ]
 
 
@@ -237,10 +242,10 @@ def test_success_does_not_perform_retry():
                 "members": []
             },
         ]
-        dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
+        list(dm_mailchimp_client.get_email_addresses_from_list('a_list_id'))
         assert all_members.mock_calls == [
-            mock.call('a_list_id', count=1000, offset=0),
-            mock.call('a_list_id', count=1000, offset=1000),
+            mock.call('a_list_id', count=100, offset=0),
+            mock.call('a_list_id', count=100, offset=100),
         ]
 
 
@@ -261,7 +266,7 @@ def test_offset_increments_until_no_members():
 
         res = dm_mailchimp_client.get_email_addresses_from_list('a_list_id')
 
-        assert res == [
+        assert list(res) == [
             "user1@example.com",
             "user2@example.com",
             "user3@example.com",
@@ -272,12 +277,12 @@ def test_offset_increments_until_no_members():
         ]
 
         assert all_members.call_args_list == [
-            mock.call('a_list_id', count=1000, offset=0),
-            mock.call('a_list_id', count=1000, offset=1000),
-            mock.call('a_list_id', count=1000, offset=2000),
-            mock.call('a_list_id', count=1000, offset=3000),
-            mock.call('a_list_id', count=1000, offset=4000),
-            mock.call('a_list_id', count=1000, offset=5000),
-            mock.call('a_list_id', count=1000, offset=6000),
-            mock.call('a_list_id', count=1000, offset=7000),
+            mock.call('a_list_id', count=100, offset=0),
+            mock.call('a_list_id', count=100, offset=100),
+            mock.call('a_list_id', count=100, offset=200),
+            mock.call('a_list_id', count=100, offset=300),
+            mock.call('a_list_id', count=100, offset=400),
+            mock.call('a_list_id', count=100, offset=500),
+            mock.call('a_list_id', count=100, offset=600),
+            mock.call('a_list_id', count=100, offset=700),
         ]
