@@ -120,8 +120,7 @@ class DMMailChimpClient(object):
                 success = False
         return success
 
-    def get_email_addresses_from_list(self, list_id, pagination_size=1000):
-        email_addresses = []
+    def get_email_addresses_from_list(self, list_id, pagination_size=100):
         offset = 0
         while True:
             member_data = self.timeout_retry(
@@ -130,6 +129,5 @@ class DMMailChimpClient(object):
             if not member_data.get("members", None):
                 break
             offset += pagination_size
-            email_addresses.extend(member["email_address"] for member in member_data["members"])
 
-        return email_addresses
+            yield from [member['email_address'] for member in member_data['members']]
