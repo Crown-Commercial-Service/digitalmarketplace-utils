@@ -131,7 +131,7 @@ class TestJSONFormatter(object):
 
         assert result['message'] == "hello bar"
 
-    def test_log_message_shows_missing_key_if_fields_are_not_found(self):
+    def test_log_message_shows_missing_key1_if_fields_are_not_found(self):
         self.logger.info("hello {bar}")
         result = json.loads(self.buffer.getvalue())
 

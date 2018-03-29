@@ -125,6 +125,10 @@ class CustomLogFormatter(logging.Formatter):
 
 
 class JSONFormatter(BaseJSONFormatter):
+    def __init__(self, *args, missing_key_attempts=5, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._missing_key_attempts = missing_key_attempts
+
     def process_log_record(self, log_record):
         rename_map = {
             "asctime": "time",
@@ -137,7 +141,7 @@ class JSONFormatter(BaseJSONFormatter):
         log_record['logType'] = "application"
 
         missing_keys = []
-        for attempt in range(5):
+        for attempt in range(self._missing_key_attempts):
             try:
                 log_record['message'] = log_record['message'].format(**log_record)
 
