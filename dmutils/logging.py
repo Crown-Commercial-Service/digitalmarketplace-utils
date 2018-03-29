@@ -123,9 +123,8 @@ class CustomLogFormatter(logging.Formatter):
             logger.info("failed to format log message")
         return msg
 
-class JSONFormatter(BaseJSONFormatter):
-    _format_message_missing_key_attempts = 4
 
+class JSONFormatter(BaseJSONFormatter):
     def process_log_record(self, log_record):
         rename_map = {
             "asctime": "time",
@@ -138,15 +137,18 @@ class JSONFormatter(BaseJSONFormatter):
         log_record['logType'] = "application"
 
         missing_keys = []
-        for attempt in range(self._format_message_missing_key_attempts):
+        for attempt in range(5):
             try:
                 log_record['message'] = log_record['message'].format(**log_record)
+
+                if missing_keys:
+                    logger.warning("Missing keys when formatting log message: {}".format(missing_keys))
+
                 break
+
             except KeyError as e:
                 missing_keys.append(e.args[0])
-                log_record[e.args[0]] = "<missing key>"
-            else:
-                logger.exception("Missing keys when formatting log mesage: {}".format(missing_keys))
+                log_record[e.args[0]] = f"{{{e.args[0]}: missing key}}"
         else:
             logger.exception("Too many missing keys when attempting to format log message: gave up")
 
