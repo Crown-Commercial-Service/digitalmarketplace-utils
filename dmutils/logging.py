@@ -125,6 +125,10 @@ class CustomLogFormatter(logging.Formatter):
 
 
 class JSONFormatter(BaseJSONFormatter):
+    def __init__(self, *args, max_missing_key_attempts=5, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._max_missing_key_attempts = max_missing_key_attempts
+
     def process_log_record(self, log_record):
         rename_map = {
             "asctime": "time",
@@ -133,9 +137,23 @@ class JSONFormatter(BaseJSONFormatter):
         }
         for key, newkey in rename_map.items():
             log_record[newkey] = log_record.pop(key)
+
         log_record['logType'] = "application"
-        try:
-            log_record['message'] = log_record['message'].format(**log_record)
-        except KeyError as e:
-            logger.exception("failed to format log message: {} not found".format(e))
+
+        missing_keys = []
+        for attempt in range(self._max_missing_key_attempts):
+            try:
+                log_record['message'] = log_record['message'].format(**log_record)
+
+                if missing_keys:
+                    logger.warning("Missing keys when formatting log message: {}".format(missing_keys))
+
+                break
+
+            except KeyError as e:
+                missing_keys.append(e.args[0])
+                log_record[e.args[0]] = f"{{{e.args[0]}: missing key}}"
+        else:
+            logger.exception("Too many missing keys when attempting to format log message: gave up")
+
         return log_record

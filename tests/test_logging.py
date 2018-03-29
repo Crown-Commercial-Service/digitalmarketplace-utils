@@ -131,18 +131,34 @@ class TestJSONFormatter(object):
 
         assert result['message'] == "hello bar"
 
-    def test_log_message_is_unchanged_if_fields_are_not_found(self):
+    def test_log_message_shows_missing_key_if_fields_are_not_found(self):
         self.logger.info("hello {bar}")
         result = json.loads(self.buffer.getvalue())
 
-        assert result['message'] == "hello {bar}"
+        assert result['message'] == "hello {bar: missing key}"
 
-    def test_failed_log_message_formatting_logs_an_error(self):
+    def test_missing_key_when_formatting_logs_a_warning(self):
         self.logger.info("hello {barry}")
         raw_result = self.dmbuffer.getvalue()
         result = json.loads(raw_result)
 
-        assert result['message'].startswith("failed to format log message")
+        assert result['message'].startswith("Missing keys when formatting log message: ['barry']")
+        assert result['levelname'] == 'WARNING'
+
+    def test_two_missing_keys_when_formatting_logs_a_warning(self):
+        self.logger.info("hello {barry} {paul}")
+        raw_result = self.dmbuffer.getvalue()
+        result = json.loads(raw_result)
+
+        assert result['message'].startswith("Missing keys when formatting log message: ['barry', 'paul']")
+        assert result['levelname'] == 'WARNING'
+
+    def test_failed_log_message_formatting_logs_an_error(self):
+        self.logger.info("hello {one} {two} {three} {four} {five} {six}")
+        raw_result = self.dmbuffer.getvalue()
+        result = json.loads(raw_result)
+
+        assert result['message'].startswith("Too many missing keys when attempting to format")
 
 
 class TestCustomLogFormatter(object):
