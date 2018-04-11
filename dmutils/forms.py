@@ -39,4 +39,4 @@ class EmailValidator(Regexp):
 
     def __init__(self, **kwargs):
         kwargs.setdefault("message", "Please enter a valid email address.")
-        return super(EmailValidator, self).__init__(self._email_re, **kwargs)
+        super(EmailValidator, self).__init__(self._email_re, **kwargs)
