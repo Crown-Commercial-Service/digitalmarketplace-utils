@@ -1,3 +1,5 @@
+import tempfile
+
 import pytest
 from flask import Flask
 import mock
@@ -11,6 +13,16 @@ def app():
     app = Flask(__name__)
     init_app(app)
     return app
+
+
+# it's deceptively difficult to capture & inspect *actual* log output in pytest (no, capfd doesn't seem to work)
+@pytest.fixture
+def app_logtofile():
+    with tempfile.NamedTemporaryFile() as f:
+        app = Flask(__name__)
+        app.config['DM_LOG_PATH'] = f.name
+        init_app(app)
+        yield app
 
 
 @pytest.yield_fixture
