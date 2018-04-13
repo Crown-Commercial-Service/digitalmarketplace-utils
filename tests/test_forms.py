@@ -1,6 +1,6 @@
 from itertools import product
 
-from flask.ext.wtf import Form
+from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired, Length, Optional
 from werkzeug.datastructures import ImmutableMultiDict
 import pytest
@@ -8,7 +8,7 @@ import pytest
 from dmutils.forms import EmailField
 
 
-class EmailFieldFormatTestForm(Form):
+class EmailFieldFormatTestForm(FlaskForm):
     test_email = EmailField("An Electronic Mailing Address")
 
 
@@ -32,7 +32,7 @@ class TestEmailFieldFormat(object):
                 formdata=ImmutableMultiDict((
                     ("test_email", email_address,),
                 )),
-                csrf_enabled=False,
+                meta={'csrf': False},
             )
 
             assert form.validate() is False
@@ -53,7 +53,7 @@ class TestEmailFieldFormat(object):
                 formdata=ImmutableMultiDict((
                     ("test_email", email_address,),
                 )),
-                csrf_enabled=False,
+                meta={'csrf': False},
             )
 
             assert form.validate()
@@ -66,14 +66,14 @@ class TestEmailFieldFormat(object):
                 formdata=ImmutableMultiDict((
                     ("test_email", email_address,),
                 )),
-                csrf_enabled=False,
+                meta={'csrf': False},
             )
 
             assert not form.validate()
             assert form.errors == {'test_email': ['Please enter an email address under 512 characters.']}
 
     def test_default_length_and_message_can_be_overridden(self, app):
-        class OverrideDefaultValidatorTestForm(Form):
+        class OverrideDefaultValidatorTestForm(FlaskForm):
             test_email = EmailField(
                 "An Electronic Mailing Address",
                 validators=[Length(max=11, message='Only really short emails please')]
@@ -85,14 +85,14 @@ class TestEmailFieldFormat(object):
                 formdata=ImmutableMultiDict((
                     ("test_email", email_address,),
                 )),
-                csrf_enabled=False,
+                meta={'csrf': False},
             )
 
             assert not form.validate()
             assert form.errors == {'test_email': ['Only really short emails please']}
 
 
-class EmailFieldCombinationTestForm(Form):
+class EmailFieldCombinationTestForm(FlaskForm):
     required_email = EmailField(
         "Required Electronic Mailing Address",
         validators=[DataRequired(message="No really, we want this")],
@@ -122,7 +122,7 @@ class TestEmailFieldCombination(object):
                     ("optional_email", optional_field_email,),
                     ("unspecified_email", unspecified_field_email,),
                 )),
-                csrf_enabled=False,
+                meta={'csrf': False},
             )
 
             assert form.validate() is bool(
