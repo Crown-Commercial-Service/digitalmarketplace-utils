@@ -31,7 +31,7 @@ setup(
          'boto3==1.4.5',
          'contextlib2==0.4.0',
          'cryptography==1.9',
-         'inflection==0.2.1',
+         'inflection==0.3.1',
          'mailchimp3==2.0.11',
          'mandrill==1.0.57',
          'monotonic==0.3',
@@ -40,8 +40,9 @@ setup(
          'python-json-logger==0.1.4',
          'pytz==2015.4',
          'pyyaml==3.11',
-         'six==1.9.0',
+         'six==1.11.0',
          'unicodecsv==0.14.1',
+         'Werkzeug==0.14.1',
          'workdays==1.4'
     ],
 )
