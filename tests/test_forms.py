@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired, Length, Optional
 from werkzeug.datastructures import ImmutableMultiDict
 import pytest
 
-from dmutils.forms import EmailField
+from dmutils.forms import EmailField, remove_csrf_token
 
 
 class EmailFieldFormatTestForm(FlaskForm):
@@ -141,3 +141,20 @@ class TestEmailFieldCombination(object):
 
             if unspecified_field_email in (self._invalid_address, ""):
                 assert form.errors["unspecified_email"] == ["Please enter a valid email address."]
+
+
+class TestRemoveCsrfToken:
+    def test_csrf_token_removed_if_present(self):
+        data = {'key': 'value', 'key2': 'value2', 'csrf_token': '123tgredsca2345ywt34rwe'}
+        cleaned_data = remove_csrf_token(data)
+        assert 'csrf_token' not in cleaned_data
+
+    def test_original_data_not_mutated_by_remove_csrf_token(self):
+        data = {'key': 'value', 'key2': 'value2', 'csrf_token': '123tgredsca2345ywt34rwe'}
+        remove_csrf_token(data)
+        assert 'csrf_token' in data
+
+    def test_silently_passes_if_csrf_token_not_present(self):
+        data = {'key': 'value', 'key2': 'value2'}
+        cleaned_data = remove_csrf_token(data)
+        assert cleaned_data == data
