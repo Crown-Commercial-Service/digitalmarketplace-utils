@@ -39,7 +39,7 @@ class EmailValidator(Regexp):
 
     def __init__(self, **kwargs):
         kwargs.setdefault("message", "Please enter a valid email address.")
-        super(EmailValidator, self).__init__(self._email_re, **kwargs)
+        return super(EmailValidator, self).__init__(self._email_re, **kwargs)
 
 
 def remove_csrf_token(data):
