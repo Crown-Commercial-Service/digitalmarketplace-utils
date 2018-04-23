@@ -69,6 +69,11 @@ def user_research_consent():
     raise NotImplementedError()
 
 
+@external.route('/user/change-password')
+def change_password():
+    raise NotImplementedError()
+
+
 # Briefs frontend
 
 @external.route('/buyers')
