@@ -243,6 +243,10 @@ _span_id_related_params = (
         {
             "X-B3-SpanId": "Steak, kidney, liver, mashed",
         },
+        # expected_resp_headers
+        {
+            "X-B3-SpanId": "Steak, kidney, liver, mashed",
+        },
     ),
     (
         # extra_config
@@ -252,6 +256,8 @@ _span_id_related_params = (
         # expected_span_id
         None,
         # expected_onwards_req_headers
+        {},
+        # expected_resp_headers
         {},
     ),
     (
@@ -266,6 +272,11 @@ _span_id_related_params = (
         # expected_span_id
         "huge-pork-kidney",
         # expected_onwards_req_headers
+        {
+            "barrels-and-boxes": "huge-pork-kidney",
+            "Bloomusalem": "huge-pork-kidney",
+        },
+        # expected_resp_headers
         {
             "barrels-and-boxes": "huge-pork-kidney",
             "Bloomusalem": "huge-pork-kidney",
@@ -323,7 +334,8 @@ _param_combinations = tuple(
         expected_parent_span_id,
         # expected_onwards_req_headers
         dict(chain(t_expected_onwards_req_headers.items(), s_expected_onwards_req_headers.items(),)),
-        expected_resp_headers,
+        # expected_resp_headers
+        dict(chain(t_expected_resp_headers.items(), s_expected_resp_headers.items(),)),
         expected_dm_request_id_header_final_value,
     ) for (
         t_extra_config,
@@ -331,14 +343,14 @@ _param_combinations = tuple(
         expected_trace_id,
         expect_uuid_call,
         t_expected_onwards_req_headers,
-        # so far only the trace_id should affect the response headers
-        expected_resp_headers,
+        t_expected_resp_headers,
         expected_dm_request_id_header_final_value,
     ), (
         s_extra_config,
         s_extra_req_headers,
         expected_span_id,
         s_expected_onwards_req_headers,
+        s_expected_resp_headers,
     ), (
         p_extra_config,
         p_extra_req_headers,
@@ -388,6 +400,11 @@ def test_request_header(
         assert request.parent_span_id == expected_parent_span_id
         assert request.get_onwards_request_headers() == expected_onwards_req_headers
         assert app.config.get("DM_REQUEST_ID_HEADER") == expected_dm_request_id_header_final_value
+        assert request.get_extra_log_context() == {
+            "trace_id": expected_trace_id,
+            "span_id": expected_span_id,
+            "parent_span_id": expected_parent_span_id,
+        }
 
     assert uuid4_mock.called is expect_uuid_call
 
