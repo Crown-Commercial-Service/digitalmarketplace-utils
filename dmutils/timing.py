@@ -44,9 +44,18 @@ def logged_duration(
         returns a context manager which will monitor the amount of time spent "inside" its code block and emit a log
         message on exiting block if ``condition`` passes. Uses a ``log_context`` dictionary as the log call's ``extra``
         parameter which will contain the parameters ``duration_real`` and ``duration_process``, each being a float
-        duration in seconds. Logging action is triggered whether execution fell out of the block naturally or the code
-        raised an exception. If log messages are not desired on exeptions these can always be excluded by a custom
-        ``condition``. Can also be used as a function decorator.
+        duration in seconds. Additional parameters can be added to this ``log_context`` dictionary by annotating them
+        to the dictionary which is yielded by the context manager, e.g.::
+
+            with logged_duration(message="Received result {foo} in {duration_real}s") as log_context:
+                ...
+                log_context["foo"] = do_something()
+                ...
+
+        Logging action is triggered whether execution fell out of the block naturally or the code raised an exception.
+        If log messages are not desired on exeptions these can always be excluded by a custom ``condition``.
+
+        Can also be used as a function decorator.
 
         :param logger:    The logger to log the message to. It's best to set this at the very least to give the log
                           reader a clue as to what block of code is being timed.
@@ -67,16 +76,16 @@ def logged_duration(
     # macos)
     original_process_time = process_time()
 
+    log_context = {}
+
     try:
-        yield
+        yield log_context
     finally:
         duration_real = perf_counter() - original_real_time
         duration_process = process_time() - original_process_time
 
-        log_context = {
-            "duration_real": duration_real,
-            "duration_process": duration_process,
-        }
+        log_context["duration_real"] = duration_real
+        log_context["duration_process"] = duration_process
 
         if condition in (True, None,) or condition(log_context):
             log_func(logger, message, log_level, log_context)

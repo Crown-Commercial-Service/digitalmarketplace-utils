@@ -61,8 +61,8 @@ class SentinelError(Exception):
     pass
 
 
-def _duration_real_gt_095(log_context):
-    return log_context["duration_real"] > 0.095
+def _duration_real_gt_075(log_context):
+    return log_context["duration_real"] > 0.075
 
 
 def _default_and_no_exception(log_context):
@@ -80,10 +80,10 @@ _messages_expected = OrderedDict((
         ),
     ),
     (
-        "{name} - {duration_process}s",
+        "{name}: {street} - {duration_process}s",
         (
-            "{name} - {duration_process}s",
-            ANY_string_matching(r"[a-zA-Z_.-]+ - [0-9eE.-]+s"),
+            "{name}: {street} - {duration_process}s",
+            ANY_string_matching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
         )
     ),
 ))
@@ -96,8 +96,8 @@ _parameter_combinations = tuple(product(
         True,
     ),
     (  # sleep_time values
-        0.05,
-        0.1,
+        0.04,
+        0.08,
     ),
     # message values
     _messages_expected.keys(),
@@ -109,12 +109,18 @@ _parameter_combinations = tuple(product(
         True,
         None,
         timing.default_condition,
-        _duration_real_gt_095,
+        _duration_real_gt_075,
         _default_and_no_exception,
     ),
     (  # raise_exception values
         None,
         SentinelError,
+    ),
+    (  # inject_context values
+        None,
+        {
+            "street": "eccles",
+        },
     ),
 ))
 
@@ -126,11 +132,12 @@ def _expect_log(
     log_level,
     condition,
     raise_exception,
+    inject_context,
 ):
     """return whether to expect a log line to be output or not"""
     return (
         (condition is timing.default_condition and sampling_decision)
-        or (condition is _duration_real_gt_095 and sleep_time >= 0.1)
+        or (condition is _duration_real_gt_075 and sleep_time >= 0.08)
         or (condition is _default_and_no_exception and sampling_decision and raise_exception is None)
         or (condition in (True, None,))
     )
@@ -144,6 +151,7 @@ def _expect_log(
         "log_level",
         "condition",
         "raise_exception",
+        "inject_context",
         "expected_call_args_list",
     ),
     tuple(
@@ -154,6 +162,7 @@ def _expect_log(
             log_level,
             condition,
             raise_exception,
+            inject_context,
             [  # expected_call_args_list
                 mock.call(
                     log_level,
@@ -166,6 +175,7 @@ def _expect_log(
                             (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
                         ),
                         "duration_process": mock.ANY,
+                        **(inject_context or {}),
                     },
                 )
             ] if _expect_log(
@@ -175,6 +185,7 @@ def _expect_log(
                 log_level,
                 condition,
                 raise_exception,
+                inject_context,
             ) else []
         ) for  # noqa - i don't know what you want me to do here flake8 nor do i care
             sampling_decision,
@@ -182,7 +193,8 @@ def _expect_log(
             message,
             log_level,
             condition,
-            raise_exception
+            raise_exception,
+            inject_context
         in _parameter_combinations
     )
 )
@@ -194,6 +206,7 @@ def test_logged_duration_mock_logger(
     log_level,
     condition,
     raise_exception,
+    inject_context,
     expected_call_args_list,
 ):
     with app.test_request_context("/", headers={}):
@@ -206,9 +219,11 @@ def test_logged_duration_mock_logger(
                 message=message,
                 log_level=log_level,
                 condition=condition,
-            ):
+            ) as log_context:
                 assert mock_logger.log.call_args_list == []
                 sleep(sleep_time)
+                if inject_context is not None:
+                    log_context.update(inject_context)
                 if raise_exception is not None:
                     raise raise_exception("Boo")
 
@@ -223,6 +238,7 @@ def test_logged_duration_mock_logger(
         "log_level",
         "condition",
         "raise_exception",
+        "inject_context",
         "expected_logs",
     ),
     tuple(
@@ -233,7 +249,15 @@ def test_logged_duration_mock_logger(
             log_level,
             condition,
             raise_exception,
+            inject_context,
             (  # expected_logs
+                *(  # in cases where our format string expects an extra parameter that wasn't supplied ("street" here),
+                    # our log output will be lead by a warning about the missing parameter - I feel it's important to
+                    # include this permutation to prove that we don't end up swallowing a genuine exception if we
+                    # inadvertantly raise an exception while outputting our log message
+                    (ANY_superset_of({"levelname": "WARNING"}),)
+                    if ("street" in str(message) and "street" not in (inject_context or {})) else ()
+                ),
                 ANY_superset_of({
                     "name": "conftest.foobar",
                     "levelname": logging.getLevelName(log_level),
@@ -244,6 +268,7 @@ def test_logged_duration_mock_logger(
                         (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
                     ),
                     "duration_process": malleable_ANY(lambda value: isinstance(value, Number)),
+                    **(inject_context or {}),
                     **(
                         {
                             "exc_info": ANY_string_matching(
@@ -260,6 +285,7 @@ def test_logged_duration_mock_logger(
                 log_level,
                 condition,
                 raise_exception,
+                inject_context,
             ) else ()
         ) for  # noqa - i don't know what you want me to do here flake8 nor do i care
             sampling_decision,
@@ -267,7 +293,8 @@ def test_logged_duration_mock_logger(
             message,
             log_level,
             condition,
-            raise_exception
+            raise_exception,
+            inject_context
         in _parameter_combinations
     )
 )
@@ -279,6 +306,7 @@ def test_logged_duration_real_logger(
     log_level,
     condition,
     raise_exception,
+    inject_context,
     expected_logs,
 ):
     with open(app_logtofile.config["DM_LOG_PATH"], "r") as log_file:
@@ -294,12 +322,15 @@ def test_logged_duration_real_logger(
                     message=message,
                     log_level=log_level,
                     condition=condition,
-                ):
+                ) as log_context:
                     sleep(sleep_time)
+                    if inject_context is not None:
+                        log_context.update(inject_context)
                     if raise_exception is not None:
                         raise raise_exception("Boo")
 
         # ensure buffers are flushed
         logging.shutdown()
 
-        assert tuple(json.loads(line) for line in log_file.read().splitlines()) == expected_logs
+        all_lines = tuple(json.loads(line) for line in log_file.read().splitlines())
+        assert all_lines == expected_logs
