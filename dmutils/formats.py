@@ -9,6 +9,7 @@ DISPLAY_SHORT_DATE_FORMAT = '%-d %B'
 DISPLAY_DATE_FORMAT = '%A %-d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
 DISPLAY_DATETIME_FORMAT = '%A %-d %B %Y at %I:%M%p %Z'
+DISPLAY_SHORTTIME_LONGDATE_FORMAT = '%-I%p %Z, %A %-d %B %Y'
 
 
 def timeformat(value, default_value=None):
@@ -65,11 +66,24 @@ def datetimeformat(value, default_value=None, localize=True):
       * dates that framework communication files were published
       * dates of revisions made to services (shown to admin users)
     """
-    formatted_date = _format_date(value, default_value, DISPLAY_DATETIME_FORMAT, localize=localize)
-    if formatted_date:
-        # en_GB locale uses uppercase AM/PM which contravenes our style guide
-        return formatted_date.replace('AM', 'am').replace('PM', 'pm').replace(" 0", " ")
-    return formatted_date
+    return _format_date(value, default_value, DISPLAY_DATETIME_FORMAT, localize=localize)
+
+
+def utctoshorttimelongdateformat(value, default_value=None, localize=True):
+    """
+    Example value: datetime.strptime("2010-01-01 13:00:00", "%Y-%m-%d %H:%M:%S") OR "2010-01-01T13:00:00Z"
+    Example output: '1pm GMT, Friday 1 January 2010'
+
+    "utctoshorttimelongdateformat" takes a datetime object or ISO8601 datetime string, localizes it to GMT/BST (as
+    appropriate), and then outputs a string with a short time description followed by a long date description including
+    the day of the week.
+
+    By default, this will localize the output string so that it shows GMT/BST as appropriate for the target datetime.
+
+    This is primarily used for important framework lifecycle events during the application process.
+    """
+    formatted_datetime = _format_date(value, default_value, DISPLAY_SHORTTIME_LONGDATE_FORMAT, localize=localize)
+    return formatted_datetime
 
 
 def utcdatetimeformat(value, default_value=None):
@@ -122,11 +136,19 @@ def _use_gmt_timezone(date_string):
 def _format_date(value, default_value, fmt, localize=True):
     if not value:
         return default_value
+
     if not isinstance(value, datetime):
         value = datetime.strptime(value, DATETIME_FORMAT)
+
     if value.tzinfo is None:
         value = pytz.utc.localize(value)
+
     if localize:
-        return value.astimezone(EUROPE_LONDON).strftime(fmt)
+        value = value.astimezone(EUROPE_LONDON).strftime(fmt)
     else:
-        return value.strftime(fmt)
+        value = value.strftime(fmt)
+
+    # en_GB locale uses uppercase AM/PM which contravenes our style guide
+    value = value.replace('AM', 'am').replace('PM', 'pm').replace(" 0", " ")
+
+    return value
