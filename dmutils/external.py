@@ -47,6 +47,13 @@ def opportunities_dashboard(framework_slug):
     raise NotImplementedError()
 
 
+# Admin frontend
+
+@external.route('/admin')
+def admin_dashboard():
+    raise NotImplementedError()
+
+
 # User frontend
 
 @external.route('/user/create/<encoded_token>')
