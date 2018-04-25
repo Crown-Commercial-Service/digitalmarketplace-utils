@@ -90,7 +90,7 @@ _messages_expected = OrderedDict((
 
 
 _parameter_combinations = tuple(product(
-    (  # sampling_decision values
+    (  # is_sampled values
         False,
         None,
         True,
@@ -126,7 +126,7 @@ _parameter_combinations = tuple(product(
 
 
 def _expect_log(
-    sampling_decision,
+    is_sampled,
     sleep_time,
     message,
     log_level,
@@ -136,16 +136,16 @@ def _expect_log(
 ):
     """return whether to expect a log line to be output or not"""
     return (
-        (condition is timing.default_condition and sampling_decision)
+        (condition is timing.default_condition and is_sampled)
         or (condition is _duration_real_gt_075 and sleep_time >= 0.08)
-        or (condition is _default_and_no_exception and sampling_decision and raise_exception is None)
+        or (condition is _default_and_no_exception and is_sampled and raise_exception is None)
         or (condition in (True, None,))
     )
 
 
 @pytest.mark.parametrize(
     (
-        "sampling_decision",
+        "is_sampled",
         "sleep_time",
         "message",
         "log_level",
@@ -156,7 +156,7 @@ def _expect_log(
     ),
     tuple(
         (
-            sampling_decision,
+            is_sampled,
             sleep_time,
             message,
             log_level,
@@ -179,7 +179,7 @@ def _expect_log(
                     },
                 )
             ] if _expect_log(
-                sampling_decision,
+                is_sampled,
                 sleep_time,
                 message,
                 log_level,
@@ -188,7 +188,7 @@ def _expect_log(
                 inject_context,
             ) else []
         ) for  # noqa - i don't know what you want me to do here flake8 nor do i care
-            sampling_decision,
+            is_sampled,
             sleep_time,
             message,
             log_level,
@@ -200,7 +200,7 @@ def _expect_log(
 )
 def test_logged_duration_mock_logger(
     app,
-    sampling_decision,
+    is_sampled,
     sleep_time,
     message,
     log_level,
@@ -210,7 +210,7 @@ def test_logged_duration_mock_logger(
     expected_call_args_list,
 ):
     with app.test_request_context("/", headers={}):
-        request.sampling_decision = sampling_decision
+        request.is_sampled = is_sampled
         mock_logger = mock.Mock(spec_set=("log",))
 
         with (null_context_manager() if raise_exception is None else pytest.raises(raise_exception)):
@@ -232,7 +232,7 @@ def test_logged_duration_mock_logger(
 
 @pytest.mark.parametrize(
     (
-        "sampling_decision",
+        "is_sampled",
         "sleep_time",
         "message",
         "log_level",
@@ -243,7 +243,7 @@ def test_logged_duration_mock_logger(
     ),
     tuple(
         (
-            sampling_decision,
+            is_sampled,
             sleep_time,
             message,
             log_level,
@@ -279,7 +279,7 @@ def test_logged_duration_mock_logger(
                     ),
                 }),
             ) if _expect_log(
-                sampling_decision,
+                is_sampled,
                 sleep_time,
                 message,
                 log_level,
@@ -288,7 +288,7 @@ def test_logged_duration_mock_logger(
                 inject_context,
             ) else ()
         ) for  # noqa - i don't know what you want me to do here flake8 nor do i care
-            sampling_decision,
+            is_sampled,
             sleep_time,
             message,
             log_level,
@@ -300,7 +300,7 @@ def test_logged_duration_mock_logger(
 )
 def test_logged_duration_real_logger(
     app_logtofile,
-    sampling_decision,
+    is_sampled,
     sleep_time,
     message,
     log_level,
@@ -314,7 +314,7 @@ def test_logged_duration_real_logger(
         log_file.read()
 
         with app_logtofile.test_request_context("/", headers={}):
-            request.sampling_decision = sampling_decision
+            request.is_sampled = is_sampled
 
             with (null_context_manager() if raise_exception is None else pytest.raises(raise_exception)):
                 with timing.logged_duration(

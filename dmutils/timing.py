@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 import logging
 import sys
-from time import perf_counter, process_time
+import time
 
 from flask import request
 from flask.ctx import has_request_context
@@ -20,7 +20,7 @@ def default_message(log_context):
 
 
 def default_condition(log_context):
-    return has_request_context() and getattr(request, "sampling_decision", False)
+    return has_request_context() and getattr(request, "is_sampled", False)
 
 
 def default_log_func(logger, message, log_level, log_context):
@@ -64,25 +64,25 @@ def logged_duration(
         :param log_level: Numeric log level to use.
         :param condition: Callable accepting a single dictionary argument of the ``log_context``. Should return a
                           boolean signalling whether a log message should be emitted or not. Default condition emits a
-                          log if there is a current Flask request with a True `sampling_decision` attribute. A
+                          log if there is a current Flask request with a True `is_sampled` attribute. A
                           condition of True or None will cause logs to *always* be emitted.
         :param log_func:  The actual logging function which will be called if `condition` passes. Arguments passed are:
                           ``logger``, ``message``, ``log_level`` (all verbatim as passed to ``logged_duration``) and
                           ``log_context``.
     """
-    original_real_time = perf_counter()
+    original_real_time = time.perf_counter()
     # NOTE this is *process* time, not *thread* time. if multiple threads are running in this process it will include
     # their cpu time too. getting *thread* time will be possible in python 3.7+ (but even then it doesn't work on older
     # macos)
-    original_process_time = process_time()
+    original_process_time = time.process_time()
 
     log_context = {}
 
     try:
         yield log_context
     finally:
-        duration_real = perf_counter() - original_real_time
-        duration_process = process_time() - original_process_time
+        duration_real = time.perf_counter() - original_real_time
+        duration_process = time.process_time() - original_process_time
 
         log_context["duration_real"] = duration_real
         log_context["duration_process"] = duration_process
