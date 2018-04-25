@@ -46,6 +46,20 @@ class RequestIdRequestMixin(object):
             self._parent_span_id = self._get_first_header(current_app.config['DM_PARENT_SPAN_ID_HEADERS'])
         return self._parent_span_id
 
+    @property
+    def is_sampled(self):
+        if not hasattr(self, "_is_sampled"):
+            header_value = self._get_first_header(current_app.config['DM_IS_SAMPLED_HEADERS'])
+            self._is_sampled = self.debug_flag or (None if header_value is None else header_value == "1")
+        return self._is_sampled
+
+    @property
+    def debug_flag(self):
+        if not hasattr(self, "_debug_flag"):
+            header_value = self._get_first_header(current_app.config['DM_DEBUG_FLAG_HEADERS'])
+            self._debug_flag = None if header_value is None else header_value == "1"
+        return self._debug_flag
+
     def _get_first_header(self, header_names):
         """
         Returns value of request's first present (and Truthy) header from header_names
@@ -65,13 +79,20 @@ class RequestIdRequestMixin(object):
             (
                 (header_name, self.trace_id)
                 for header_name in current_app.config['DM_TRACE_ID_HEADERS']
-                if self.trace_id
-            ),
+            ) if self.trace_id else (),
             (
                 (header_name, self.span_id)
                 for header_name in current_app.config['DM_SPAN_ID_HEADERS']
-                if self.span_id
-            ),
+            ) if self.span_id else (),
+            (
+                (header_name, "1" if self.is_sampled else "0")
+                for header_name in current_app.config['DM_IS_SAMPLED_HEADERS']
+                # according to zipkin spec we shouldn't propagate the sampling decision if debug_flag is set
+            ) if self.is_sampled is not None and not self.debug_flag else (),
+            (
+                (header_name, "1" if self.debug_flag else "0")
+                for header_name in current_app.config['DM_DEBUG_FLAG_HEADERS']
+            ) if self.debug_flag is not None else (),
         ))
 
     def get_extra_log_context(self):
@@ -82,6 +103,8 @@ class RequestIdRequestMixin(object):
             "trace_id": self.trace_id,
             "span_id": self.span_id,
             "parent_span_id": self.parent_span_id,
+            "is_sampled": self.is_sampled,
+            "debug_flag": self.debug_flag,
         }
 
 
@@ -119,6 +142,8 @@ def init_app(app):
     ))
     app.config.setdefault("DM_SPAN_ID_HEADERS", ("X-B3-SpanId",))
     app.config.setdefault("DM_PARENT_SPAN_ID_HEADERS", ("X-B3-ParentSpan",))
+    app.config.setdefault("DM_IS_SAMPLED_HEADERS", ("X-B3-Sampled",))
+    app.config.setdefault("DM_DEBUG_FLAG_HEADERS", ("X-B3-Flags",))
 
     # we do something a little odd here now - back-populate the first value of DM_TRACE_ID_HEADERS back to the
     # DM_REQUEST_ID_HEADER setting, because it turns out that some components (notably the apiclient) depend on that
