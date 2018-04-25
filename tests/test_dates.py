@@ -243,3 +243,28 @@ class TestPublishingDates():
         assert dates['questions_close'] == datetime.datetime(2016, 1, 11, 23, 59, 59)
         assert dates['answers_close'] == datetime.datetime(2016, 1, 15, 23, 59, 59)
         assert dates['closing_date'] == datetime.datetime(2016, 1, 18, 23, 59, 59)
+
+
+def test_update_framework_with_formatted_dates():
+    framework = {
+        'clarificationsCloseAtUTC': '2000-01-01T12:00:00.000000Z',
+        'clarificationsPublishAtUTC': '2000-01-02T12:00:00.000000Z',
+        'applicationsCloseAtUTC': '2000-01-03T17:00:00.000000Z',
+        'intentionToAwardAtUTC': '2000-01-04T12:00:00.000000Z',
+        'frameworkLiveAtUTC': '2000-01-05T12:00:00.000000Z',
+    }
+
+    dates_package.update_framework_with_formatted_dates(framework)
+
+    assert framework == {
+        'clarificationsCloseAtUTC': '2000-01-01T12:00:00.000000Z',
+        'clarificationsPublishAtUTC': '2000-01-02T12:00:00.000000Z',
+        'applicationsCloseAtUTC': '2000-01-03T17:00:00.000000Z',
+        'intentionToAwardAtUTC': '2000-01-04T12:00:00.000000Z',
+        'frameworkLiveAtUTC': '2000-01-05T12:00:00.000000Z',
+        'clarificationsCloseAt': '12pm GMT, Saturday 1 January 2000',
+        'clarificationsPublishAt': '12pm GMT, Sunday 2 January 2000',
+        'applicationsCloseAt': '5pm GMT, Monday 3 January 2000',
+        'intentionToAwardAt': 'Tuesday 4 January 2000',
+        'frameworkLiveAt': 'Wednesday 5 January 2000',
+    }
