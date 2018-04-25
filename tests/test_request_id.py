@@ -326,7 +326,7 @@ _debug_sampling_related_params = (
         {},
         # extra_req_headers
         (),
-        # expected_sampling_decision
+        # expected_is_sampled
         None,
         # expected_debug_flag
         None,
@@ -340,7 +340,7 @@ _debug_sampling_related_params = (
         (
             ("X-B3-SAMPLED", "1",),  # also checking header case-insensitivity here
         ),
-        # expected_sampling_decision
+        # expected_is_sampled
         True,
         # expected_debug_flag
         None,
@@ -352,14 +352,14 @@ _debug_sampling_related_params = (
     (
         # extra_config
         {
-            "DM_SAMPLING_DECISION_HEADERS": ("Brown-Bread", "GOLDEN-SYRUP",),
+            "DM_IS_SAMPLED_HEADERS": ("Brown-Bread", "GOLDEN-SYRUP",),
         },
         # extra_req_headers
         (
             ("X-B3-Sampled", "1"),  # should be ignored because of DM_SAMPLE_DECISION_HEADERS setting
             ("golden-syrup", "yes",),  # also checking header case-insensitivity here
         ),
-        # expected_sampling_decision
+        # expected_is_sampled
         False,
         # expected_debug_flag
         None,
@@ -376,7 +376,7 @@ _debug_sampling_related_params = (
         (
             ("X-B3-Flags", "1",),
         ),
-        # expected_sampling_decision
+        # expected_is_sampled
         True,
         # expected_debug_flag
         True,
@@ -388,7 +388,7 @@ _debug_sampling_related_params = (
     (
         # extra_config
         {
-            "DM_SAMPLING_DECISION_HEADERS": ("Castor", "Oil",),
+            "DM_IS_SAMPLED_HEADERS": ("Castor", "Oil",),
             "DM_DEBUG_FLAG_HEADERS": ("Spades", "Buckets",),
         },
         # extra_req_headers
@@ -397,7 +397,7 @@ _debug_sampling_related_params = (
             ("Spades", "1",),
             ("Buckets", "0",),
         ),
-        # expected_sampling_decision
+        # expected_is_sampled
         True,
         # expected_debug_flag
         True,
@@ -422,7 +422,7 @@ _param_combinations = tuple(
         expect_uuid_call,
         expected_span_id,
         expected_parent_span_id,
-        expected_sampling_decision,
+        expected_is_sampled,
         expected_debug_flag,
         # expected_onwards_req_headers
         dict(chain(
@@ -454,7 +454,7 @@ _param_combinations = tuple(
     ), (
         d_extra_config,
         d_extra_req_headers,
-        expected_sampling_decision,
+        expected_is_sampled,
         expected_debug_flag,
         d_expected_onwards_req_headers,
     )in product(
@@ -474,7 +474,7 @@ _param_combinations = tuple(
         "expect_uuid_call",
         "expected_span_id",
         "expected_parent_span_id",
-        "expected_sampling_decision",
+        "expected_is_sampled",
         "expected_debug_flag",
         "expected_onwards_req_headers",
         "expected_resp_headers",
@@ -492,7 +492,7 @@ def test_request_header(
     expect_uuid_call,
     expected_span_id,
     expected_parent_span_id,
-    expected_sampling_decision,
+    expected_is_sampled,
     expected_debug_flag,
     expected_onwards_req_headers,
     expected_resp_headers,  # unused here
@@ -509,7 +509,7 @@ def test_request_header(
         assert request.request_id == request.trace_id == expected_trace_id
         assert request.span_id == expected_span_id
         assert request.parent_span_id == expected_parent_span_id
-        assert request.sampling_decision == expected_sampling_decision
+        assert request.is_sampled == expected_is_sampled
         assert request.debug_flag == expected_debug_flag
         assert request.get_onwards_request_headers() == expected_onwards_req_headers
         assert app.config.get("DM_REQUEST_ID_HEADER") == expected_dm_request_id_header_final_value
@@ -517,7 +517,7 @@ def test_request_header(
             "trace_id": expected_trace_id,
             "span_id": expected_span_id,
             "parent_span_id": expected_parent_span_id,
-            "sampling_decision": expected_sampling_decision,
+            "is_sampled": expected_is_sampled,
             "debug_flag": expected_debug_flag,
         }
 
@@ -532,7 +532,7 @@ def test_request_header(
         "expect_uuid_call",
         "expected_span_id",
         "expected_parent_span_id",
-        "expected_sampling_decision",
+        "expected_is_sampled",
         "expected_debug_flag",
         "expected_onwards_req_headers",
         "expected_resp_headers",
@@ -550,7 +550,7 @@ def test_response_headers_regular_response(
     expect_uuid_call,
     expected_span_id,  # unused here
     expected_parent_span_id,  # unused here
-    expected_sampling_decision,  # unused here
+    expected_is_sampled,  # unused here
     expected_debug_flag,  # unused here
     expected_onwards_req_headers,  # unused here
     expected_resp_headers,
@@ -578,7 +578,7 @@ def test_response_headers_regular_response(
         "expect_uuid_call",
         "expected_span_id",
         "expected_parent_span_id",
-        "expected_sampling_decision",
+        "expected_is_sampled",
         "expected_debug_flag",
         "expected_onwards_req_headers",
         "expected_resp_headers",
@@ -596,7 +596,7 @@ def test_response_headers_error_response(
     expect_uuid_call,
     expected_span_id,  # unused here
     expected_parent_span_id,  # unused here
-    expected_sampling_decision,  # unused here
+    expected_is_sampled,  # unused here
     expected_debug_flag,  # unused here
     expected_onwards_req_headers,  # unused here
     expected_resp_headers,

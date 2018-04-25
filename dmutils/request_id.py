@@ -47,11 +47,11 @@ class RequestIdRequestMixin(object):
         return self._parent_span_id
 
     @property
-    def sampling_decision(self):
-        if not hasattr(self, "_sampling_decision"):
-            header_value = self._get_first_header(current_app.config['DM_SAMPLING_DECISION_HEADERS'])
-            self._sampling_decision = self.debug_flag or (None if header_value is None else header_value == "1")
-        return self._sampling_decision
+    def is_sampled(self):
+        if not hasattr(self, "_is_sampled"):
+            header_value = self._get_first_header(current_app.config['DM_IS_SAMPLED_HEADERS'])
+            self._is_sampled = self.debug_flag or (None if header_value is None else header_value == "1")
+        return self._is_sampled
 
     @property
     def debug_flag(self):
@@ -85,10 +85,10 @@ class RequestIdRequestMixin(object):
                 for header_name in current_app.config['DM_SPAN_ID_HEADERS']
             ) if self.span_id else (),
             (
-                (header_name, "1" if self.sampling_decision else "0")
-                for header_name in current_app.config['DM_SAMPLING_DECISION_HEADERS']
+                (header_name, "1" if self.is_sampled else "0")
+                for header_name in current_app.config['DM_IS_SAMPLED_HEADERS']
                 # according to zipkin spec we shouldn't propagate the sampling decision if debug_flag is set
-            ) if self.sampling_decision is not None and not self.debug_flag else (),
+            ) if self.is_sampled is not None and not self.debug_flag else (),
             (
                 (header_name, "1" if self.debug_flag else "0")
                 for header_name in current_app.config['DM_DEBUG_FLAG_HEADERS']
@@ -103,7 +103,7 @@ class RequestIdRequestMixin(object):
             "trace_id": self.trace_id,
             "span_id": self.span_id,
             "parent_span_id": self.parent_span_id,
-            "sampling_decision": self.sampling_decision,
+            "is_sampled": self.is_sampled,
             "debug_flag": self.debug_flag,
         }
 
@@ -142,7 +142,7 @@ def init_app(app):
     ))
     app.config.setdefault("DM_SPAN_ID_HEADERS", ("X-B3-SpanId",))
     app.config.setdefault("DM_PARENT_SPAN_ID_HEADERS", ("X-B3-ParentSpan",))
-    app.config.setdefault("DM_SAMPLING_DECISION_HEADERS", ("X-B3-Sampled",))
+    app.config.setdefault("DM_IS_SAMPLED_HEADERS", ("X-B3-Sampled",))
     app.config.setdefault("DM_DEBUG_FLAG_HEADERS", ("X-B3-Flags",))
 
     # we do something a little odd here now - back-populate the first value of DM_TRACE_ID_HEADERS back to the
