@@ -47,6 +47,13 @@ def opportunities_dashboard(framework_slug):
     raise NotImplementedError()
 
 
+# Admin frontend
+
+@external.route('/admin')
+def admin_dashboard():
+    raise NotImplementedError()
+
+
 # User frontend
 
 @external.route('/user/create/<encoded_token>')
@@ -66,6 +73,11 @@ def user_logout():
 
 @external.route('/user/notifications/user-research')
 def user_research_consent():
+    raise NotImplementedError()
+
+
+@external.route('/user/change-password')
+def change_password():
     raise NotImplementedError()
 
 
