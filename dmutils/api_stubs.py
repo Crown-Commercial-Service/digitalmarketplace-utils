@@ -3,12 +3,64 @@ from datetime import datetime as dt
 from .formats import DATETIME_FORMAT
 
 
-def framework(status="open",
+def lot(lot_id=1, slug="some-lot", name=None, allows_brief=False, one_service_limit=False, unit_singular='service',
+        unit_plural='services'):
+    if not name:
+        name = slug.replace("-", " ").title()
+
+    return {
+        "id": lot_id,
+        "slug": slug,
+        "name": name,
+        "allowsBrief": allows_brief,
+        "oneServiceLimit": one_service_limit,
+        "unitSingular": unit_singular,
+        "unitPlural": unit_plural,
+    }
+
+
+def framework_agreement_details(slug='g-cloud-7',
+                                framework_agreement_version='RM1557x',
+                                framework_variations=None,
+                                lots=None):
+    if not lots:
+        lots = []
+
+    lot_descriptions = {}
+    for i, one_lot in enumerate(lots):
+        lot_descriptions[one_lot['slug']] = f"Lot {i+1}: {one_lot['name']}"
+
+    lot_order = [one_lot['slug'] for one_lot in lots]
+
+    if not framework_variations:
+        framework_variations = {}
+
+    return {
+        "contractNoticeNumber": "2010/ABC-DEF",
+        "frameworkAgreementVersion": framework_agreement_version,
+        "frameworkEndDate": "01 January 2001",
+        "frameworkExtensionLength": "12 months",
+        "frameworkRefDate": "29-06-2000",
+        "frameworkStartDate": "05 January 2000",
+        "frameworkURL": f"https://www.gov.uk/government/publications/{slug}",
+        "lotDescriptions": lot_descriptions,
+        "lotOrder": lot_order,
+        "pageTotal": 99,
+        "signaturePageNumber": 98,
+        "variations": framework_variations
+    }
+
+
+def framework(framework_id=1,
+              status="open",
               slug="g-cloud-7",
               name=None,
               clarification_questions_open=True,
               lots=None,
               framework_family=None,
+              framework_agreement_version='RM1557x',
+              framework_variations=None,
+              allow_declaration_reuse=True,
               clarifications_close_at=dt(2000, 1, 1),
               clarifications_publish_at=dt(2000, 1, 2),
               applications_close_at=dt(2000, 1, 3),
@@ -35,34 +87,35 @@ def framework(status="open",
 
     lots = lots or []
 
+    agreement_details = framework_agreement_details(slug=slug,
+                                                    framework_agreement_version=framework_agreement_version,
+                                                    framework_variations=framework_variations,
+                                                    lots=lots)
+
     def format_datetime(datetime_utc):
         assert isinstance(datetime_utc, dt)
         return datetime_utc.strftime(DATETIME_FORMAT)
 
     return {
         "frameworks": {
+            "id": framework_id,
+            "name": name,
+            "slug": slug,
             "framework": framework_family,
             "status": status,
             "clarificationQuestionsOpen": clarification_questions_open,
-            "name": name,
-            "slug": slug,
             "lots": lots,
+            "allowDeclarationReuse": allow_declaration_reuse,
+            "frameworkAgreementDetails": agreement_details,
+            "countersignerName": agreement_details.get('countersignerName'),
+            "frameworkAgreementVersion": agreement_details.get('frameworkAgreementVersion'),
+            "variations": agreement_details.get('variations'),
             'clarificationsCloseAtUTC': format_datetime(clarifications_close_at),
             'clarificationsPublishAtUTC': format_datetime(clarifications_publish_at),
             'applicationsCloseAtUTC': format_datetime(applications_close_at),
             'intentionToAwardAtUTC': format_datetime(intention_to_award_at),
             'frameworkLiveAtUTC': format_datetime(framework_live_at),
         }
-    }
-
-
-def lot(slug="some-lot", allows_brief=False, one_service_limit=False):
-    return {
-        "id": 1,
-        "slug": slug,
-        "name": slug.replace("-", " ").title(),
-        "allowsBrief": allows_brief,
-        "oneServiceLimit": one_service_limit,
     }
 
 

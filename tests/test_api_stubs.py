@@ -2,111 +2,207 @@ from datetime import datetime as dt
 from dmutils import api_stubs
 
 
-def test_framework():
-    assert api_stubs.framework() == {
-        "frameworks": {
-            "clarificationQuestionsOpen": True,
-            "lots": [],
-            "name": "G-Cloud 7",
-            "slug": "g-cloud-7",
-            "framework": "g-cloud",
-            "status": "open",
-            'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
-            'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
-            'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
-            'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
-            'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+class TestLot:
+    def test_default_values(self):
+        assert api_stubs.lot() == {
+            "id": 1,
+            "slug": "some-lot",
+            "name": "Some Lot",
+            "allowsBrief": False,
+            "oneServiceLimit": False,
+            "unitSingular": "service",
+            "unitPlural": "services",
         }
-    }
 
-    assert api_stubs.framework(slug='digital-outcomes-and-specialists') == {
-        "frameworks": {
-            "clarificationQuestionsOpen": True,
-            "lots": [],
-            "name": "Digital Outcomes and Specialists",
-            "slug": "digital-outcomes-and-specialists",
-            "framework": "digital-outcomes-and-specialists",
-            "status": "open",
-            'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
-            'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
-            'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
-            'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
-            'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+    def test_override_values(self):
+        assert api_stubs.lot(lot_id=2, slug="my-special-lot", allows_brief=True, one_service_limit=True,
+                             unit_singular='brief', unit_plural='briefs') == {
+            "id": 2,
+            "slug": "my-special-lot",
+            "name": "My Special Lot",
+            "allowsBrief": True,
+            "oneServiceLimit": True,
+            "unitSingular": "brief",
+            "unitPlural": "briefs",
         }
-    }
 
-    assert api_stubs.framework(status='live', clarification_questions_open=False,
-                               name='My overriden name', slug='my-fake-framework') == {
-        "frameworks": {
-            "clarificationQuestionsOpen": False,
-            "lots": [],
-            "name": "My overriden name",
-            "slug": "my-fake-framework",
-            "framework": "my-fake-framework",
-            "status": "live",
-            'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
-            'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
-            'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
-            'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
-            'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+
+class TestFrameworkAgreementDetails:
+    def test_default_values(self):
+        assert api_stubs.framework_agreement_details() == {
+            "contractNoticeNumber": "2010/ABC-DEF",
+            "frameworkAgreementVersion": "RM1557x",
+            "frameworkEndDate": "01 January 2001",
+            "frameworkExtensionLength": "12 months",
+            "frameworkRefDate": "29-06-2000",
+            "frameworkStartDate": "05 January 2000",
+            "frameworkURL": f"https://www.gov.uk/government/publications/g-cloud-7",
+            "lotDescriptions": {},
+            "lotOrder": [],
+            "pageTotal": 99,
+            "signaturePageNumber": 98,
+            "variations": {}
         }
-    }
 
-    assert api_stubs.framework(lots=['cloud-hosting', 'cloud-support']) == {
-        "frameworks": {
-            "clarificationQuestionsOpen": True,
-            "lots": ['cloud-hosting', 'cloud-support'],
-            "name": "G-Cloud 7",
-            "slug": "g-cloud-7",
-            "framework": "g-cloud",
-            "status": "open",
-            'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
-            'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
-            'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
-            'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
-            'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+    def test_override_slug_version_and_variation(self):
+        assert api_stubs.framework_agreement_details(slug='my-custom-slug',
+                                                     framework_agreement_version='v0.0.1',
+                                                     framework_variations={"1": "blah"}) == {
+            "contractNoticeNumber": "2010/ABC-DEF",
+            "frameworkAgreementVersion": "v0.0.1",
+            "frameworkEndDate": "01 January 2001",
+            "frameworkExtensionLength": "12 months",
+            "frameworkRefDate": "29-06-2000",
+            "frameworkStartDate": "05 January 2000",
+            "frameworkURL": f"https://www.gov.uk/government/publications/my-custom-slug",
+            "lotDescriptions": {},
+            "lotOrder": [],
+            "pageTotal": 99,
+            "signaturePageNumber": 98,
+            "variations": {"1": "blah"},
         }
-    }
 
-    assert api_stubs.framework(clarifications_close_at=dt(2010, 1, 1),
-                               clarifications_publish_at=dt(2010, 2, 2),
-                               applications_close_at=dt(2010, 3, 3),
-                               intention_to_award_at=dt(2010, 4, 4),
-                               framework_live_at=dt(2010, 5, 5)) == {
-        "frameworks": {
-            "clarificationQuestionsOpen": True,
-            "lots": [],
-            "name": "G-Cloud 7",
-            "slug": "g-cloud-7",
-            "framework": "g-cloud",
-            "status": "open",
-            'clarificationsCloseAtUTC': '2010-01-01T00:00:00.000000Z',
-            'clarificationsPublishAtUTC': '2010-02-02T00:00:00.000000Z',
-            'applicationsCloseAtUTC': '2010-03-03T00:00:00.000000Z',
-            'intentionToAwardAtUTC': '2010-04-04T00:00:00.000000Z',
-            'frameworkLiveAtUTC': '2010-05-05T00:00:00.000000Z',
+    def test_with_lots(self):
+        lots = [api_stubs.lot(slug='cloud-hosting'), api_stubs.lot(slug='cloud-support')]
+        assert api_stubs.framework_agreement_details(lots=lots) == {
+            "contractNoticeNumber": "2010/ABC-DEF",
+            "frameworkAgreementVersion": "RM1557x",
+            "frameworkEndDate": "01 January 2001",
+            "frameworkExtensionLength": "12 months",
+            "frameworkRefDate": "29-06-2000",
+            "frameworkStartDate": "05 January 2000",
+            "frameworkURL": f"https://www.gov.uk/government/publications/g-cloud-7",
+            "lotDescriptions": {"cloud-hosting": "Lot 1: Cloud Hosting",
+                                "cloud-support": "Lot 2: Cloud Support"},
+            "lotOrder": ["cloud-hosting", "cloud-support"],
+            "pageTotal": 99,
+            "signaturePageNumber": 98,
+            "variations": {}
         }
-    }
 
 
-def test_framework_name_changes_with_slug():
-    assert api_stubs.framework(slug='digital-outcomes-and-specialists')["frameworks"]["name"] == \
-        "Digital Outcomes and Specialists"
-    assert api_stubs.framework(slug="my-framework")["frameworks"]["name"] == "My Framework"
+class TestFramework:
+    def test_default_values(self):
+        assert api_stubs.framework() == {
+            "frameworks": {
+                "id": 1,
+                "name": "G-Cloud 7",
+                "slug": "g-cloud-7",
+                "framework": "g-cloud",
+                "status": "open",
+                "clarificationQuestionsOpen": True,
+                "lots": [],
+                "allowDeclarationReuse": True,
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(),
+                "countersignerName": None,
+                "frameworkAgreementVersion": "RM1557x",
+                "variations": {},
+                'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
+                'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
+                'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
+                'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
+                'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+            }
+        }
 
+    def test_custom_slug_derives_name_and_framework(self):
+        framework_agreement_details = api_stubs.framework_agreement_details(slug='digital-outcomes-and-specialists')
+        assert api_stubs.framework(slug='digital-outcomes-and-specialists') == {
+            "frameworks": {
+                "id": 1,
+                "name": "Digital Outcomes and Specialists",
+                "slug": "digital-outcomes-and-specialists",
+                "framework": "digital-outcomes-and-specialists",
+                "status": "open",
+                "clarificationQuestionsOpen": True,
+                "lots": [],
+                "allowDeclarationReuse": True,
+                "frameworkAgreementDetails": framework_agreement_details,
+                "countersignerName": None,
+                "frameworkAgreementVersion": "RM1557x",
+                "variations": {},
+                'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
+                'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
+                'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
+                'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
+                'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+            }
+        }
 
-def test_lot_name_default_is_made_from_slug():
-    assert api_stubs.lot(slug="my-lot")["name"] == "My Lot"
+    def test_override_status_slug_name_and_clarification_questions(self):
+        assert api_stubs.framework(status='live', slug='my-fake-framework', name='My overriden name',
+                                   clarification_questions_open=False) == {
+            "frameworks": {
+                "id": 1,
+                "name": "My overriden name",
+                "slug": "my-fake-framework",
+                "framework": "my-fake-framework",
+                "status": "live",
+                "clarificationQuestionsOpen": False,
+                "lots": [],
+                "allowDeclarationReuse": True,
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(slug='my-fake-framework'),
+                "countersignerName": None,
+                "frameworkAgreementVersion": "RM1557x",
+                "variations": {},
+                'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
+                'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
+                'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
+                'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
+                'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+            }
+        }
 
+    def test_with_lots(self):
+        lots = [api_stubs.lot(slug='cloud-hosting'), api_stubs.lot(slug='cloud-support')]
+        assert api_stubs.framework(lots=lots) == {
+            "frameworks": {
+                "id": 1,
+                "name": "G-Cloud 7",
+                "slug": "g-cloud-7",
+                "framework": "g-cloud",
+                "status": "open",
+                "clarificationQuestionsOpen": True,
+                "lots": lots,
+                "allowDeclarationReuse": True,
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(lots=lots),
+                "countersignerName": None,
+                "frameworkAgreementVersion": "RM1557x",
+                "variations": {},
+                'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
+                'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
+                'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
+                'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
+                'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+            }
+        }
 
-def test_lot():
-    assert api_stubs.lot(slug="foo") == {
-        "id": 1,
-        "slug": "foo",
-        "name": "Foo",
-        "allowsBrief": False,
-        "oneServiceLimit": False,
-    }
+    def test_custom_dates(self):
+        assert api_stubs.framework(clarifications_close_at=dt(2010, 1, 1),
+                                   clarifications_publish_at=dt(2010, 2, 2),
+                                   applications_close_at=dt(2010, 3, 3),
+                                   intention_to_award_at=dt(2010, 4, 4),
+                                   framework_live_at=dt(2010, 5, 5)) == {
+            "frameworks": {
+                "id": 1,
+                "name": "G-Cloud 7",
+                "slug": "g-cloud-7",
+                "framework": "g-cloud",
+                "status": "open",
+                "clarificationQuestionsOpen": True,
+                "lots": [],
+                "allowDeclarationReuse": True,
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(),
+                "countersignerName": None,
+                "frameworkAgreementVersion": "RM1557x",
+                "variations": {},
+                'clarificationsCloseAtUTC': '2010-01-01T00:00:00.000000Z',
+                'clarificationsPublishAtUTC': '2010-02-02T00:00:00.000000Z',
+                'applicationsCloseAtUTC': '2010-03-03T00:00:00.000000Z',
+                'intentionToAwardAtUTC': '2010-04-04T00:00:00.000000Z',
+                'frameworkLiveAtUTC': '2010-05-05T00:00:00.000000Z',
+            }
+        }
 
 
 def test_brief():
