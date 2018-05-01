@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from workdays import workday
 
-from dmutils.formats import dateformat, utctoshorttimelongdateformat
+from .formats import dateformat, utctoshorttimelongdateformat
 
 
 def get_publishing_dates(brief):
