@@ -5,6 +5,7 @@ import re
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
+DISPLAY_MONTH_YEAR_FORMAT = "%B %Y"
 DISPLAY_SHORT_DATE_FORMAT = '%-d %B'
 DISPLAY_DATE_FORMAT = '%A %-d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
@@ -52,6 +53,18 @@ def dateformat(value, default_value=None):
     return _format_date(value, default_value, DISPLAY_DATE_FORMAT, localize=False)
 
 
+def monthyearformat(value, default_value=None):
+    """
+    Example value: datetime.strptime("2018-07-25 10:15:00", "%Y-%m-%d %H:%M:%S") OR "2010-01-01T13:00:00.000000Z"
+    Example output: 'July 2018'
+
+    This is used when precision is not required and we are trying to remind a user roughly when a historical event
+    occurred. The only place this is currently used is when offering a supplier the ability to reuse their declaration
+    from a previous framework and we want to remind them roughly when those answers were provided.
+    """
+    return _format_date(value, default_value, DISPLAY_MONTH_YEAR_FORMAT, localize=False)
+
+
 def datetimeformat(value, default_value=None, localize=True):
     """
     Example value: datetime.strptime("2018-07-25 23:59:59", "%Y-%m-%d %H:%M:%S")
@@ -71,7 +84,7 @@ def datetimeformat(value, default_value=None, localize=True):
 
 def utctoshorttimelongdateformat(value, default_value=None, localize=True):
     """
-    Example value: datetime.strptime("2010-01-01 13:00:00", "%Y-%m-%d %H:%M:%S") OR "2010-01-01T13:00:00Z"
+    Example value: datetime.strptime("2010-01-01 13:00:00", "%Y-%m-%d %H:%M:%S") OR "2010-01-01T13:00:00.000000Z"
     Example output: '1pm GMT, Friday 1 January 2010'
 
     "utctoshorttimelongdateformat" takes a datetime object or ISO8601 datetime string, localizes it to GMT/BST (as

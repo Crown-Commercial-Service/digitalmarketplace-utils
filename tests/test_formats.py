@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from dmutils.formats import (
-    timeformat, shortdateformat, dateformat, datetimeformat, datetodatetimeformat,
+    timeformat, shortdateformat, dateformat, monthyearformat, datetimeformat, datetodatetimeformat,
     utcdatetimeformat, utctoshorttimelongdateformat
 )
 import pytz
@@ -46,6 +46,23 @@ def test_shortdateformat(dt, formatted_date):
 ))
 def test_dateformat(dt, formatted_date):
     assert dateformat(dt) == formatted_date
+
+
+@pytest.mark.parametrize("dt, default_value, formatted_date", (
+    (datetime(2012, 11, 10, 9, 8, 7, 6), None, "November 2012"),
+    ("2012-11-10T09:08:07.0Z", None, "November 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6), None, "August 2012"),
+    ("2012-08-10T09:08:07.0Z", None, "August 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), None, "August 2012"),
+    ("2016-04-27T23:59:59.0Z", None, "April 2016"),
+    (datetime(2016, 4, 27, 23, 59, 59, 0), None, "April 2016"),
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), None, "August 2012"),
+
+    # Check fall back to default_value if no date provided
+    (None, 'default-value', 'default-value')
+))
+def test_monthyearformat(dt, default_value, formatted_date):
+    assert monthyearformat(dt, default_value=default_value) == formatted_date
 
 
 @pytest.mark.parametrize("dt, formatted_datetime", (
