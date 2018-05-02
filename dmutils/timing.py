@@ -7,38 +7,31 @@ from flask import request
 from flask.ctx import has_request_context
 
 
-#
-# logged_duration's defaults are exposed here so that a caller is able to defer to the default or simply use a wrapper
-# for the default when customizing the call.
-#
-
-
-def default_message(log_context):
+def _logged_duration_default_message(log_context):
     return "Block {} in {{duration_real}}s of real-time".format(
         "executed" if sys.exc_info()[0] is None else "raised {}".format(sys.exc_info()[0].__name__)
     )
 
 
-def default_condition(log_context):
+def _logged_duration_default_condition(log_context):
     return has_request_context() and getattr(request, "is_sampled", False)
 
 
-def default_log_func(logger, message, log_level, log_context):
+def _logged_duration_default_log_func(logger, message, log_level, log_context):
     final_message = message(log_context) if callable(message) else message
     logger.log(log_level, final_message, exc_info=(sys.exc_info()[0] is not None), extra=log_context)
 
 
-# exposing this allows a caller to specify default_logger.getChild(...) as their logger
-default_logger = logging.getLogger(__name__)
+_logged_duration_default_logger = logging.getLogger(__name__)
 
 
 @contextmanager
 def logged_duration(
-    logger=default_logger,
-    message=default_message,
+    logger=_logged_duration_default_logger,
+    message=_logged_duration_default_message,
     log_level=logging.DEBUG,
-    condition=default_condition,
-    log_func=default_log_func,
+    condition=_logged_duration_default_condition,
+    log_func=_logged_duration_default_log_func,
 ):
     """
         returns a context manager which will monitor the amount of time spent "inside" its code block and emit a log
@@ -89,3 +82,15 @@ def logged_duration(
 
         if condition in (True, None,) or condition(log_context):
             log_func(logger, message, log_level, log_context)
+
+
+#
+# logged_duration's defaults are exposed here so that a caller is able to defer to the default or simply use a wrapper
+# for the default when customizing the call. annotating them *onto* logged_duration itself allows these defaults to be
+# used without needing an extra import.
+#
+logged_duration.default_log_func = _logged_duration_default_log_func
+logged_duration.default_message = _logged_duration_default_message
+logged_duration.default_condition = _logged_duration_default_condition
+# exposing this allows a caller to specify default_logger.getChild(...) as their logger
+logged_duration.default_logger = _logged_duration_default_logger

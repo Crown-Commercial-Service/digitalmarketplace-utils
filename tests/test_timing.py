@@ -101,14 +101,14 @@ def _duration_real_gt_075(log_context):
 
 
 def _default_and_no_exception(log_context):
-    return timing.default_condition(log_context) and sys.exc_info()[0] is None
+    return timing.logged_duration.default_condition(log_context) and sys.exc_info()[0] is None
 
 
 # a dictionary of messages to be passed to logged_duration mapped against a tuple of values to expect, the first of
 # these in the case that log message formatting has *not* yet taken place, the second assuming it *has*.
 _messages_expected = OrderedDict((
     (
-        timing.default_message,
+        timing.logged_duration.default_message,
         (
             AnyStringMatching(r"Block (executed|raised \w+) in \{duration_real\}s of real-time"),
             AnyStringMatching(r"Block (executed|raised \w+) in [0-9eE.-]+s of real-time"),
@@ -143,7 +143,7 @@ _parameter_combinations = tuple(product(
     (  # condition values
         True,
         None,
-        timing.default_condition,
+        timing.logged_duration.default_condition,
         _duration_real_gt_075,
         _default_and_no_exception,
     ),
@@ -171,7 +171,7 @@ def _expect_log(
 ):
     """return whether to expect a log line to be output or not"""
     return (
-        (condition is timing.default_condition and is_sampled)
+        (condition is timing.logged_duration.default_condition and is_sampled)
         or (condition is _duration_real_gt_075 and sleep_time >= 0.08)
         or (condition is _default_and_no_exception and is_sampled and raise_exception is None)
         or (condition in (True, None,))
@@ -249,7 +249,7 @@ def _expect_log(
                 # log_level
                 logging.WARNING,
                 # condition
-                timing.default_condition,
+                timing.logged_duration.default_condition,
                 # raise_exception
                 None,
                 # inject_context
@@ -432,7 +432,7 @@ def test_logged_duration_mock_logger(
                 # log_level
                 logging.WARNING,
                 # condition
-                timing.default_condition,
+                timing.logged_duration.default_condition,
                 # raise_exception
                 None,
                 # inject_context
