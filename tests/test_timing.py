@@ -18,7 +18,7 @@ import pytest
 import six
 
 
-class malleable_ANY:
+class MalleableAny:
     def __init__(self, condition):
         self._condition = condition
 
@@ -32,7 +32,7 @@ class malleable_ANY:
         return None
 
 
-class ANY_superset_of(malleable_ANY):
+class AnySupersetOf(MalleableAny):
     def __init__(self, subset_dict):
         self._subset_dict = subset_dict
         super().__init__(lambda other: self._subset_dict == {k: v for k, v in other.items() if k in self._subset_dict})
@@ -41,7 +41,7 @@ class ANY_superset_of(malleable_ANY):
         return f"{self.__class__.__name__}({self._subset_dict})"
 
 
-class ANY_string_matching(malleable_ANY):
+class AnyStringMatching(MalleableAny):
     _cached_re_compile = staticmethod(lru_cache(maxsize=32)(re.compile))
 
     def __init__(self, *args, **kwargs):
@@ -108,15 +108,15 @@ _messages_expected = OrderedDict((
     (
         timing.default_message,
         (
-            ANY_string_matching(r"Block (executed|raised \w+) in \{duration_real\}s of real-time"),
-            ANY_string_matching(r"Block (executed|raised \w+) in [0-9eE.-]+s of real-time"),
+            AnyStringMatching(r"Block (executed|raised \w+) in \{duration_real\}s of real-time"),
+            AnyStringMatching(r"Block (executed|raised \w+) in [0-9eE.-]+s of real-time"),
         ),
     ),
     (
         "{name}: {street} - {duration_process}s",
         (
             "{name}: {street} - {duration_process}s",
-            ANY_string_matching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
+            AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
         )
     ),
 ))
@@ -205,7 +205,7 @@ def _expect_log(
                         _messages_expected[message][0],
                         exc_info=bool(raise_exception),
                         extra={
-                            "duration_real": malleable_ANY(
+                            "duration_real": MalleableAny(
                                 # a double-closure here to get around python's weird behaviour when capturing iterated
                                 # variables (in this case `sleep_time`)
                                 (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
@@ -254,8 +254,8 @@ def _expect_log(
                     extra={
                         "key": "D#",
                         "keyes": "House Of",
-                        "duration_real": malleable_ANY(lambda value: 0.48 < value < 0.6),
-                        "duration_process": malleable_ANY(lambda value: isinstance(value, Number)),
+                        "duration_real": MalleableAny(lambda value: 0.48 < value < 0.6),
+                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
                     },
                 )],
             ),
@@ -273,8 +273,8 @@ def _expect_log(
                     "The obedient {item}s feeding in {exc_info}",
                     exc_info=True,
                     extra={
-                        "duration_real": malleable_ANY(lambda value: 0.18 < value < 0.35),
-                        "duration_process": malleable_ANY(lambda value: isinstance(value, Number)),
+                        "duration_real": MalleableAny(lambda value: 0.18 < value < 0.35),
+                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
                     },
                 )],
             ),
@@ -354,23 +354,23 @@ def test_logged_duration_mock_logger(
                         # here), our log output will be lead by a warning about the missing parameter - I feel it's
                         # important to include this permutation to prove that we don't end up swallowing a genuine
                         # exception if we inadvertantly raise an exception while outputting our log message
-                        (ANY_superset_of({"levelname": "WARNING"}),)
+                        (AnySupersetOf({"levelname": "WARNING"}),)
                         if ("street" in str(message) and "street" not in (inject_context or {})) else ()
                     ),
-                    ANY_superset_of({
+                    AnySupersetOf({
                         "name": "conftest.foobar",
                         "levelname": logging.getLevelName(log_level),
                         "message": _messages_expected[message][1],
-                        "duration_real": malleable_ANY(
+                        "duration_real": MalleableAny(
                             # a double-closure here to get around python's weird behaviour when capturing iterated
                             # variables (in this case `sleep_time`)
                             (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
                         ),
-                        "duration_process": malleable_ANY(lambda value: isinstance(value, Number)),
+                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
                         **(inject_context or {}),
                         **(
                             {
-                                "exc_info": ANY_string_matching(
+                                "exc_info": AnyStringMatching(
                                     r".*{}.*".format(re.escape(raise_exception.__name__)),
                                     flags=re.DOTALL,
                                 ),
@@ -410,12 +410,12 @@ def test_logged_duration_mock_logger(
                     "keyes": "House Of",
                 },
                 False,
-                (ANY_superset_of({
-                    "message": ANY_string_matching(r"Touched the obedient D#s for [0-9Ee.-]+s"),
+                (AnySupersetOf({
+                    "message": AnyStringMatching(r"Touched the obedient D#s for [0-9Ee.-]+s"),
                     "levelname": "WARNING",
                     "key": "D#",
-                    "duration_real": malleable_ANY(lambda value: 0.48 < value < 0.6),
-                    "duration_process": malleable_ANY(lambda value: isinstance(value, Number)),
+                    "duration_real": MalleableAny(lambda value: 0.48 < value < 0.6),
+                    "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
                     "name": "conftest.foobar",
                 }),),
             ),
@@ -429,22 +429,22 @@ def test_logged_duration_mock_logger(
                 None,
                 False,
                 (
-                    ANY_superset_of({
+                    AnySupersetOf({
                         "levelname": "WARNING",
-                        "message": ANY_string_matching(r".*missing key.*", flags=re.IGNORECASE),
+                        "message": AnyStringMatching(r".*missing key.*", flags=re.IGNORECASE),
                     }),
-                    ANY_superset_of({
-                        "message": ANY_string_matching(
+                    AnySupersetOf({
+                        "message": AnyStringMatching(
                             r"The obedient \{.*\}s feeding in .*ValueError.*",
                             flags=re.DOTALL,
                         ),
                         "levelname": "ERROR",
-                        "exc_info": ANY_string_matching(
+                        "exc_info": AnyStringMatching(
                             r".*ValueError.*",
                             flags=re.DOTALL,
                         ),
-                        "duration_real": malleable_ANY(lambda value: 0.18 < value < 0.35),
-                        "duration_process": malleable_ANY(lambda value: isinstance(value, Number)),
+                        "duration_real": MalleableAny(lambda value: 0.18 < value < 0.35),
+                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
                         "name": "conftest.foobar",
                     }),
                 ),
