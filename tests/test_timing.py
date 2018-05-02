@@ -80,6 +80,8 @@ def mock_time_functions():
 
 @contextmanager
 def actual_time_functions():
+    # this is only a context manager so it can be swapped out in place of mock_time_functions, which uses mock.patch
+    # extensively
     yield time.sleep, time.perf_counter, time.process_time
 
 
@@ -233,20 +235,31 @@ def _expect_log(
                 inject_context
             in _parameter_combinations
         ),
-        (  # we include a few explicit test cases using unmocked time functions to ensure the functions *actually* work
-           # as expected
+        (   #
+            # we include a few explicit test cases using unmocked time functions to ensure the functions *actually* work
+            # as expected
+            #
             (
+                # is_sampled
                 True,
+                # sleep_time
                 0.5,
+                # message
                 "Touched the obedient {key}s for {duration_real}s",
+                # log_level
                 logging.WARNING,
+                # condition
                 timing.default_condition,
+                # raise_exception
                 None,
+                # inject_context
                 {
                     "key": "D#",
                     "keyes": "House Of",
                 },
+                # mock_time
                 False,
+                # expected_call_args_list
                 [mock.call(
                     logging.WARNING,
                     "Touched the obedient {key}s for {duration_real}s",
@@ -260,14 +273,23 @@ def _expect_log(
                 )],
             ),
             (
+                # is_sampled
                 None,
+                # sleep_time
                 0.2,
+                # message
                 "The obedient {item}s feeding in {exc_info}",
+                # log_level
                 logging.ERROR,
+                # condition
                 True,
+                # raise_exception
                 ValueError,
+                # inject_context
                 None,
+                # mock_time
                 False,
+                # expected_call_args_list
                 [mock.call(
                     logging.ERROR,
                     "The obedient {item}s feeding in {exc_info}",
@@ -396,20 +418,31 @@ def test_logged_duration_mock_logger(
                 inject_context
             in _parameter_combinations
         ),
-        (  # we include a few explicit test cases using unmocked time functions to ensure the functions *actually* work
-           # as expected
+        (   #
+            # we include a few explicit test cases using unmocked time functions to ensure the functions *actually* work
+            # as expected
+            #
             (
+                # is_sampled
                 True,
+                # sleep_time
                 0.5,
+                # message
                 "Touched the obedient {key}s for {duration_real}s",
+                # log_level
                 logging.WARNING,
+                # condition
                 timing.default_condition,
+                # raise_exception
                 None,
+                # inject_context
                 {
                     "key": "D#",
                     "keyes": "House Of",
                 },
+                # mock_time
                 False,
+                # expected_logs
                 (AnySupersetOf({
                     "message": AnyStringMatching(r"Touched the obedient D#s for [0-9Ee.-]+s"),
                     "levelname": "WARNING",
@@ -420,14 +453,23 @@ def test_logged_duration_mock_logger(
                 }),),
             ),
             (
+                # is_sampled
                 None,
+                # sleep_time
                 0.2,
+                # message
                 "The obedient {item}s feeding in {exc_info}",
+                # log_level
                 logging.ERROR,
+                # condition
                 True,
+                # raise_exception
                 ValueError,
+                # inject_context
                 None,
+                # mock_time
                 False,
+                # expected_logs
                 (
                     AnySupersetOf({
                         "levelname": "WARNING",
