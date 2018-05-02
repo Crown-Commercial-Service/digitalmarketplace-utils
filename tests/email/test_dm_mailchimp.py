@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the Digital Marketplace MailChimp integration."""
 import types
+from json.decoder import JSONDecodeError
 
 import mock
 import pytest
@@ -140,6 +141,24 @@ def test_returns_true_if_expected_error_subscribing_email_to_list(get_email_hash
         logger.error.assert_called_once_with(
             "Expected error: Mailchimp failed to add user (foo) to list (list_id). API error: The email address looks fake or invalid, please enter a real email address.",  # noqa
             extra={"error": "error sending"}
+        )
+
+
+@mock.patch("logging.Logger", autospec=True)
+@mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+def test_handles_responses_with_invalid_json(get_email_hash, logger):
+    dm_mailchimp_client = DMMailChimpClient('username', 'api key', logger)
+    with mock.patch.object(
+            dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
+        response = mock.Mock()
+        response.json.side_effect = JSONDecodeError('msg', 'doc', 0)
+        create_or_update.side_effect = RequestException("error sending", response=response)
+
+        res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+        assert res is False
+        assert logger.error.call_args == mock.call(
+            'Mailchimp failed to add user (foo) to list (list_id)', extra={'error': 'error sending'}
         )
 
 
