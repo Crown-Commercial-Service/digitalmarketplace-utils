@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from dmutils.formats import (
-    timeformat, shortdateformat, dateformat, datetimeformat, datetodatetimeformat,
-    utcdatetimeformat
+    timeformat, shortdateformat, dateformat, monthyearformat, datetimeformat, datetodatetimeformat,
+    utcdatetimeformat, utctoshorttimelongdateformat
 )
 import pytz
 from datetime import datetime
@@ -48,6 +48,23 @@ def test_dateformat(dt, formatted_date):
     assert dateformat(dt) == formatted_date
 
 
+@pytest.mark.parametrize("dt, default_value, formatted_date", (
+    (datetime(2012, 11, 10, 9, 8, 7, 6), None, "November 2012"),
+    ("2012-11-10T09:08:07.0Z", None, "November 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6), None, "August 2012"),
+    ("2012-08-10T09:08:07.0Z", None, "August 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), None, "August 2012"),
+    ("2016-04-27T23:59:59.0Z", None, "April 2016"),
+    (datetime(2016, 4, 27, 23, 59, 59, 0), None, "April 2016"),
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), None, "August 2012"),
+
+    # Check fall back to default_value if no date provided
+    (None, 'default-value', 'default-value')
+))
+def test_monthyearformat(dt, default_value, formatted_date):
+    assert monthyearformat(dt, default_value=default_value) == formatted_date
+
+
 @pytest.mark.parametrize("dt, formatted_datetime", (
     (datetime(2012, 11, 10, 9, 8, 7, 6), "Saturday 10 November 2012 at 9:08am GMT"),
     ("2012-11-10T09:08:07.0Z", "Saturday 10 November 2012 at 9:08am GMT"),
@@ -64,6 +81,33 @@ def test_dateformat(dt, formatted_date):
 ))
 def test_datetimeformat(dt, formatted_datetime):
     assert datetimeformat(dt) == formatted_datetime
+
+
+@pytest.mark.parametrize("dt, localize, default_value, formatted_datetime", (
+    (datetime(2012, 11, 10, 9, 8, 7, 6), True, None, "9am GMT, Saturday 10 November 2012"),
+    ("2012-11-10T09:08:07.0Z", True, None, "9am GMT, Saturday 10 November 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6), True, None, "10am BST, Friday 10 August 2012"),
+    ("2012-08-10T09:08:07.0Z", True, None, "10am BST, Friday 10 August 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), True, None, "10am BST, Friday 10 August 2012"),
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), True, None, "10am BST, Wednesday 1 August 2012"),
+    (datetime(2012, 8, 1, 22, 59, 7, 6, tzinfo=pytz.utc), True, None, "11pm BST, Wednesday 1 August 2012"),
+
+    # Daylight savings edge case
+    (datetime(2012, 3, 25, 0, 59, 7, 6, tzinfo=pytz.utc), True, None, "12am GMT, Sunday 25 March 2012"),
+    (datetime(2012, 3, 25, 1, 59, 7, 6, tzinfo=pytz.utc), True, None, "2am BST, Sunday 25 March 2012"),
+
+    # Check localization can be disabled
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), False, None, "9am UTC, Wednesday 1 August 2012"),
+
+    # Check default_value returned if no value specified
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), True, 'my-default-value', "10am BST, Wednesday 1 August 2012"),
+    (None, False, 'my-default-value', "my-default-value"),
+
+    # Fall back to default if no valid date supplied
+    (None, True, None, None),
+))
+def test_utctoshorttimelongdateformat(dt, localize, default_value, formatted_datetime):
+    assert utctoshorttimelongdateformat(dt, localize=localize, default_value=default_value) == formatted_datetime
 
 
 @pytest.mark.parametrize("dt, formatted_datetime", (

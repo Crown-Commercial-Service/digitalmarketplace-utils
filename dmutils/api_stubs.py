@@ -65,7 +65,8 @@ def framework(framework_id=1,
               clarifications_publish_at=dt(2000, 1, 2),
               applications_close_at=dt(2000, 1, 3),
               intention_to_award_at=dt(2000, 1, 4),
-              framework_live_at=dt(2000, 1, 5)):
+              framework_live_at=dt(2000, 1, 5),
+              framework_expires_at=dt(2000, 1, 6)):
     if name:
         pass
     elif slug.startswith('g-cloud'):
@@ -115,6 +116,7 @@ def framework(framework_id=1,
             'applicationsCloseAtUTC': format_datetime(applications_close_at),
             'intentionToAwardAtUTC': format_datetime(intention_to_award_at),
             'frameworkLiveAtUTC': format_datetime(framework_live_at),
+            'frameworkExpiresAtUTC': format_datetime(framework_expires_at),
         }
     }
 

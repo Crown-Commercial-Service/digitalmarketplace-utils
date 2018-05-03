@@ -102,6 +102,7 @@ class TestFramework:
                 'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+                'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
             }
         }
 
@@ -126,6 +127,7 @@ class TestFramework:
                 'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+                'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
             }
         }
 
@@ -150,6 +152,7 @@ class TestFramework:
                 'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+                'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
             }
         }
 
@@ -174,6 +177,7 @@ class TestFramework:
                 'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+                'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
             }
         }
 
@@ -182,7 +186,8 @@ class TestFramework:
                                    clarifications_publish_at=dt(2010, 2, 2),
                                    applications_close_at=dt(2010, 3, 3),
                                    intention_to_award_at=dt(2010, 4, 4),
-                                   framework_live_at=dt(2010, 5, 5)) == {
+                                   framework_live_at=dt(2010, 5, 5),
+                                   framework_expires_at=dt(2010, 6, 6)) == {
             "frameworks": {
                 "id": 1,
                 "name": "G-Cloud 7",
@@ -201,6 +206,7 @@ class TestFramework:
                 'applicationsCloseAtUTC': '2010-03-03T00:00:00.000000Z',
                 'intentionToAwardAtUTC': '2010-04-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2010-05-05T00:00:00.000000Z',
+                'frameworkExpiresAtUTC': '2010-06-06T00:00:00.000000Z',
             }
         }
 

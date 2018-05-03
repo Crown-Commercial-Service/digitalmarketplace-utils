@@ -59,6 +59,7 @@ def init_app(
     application.add_template_filter(formats.shortdateformat)
     application.add_template_filter(formats.timeformat)
     application.add_template_filter(formats.utcdatetimeformat)
+    application.add_template_filter(formats.utctoshorttimelongdateformat)
 
     @application.context_processor
     def inject_global_template_variables():

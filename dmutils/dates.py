@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from workdays import workday
 
+from .formats import dateformat, utctoshorttimelongdateformat
+
 
 def get_publishing_dates(brief):
     APPLICATION_OPEN_DAYS = {'1 week': 7, '2 weeks': 14}
@@ -48,3 +50,18 @@ def _get_todays_date():
 
 def _get_length_of_brief(brief):
     return brief['requirementsLength'] if brief.get('requirementsLength') else '2 weeks'
+
+
+def update_framework_with_formatted_dates(framework):
+    """Takes a framework record (as returned by eg data_api_client.get_framework) and inserts new keys
+    for any date/time values that should be displayed consistently on the frontends.
+
+    This is currently used for important framework lifecycle/application dates."""
+    framework.update({
+        'clarificationsCloseAt': utctoshorttimelongdateformat(framework['clarificationsCloseAtUTC']),
+        'clarificationsPublishAt': utctoshorttimelongdateformat(framework['clarificationsPublishAtUTC']),
+        'applicationsCloseAt': utctoshorttimelongdateformat(framework['applicationsCloseAtUTC']),
+        'intentionToAwardAt': dateformat(framework['intentionToAwardAtUTC']),
+        'frameworkLiveAt': dateformat(framework['frameworkLiveAtUTC']),
+        'frameworkExpiresAt': dateformat(framework['frameworkExpiresAtUTC']),
+    })
