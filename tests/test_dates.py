@@ -252,6 +252,7 @@ def test_update_framework_with_formatted_dates():
         'applicationsCloseAtUTC': '2000-01-03T17:00:00.000000Z',
         'intentionToAwardAtUTC': '2000-01-04T12:00:00.000000Z',
         'frameworkLiveAtUTC': '2000-01-05T12:00:00.000000Z',
+        'frameworkExpiresAtUTC': '2000-01-06T12:00:00.000000Z',
     }
 
     dates_package.update_framework_with_formatted_dates(framework)
@@ -262,9 +263,11 @@ def test_update_framework_with_formatted_dates():
         'applicationsCloseAtUTC': '2000-01-03T17:00:00.000000Z',
         'intentionToAwardAtUTC': '2000-01-04T12:00:00.000000Z',
         'frameworkLiveAtUTC': '2000-01-05T12:00:00.000000Z',
+        'frameworkExpiresAtUTC': '2000-01-06T12:00:00.000000Z',
         'clarificationsCloseAt': '12pm GMT, Saturday 1 January 2000',
         'clarificationsPublishAt': '12pm GMT, Sunday 2 January 2000',
         'applicationsCloseAt': '5pm GMT, Monday 3 January 2000',
         'intentionToAwardAt': 'Tuesday 4 January 2000',
         'frameworkLiveAt': 'Wednesday 5 January 2000',
+        'frameworkExpiresAt': 'Thursday 6 January 2000',
     }

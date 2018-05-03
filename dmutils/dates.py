@@ -63,4 +63,5 @@ def update_framework_with_formatted_dates(framework):
         'applicationsCloseAt': utctoshorttimelongdateformat(framework['applicationsCloseAtUTC']),
         'intentionToAwardAt': dateformat(framework['intentionToAwardAtUTC']),
         'frameworkLiveAt': dateformat(framework['frameworkLiveAtUTC']),
+        'frameworkExpiresAt': dateformat(framework['frameworkExpiresAtUTC']),
     })
