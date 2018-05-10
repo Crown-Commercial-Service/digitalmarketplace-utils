@@ -145,17 +145,25 @@ class TestDecodePasswordReset:
                 else:
                     assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
-    def test_decode_password_reset_token_does_not_work_if_password_changed_later_than_token(
-        self, email_app, data_api_client, password_reset_token
+    @pytest.mark.parametrize(
+        'generation_time, expected_result', [
+            ('2016-01-01 12:00:01', 'ok'),
+            ('2016-01-01 12:00:00', 'error'),  # TODO: allow 1 second leeway
+            ('2016-01-01 11:59:59', 'error')
+        ]
+    )
+    def test_decode_password_reset_token_invalid_if_password_changed_since_token_was_generated(
+        self, generation_time, expected_result, email_app, data_api_client, password_reset_token
     ):
-        with freeze_time('2016-01-01T11:00:00.30Z'):
-            # Token was generated an hour earlier than password was changed
+        with freeze_time(generation_time):
             token = generate_token(password_reset_token, "Key", 'PassSalt')
 
         with freeze_time('2016-01-01T13:00:00.30Z'):
-            # Token is two hours old; password was changed an hour ago
             with email_app.app_context():
-                assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
+                if expected_result == 'ok':
+                    assert decode_password_reset_token(token, data_api_client) == password_reset_token
+                else:
+                    assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
 
 class TestDecodeInvitationToken:
@@ -180,7 +188,9 @@ class TestDecodeInvitationToken:
                 'supplier_name': 'A. Supplier',
                 'role': 'supplier'
             }
-            token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])[1:]
+            token = generate_token(
+                data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT']
+            )[1:]
 
             assert decode_invitation_token(token) == {'error': 'token_invalid'}
 
@@ -191,7 +201,8 @@ class TestDecodeInvitationToken:
             ('2015-01-09 03:04:06', 'error'),
         ]
     )
-    def test_decode_invitation_token_returns_an_error_and_role_if_token_expired(self, decode_time, expected_result, email_app):
+    def test_decode_invitation_token_returns_an_error_and_role_if_token_expired(
+            self, decode_time, expected_result, email_app):
         with freeze_time('2015-01-02 03:04:05'):
             data = {
                 'email_address': 'test-user@email.com',
