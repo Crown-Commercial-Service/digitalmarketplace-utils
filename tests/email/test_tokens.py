@@ -126,6 +126,7 @@ class TestDecodePasswordReset:
 
     @pytest.mark.parametrize(
         'decode_time, expected_result', [
+            ('2016-01-02 03:04:04', 'error'),  # Cannot decode before the token has been generated
             ('2016-01-02 03:04:05', 'ok'),
             ('2016-01-03 03:04:05', 'ok'),
             ('2016-01-03 03:04:06', 'error'),
@@ -138,7 +139,6 @@ class TestDecodePasswordReset:
             with freeze_time('2016-01-02 03:04:05'):
                 token = generate_token(password_reset_token, "Key", 'PassSalt')
 
-        with email_app.app_context():
             with freeze_time(decode_time):
                 if expected_result == 'ok':
                     assert decode_password_reset_token(token, data_api_client) == password_reset_token
