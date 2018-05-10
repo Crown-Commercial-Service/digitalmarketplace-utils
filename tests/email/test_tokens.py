@@ -147,8 +147,7 @@ class TestDecodePasswordReset:
 
     @pytest.mark.parametrize(
         'generation_time, expected_result', [
-            ('2016-01-01 12:00:01', 'ok'),
-            ('2016-01-01 12:00:00', 'error'),  # TODO: allow 1 second leeway
+            ('2016-01-01 12:00:00', 'ok'),  # Allow 1 second leeway (following password change)
             ('2016-01-01 11:59:59', 'error')
         ]
     )

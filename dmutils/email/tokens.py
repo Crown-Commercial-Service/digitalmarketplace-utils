@@ -2,7 +2,7 @@ import base64
 import json
 import struct
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from cryptography import fernet
 from flask import current_app
@@ -113,8 +113,9 @@ def decode_password_reset_token(token, data_api_client):
         DATETIME_FORMAT
     )
 
-    # If the token was created before the last password change
-    if token_timestamp < user_last_changed_password_at:
+    # Check if the token was created before the last password change
+    # (allow 1 second leeway for reset tokens generated for the 'Your password was changed' email link)
+    if token_timestamp + timedelta(seconds=1) < user_last_changed_password_at:
         current_app.logger.info("Error changing password: Token generated earlier than password was last changed.")
         return {'error': 'token_invalid'}
 
