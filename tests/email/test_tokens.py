@@ -126,14 +126,26 @@ def test_decode_password_reset_token_does_not_work_if_bad_token(email_app, data_
         assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
 
-def test_decode_password_reset_token_does_not_work_if_token_expired(email_app, data_api_client, password_reset_token):
-    with freeze_time('2015-01-02 03:04:05'):
-        # Token was generated a year before current time
-        token = generate_token(password_reset_token, "Key", 'PassSalt')
+@pytest.mark.parametrize(
+    'decode_time, expected_result', [
+        ('2016-01-02 03:04:05', 'ok'),
+        ('2016-01-03 03:04:05', 'ok'),
+        ('2016-01-03 03:04:06', 'error'),
+    ]
+)
+def test_decode_password_reset_token_is_only_valid_within_a_day_of_token_creation(
+    decode_time, expected_result, email_app, data_api_client, password_reset_token
+):
+    with email_app.app_context():
+        with freeze_time('2016-01-02 03:04:05'):
+            token = generate_token(password_reset_token, "Key", 'PassSalt')
 
-    with freeze_time('2016-01-02 03:04:05'):
-        with email_app.app_context():
-            assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
+    with email_app.app_context():
+        with freeze_time(decode_time):
+            if expected_result == 'ok':
+                assert decode_password_reset_token(token, data_api_client) == password_reset_token
+            else:
+                assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
 
 def test_decode_password_reset_token_does_not_work_if_password_changed_later_than_token(
@@ -175,7 +187,14 @@ def test_decode_invitation_token_returns_an_error_if_token_invalid(email_app):
         assert decode_invitation_token(token) == {'error': 'token_invalid'}
 
 
-def test_decode_invitation_token_returns_an_error_and_role_if_token_expired(email_app):
+@pytest.mark.parametrize(
+    'decode_time, expected_result', [
+        ('2015-01-02 03:04:05', 'ok'),
+        ('2015-01-09 03:04:05', 'ok'),
+        ('2015-01-09 03:04:06', 'error'),
+    ]
+)
+def test_decode_invitation_token_returns_an_error_and_role_if_token_expired(decode_time, expected_result, email_app):
     with freeze_time('2015-01-02 03:04:05'):
         data = {
             'email_address': 'test-user@email.com',
@@ -184,9 +203,13 @@ def test_decode_invitation_token_returns_an_error_and_role_if_token_expired(emai
             'role': 'supplier'
         }
         token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])
-    with email_app.app_context():
 
-        assert decode_invitation_token(token) == {'error': 'token_expired', 'role': 'supplier'}
+    with freeze_time(decode_time):
+        with email_app.app_context():
+            if expected_result == 'ok':
+                assert decode_invitation_token(token) == data
+            else:
+                assert decode_invitation_token(token) == {'error': 'token_expired', 'role': 'supplier'}
 
 
 def test_decode_invitation_token_adds_the_role_key_to_expired_old_style_buyer_tokens(email_app):
