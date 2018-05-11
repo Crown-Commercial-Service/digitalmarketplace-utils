@@ -3,7 +3,7 @@
 from flask import current_app
 from flask._compat import string_types
 
-from mandrill import Mandrill, Error
+from mandrill import Mandrill
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 
@@ -41,8 +41,10 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
         }
 
         result = mandrill_client.messages.send(message=message, async=True)
-    except Error as e:
-        # Mandrill errors are thrown as exceptions
+    except Exception as e:
+        # Anything that Mandrill throws will be rethrown in a manner consistent with out other email backends.
+        # Note that this isn't just `mandrill.Error` exceptions, because the mandrill client also sometimes throws
+        # things like JSONDecodeError (sad face).
         logger.error("Failed to send an email: {error}", extra={'error': e})
         raise EmailError(e)
     logger.info("Sent {tags} response: id={id}, email={email_hash}",

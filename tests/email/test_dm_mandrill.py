@@ -3,7 +3,6 @@
 
 import mock
 import pytest
-from mandrill import Error
 
 from dmutils.config import init_app
 from dmutils.email.dm_mandrill import send_email
@@ -139,8 +138,8 @@ def test_calls_send_email_with_alternative_reply_to(email_app, mandrill):
 
 def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
     with email_app.app_context():
-
-        mandrill.messages.send.side_effect = Error('this is an error')
+        something_bad = Exception('this is an error')
+        mandrill.messages.send.side_effect = something_bad
 
         with pytest.raises(EmailError) as e:
             send_email(
@@ -154,3 +153,4 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
 
             )
         assert str(e.value) == 'this is an error'
+        assert e.value.__context__ == something_bad
