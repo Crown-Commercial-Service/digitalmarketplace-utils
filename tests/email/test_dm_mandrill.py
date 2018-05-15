@@ -3,6 +3,7 @@
 
 import mock
 import pytest
+import json
 
 from dmutils.config import init_app
 from dmutils.email.dm_mandrill import send_email
@@ -136,10 +137,20 @@ def test_calls_send_email_with_alternative_reply_to(email_app, mandrill):
         mandrill.messages.send.assert_called_once_with(message=expected_call, async=True)
 
 
-def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
+def _get_json_decode_error():
+    try:
+        json.loads('')
+    except json.JSONDecodeError as e:
+        return e
+
+
+@pytest.mark.parametrize("exception", [
+    Exception('this is an error'),  # all exceptions should be caught and turned into an EmailError
+    _get_json_decode_error(),  # but we are particularly interested in knowing that JSON errors are handled
+])
+def test_should_throw_exception_if_mandrill_fails(email_app, mandrill, exception):
     with email_app.app_context():
-        something_bad = Exception('this is an error')
-        mandrill.messages.send.side_effect = something_bad
+        mandrill.messages.send.side_effect = exception
 
         with pytest.raises(EmailError) as e:
             send_email(
@@ -152,5 +163,4 @@ def test_should_throw_exception_if_mandrill_fails(email_app, mandrill):
                 ['password-resets']
 
             )
-        assert str(e.value) == 'this is an error'
-        assert e.value.__context__ == something_bad
+        assert e.value.__context__ == exception
