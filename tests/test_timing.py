@@ -110,16 +110,44 @@ _messages_expected = OrderedDict((
     (
         timing.logged_duration.default_message,
         (
-            AnyStringMatching(r"Block (executed|raised \w+) in \{duration_real\}s of real-time"),
-            AnyStringMatching(r"Block (executed|raised \w+) in [0-9eE.-]+s of real-time"),
+            {
+                'success': "Block executed in {duration_real}s of real-time",
+                'error': AnyStringMatching(r"Block raised \w+ in \{duration_real\}s of real-time"),
+            },
+            {
+                'success': AnyStringMatching(r"Block executed in [0-9eE.-]+s of real-time"),
+                'error': AnyStringMatching(r"Block raised \w+ in [0-9eE.-]+s of real-time"),
+            },
+        ),
+    ),
+    (
+        timing.different_message_for_success_or_error(
+            success_message='Block succeeded in {duration_real}s',
+            error_message='Block raised {exc_info[0]} in {duration_real}s',
+        ),
+        (
+            {
+                'success': "Block succeeded in {duration_real}s",
+                'error': "Block raised {exc_info[0]} in {duration_real}s",
+            },
+            {
+                'success': AnyStringMatching(r"Block succeeded in [0-9eE.-]+s"),
+                'error': AnyStringMatching(r"Block raised \w+ in [0-9eE.-]+s"),
+            },
         ),
     ),
     (
         "{name}: {street} - {duration_process}s",
         (
-            "{name}: {street} - {duration_process}s",
-            AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
-        )
+            {
+                'success': "{name}: {street} - {duration_process}s",
+                'error': "{name}: {street} - {duration_process}s",
+            },
+            {
+                'success': AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
+                'error': AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
+            },
+        ),
     ),
 ))
 
@@ -146,6 +174,8 @@ _parameter_combinations = tuple(product(
         timing.logged_duration.default_condition,
         _duration_real_gt_075,
         _default_and_no_exception,
+        timing.exceeds_slow_external_call_threshold,
+        timing.request_is_sampled
     ),
     (  # raise_exception values
         None,
@@ -174,6 +204,9 @@ def _expect_log(
         (condition is timing.logged_duration.default_condition and is_sampled)
         or (condition is _duration_real_gt_075 and sleep_time >= 0.08)
         or (condition is _default_and_no_exception and is_sampled and raise_exception is None)
+        or (condition is timing.exceeds_slow_external_call_threshold
+            and sleep_time >= timing.SLOW_EXTERNAL_CALL_THRESHOLD)
+        or (condition is timing.request_is_sampled and is_sampled)
         or (condition in (True, None,))
     )
 
@@ -204,7 +237,7 @@ def _expect_log(
                 [  # expected_call_args_list
                     mock.call(
                         log_level,
-                        _messages_expected[message][0],
+                        _messages_expected[message][0].get('error' if raise_exception else 'success'),
                         exc_info=bool(raise_exception),
                         extra={
                             "duration_real": MalleableAny(
@@ -382,7 +415,7 @@ def test_logged_duration_mock_logger(
                     AnySupersetOf({
                         "name": "conftest.foobar",
                         "levelname": logging.getLevelName(log_level),
-                        "message": _messages_expected[message][1],
+                        "message": _messages_expected[message][1].get('error' if raise_exception else 'success'),
                         "duration_real": MalleableAny(
                             # a double-closure here to get around python's weird behaviour when capturing iterated
                             # variables (in this case `sleep_time`)
