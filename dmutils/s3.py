@@ -1,16 +1,24 @@
 from __future__ import absolute_import
-import os
+
 import boto3
 import datetime
-import mimetypes
-import logging
 from dateutil.parser import parse as parse_time
+import logging
+import mimetypes
+import os
+import sys
 
 # a bit of a lie here - retains compatibility with consumers that were importing boto2's S3ResponseError from here. this
 # is the exception boto3 raises in (mostly) the same situations.
 from botocore.exceptions import ClientError as S3ResponseError
 
 from .formats import DATETIME_FORMAT
+from .timing import (
+    different_message_for_success_or_error,
+    exceeds_slow_external_call_threshold,
+    logged_duration,
+    request_is_sampled,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,22 +64,28 @@ class S3(object):
                 # to strip non-ascii chars..
                 str(download_filename).encode("ascii", errors="ignore").decode(),
             )
-        obj.put(
-            ACL=acl,
-            Body=file_,
-            ContentType=self._get_mimetype(path),
-            # using a custom "timestamp" field allows us to manually override it if necessary
-            Metadata={"timestamp": timestamp.strftime(DATETIME_FORMAT)},
-            **extra_kwargs
+
+        log_duration_message = different_message_for_success_or_error(
+            success_message='Uploaded file {filepath} of size {filesize} and acl {fileacl} in {duration_real}s',
+            error_message='Exception during file upload ({filepath} of size {filesize} and acl {fileacl}) '
+                          'with {exc_info[0]} after {duration_real}s'
         )
-        logger.info(
-            "Uploaded file {filepath} of size {filesize} with acl {fileacl}",
-            extra={
+
+        with logged_duration(message=log_duration_message, condition=None) as log_context:
+            log_context.update({
                 "filepath": path,
                 "filesize": filesize,
                 "fileacl": acl,
-            },
-        )
+            })
+
+            obj.put(
+                ACL=acl,
+                Body=file_,
+                ContentType=self._get_mimetype(path),
+                # using a custom "timestamp" field allows us to manually override it if necessary
+                Metadata={"timestamp": timestamp.strftime(DATETIME_FORMAT)},
+                **extra_kwargs
+            )
 
         return self._format_key(obj)
 
@@ -91,18 +105,24 @@ class S3(object):
             raise ValueError('Target key already exists in S3.')
 
         extra_args = {'ACL': acl} if acl else {}
-        self._bucket.copy(CopySource={"Bucket": src_bucket, "Key": src_key}, Key=target_key, ExtraArgs=extra_args)
 
-        logger.info(
-            "Created a copy of {src_bucket}/{src_key} at {target_bucket}/{target_key}{set_acl}",
-            extra={
+        log_duration_message = different_message_for_success_or_error(
+            success_message="Copied {src_bucket}/{src_key} to {target_bucket}/{target_key}{set_acl} in "
+                            "{duration_real}s",
+            error_message="Failed to copy key ({src_bucket}/{src_key} to "
+                          "{target_bucket}/{target_key}{set_acl}) with {exc_info[0].__name__} after "
+                          "{duration_real}s"
+        )
+        with logged_duration(message=log_duration_message, condition=None) as log_context:
+            log_context.update({
                 "src_bucket": src_bucket,
                 "src_key": src_key,
                 "target_bucket": self.bucket_name,
                 "target_key": target_key,
                 "set_acl": f" with '{acl} ACL" if acl else ""
-            },
-        )
+            })
+
+            self._bucket.copy(CopySource={"Bucket": src_bucket, "Key": src_key}, Key=target_key, ExtraArgs=extra_args)
 
         return self._format_key(self._bucket.Object(target_key))
 
@@ -165,11 +185,32 @@ class S3(object):
         :return: list
         """
         prefix = self._normalize_path(prefix)
-        return sorted((
-            self._format_key(obj_s, with_timestamp=load_timestamps)
-            for obj_s in self._bucket.objects.filter(Prefix=prefix, Delimiter=delimiter)
-            if not (obj_s.size == 0 and obj_s.key[-1] == '/')
-        ), key=lambda obj_s: (obj_s.get("last_modified") or "", obj_s["path"],))
+
+        def slow_call_or_sampled_request_or_error(log_context):
+            return (
+                exceeds_slow_external_call_threshold(log_context)
+                or request_is_sampled(log_context) or
+                sys.exc_info()[0]
+            )
+
+        filtered_objects = self._bucket.objects.filter(Prefix=prefix, Delimiter=delimiter)
+
+        with logged_duration(
+            message=different_message_for_success_or_error(
+                success_message='Retrieved objects from S3 in {duration_real}s',
+                error_message='Failed to retrieve objects from S3 with {exc_info[0].__name__} '
+                              'after {duration_real}s'
+            ),
+            condition=slow_call_or_sampled_request_or_error
+        ):
+            # Consume the `filtered_objects` generator to memory and prepare for sorting
+            objects_for_sorting = [
+                self._format_key(obj_s, with_timestamp=load_timestamps)
+                for obj_s in filtered_objects
+                if not (obj_s.size == 0 and obj_s.key[-1] == '/')
+            ]
+
+        return sorted(objects_for_sorting, key=lambda obj_s: (obj_s.get("last_modified") or "", obj_s["path"]))
 
     def _format_key(self, obj, with_timestamp=True):
         """

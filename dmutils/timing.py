@@ -7,6 +7,30 @@ from flask import request
 from flask.ctx import has_request_context
 
 
+SLOW_EXTERNAL_CALL_THRESHOLD = 0.25
+
+
+# General public conditions that may be useful
+def exceeds_slow_external_call_threshold(log_context):
+    """A public condition that will return True if the duration is above the threshold we have defined as acceptable for
+    calls to external services (e.g. Notify, Mailchimp, S3, etc)."""
+    return log_context['duration_real'] > SLOW_EXTERNAL_CALL_THRESHOLD
+
+
+def request_is_sampled(log_context):
+    """A public condition that returns True if the request has the X-B3-Sampled flag set in its headers. While this is
+    the default condition for logged_duration, exposing it publically allows it to be easily combined with other
+    conditions."""
+    return has_request_context() and getattr(request, "is_sampled", False)
+# End public conditions ----------------------
+
+
+def different_message_for_success_or_error(success_message, error_message):
+    """Can be passed into `logged_duration` as `message=different_message_for_success_or_error(x, y)` in order to
+    generate different log messages depending on whether the block completed successfully or raised an exception."""
+    return lambda _: success_message if sys.exc_info()[0] is None else error_message
+
+
 def _logged_duration_default_message(log_context):
     return "Block {} in {{duration_real}}s of real-time".format(
         "executed" if sys.exc_info()[0] is None else "raised {}".format(sys.exc_info()[0].__name__)
