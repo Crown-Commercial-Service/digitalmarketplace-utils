@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import inspect
 import logging
 import sys
 import time
@@ -8,27 +9,6 @@ from flask.ctx import has_request_context
 
 
 SLOW_EXTERNAL_CALL_THRESHOLD = 0.25
-
-
-# General public conditions that may be useful
-def exceeds_slow_external_call_threshold(log_context):
-    """A public condition that will return True if the duration is above the threshold we have defined as acceptable for
-    calls to external services (e.g. Notify, Mailchimp, S3, etc)."""
-    return log_context['duration_real'] > SLOW_EXTERNAL_CALL_THRESHOLD
-
-
-def request_is_sampled(log_context):
-    """A public condition that returns True if the request has the X-B3-Sampled flag set in its headers. While this is
-    the default condition for logged_duration, exposing it publically allows it to be easily combined with other
-    conditions."""
-    return has_request_context() and getattr(request, "is_sampled", False)
-# End public conditions ----------------------
-
-
-def different_message_for_success_or_error(success_message, error_message):
-    """Can be passed into `logged_duration` as `message=different_message_for_success_or_error(x, y)` in order to
-    generate different log messages depending on whether the block completed successfully or raised an exception."""
-    return lambda _: success_message if sys.exc_info()[0] is None else error_message
 
 
 def _logged_duration_default_message(log_context):
@@ -118,3 +98,61 @@ logged_duration.default_message = _logged_duration_default_message
 logged_duration.default_condition = _logged_duration_default_condition
 # exposing this allows a caller to specify default_logger.getChild(...) as their logger
 logged_duration.default_logger = _logged_duration_default_logger
+
+
+def exceeds_slow_external_call_threshold(log_context):
+    """A public condition that will return True if the duration is above the threshold we have defined as acceptable for
+    calls to external services (e.g. Notify, Mailchimp, S3, etc)."""
+    return log_context['duration_real'] > SLOW_EXTERNAL_CALL_THRESHOLD
+
+
+def request_is_sampled(log_context):
+    """A public condition that returns True if the request has the X-B3-Sampled flag set in its headers. While this is
+    the default condition for logged_duration, exposing it publically allows it to be easily combined with other
+    conditions."""
+    return has_request_context() and getattr(request, "is_sampled", False)
+
+
+def different_message_for_success_or_error(success_message, error_message):
+    """Can be passed into `logged_duration` as `message=different_message_for_success_or_error(x, y)` in order to
+    generate different log messages depending on whether the block completed successfully or raised an exception."""
+    return lambda _: success_message if sys.exc_info()[0] is None else error_message
+
+
+def request_context_and_any_of_slow_call_or_sampled_request(log_context):
+    return has_request_context() and (
+        exceeds_slow_external_call_threshold(log_context) or request_is_sampled(log_context)
+    )
+
+
+def logged_duration_for_external_request(service, description=None, success_message=None, error_message=None,
+                                         logger=None):
+    """A default implementation of `logged_duration` to wrap around calls to external services (such as Notify,
+    Mailchimp, S3, ...) to generate log messages on these events in a standardised manner.
+
+    This implementation will not log durations outside of a Flask request context (e.g. when running scripts).
+
+    Use to wrap a call to a third-party service like so [note the final () call which accepts additional args]:
+    >>> with logged_duration_for_external_request('Notify'):
+    >>>     notify_client.send_email('user@email.com')
+    """
+    if not description:
+        # Returns the name of the calling function
+        description = inspect.stack()[1].function
+
+    success_message = (
+        success_message
+        if success_message else
+        f'Call to {service} ({description}) executed in {{duration_real}}s'
+    )
+    error_message = (
+        error_message
+        if error_message else
+        f'Exception from call to {service} ({description}) after {{duration_real}}s'
+    )
+
+    return logged_duration(
+        message=different_message_for_success_or_error(success_message=success_message, error_message=error_message),
+        condition=request_context_and_any_of_slow_call_or_sampled_request,
+        **{'logger': logger} if logger else {}
+    )

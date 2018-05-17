@@ -6,9 +6,10 @@ from notifications_python_client.errors import HTTPError
 
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
+from dmutils.timing import logged_duration_for_external_request as log_external_request
 
 
-class DMNotifyClient(object):
+class DMNotifyClient:
     """Digital Marketplace wrapper around the Notify python client."""
 
     _client_class = NotificationsAPIClient
@@ -40,11 +41,13 @@ class DMNotifyClient(object):
 
     def get_all_notifications(self, **kwargs):
         """Wrapper for notifications_python_client.notifications.NotificationsAPIClient::get_all_notifications"""
-        return self.client.get_all_notifications(**kwargs)['notifications']
+        with log_external_request(service='Notify'):
+            return self.client.get_all_notifications(**kwargs)['notifications']
 
     def get_delivered_notifications(self, **kwargs):
         """Wrapper for notifications_python_client.notifications.NotificationsAPIClient::get_all_notifications"""
-        return self.get_all_notifications(status='delivered', **kwargs)
+        with log_external_request(service='Notify'):
+            return self.get_all_notifications(status='delivered', **kwargs)
 
     def get_delivered_references(self, invalidate_cache=False):
         """Get the references of all notifications that have already been delivered."""
@@ -116,33 +119,30 @@ class DMNotifyClient(object):
                 ),
             )
             return
-        try:
-            # NOTE how the potential replacement of the email address happens *after* the has_been_sent check and
-            # reference generation
-            final_email_address = (
-                self._redirect_domains_to_address and self._redirect_domains_to_address.get(
-                    # splitting at rightmost @ should reliably give us the domain
-                    email_address.rsplit("@", 1)[-1].lower()
-                )
-            ) or email_address
 
-            response = self.client.send_email_notification(
-                final_email_address,
-                template_id,
-                personalisation=personalisation,
-                reference=reference,
+        # NOTE how the potential replacement of the email address happens *after* the has_been_sent check and
+        # reference generation
+        final_email_address = (
+            self._redirect_domains_to_address
+            and self._redirect_domains_to_address.get(
+                # splitting at rightmost @ should reliably give us the domain
+                email_address.rsplit("@", 1)[-1].lower()
             )
+        ) or email_address
+
+        try:
+            with log_external_request(service='Notify'):
+                response = self.client.send_email_notification(
+                    final_email_address,
+                    template_id,
+                    personalisation=personalisation,
+                    reference=reference,
+                )
+
         except HTTPError as e:
             self.logger.error(self.get_error_message(hash_string(email_address), e))
             raise EmailError(str(e))
+
         self._update_cache(reference)
-        self.logger.info(
-            "Sent email {reference} to {email_address} (id: {notify_id}, template: {template_id}) through Notify",
-            extra=dict(
-                email_address=hash_string(email_address),
-                notify_id=response['id'],
-                template_id=template_id,
-                reference=reference,
-            ),
-        )
+
         return response
