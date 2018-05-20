@@ -46,8 +46,7 @@ class DMNotifyClient:
 
     def get_delivered_notifications(self, **kwargs):
         """Wrapper for notifications_python_client.notifications.NotificationsAPIClient::get_all_notifications"""
-        with log_external_request(service='Notify'):
-            return self.get_all_notifications(status='delivered', **kwargs)
+        return self.get_all_notifications(status='delivered', **kwargs)
 
     def get_delivered_references(self, invalidate_cache=False):
         """Get the references of all notifications that have already been delivered."""

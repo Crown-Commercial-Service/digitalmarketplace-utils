@@ -1,8 +1,8 @@
 from dmutils import timing
+from helpers import MalleableAny, AnySupersetOf, AnyStringMatching
 
 from collections import OrderedDict
 from contextlib import contextmanager
-from functools import lru_cache
 from itertools import chain, product
 import json
 import logging
@@ -15,41 +15,6 @@ import time
 
 from flask import request
 import pytest
-import six
-
-
-class MalleableAny:
-    def __init__(self, condition):
-        self._condition = condition
-
-    def __eq__(self, other):
-        return self._condition(other)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._condition})"
-
-    def __hash__(self):
-        return None
-
-
-class AnySupersetOf(MalleableAny):
-    def __init__(self, subset_dict):
-        self._subset_dict = subset_dict
-        super().__init__(lambda other: self._subset_dict == {k: v for k, v in other.items() if k in self._subset_dict})
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._subset_dict})"
-
-
-class AnyStringMatching(MalleableAny):
-    _cached_re_compile = staticmethod(lru_cache(maxsize=32)(re.compile))
-
-    def __init__(self, *args, **kwargs):
-        self._regex = self._cached_re_compile(*args, **kwargs)
-        super().__init__(lambda other: isinstance(other, six.string_types) and self._regex.match(other))
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._regex})"
 
 
 @contextmanager

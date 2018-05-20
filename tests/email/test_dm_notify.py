@@ -10,6 +10,7 @@ from itertools import product
 import pytest
 
 from dmutils.email.dm_notify import DMNotifyClient
+from helpers import PatchExternalServiceLogConditionMixin, assert_external_service_log_entry
 
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -72,13 +73,15 @@ def notify_send_email():
     return example_response
 
 
-class TestDMNotifyClient(object):
+class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
     """Tests for the Digital Marketplace Notify API Client."""
 
     client_class_str = 'notifications_python_client.NotificationsAPIClient'
 
     def setup(self):
         """Set up some standard attributes for tests."""
+        super().setup()
+
         self.email_address = 'example@example.com'
         self.template_id = 'my-cool-example-template'
         self.personalisation = OrderedDict([
@@ -105,6 +108,7 @@ class TestDMNotifyClient(object):
         """Test the `send_email` function with data that should pass and run without exception."""
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
             email_mock.return_value = notify_send_email
+
             dm_notify_client.send_email(self.email_address, self.template_id)
 
             email_mock.assert_called_with(
@@ -168,6 +172,7 @@ class TestDMNotifyClient(object):
 
             with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
                 email_mock.return_value = notify_send_email
+
                 dm_notify_client.send_email(self.email_address, self.template_id)
 
                 email_mock.assert_called_with(
@@ -181,6 +186,7 @@ class TestDMNotifyClient(object):
     def test_send_email_with_external_reference(self, dm_notify_client, notify_send_email):
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
             email_mock.return_value = notify_send_email
+
             dm_notify_client.send_email(self.email_address, self.template_id, reference='abc')
 
             email_mock.assert_called_with(
@@ -195,11 +201,13 @@ class TestDMNotifyClient(object):
         personalisation = {u'f\u00a3oo': u'bar\u00a3'}
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
             notify_send_email.update(personalisation=personalisation)
+
             dm_notify_client.send_email(
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation
             )
+
             email_mock.assert_called_with(
                 self.email_address,
                 self.template_id,
@@ -212,11 +220,13 @@ class TestDMNotifyClient(object):
         personalisation = {u'f\u00a3oo': u'bar\u00a3'}
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
             notify_send_email.update(personalisation=personalisation)
+
             dm_notify_client.send_email(
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation
             )
+
             email_mock.assert_called_with(
                 self.email_address,
                 self.template_id,
@@ -239,7 +249,9 @@ class TestDMNotifyClient(object):
         """The cache shouldn't be touched until we pass `allow_resend=False` to `send_email`."""
         with mock.patch(self.client_class_str + '.' + 'send_email_notification'):
             assert dm_notify_client._sent_references_cache is None
+
             dm_notify_client.send_email(self.email_address, self.template_id)
+
             assert dm_notify_client._sent_references_cache is None
 
     def test_cache_instantiated_without_allow_resend(
@@ -255,6 +267,7 @@ class TestDMNotifyClient(object):
                 get_all_notifications_mock.return_value = notify_get_all_notifications
 
                 assert dm_notify_client._sent_references_cache is None
+
                 dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=False)
 
                 get_all_notifications_mock.assert_called_once_with(status='delivered')
@@ -304,6 +317,7 @@ class TestDMNotifyClient(object):
             with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
                 send_email_notification_mock.return_value = {'id': 'example-id'}
                 get_all_notifications_mock.return_value = {"notifications": []}
+
                 dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=False)
                 dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=False)
 
@@ -329,6 +343,9 @@ class TestDMNotifyClient(object):
             with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
                 send_email_notification_mock.return_value = {'id': 'example-id'}
                 get_all_notifications_mock.return_value = {"notifications": []}
+
+                # First call to send_email instantiates the cache with calls to `get_all_notifications`
+                # and `get_delivered_notifications`, hence 2 extra log entries.
                 dm_notify_client.send_email("fatchuck@example.gov.uk", self.template_id, allow_resend=False)
                 dm_notify_client.send_email("cheek.chops@example.gov.uk", self.template_id, allow_resend=False)
 
@@ -346,3 +363,27 @@ class TestDMNotifyClient(object):
                         reference='Q_0wRa57Pj4BEIWGop9gOLoxhkCsVMsE2UOZeOnZyas='
                     ),
                 ]
+
+    def test_get_all_notifications_logs_for_external_service_calls(self, dm_notify_client):
+        with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
+            get_all_notifications_mock.return_value = {"notifications": []}
+
+            with assert_external_service_log_entry(service='Notify', description='get_all_notifications'):
+                dm_notify_client.get_all_notifications()
+
+    def test_send_email_writes_logs_for_external_service_calls(self, dm_notify_client):
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
+            with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
+                send_email_notification_mock.return_value = {'id': 'example-id'}
+                get_all_notifications_mock.return_value = {"notifications": []}
+
+                with assert_external_service_log_entry(service='Notify', description='send_email'):
+                    dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=True)
+
+                with assert_external_service_log_entry(service='Notify', description='send_email', count=2):
+                    dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=True)
+                    dm_notify_client.send_email(self.email_address, self.template_id, allow_resend=True)
+
+                with assert_external_service_log_entry(service='Notify', description='send_email', count=1):
+                    dm_notify_client.send_email(self.email_address + 'foo', self.template_id, allow_resend=False)
+                    dm_notify_client.send_email(self.email_address + 'foo', self.template_id, allow_resend=False)
