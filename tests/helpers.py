@@ -1,12 +1,10 @@
 from contextlib import contextmanager
 from datetime import datetime
-from functools import lru_cache
 from io import BytesIO
-import re
-import six
 
 import mock
 from testfixtures import logcapture
+from dmtestutils.comparisons import AnyStringMatching
 
 
 class IsDatetime(object):
@@ -28,40 +26,6 @@ class MockFile(BytesIO):
     def filename(self):
         # weird flask property
         return self._filename
-
-
-class MalleableAny:
-    def __init__(self, condition):
-        self._condition = condition
-
-    def __eq__(self, other):
-        return self._condition(other)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._condition})"
-
-    def __hash__(self):
-        return None
-
-
-class AnySupersetOf(MalleableAny):
-    def __init__(self, subset_dict):
-        self._subset_dict = subset_dict
-        super().__init__(lambda other: self._subset_dict == {k: v for k, v in other.items() if k in self._subset_dict})
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._subset_dict})"
-
-
-class AnyStringMatching(MalleableAny):
-    _cached_re_compile = staticmethod(lru_cache(maxsize=32)(re.compile))
-
-    def __init__(self, *args, **kwargs):
-        self._regex = self._cached_re_compile(*args, **kwargs)
-        super().__init__(lambda other: isinstance(other, six.string_types) and self._regex.match(other))
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._regex})"
 
 
 @contextmanager
@@ -96,8 +60,10 @@ def assert_log_entry(modules, message, count=1):
 
 def assert_external_service_log_entry(service='\w+', description='.+', successful_call=True, extra_modules=None,
                                       count=1):
-    """A subclass of AssertLogEntry specialised to inspect for the standardised message that is logged when
-    making calls to backing services (Notify, Mandrill, S3, etc)."""
+    """An extension of assert_log_entry specialised to inspect for the standardised message that is logged when
+    making calls to backing services (Notify, Mandrill, S3, etc).
+
+    `service` and `description` both take regex patterns for matching values."""
     if successful_call:
         expected_message = r'Call to {service} \({description}\) executed in {{duration_real}}s'
     else:
@@ -113,6 +79,12 @@ def assert_external_service_log_entry(service='\w+', description='.+', successfu
 
 
 class PatchExternalServiceLogConditionMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.log_condition_patch = None
+        self.log_condition = None
+
     def setup(self):
         self.log_condition_patch = mock.patch('dmutils.timing.request_context_and_any_of_slow_call_or_sampled_request')
         self.log_condition = self.log_condition_patch.start()

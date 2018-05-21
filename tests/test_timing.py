@@ -1,5 +1,5 @@
 from dmutils import timing
-from helpers import MalleableAny, AnySupersetOf, AnyStringMatching
+from dmtestutils.comparisons import RestrictedAny, AnySupersetOf, AnyStringMatching
 
 from collections import OrderedDict
 from contextlib import contextmanager
@@ -205,7 +205,7 @@ def _expect_log(
                         _messages_expected[message][0].get('error' if raise_exception else 'success'),
                         exc_info=bool(raise_exception),
                         extra={
-                            "duration_real": MalleableAny(
+                            "duration_real": RestrictedAny(
                                 # a double-closure here to get around python's weird behaviour when capturing iterated
                                 # variables (in this case `sleep_time`)
                                 (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
@@ -265,8 +265,8 @@ def _expect_log(
                     extra={
                         "key": "D#",
                         "keyes": "House Of",
-                        "duration_real": MalleableAny(lambda value: 0.48 < value < 0.6),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_real": RestrictedAny(lambda value: 0.48 < value < 0.6),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                     },
                 )],
             ),
@@ -293,8 +293,8 @@ def _expect_log(
                     "The obedient {item}s feeding in {exc_info}",
                     exc_info=True,
                     extra={
-                        "duration_real": MalleableAny(lambda value: 0.18 < value < 0.35),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_real": RestrictedAny(lambda value: 0.18 < value < 0.35),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                     },
                 )],
             ),
@@ -381,12 +381,12 @@ def test_logged_duration_mock_logger(
                         "name": "conftest.foobar",
                         "levelname": logging.getLevelName(log_level),
                         "message": _messages_expected[message][1].get('error' if raise_exception else 'success'),
-                        "duration_real": MalleableAny(
+                        "duration_real": RestrictedAny(
                             # a double-closure here to get around python's weird behaviour when capturing iterated
                             # variables (in this case `sleep_time`)
                             (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
                         ),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                         **(inject_context or {}),
                         **(
                             {
@@ -445,8 +445,8 @@ def test_logged_duration_mock_logger(
                     "message": AnyStringMatching(r"Touched the obedient D#s for [0-9Ee.-]+s"),
                     "levelname": "WARNING",
                     "key": "D#",
-                    "duration_real": MalleableAny(lambda value: 0.48 < value < 0.6),
-                    "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                    "duration_real": RestrictedAny(lambda value: 0.48 < value < 0.6),
+                    "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                     "name": "conftest.foobar",
                 }),),
             ),
@@ -483,8 +483,8 @@ def test_logged_duration_mock_logger(
                             r".*ValueError.*",
                             flags=re.DOTALL,
                         ),
-                        "duration_real": MalleableAny(lambda value: 0.18 < value < 0.35),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_real": RestrictedAny(lambda value: 0.18 < value < 0.35),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                         "name": "conftest.foobar",
                     }),
                 ),
