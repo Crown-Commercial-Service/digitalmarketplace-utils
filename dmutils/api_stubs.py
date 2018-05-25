@@ -66,7 +66,9 @@ def framework(framework_id=1,
               applications_close_at=dt(2000, 1, 3),
               intention_to_award_at=dt(2000, 1, 4),
               framework_live_at=dt(2000, 1, 5),
-              framework_expires_at=dt(2000, 1, 6)):
+              framework_expires_at=dt(2000, 1, 6),
+              has_direct_award=True,
+              has_further_competition=False):
     if name:
         pass
     elif slug.startswith('g-cloud'):
@@ -117,6 +119,8 @@ def framework(framework_id=1,
             'intentionToAwardAtUTC': format_datetime(intention_to_award_at),
             'frameworkLiveAtUTC': format_datetime(framework_live_at),
             'frameworkExpiresAtUTC': format_datetime(framework_expires_at),
+            "hasDirectAward": has_direct_award,
+            "hasFurtherCompetition": has_further_competition,
         }
     }
 

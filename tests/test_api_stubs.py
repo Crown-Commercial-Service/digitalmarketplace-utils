@@ -103,6 +103,8 @@ class TestFramework:
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
+                'hasDirectAward': True,
+                'hasFurtherCompetition': False,
             }
         }
 
@@ -128,6 +130,8 @@ class TestFramework:
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
+                'hasDirectAward': True,
+                'hasFurtherCompetition': False,
             }
         }
 
@@ -153,6 +157,8 @@ class TestFramework:
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
+                'hasDirectAward': True,
+                'hasFurtherCompetition': False,
             }
         }
 
@@ -178,6 +184,8 @@ class TestFramework:
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
+                'hasDirectAward': True,
+                'hasFurtherCompetition': False,
             }
         }
 
@@ -207,6 +215,34 @@ class TestFramework:
                 'intentionToAwardAtUTC': '2010-04-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2010-05-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2010-06-06T00:00:00.000000Z',
+                'hasDirectAward': True,
+                'hasFurtherCompetition': False,
+            }
+        }
+
+    def test_further_competition_vs_direct_award(self):
+        assert api_stubs.framework(has_direct_award=False, has_further_competition=True) == {
+            "frameworks": {
+                "id": 1,
+                "name": "G-Cloud 7",
+                "slug": "g-cloud-7",
+                "framework": "g-cloud",
+                "status": "open",
+                "clarificationQuestionsOpen": True,
+                "lots": [],
+                "allowDeclarationReuse": True,
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(),
+                "countersignerName": None,
+                "frameworkAgreementVersion": "RM1557x",
+                "variations": {},
+                'clarificationsCloseAtUTC': '2000-01-01T00:00:00.000000Z',
+                'clarificationsPublishAtUTC': '2000-01-02T00:00:00.000000Z',
+                'applicationsCloseAtUTC': '2000-01-03T00:00:00.000000Z',
+                'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
+                'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
+                'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
+                'hasDirectAward': False,
+                'hasFurtherCompetition': True,
             }
         }
 
