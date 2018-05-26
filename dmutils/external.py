@@ -10,8 +10,8 @@ def index():
     raise NotImplementedError()
 
 
-@external.route('/<framework_framework>/opportunities/<brief_id>')
-def get_brief_by_id(framework_framework, brief_id):
+@external.route('/<framework_family>/opportunities/<brief_id>')
+def get_brief_by_id(framework_family, brief_id):
     raise NotImplementedError()
 
 

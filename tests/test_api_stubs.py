@@ -274,7 +274,7 @@ def test_brief():
         framework_slug='a-framework-slug',
         lot_slug='a-lot-slug', user_id=234,
         framework_name='A Framework Name',
-        framework_framework='a framework framework') \
+        framework_family='a framework framework') \
         == {
         "briefs": {
             "id": 1234,
