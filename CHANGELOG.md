@@ -2,9 +2,29 @@
 
 Records breaking changes from major version bumps
 
+## 37.0.0
+
+PR [#398](https://github.com/alphagov/digitalmarketplace-utils/pull/398)
+
+This bump introduces a new method to format errors from Flask-WTForms in a consistent way. While this is not technically a breaking change, we should still make changes when this is pulled in to make sure all errors from WTForms are passed into templates in a consistent way. Where we might have referenced errors in templates either from the form directly on `form.errors`, or passed them in as `form_errors`, we should now pass **all** errors into the templating engine as an `errors` variable.
+
+Old code
+```python
+errors = {
+    key: {'question': form[key].label.text, 'input_name': key, 'message': form[key].errors[0]}
+    for key, value in form.errors.items()
+}
+return render_template('blah', form_errors=errors)
+```
+
+New code:
+```python
+return render_template('blah', errors=get_errors_from_wtform(form))
+```
+
 ## 36.0.0
 
-PR [#?376](https://github.com/alphagov/digitalmarketplace-utils/pull/376)
+PR [#376](https://github.com/alphagov/digitalmarketplace-utils/pull/376)
 
 DMMailChimpClient's `get_email_addresses_from_list` method is now a generator and has a reduced default page size of 100 (down from 1000) in an effort to reduce timeouts with the Mailchimp servers. Any code that uses email addresses from `get_email_addresses_from_list` will need to be updated to take account of the fact it returns a generator object rather than a list - mainly, where the result object is iterated over multiple times, this will fail without refactoring or converting the generator to a list object first (though this should be avoided to reap the most benefit from it being a generator).
 
