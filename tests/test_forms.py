@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from itertools import product
 
 from flask_wtf import FlaskForm
@@ -5,27 +6,37 @@ from wtforms.validators import DataRequired, Length, Optional
 from werkzeug.datastructures import ImmutableMultiDict
 import pytest
 
-from dmutils.forms import EmailField, remove_csrf_token
+from dmutils.forms import EmailField, StringField, remove_csrf_token, get_errors_from_wtform
 
 
 class EmailFieldFormatTestForm(FlaskForm):
     test_email = EmailField("An Electronic Mailing Address")
 
 
+class MultipleFieldFormatTestForm(FlaskForm):
+    test_one = EmailField("Email address")
+    test_two = StringField("Test Two", validators=[DataRequired(message="Enter text.")])
+    test_three = StringField("Test Three", validators=[Length(min=100, max=100, message="Bad length.")])
+    test_four = StringField("Test Four", validators=[DataRequired(message="Enter text.")])
+
+
+email_address_parametrization = ("email_address", (
+    "oiufewnew",
+    "",
+    None,
+    "cissy@edy@how.th",
+    "@major.tweedy",
+    "ned.l?mbert@x.",
+    "bu ck@41.com",
+    "malachi@.o.flynn.net",
+    "@",
+    "first.w@t.ch.",
+    "second.w@t..h",
+))
+
+
 class TestEmailFieldFormat(object):
-    @pytest.mark.parametrize("email_address", (
-        "oiufewnew",
-        "",
-        None,
-        "cissy@edy@how.th",
-        "@major.tweedy",
-        "ned.l?mbert@x.",
-        "bu ck@41.com",
-        "malachi@.o.flynn.net",
-        "@",
-        "first.w@t.ch.",
-        "second.w@t..h",
-    ))
+    @pytest.mark.parametrize(*email_address_parametrization)
     def test_invalid_emails(self, app, email_address):
         with app.app_context():
             form = EmailFieldFormatTestForm(
@@ -158,3 +169,62 @@ class TestRemoveCsrfToken:
         data = {'key': 'value', 'key2': 'value2'}
         cleaned_data = remove_csrf_token(data)
         assert cleaned_data == data
+
+
+class TestFormatWTFormErrors:
+    def test_empty_list_if_no_errors(self, app):
+        with app.app_context():
+            form = EmailFieldFormatTestForm(
+                formdata=ImmutableMultiDict((
+                    ("test_email", 'test@email.com',),
+                )),
+                meta={'csrf': False},
+            )
+
+            assert form.validate() is True
+            assert not form.errors
+            assert get_errors_from_wtform(form) == OrderedDict()
+
+    @pytest.mark.parametrize(*email_address_parametrization)
+    def test_errors_are_formatted(self, app, email_address):
+        with app.app_context():
+            form = EmailFieldFormatTestForm(
+                formdata=ImmutableMultiDict((
+                    ("test_email", email_address,),
+                )),
+                meta={'csrf': False},
+            )
+
+            assert form.validate() is False
+            assert form.errors
+            assert get_errors_from_wtform(form) == OrderedDict([(
+                'test_email',
+                {
+                    'input_name': 'test_email',
+                    'question': "An Electronic Mailing Address",
+                    'message': 'Please enter a valid email address.'
+                }
+            )])
+
+    def test_errors_retain_ordering(self, app):
+        with app.app_context():
+            form = MultipleFieldFormatTestForm(
+                formdata=ImmutableMultiDict((
+                    ('test_email', 'my bad email',),
+                    ('test_two', 'some text, good'),
+                    ('test_three', 'not enough text'),
+                    ('test_four', ''),
+                )),
+                meta={'csrf': False},
+            )
+
+            assert form.validate() is False
+            assert form.errors
+            assert get_errors_from_wtform(form) == OrderedDict(
+                [
+                    ('test_one', {'input_name': 'test_one', 'question': "Email address",
+                                  'message': 'Please enter a valid email address.'}),
+                    ('test_three', {'input_name': 'test_three', 'question': "Test Three", 'message': 'Bad length.'}),
+                    ('test_four', {'input_name': 'test_four', 'question': "Test Four", 'message': 'Enter text.'}),
+                ]
+            )
