@@ -1,8 +1,8 @@
 from dmutils import timing
+from dmtestutils.comparisons import RestrictedAny, AnySupersetOf, AnyStringMatching
 
 from collections import OrderedDict
 from contextlib import contextmanager
-from functools import lru_cache
 from itertools import chain, product
 import json
 import logging
@@ -15,41 +15,6 @@ import time
 
 from flask import request
 import pytest
-import six
-
-
-class MalleableAny:
-    def __init__(self, condition):
-        self._condition = condition
-
-    def __eq__(self, other):
-        return self._condition(other)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._condition})"
-
-    def __hash__(self):
-        return None
-
-
-class AnySupersetOf(MalleableAny):
-    def __init__(self, subset_dict):
-        self._subset_dict = subset_dict
-        super().__init__(lambda other: self._subset_dict == {k: v for k, v in other.items() if k in self._subset_dict})
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._subset_dict})"
-
-
-class AnyStringMatching(MalleableAny):
-    _cached_re_compile = staticmethod(lru_cache(maxsize=32)(re.compile))
-
-    def __init__(self, *args, **kwargs):
-        self._regex = self._cached_re_compile(*args, **kwargs)
-        super().__init__(lambda other: isinstance(other, six.string_types) and self._regex.match(other))
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._regex})"
 
 
 @contextmanager
@@ -240,7 +205,7 @@ def _expect_log(
                         _messages_expected[message][0].get('error' if raise_exception else 'success'),
                         exc_info=bool(raise_exception),
                         extra={
-                            "duration_real": MalleableAny(
+                            "duration_real": RestrictedAny(
                                 # a double-closure here to get around python's weird behaviour when capturing iterated
                                 # variables (in this case `sleep_time`)
                                 (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
@@ -300,8 +265,8 @@ def _expect_log(
                     extra={
                         "key": "D#",
                         "keyes": "House Of",
-                        "duration_real": MalleableAny(lambda value: 0.48 < value < 0.6),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_real": RestrictedAny(lambda value: 0.48 < value < 0.6),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                     },
                 )],
             ),
@@ -328,8 +293,8 @@ def _expect_log(
                     "The obedient {item}s feeding in {exc_info}",
                     exc_info=True,
                     extra={
-                        "duration_real": MalleableAny(lambda value: 0.18 < value < 0.35),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_real": RestrictedAny(lambda value: 0.18 < value < 0.35),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                     },
                 )],
             ),
@@ -416,12 +381,12 @@ def test_logged_duration_mock_logger(
                         "name": "conftest.foobar",
                         "levelname": logging.getLevelName(log_level),
                         "message": _messages_expected[message][1].get('error' if raise_exception else 'success'),
-                        "duration_real": MalleableAny(
+                        "duration_real": RestrictedAny(
                             # a double-closure here to get around python's weird behaviour when capturing iterated
                             # variables (in this case `sleep_time`)
                             (lambda st: lambda val: st * 0.95 < val < st * 1.5)(sleep_time)
                         ),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                         **(inject_context or {}),
                         **(
                             {
@@ -480,8 +445,8 @@ def test_logged_duration_mock_logger(
                     "message": AnyStringMatching(r"Touched the obedient D#s for [0-9Ee.-]+s"),
                     "levelname": "WARNING",
                     "key": "D#",
-                    "duration_real": MalleableAny(lambda value: 0.48 < value < 0.6),
-                    "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                    "duration_real": RestrictedAny(lambda value: 0.48 < value < 0.6),
+                    "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                     "name": "conftest.foobar",
                 }),),
             ),
@@ -518,8 +483,8 @@ def test_logged_duration_mock_logger(
                             r".*ValueError.*",
                             flags=re.DOTALL,
                         ),
-                        "duration_real": MalleableAny(lambda value: 0.18 < value < 0.35),
-                        "duration_process": MalleableAny(lambda value: isinstance(value, Number)),
+                        "duration_real": RestrictedAny(lambda value: 0.18 < value < 0.35),
+                        "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
                         "name": "conftest.foobar",
                     }),
                 ),

@@ -6,19 +6,13 @@ from dateutil.parser import parse as parse_time
 import logging
 import mimetypes
 import os
-import sys
 
 # a bit of a lie here - retains compatibility with consumers that were importing boto2's S3ResponseError from here. this
 # is the exception boto3 raises in (mostly) the same situations.
 from botocore.exceptions import ClientError as S3ResponseError
 
 from .formats import DATETIME_FORMAT
-from .timing import (
-    different_message_for_success_or_error,
-    exceeds_slow_external_call_threshold,
-    logged_duration,
-    request_is_sampled,
-)
+from .timing import logged_duration_for_external_request as log_external_request
 
 logger = logging.getLogger(__name__)
 
@@ -65,13 +59,8 @@ class S3(object):
                 str(download_filename).encode("ascii", errors="ignore").decode(),
             )
 
-        log_duration_message = different_message_for_success_or_error(
-            success_message='Uploaded file {filepath} of size {filesize} and acl {fileacl} in {duration_real}s',
-            error_message='Exception during file upload ({filepath} of size {filesize} and acl {fileacl}) '
-                          'with {exc_info[0]} after {duration_real}s'
-        )
-
-        with logged_duration(message=log_duration_message, condition=None) as log_context:
+        log_description = 'file upload [{filepath} of size {filesize} and acl {fileacl}]'
+        with log_external_request('S3', log_description) as log_context:
             log_context.update({
                 "filepath": path,
                 "filesize": filesize,
@@ -106,14 +95,8 @@ class S3(object):
 
         extra_args = {'ACL': acl} if acl else {}
 
-        log_duration_message = different_message_for_success_or_error(
-            success_message="Copied {src_bucket}/{src_key} to {target_bucket}/{target_key}{set_acl} in "
-                            "{duration_real}s",
-            error_message="Failed to copy key ({src_bucket}/{src_key} to "
-                          "{target_bucket}/{target_key}{set_acl}) with {exc_info[0].__name__} after "
-                          "{duration_real}s"
-        )
-        with logged_duration(message=log_duration_message, condition=None) as log_context:
+        log_description = 'copy document [{src_bucket}/{src_key} to {target_bucket}/{target_key}{set_acl}]'
+        with log_external_request('S3', log_description) as log_context:
             log_context.update({
                 "src_bucket": src_bucket,
                 "src_key": src_key,
@@ -186,23 +169,9 @@ class S3(object):
         """
         prefix = self._normalize_path(prefix)
 
-        def slow_call_or_sampled_request_or_error(log_context):
-            return (
-                exceeds_slow_external_call_threshold(log_context)
-                or request_is_sampled(log_context) or
-                sys.exc_info()[0]
-            )
-
         filtered_objects = self._bucket.objects.filter(Prefix=prefix, Delimiter=delimiter)
 
-        with logged_duration(
-            message=different_message_for_success_or_error(
-                success_message='Retrieved objects from S3 in {duration_real}s',
-                error_message='Failed to retrieve objects from S3 with {exc_info[0].__name__} '
-                              'after {duration_real}s'
-            ),
-            condition=slow_call_or_sampled_request_or_error
-        ):
+        with log_external_request('S3', f'list objects [prefix={prefix}, delimiter={delimiter}]'):
             # Consume the `filtered_objects` generator to memory and prepare for sorting
             objects_for_sorting = [
                 self._format_key(obj_s, with_timestamp=load_timestamps)
