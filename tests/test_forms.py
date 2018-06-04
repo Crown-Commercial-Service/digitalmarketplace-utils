@@ -2,11 +2,12 @@ from collections import OrderedDict
 from itertools import product
 
 from flask_wtf import FlaskForm
+from wtforms.fields import StringField
 from wtforms.validators import DataRequired, Length, Optional
 from werkzeug.datastructures import ImmutableMultiDict
 import pytest
 
-from dmutils.forms import EmailField, StringField, remove_csrf_token, get_errors_from_wtform
+from dmutils.forms import EmailField, remove_csrf_token, get_errors_from_wtform
 
 
 class EmailFieldFormatTestForm(FlaskForm):
