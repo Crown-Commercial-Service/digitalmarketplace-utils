@@ -15,7 +15,8 @@ def _derive_framework_family(slug):
 def lot(lot_id=1, slug="some-lot", name=None, allows_brief=False, one_service_limit=False, unit_singular='service',
         unit_plural='services'):
     if not name:
-        name = slug.replace("-", " ").title()
+        name = slug.replace("-", " ")
+        name = name[:1].upper() + name[1:]
 
     return {
         "id": lot_id,
@@ -76,19 +77,24 @@ def framework(framework_id=1,
               intention_to_award_at=dt(2000, 1, 4),
               framework_live_at=dt(2000, 1, 5),
               framework_expires_at=dt(2000, 1, 6),
-              has_direct_award=True,
-              has_further_competition=False):
-    if name:
-        pass
-    elif slug.startswith('g-cloud'):
-        name = 'G-Cloud {}'.format(slug.split('-')[-1])
-    elif slug.startswith("digital-outcomes-and-specialists"):
-        name = slug.replace("-", " ").title()
-        name = name.replace('And', 'and')
-    else:
-        name = slug.replace("-", " ").title()
+              has_direct_award=None,
+              has_further_competition=None):
+    framework_family = framework_family or _derive_framework_family(slug)
 
-    framework_family = _derive_framework_family(slug) if not framework_family else framework_family
+    if slug.startswith('g-cloud'):
+        name = name or 'G-Cloud {}'.format(slug.split('-')[-1])
+        has_direct_award = has_direct_award if has_direct_award is not None else True
+        has_further_competition = has_further_competition if has_further_competition is not None else False
+
+    elif slug.startswith('digital-outcomes-and-specialists'):
+        name = name or slug.replace("-", " ").title().replace('And', 'and')
+        has_direct_award = has_direct_award if has_direct_award is not None else False
+        has_further_competition = has_further_competition if has_further_competition is not None else True
+
+    else:
+        name = name or slug.replace("-", " ").title()
+        has_direct_award = has_direct_award if has_direct_award is not None else True
+        has_further_competition = has_further_competition if has_further_competition is not None else True
 
     lots = lots or []
 

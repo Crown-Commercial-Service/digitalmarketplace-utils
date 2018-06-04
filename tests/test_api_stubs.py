@@ -7,7 +7,7 @@ class TestLot:
         assert api_stubs.lot() == {
             "id": 1,
             "slug": "some-lot",
-            "name": "Some Lot",
+            "name": "Some lot",
             "allowsBrief": False,
             "oneServiceLimit": False,
             "unitSingular": "service",
@@ -19,7 +19,7 @@ class TestLot:
                              unit_singular='brief', unit_plural='briefs') == {
             "id": 2,
             "slug": "my-special-lot",
-            "name": "My Special Lot",
+            "name": "My special lot",
             "allowsBrief": True,
             "oneServiceLimit": True,
             "unitSingular": "brief",
@@ -72,8 +72,8 @@ class TestFrameworkAgreementDetails:
             "frameworkRefDate": "29-06-2000",
             "frameworkStartDate": "05 January 2000",
             "frameworkURL": f"https://www.gov.uk/government/publications/g-cloud-7",
-            "lotDescriptions": {"cloud-hosting": "Lot 1: Cloud Hosting",
-                                "cloud-support": "Lot 2: Cloud Support"},
+            "lotDescriptions": {"cloud-hosting": "Lot 1: Cloud hosting",
+                                "cloud-support": "Lot 2: Cloud support"},
             "lotOrder": ["cloud-hosting", "cloud-support"],
             "pageTotal": 99,
             "signaturePageNumber": 98,
@@ -130,8 +130,8 @@ class TestFramework:
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
-                'hasDirectAward': True,
-                'hasFurtherCompetition': False,
+                'hasDirectAward': False,
+                'hasFurtherCompetition': True,
             }
         }
 
@@ -158,7 +158,7 @@ class TestFramework:
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
                 'hasDirectAward': True,
-                'hasFurtherCompetition': False,
+                'hasFurtherCompetition': True,
             }
         }
 
