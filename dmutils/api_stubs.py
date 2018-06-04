@@ -3,6 +3,15 @@ from datetime import datetime as dt
 from .formats import DATETIME_FORMAT
 
 
+def _derive_framework_family(slug):
+    if slug.startswith('g-cloud'):
+        return 'g-cloud'
+    elif slug.startswith("digital-outcomes-and-specialists"):
+        return 'digital-outcomes-and-specialists'
+    else:
+        return slug
+
+
 def lot(lot_id=1, slug="some-lot", name=None, allows_brief=False, one_service_limit=False, unit_singular='service',
         unit_plural='services'):
     if not name:
@@ -79,14 +88,7 @@ def framework(framework_id=1,
     else:
         name = slug.replace("-", " ").title()
 
-    if framework_family:
-        pass
-    elif slug.startswith('g-cloud'):
-        framework_family = 'g-cloud'
-    elif slug.startswith("digital-outcomes-and-specialists"):
-        framework_family = 'digital-outcomes-and-specialists'
-    else:
-        framework_family = slug
+    framework_family = _derive_framework_family(slug) if not framework_family else framework_family
 
     lots = lots or []
 
@@ -211,5 +213,89 @@ def supplier(id=1234, contact_id=4321, other_company_registration_number=0, comp
         del data['suppliers']['companiesHouseNumber']
         # Companies without a Companies House number aren't necessarily overseas, but they might well be
         data['suppliers']['registrationCountry'] = 'country:NZ'
+
+    return data
+
+
+def supplier_framework(
+    agreed_variations=True,
+    supplier_id=1234,
+    framework_slug='g-cloud-7',
+    framework_family=None,
+    on_framework=True,
+    prefill_declaration_from_slug='g-cloud-6',
+    with_declaration=True,
+    declaration_status='complete',
+    with_agreement=True,
+    with_users=True,
+):
+    framework_family = _derive_framework_family(framework_slug) if not framework_family else framework_family
+
+    data = {
+        "frameworkInterest": {
+            "agreedVariations": {},
+            "agreementDetails": None,
+            "agreementId": None,
+            "agreementPath": None,
+            "agreementReturned": False,
+            "agreementReturnedAt": None,
+            "agreementStatus": None,
+            "countersigned": False,
+            "countersignedAt": None,
+            "countersignedDetails": None,
+            "countersignedPath": None,
+            "frameworkFramework": framework_family,
+            "frameworkSlug": framework_slug,
+            "onFramework": on_framework,
+            "prefillDeclarationFromFrameworkSlug": prefill_declaration_from_slug,
+            "supplierId": supplier_id,
+            "supplierName": "My Little Company"
+        }
+    }
+    if agreed_variations:
+        data['frameworkInterest']['agreedVariations'].update({
+            "1": {
+                "agreedAt": "2018-05-04T16:58:52.362855Z",
+                "agreedUserEmail": "stub@example.com",
+                "agreedUserId": 123,
+                "agreedUserName": "Test user"
+            }
+        })
+    if with_declaration:
+        data['frameworkInterest']['declaration'] = {
+            "nameOfOrganisation": "My Little Company",
+            "organisationSize": "micro",
+            "primaryContactEmail": "supplier@example.com",
+            "status": declaration_status,
+        }
+    if with_agreement:
+        agreement_data = {
+            'agreementId': 9876,
+            "agreementReturned": True,
+            "agreementReturnedAt": "2017-05-17T14:31:27.118905Z",
+            "agreementDetails": {
+                "frameworkAgreementVersion": "RM1557ix",
+                "signerName": "A. Nonymous",
+                "signerRole": "The Boss",
+                "uploaderUserId": 123,
+            },
+            "agreementPath": "not/the/real/path.pdf",
+            "countersigned": True,
+            "countersignedAt": "2017-06-15T08:41:46.390992Z",
+            "countersignedDetails": {
+                "approvedByUserId": 123,
+            },
+            "agreementStatus": "countersigned",
+        }
+        if with_users:
+            agreement_data['agreementDetails'].update({
+                "uploaderUserEmail": "stub@example.com",
+                "uploaderUserName": "Test user",
+            })
+            agreement_data['countersignedDetails'].update({
+                "approvedByUserEmail": "stub@example.com",
+                "approvedByUserName": "Test user",
+            })
+        data['frameworkInterest'].update(agreement_data)
 
     return data
