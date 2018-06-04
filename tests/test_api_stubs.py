@@ -247,6 +247,155 @@ class TestFramework:
         }
 
 
+class TestSupplierFramework:
+    def test_default_values(self):
+        assert api_stubs.supplier_framework() == {
+            'frameworkInterest': {
+                'agreedVariations': {
+                    '1': {
+                        'agreedAt': '2018-05-04T16:58:52.362855Z',
+                        'agreedUserEmail': 'stub@example.com',
+                        'agreedUserId': 123,
+                        'agreedUserName': 'Test user'
+                    }
+                },
+                'agreementDetails': {
+                    'frameworkAgreementVersion': 'RM1557ix',
+                    'signerName': 'A. Nonymous',
+                    'signerRole': 'The Boss',
+                    'uploaderUserEmail': 'stub@example.com',
+                    'uploaderUserId': 123,
+                    'uploaderUserName': 'Test user',
+                },
+                'agreementId': 9876,
+                'agreementPath': 'not/the/real/path.pdf',
+                'agreementReturned': True,
+                'agreementReturnedAt': '2017-05-17T14:31:27.118905Z',
+                'agreementStatus': 'countersigned',
+                'countersigned': True,
+                'countersignedAt': '2017-06-15T08:41:46.390992Z',
+                'countersignedDetails': {
+                    'approvedByUserEmail': 'stub@example.com',
+                    'approvedByUserId': 123,
+                    'approvedByUserName': 'Test user',
+                },
+                'countersignedPath': None,
+                'declaration': {
+                    'nameOfOrganisation': 'My Little Company',
+                    'organisationSize': 'micro',
+                    'primaryContactEmail': 'supplier@example.com',
+                    'status': 'complete'
+                },
+                'frameworkFramework': 'g-cloud',
+                'frameworkSlug': 'g-cloud-7',
+                'onFramework': True,
+                'prefillDeclarationFromFrameworkSlug': 'g-cloud-6',
+                'supplierId': 1234,
+                'supplierName': 'My Little Company',
+            }
+        }
+
+    def test_custom_values(self):
+        assert api_stubs.supplier_framework(
+            supplier_id=4444244,
+            framework_slug='digital-outcomes-and-specialists-2',
+            on_framework=False,
+            prefill_declaration_from_slug='digital-outcomes-and-specialists',
+            declaration_status='started',
+        ) == {
+            'frameworkInterest': {
+                'agreedVariations': {
+                    '1': {
+                        'agreedAt': '2018-05-04T16:58:52.362855Z',
+                        'agreedUserEmail': 'stub@example.com',
+                        'agreedUserId': 123,
+                        'agreedUserName': 'Test user'
+                    }
+                },
+                'agreementDetails': {
+                    'frameworkAgreementVersion': 'RM1557ix',
+                    'signerName': 'A. Nonymous',
+                    'signerRole': 'The Boss',
+                    'uploaderUserEmail': 'stub@example.com',
+                    'uploaderUserId': 123,
+                    'uploaderUserName': 'Test user',
+                },
+                'agreementId': 9876,
+                'agreementPath': 'not/the/real/path.pdf',
+                'agreementReturned': True,
+                'agreementReturnedAt': '2017-05-17T14:31:27.118905Z',
+                'agreementStatus': 'countersigned',
+                'countersigned': True,
+                'countersignedAt': '2017-06-15T08:41:46.390992Z',
+                'countersignedDetails': {
+                    'approvedByUserEmail': 'stub@example.com',
+                    'approvedByUserId': 123,
+                    'approvedByUserName': 'Test user',
+                },
+                'countersignedPath': None,
+                'declaration': {
+                    'nameOfOrganisation': 'My Little Company',
+                    'organisationSize': 'micro',
+                    'primaryContactEmail': 'supplier@example.com',
+                    'status': 'started'
+                },
+                'frameworkFramework': 'digital-outcomes-and-specialists',
+                'frameworkSlug': 'digital-outcomes-and-specialists-2',
+                'onFramework': False,
+                'prefillDeclarationFromFrameworkSlug': 'digital-outcomes-and-specialists',
+                'supplierId': 4444244,
+                'supplierName': 'My Little Company',
+            }
+        }
+
+    def test_agreed_variations(self):
+        assert api_stubs.supplier_framework(agreed_variations=False)['frameworkInterest']['agreedVariations'] == {}
+
+    def test_with_declaration(self):
+        assert 'declaration' not in api_stubs.supplier_framework(with_declaration=False)['frameworkInterest'].keys()
+
+    def test_with_agreement(self):
+        assert api_stubs.supplier_framework(with_agreement=False)['frameworkInterest'] == {
+            'agreedVariations': {
+                '1': {
+                    'agreedAt': '2018-05-04T16:58:52.362855Z',
+                    'agreedUserEmail': 'stub@example.com',
+                    'agreedUserId': 123,
+                    'agreedUserName': 'Test user'
+                }
+            },
+            'agreementDetails': None,
+            'agreementId': None,
+            'agreementPath': None,
+            'agreementReturned': False,
+            'agreementReturnedAt': None,
+            'agreementStatus': None,
+            'countersigned': False,
+            'countersignedAt': None,
+            'countersignedDetails': None,
+            'countersignedPath': None,
+            'declaration': {
+                'nameOfOrganisation': 'My Little Company',
+                'organisationSize': 'micro',
+                'primaryContactEmail': 'supplier@example.com',
+                'status': 'complete'
+            },
+            'frameworkFramework': 'g-cloud',
+            'frameworkSlug': 'g-cloud-7',
+            'onFramework': True,
+            'prefillDeclarationFromFrameworkSlug': 'g-cloud-6',
+            'supplierId': 1234,
+            'supplierName': 'My Little Company'
+        }
+
+    def test_with_users(self):
+        supplier_framework = api_stubs.supplier_framework(with_users=False)['frameworkInterest']
+        assert set(supplier_framework['agreementDetails'].keys()) == {
+            'frameworkAgreementVersion', 'signerName', 'signerRole', 'uploaderUserId'
+        }
+        assert set(supplier_framework['countersignedDetails'].keys()) == {'approvedByUserId'}
+
+
 def test_brief():
     assert api_stubs.brief() \
         == {
