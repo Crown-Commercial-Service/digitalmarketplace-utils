@@ -2,6 +2,32 @@
 
 Records breaking changes from major version bumps
 
+38.0.0
+
+PR [#397](https://github.com/alphagov/digitalmarketplace-utils/pull/397)
+
+https://trello.com/c/iqFcVKpd/14 is a ticket to retire the name `framework_framework` in place of a more descriptive `framework_family` when referencing the 'family' a given framework relates to (e.g. the framework family of G-Cloud 10 is G-Cloud).
+
+Updating the references across our updates requires some breaking changes in interfaces, specifically in this case, `dmutils.api_stubs.brief` and `dmutils.externals.get_brief_by_id`. Any calls to these methods using keyword parameters will need to update the interface.
+
+Old code:
+```python
+from dmutils import api_stubs, externals
+
+api_stubs.brief(framework_framework='digital-outcomes-and-specialists')
+
+externals.get_brief_by_id('digital-outcomes-and-specialists', 1234)
+```
+
+
+New code:
+```python
+from dmutils import api_stubs, externals
+
+api_stubs.brief(framework_family='digital-outcomes-and-specialists')
+
+externals.get_brief_by_id(framework_family='digital-outcomes-and-specialists', brief_id=1234)
+
 ## 37.0.0
 
 PR [#398](https://github.com/alphagov/digitalmarketplace-utils/pull/398)
