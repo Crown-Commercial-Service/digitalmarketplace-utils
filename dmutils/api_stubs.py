@@ -15,8 +15,7 @@ def _derive_framework_family(slug):
 def lot(lot_id=1, slug="some-lot", name=None, allows_brief=False, one_service_limit=False, unit_singular='service',
         unit_plural='services'):
     if not name:
-        name = slug.replace("-", " ")
-        name = name[:1].upper() + name[1:]
+        name = slug.replace("-", " ").capitalize()
 
     return {
         "id": lot_id,
@@ -57,10 +56,13 @@ g_cloud_10_lots = __cloud_lots
 
 def dos_lots():
     return [
-        lot(lot_id=5, slug='digital-outcomes', name='Digital outcomes', allows_brief=True),
-        lot(lot_id=6, slug='digital-specialists', name='Digital specialists', allows_brief=True),
-        lot(lot_id=7, slug='user-research-studios', name='User research studios'),
-        lot(lot_id=8, slug='user-research-participants', name='User research participants', allows_brief=True)
+        lot(lot_id=5, slug='digital-outcomes', name='Digital outcomes', allows_brief=True, one_service_limit=True),
+        lot(lot_id=6, slug='digital-specialists', name='Digital specialists', allows_brief=True,
+            one_service_limit=True),
+        lot(lot_id=7, slug='user-research-studios', name='User research studios', unit_singular='lab',
+            unit_plural='labs'),
+        lot(lot_id=8, slug='user-research-participants', name='User research participants', allows_brief=True,
+            one_service_limit=True)
     ]
 
 
