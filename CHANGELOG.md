@@ -2,7 +2,7 @@
 
 Records breaking changes from major version bumps
 
-38.0.0
+## 38.0.0
 
 PR [#397](https://github.com/alphagov/digitalmarketplace-utils/pull/397)
 
@@ -27,6 +27,7 @@ from dmutils import api_stubs, externals
 api_stubs.brief(framework_family='digital-outcomes-and-specialists')
 
 externals.get_brief_by_id(framework_family='digital-outcomes-and-specialists', brief_id=1234)
+```
 
 ## 37.0.0
 
