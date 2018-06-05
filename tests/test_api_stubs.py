@@ -7,7 +7,7 @@ class TestLot:
         assert api_stubs.lot() == {
             "id": 1,
             "slug": "some-lot",
-            "name": "Some Lot",
+            "name": "Some lot",
             "allowsBrief": False,
             "oneServiceLimit": False,
             "unitSingular": "service",
@@ -19,7 +19,7 @@ class TestLot:
                              unit_singular='brief', unit_plural='briefs') == {
             "id": 2,
             "slug": "my-special-lot",
-            "name": "My Special Lot",
+            "name": "My special lot",
             "allowsBrief": True,
             "oneServiceLimit": True,
             "unitSingular": "brief",
@@ -72,8 +72,8 @@ class TestFrameworkAgreementDetails:
             "frameworkRefDate": "29-06-2000",
             "frameworkStartDate": "05 January 2000",
             "frameworkURL": f"https://www.gov.uk/government/publications/g-cloud-7",
-            "lotDescriptions": {"cloud-hosting": "Lot 1: Cloud Hosting",
-                                "cloud-support": "Lot 2: Cloud Support"},
+            "lotDescriptions": {"cloud-hosting": "Lot 1: Cloud hosting",
+                                "cloud-support": "Lot 2: Cloud support"},
             "lotOrder": ["cloud-hosting", "cloud-support"],
             "pageTotal": 99,
             "signaturePageNumber": 98,
@@ -82,6 +82,10 @@ class TestFrameworkAgreementDetails:
 
 
 class TestFramework:
+    def setup(self):
+        self.g7_lots = api_stubs.g_cloud_7_lots()
+        self.dos_lots = api_stubs.dos_lots()
+
     def test_default_values(self):
         assert api_stubs.framework() == {
             "frameworks": {
@@ -91,9 +95,9 @@ class TestFramework:
                 "framework": "g-cloud",
                 "status": "open",
                 "clarificationQuestionsOpen": True,
-                "lots": [],
+                "lots": self.g7_lots,
                 "allowDeclarationReuse": True,
-                "frameworkAgreementDetails": api_stubs.framework_agreement_details(),
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(lots=self.g7_lots),
                 "countersignerName": None,
                 "frameworkAgreementVersion": "RM1557x",
                 "variations": {},
@@ -109,7 +113,8 @@ class TestFramework:
         }
 
     def test_custom_slug_derives_name_and_framework(self):
-        framework_agreement_details = api_stubs.framework_agreement_details(slug='digital-outcomes-and-specialists')
+        framework_agreement_details = api_stubs.framework_agreement_details(slug='digital-outcomes-and-specialists',
+                                                                            lots=self.dos_lots)
         assert api_stubs.framework(slug='digital-outcomes-and-specialists') == {
             "frameworks": {
                 "id": 1,
@@ -118,7 +123,7 @@ class TestFramework:
                 "framework": "digital-outcomes-and-specialists",
                 "status": "open",
                 "clarificationQuestionsOpen": True,
-                "lots": [],
+                "lots": self.dos_lots,
                 "allowDeclarationReuse": True,
                 "frameworkAgreementDetails": framework_agreement_details,
                 "countersignerName": None,
@@ -130,8 +135,8 @@ class TestFramework:
                 'intentionToAwardAtUTC': '2000-01-04T00:00:00.000000Z',
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
-                'hasDirectAward': True,
-                'hasFurtherCompetition': False,
+                'hasDirectAward': False,
+                'hasFurtherCompetition': True,
             }
         }
 
@@ -158,7 +163,7 @@ class TestFramework:
                 'frameworkLiveAtUTC': '2000-01-05T00:00:00.000000Z',
                 'frameworkExpiresAtUTC': '2000-01-06T00:00:00.000000Z',
                 'hasDirectAward': True,
-                'hasFurtherCompetition': False,
+                'hasFurtherCompetition': True,
             }
         }
 
@@ -203,9 +208,9 @@ class TestFramework:
                 "framework": "g-cloud",
                 "status": "open",
                 "clarificationQuestionsOpen": True,
-                "lots": [],
+                "lots": self.g7_lots,
                 "allowDeclarationReuse": True,
-                "frameworkAgreementDetails": api_stubs.framework_agreement_details(),
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(lots=self.g7_lots),
                 "countersignerName": None,
                 "frameworkAgreementVersion": "RM1557x",
                 "variations": {},
@@ -229,9 +234,9 @@ class TestFramework:
                 "framework": "g-cloud",
                 "status": "open",
                 "clarificationQuestionsOpen": True,
-                "lots": [],
+                "lots": self.g7_lots,
                 "allowDeclarationReuse": True,
-                "frameworkAgreementDetails": api_stubs.framework_agreement_details(),
+                "frameworkAgreementDetails": api_stubs.framework_agreement_details(lots=self.g7_lots),
                 "countersignerName": None,
                 "frameworkAgreementVersion": "RM1557x",
                 "variations": {},
