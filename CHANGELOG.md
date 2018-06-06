@@ -2,6 +2,37 @@
 
 Records breaking changes from major version bumps
 
+## 39.0.0
+
+PR [?]
+
+All of our apps have duplicated configuration for `DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS`, which defines email domains that should be redirected by the DMNotifyClient to point at Amazon SES's 'fake-success' email addresses. This config should be held locally as it's unlikely to change per app, and we also need to inject the same configuration into scripts that use Notify. Holding it in utils seems sensible. Therefore, apps that pull in this version of utils should update config to use the new variable exposed in dmutils.email.dm_notify at `DEFAULT_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS`.
+
+Old
+```python
+class Live(Config):
+    ...
+
+    DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS = {
+        "example.com": "success@simulator.amazonses.com",
+        "example.gov.uk": "success@simulator.amazonses.com",
+        "user.marketplace.team": "success@simulator.amazonses.com",
+    }
+    ...
+```
+
+New
+```python
+from dmutils.email.dm_notify import DEFAULT_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS
+...
+class Live(Config):
+    ...
+
+    DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS = DEFAULT_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS
+    ...
+```
+
+
 ## 38.0.0
 
 PR [#397](https://github.com/alphagov/digitalmarketplace-utils/pull/397)
