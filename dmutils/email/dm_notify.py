@@ -9,6 +9,15 @@ from dmutils.email.helpers import hash_string
 from dmutils.timing import logged_duration_for_external_request as log_external_request
 
 
+# These are listed here so that we have a central definition that can be imported and used by apps/scripts. These
+# domains are *not* injected into all DMNotifyClients automatically.
+DEFAULT_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS = {
+    "example.com": "success@simulator.amazonses.com",
+    "example.gov.uk": "success@simulator.amazonses.com",
+    "user.marketplace.team": "success@simulator.amazonses.com",
+}
+
+
 class DMNotifyClient:
     """Digital Marketplace wrapper around the Notify python client."""
 
