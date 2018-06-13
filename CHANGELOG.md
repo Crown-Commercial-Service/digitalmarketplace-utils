@@ -2,6 +2,12 @@
 
 Records breaking changes from major version bumps
 
+## 39.0.0
+
+PR [407](https://github.com/alphagov/digitalmarketplace-utils/pull/407)
+
+Updated api_stubs.framework_agreement_details, removing keys `frameworkEndDate` and `frameworkStartDate`. Any references to these will need to be removed.
+
 ## 38.0.0
 
 PR [#397](https://github.com/alphagov/digitalmarketplace-utils/pull/397)

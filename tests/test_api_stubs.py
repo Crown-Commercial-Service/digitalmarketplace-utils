@@ -32,10 +32,8 @@ class TestFrameworkAgreementDetails:
         assert api_stubs.framework_agreement_details() == {
             "contractNoticeNumber": "2010/ABC-DEF",
             "frameworkAgreementVersion": "RM1557x",
-            "frameworkEndDate": "01 January 2001",
             "frameworkExtensionLength": "12 months",
             "frameworkRefDate": "29-06-2000",
-            "frameworkStartDate": "05 January 2000",
             "frameworkURL": f"https://www.gov.uk/government/publications/g-cloud-7",
             "lotDescriptions": {},
             "lotOrder": [],
@@ -50,10 +48,8 @@ class TestFrameworkAgreementDetails:
                                                      framework_variations={"1": "blah"}) == {
             "contractNoticeNumber": "2010/ABC-DEF",
             "frameworkAgreementVersion": "v0.0.1",
-            "frameworkEndDate": "01 January 2001",
             "frameworkExtensionLength": "12 months",
             "frameworkRefDate": "29-06-2000",
-            "frameworkStartDate": "05 January 2000",
             "frameworkURL": f"https://www.gov.uk/government/publications/my-custom-slug",
             "lotDescriptions": {},
             "lotOrder": [],
@@ -67,10 +63,8 @@ class TestFrameworkAgreementDetails:
         assert api_stubs.framework_agreement_details(lots=lots) == {
             "contractNoticeNumber": "2010/ABC-DEF",
             "frameworkAgreementVersion": "RM1557x",
-            "frameworkEndDate": "01 January 2001",
             "frameworkExtensionLength": "12 months",
             "frameworkRefDate": "29-06-2000",
-            "frameworkStartDate": "05 January 2000",
             "frameworkURL": f"https://www.gov.uk/government/publications/g-cloud-7",
             "lotDescriptions": {"cloud-hosting": "Lot 1: Cloud hosting",
                                 "cloud-support": "Lot 2: Cloud support"},
