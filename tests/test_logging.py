@@ -146,6 +146,10 @@ class TestJSONFormatter(object):
         assert 'span_id' not in result
         assert 'parentSpanId' in result
         assert 'parent_span_id' not in result
+        assert 'isSampled' in result
+        assert 'is_sampled' not in result
+        assert 'debugFlag' in result
+        assert 'debug_flag' not in result
 
     def test_log_type_is_set_to_application(self):
         self.logger.info("hello")
