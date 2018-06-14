@@ -291,7 +291,7 @@ _parent_span_id_related_params = (
         {},
         # extra_req_headers
         (
-            ("X-B3-PARENTSPAN", "colossal-edifice",),
+            ("X-B3-PARENTSPANID", "colossal-edifice",),
             ("X-WANDERING-SOAP", "Flower of the Bath",),
         ),
         # expected_parent_span_id
