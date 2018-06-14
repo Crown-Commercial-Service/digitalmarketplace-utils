@@ -141,7 +141,7 @@ def init_app(app):
         (app.config.get("DM_DOWNSTREAM_REQUEST_ID_HEADER") or "X-B3-TraceId"),
     ))
     app.config.setdefault("DM_SPAN_ID_HEADERS", ("X-B3-SpanId",))
-    app.config.setdefault("DM_PARENT_SPAN_ID_HEADERS", ("X-B3-ParentSpan",))
+    app.config.setdefault("DM_PARENT_SPAN_ID_HEADERS", ("X-B3-ParentSpanId",))
     app.config.setdefault("DM_IS_SAMPLED_HEADERS", ("X-B3-Sampled",))
     app.config.setdefault("DM_DEBUG_FLAG_HEADERS", ("X-B3-Flags",))
 
