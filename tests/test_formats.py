@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
 from dmutils.formats import (
-    timeformat, shortdateformat, dateformat, monthyearformat, datetimeformat, datetodatetimeformat,
-    utcdatetimeformat, utctoshorttimelongdateformat
+    dateformat,
+    datetimeformat,
+    datetodatetimeformat,
+    monthyearformat,
+    nodaydateformat,
+    shortdateformat,
+    timeformat,
+    utcdatetimeformat,
+    utctoshorttimelongdateformat,
 )
 import pytz
 from datetime import datetime
@@ -32,6 +39,20 @@ def test_timeformat(dt, formatted_time):
 ))
 def test_shortdateformat(dt, formatted_date):
     assert shortdateformat(dt) == formatted_date
+
+
+@pytest.mark.parametrize("dt, formatted_date", (
+    (datetime(2012, 11, 10, 9, 8, 7, 6), "10 November 2012"),
+    ("2012-11-10T09:08:07.0Z", "10 November 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6), "10 August 2012"),
+    ("2012-08-10T09:08:07.0Z", "10 August 2012"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "10 August 2012"),
+    ("2016-04-27T23:59:59.0Z", "27 April 2016"),
+    (datetime(2016, 4, 27, 23, 59, 59, 0), "27 April 2016"),
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), "1 August 2012"),
+))
+def test_nodaydateformat(dt, formatted_date):
+    assert nodaydateformat(dt) == formatted_date
 
 
 @pytest.mark.parametrize("dt, formatted_date", (
