@@ -7,6 +7,7 @@ DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
 DISPLAY_MONTH_YEAR_FORMAT = "%B %Y"
 DISPLAY_SHORT_DATE_FORMAT = '%-d %B'
+DISPLAY_NO_DAY_DATE_FORMAT = '%-d %B %Y'
 DISPLAY_DATE_FORMAT = '%A %-d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
 DISPLAY_DATETIME_FORMAT = '%A %-d %B %Y at %I:%M%p %Z'
@@ -36,6 +37,17 @@ def shortdateformat(value, default_value=None):
     ** USE OUR STANDARD dateformat RATHER THAN THIS UNLESS THERE IS A GOOD REASON NOT TO **
     """
     return _format_date(value, default_value, DISPLAY_SHORT_DATE_FORMAT, localize=False)
+
+
+def nodaydateformat(value, default_value=None):
+    """
+    Example value: datetime.strptime("2018-07-25 10:15:00", "%Y-%m-%d %H:%M:%S")
+    Example output: '25 July 2018'
+
+    `nodaydateformat` is used *only* when generating framework agreement signature pages. If you're thinking about
+    using this, you probably want to use `dateformat` instead.
+    """
+    return _format_date(value, default_value, DISPLAY_NO_DAY_DATE_FORMAT, localize=False)
 
 
 def dateformat(value, default_value=None):
