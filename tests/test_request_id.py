@@ -3,10 +3,31 @@ from itertools import chain, product
 import mock
 import pytest
 
-from dmutils.request_id import init_app as request_id_init_app
+from dmtestutils.mocking import assert_args_and_return
+from dmtestutils.comparisons import AnySupersetOf
+
+from dmutils.request_id import (
+    init_app as request_id_init_app,
+    RequestIdRequestMixin,
+)
 
 
-_GENERATED_TRACE_VALUE = "d15ea5e5deadbeefbaadf00dabadcafe"
+_GENERATED_TRACE_VALUE = 0xd15ea5e5deadbeefbaadf00dabadcafe
+_GENERATED_SPAN_VALUE = 0xc001d00dbeefcace
+
+_GENERATED_TRACE_HEX = hex(_GENERATED_TRACE_VALUE)[2:]
+_GENERATED_SPAN_HEX = hex(_GENERATED_SPAN_VALUE)[2:]
+
+
+def _abbreviate_id(value):
+    if value == _GENERATED_TRACE_VALUE:
+        return "GEN_TRACE_VAL"
+    elif value == _GENERATED_SPAN_VALUE:
+        return "GEN_SPAN_VAL"
+    elif value == ():
+        return "EMPTYTUP"
+    elif value == {}:
+        return "EMPTYDCT"
 
 
 _trace_id_related_params = (
@@ -23,7 +44,7 @@ _trace_id_related_params = (
         ),
         # expected_trace_id
         "from-header",
-        # expect_uuid_call
+        # expect_trace_random_call
         False,
         # expected_onwards_req_headers
         {
@@ -73,18 +94,18 @@ _trace_id_related_params = (
         # extra_req_headers
         (),
         # expected_trace_id
-        _GENERATED_TRACE_VALUE,
-        # expect_uuid_call
+        _GENERATED_TRACE_HEX,
+        # expect_trace_random_call
         True,
         # expected_onwards_req_headers
         {
-            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
-            "X-B3-TraceId": _GENERATED_TRACE_VALUE,
+            "DM-REQUEST-ID": _GENERATED_TRACE_HEX,
+            "X-B3-TraceId": _GENERATED_TRACE_HEX,
         },
         # expected_resp_headers
         {
-            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
-            "X-B3-TraceId": _GENERATED_TRACE_VALUE,
+            "DM-REQUEST-ID": _GENERATED_TRACE_HEX,
+            "X-B3-TraceId": _GENERATED_TRACE_HEX,
         },
         # expected_dm_request_id_header_final_value
         "DM-REQUEST-ID",
@@ -98,18 +119,18 @@ _trace_id_related_params = (
         # extra_req_headers
         (),
         # expected_trace_id
-        _GENERATED_TRACE_VALUE,
-        # expect_uuid_call
+        _GENERATED_TRACE_HEX,
+        # expect_trace_random_call
         True,
         # expected_onwards_req_headers
         {
-            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
-            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "DM-REQUEST-ID": _GENERATED_TRACE_HEX,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_HEX,
         },
         # expected_resp_headers
         {
-            "DM-REQUEST-ID": _GENERATED_TRACE_VALUE,
-            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "DM-REQUEST-ID": _GENERATED_TRACE_HEX,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_HEX,
         },
         # expected_dm_request_id_header_final_value
         "DM-REQUEST-ID",
@@ -125,18 +146,18 @@ _trace_id_related_params = (
             ("X-B3-TraceId", "H. M. S. Belleisle",),  # should be ignored as default header name has been overwritten
         ),
         # expected_trace_id
-        _GENERATED_TRACE_VALUE,
-        # expect_uuid_call
+        _GENERATED_TRACE_HEX,
+        # expect_trace_random_call
         True,
         # expected_onwards_req_headers
         {
-            "DM-Request-ID": _GENERATED_TRACE_VALUE,
-            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "DM-Request-ID": _GENERATED_TRACE_HEX,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_HEX,
         },
         # expected_resp_headers
         {
-            "DM-Request-ID": _GENERATED_TRACE_VALUE,
-            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_VALUE,
+            "DM-Request-ID": _GENERATED_TRACE_HEX,
+            "DOWNSTREAM-REQUEST-ID": _GENERATED_TRACE_HEX,
         },
         # expected_dm_request_id_header_final_value
         "DM-Request-ID",
@@ -155,18 +176,18 @@ _trace_id_related_params = (
             ("DOWNSTREAM-REQUEST-ID", "from-downstream",),
         ),
         # expected_trace_id
-        _GENERATED_TRACE_VALUE,
-        # expect_uuid_call
+        _GENERATED_TRACE_HEX,
+        # expect_trace_random_call
         True,
         # expected_onwards_req_headers
         {
-            "x-tommy-caffrey": _GENERATED_TRACE_VALUE,
-            "y-jacky-caffrey": _GENERATED_TRACE_VALUE,
+            "x-tommy-caffrey": _GENERATED_TRACE_HEX,
+            "y-jacky-caffrey": _GENERATED_TRACE_HEX,
         },
         # expected_resp_headers
         {
-            "x-tommy-caffrey": _GENERATED_TRACE_VALUE,
-            "y-jacky-caffrey": _GENERATED_TRACE_VALUE,
+            "x-tommy-caffrey": _GENERATED_TRACE_HEX,
+            "y-jacky-caffrey": _GENERATED_TRACE_HEX,
         },
         # expected_dm_request_id_header_final_value
         "x-tommy-caffrey",
@@ -183,7 +204,7 @@ _trace_id_related_params = (
         ),
         # expected_trace_id
         "tommy-header-value",
-        # expect_uuid_call
+        # expect_trace_random_call
         False,
         # expected_onwards_req_headers
         {
@@ -211,7 +232,7 @@ _trace_id_related_params = (
         ),
         # expected_trace_id
         "Grilled Mutton",
-        # expect_uuid_call
+        # expect_trace_random_call
         False,
         # expected_onwards_req_headers
         {
@@ -236,12 +257,16 @@ _span_id_related_params = (
         # extra_req_headers
         (
             ("x-b3-spanid", "Steak, kidney, liver, mashed",),  # also checking header case-insensitivity here
+            ("x-b3-parentspanid", "Muttoning",),
         ),
         # expected_span_id
         "Steak, kidney, liver, mashed",
+        # expected_parent_span_id
+        "Muttoning",
         # expected_onwards_req_headers
         {
-            "X-B3-SpanId": "Steak, kidney, liver, mashed",
+            "X-B3-SpanId": _GENERATED_SPAN_HEX,
+            "X-B3-ParentSpanId": "Steak, kidney, liver, mashed",
         },
         # expected_resp_headers
         {
@@ -255,8 +280,12 @@ _span_id_related_params = (
         (),
         # expected_span_id
         None,
+        # expected_parent_span_id
+        None,
         # expected_onwards_req_headers
-        {},
+        {
+            "X-B3-SpanId": _GENERATED_SPAN_HEX,
+        },
         # expected_resp_headers
         {},
     ),
@@ -271,10 +300,13 @@ _span_id_related_params = (
         ),
         # expected_span_id
         "huge-pork-kidney",
+        # expected_parent_span_id
+        None,
         # expected_onwards_req_headers
         {
-            "barrels-and-boxes": "huge-pork-kidney",
-            "Bloomusalem": "huge-pork-kidney",
+            "X-B3-ParentSpanId": "huge-pork-kidney",
+            "barrels-and-boxes": _GENERATED_SPAN_HEX,
+            "Bloomusalem": _GENERATED_SPAN_HEX,
         },
         # expected_resp_headers
         {
@@ -282,40 +314,31 @@ _span_id_related_params = (
             "Bloomusalem": "huge-pork-kidney",
         },
     ),
-)
-
-
-_parent_span_id_related_params = (
-    (
-        # extra_config
-        {},
-        # extra_req_headers
-        (
-            ("X-B3-PARENTSPANID", "colossal-edifice",),
-            ("X-WANDERING-SOAP", "Flower of the Bath",),
-        ),
-        # expected_parent_span_id
-        "colossal-edifice",
-    ),
-    (
-        # extra_config
-        {},
-        # extra_req_headers
-        (),
-        # expected_parent_span_id
-        None,
-    ),
     (
         # extra_config
         {
-            "DM_PARENT_SPAN_ID_HEADERS": ("Potato-Preservative",),
+            "DM_PARENT_SPAN_ID_HEADERS": ("Potato-Preservative", "X-WANDERING-SOAP",),
         },
         # extra_req_headers
         (
             ("POTATO-PRESERVATIVE", "Plage and Pestilence",),  # also checking header case-insensitivity here
+            ("X-WANDERING-SOAP", "Flower of the Bath",),  # should be ignored in favour of POTATO-PRESERVATIVE's value
+            ("X-B3-SpanId", "colossal-edifice",),
         ),
+        # expected_span_id
+        "colossal-edifice",
         # expected_parent_span_id
         "Plage and Pestilence",
+        # expected_onwards_req_headers
+        {
+            "Potato-Preservative": "colossal-edifice",
+            "X-WANDERING-SOAP": "colossal-edifice",
+            "X-B3-SpanId": _GENERATED_SPAN_HEX,
+        },
+        # expected_resp_headers
+        {
+            "X-B3-SpanId": "colossal-edifice",
+        },
     ),
 )
 
@@ -415,11 +438,11 @@ _param_combinations = tuple(
     # of all sets of parameters to test every possible combination of scenarios we've provided...
     (
         # extra_config
-        dict(chain(t_extra_config.items(), s_extra_config.items(), p_extra_config.items(), d_extra_config.items(),)),
+        dict(chain(t_extra_config.items(), s_extra_config.items(), d_extra_config.items(),)),
         # extra_req_headers
-        tuple(chain(t_extra_req_headers, s_extra_req_headers, p_extra_req_headers, d_extra_req_headers)),
+        tuple(chain(t_extra_req_headers, s_extra_req_headers, d_extra_req_headers)),
         expected_trace_id,
-        expect_uuid_call,
+        expect_trace_random_call,
         expected_span_id,
         expected_parent_span_id,
         expected_is_sampled,
@@ -437,7 +460,7 @@ _param_combinations = tuple(
         t_extra_config,
         t_extra_req_headers,
         expected_trace_id,
-        expect_uuid_call,
+        expect_trace_random_call,
         t_expected_onwards_req_headers,
         t_expected_resp_headers,
         expected_dm_request_id_header_final_value,
@@ -445,12 +468,9 @@ _param_combinations = tuple(
         s_extra_config,
         s_extra_req_headers,
         expected_span_id,
+        expected_parent_span_id,
         s_expected_onwards_req_headers,
         s_expected_resp_headers,
-    ), (
-        p_extra_config,
-        p_extra_req_headers,
-        expected_parent_span_id,
     ), (
         d_extra_config,
         d_extra_req_headers,
@@ -460,7 +480,6 @@ _param_combinations = tuple(
     )in product(
         _trace_id_related_params,
         _span_id_related_params,
-        _parent_span_id_related_params,
         _debug_sampling_related_params,
     )
 )
@@ -471,7 +490,7 @@ _param_combinations = tuple(
         "extra_config",
         "extra_req_headers",
         "expected_trace_id",
-        "expect_uuid_call",
+        "expect_trace_random_call",
         "expected_span_id",
         "expected_parent_span_id",
         "expected_is_sampled",
@@ -481,15 +500,18 @@ _param_combinations = tuple(
         "expected_dm_request_id_header_final_value",
     ),
     _param_combinations,
+    ids=_abbreviate_id,
 )
-@mock.patch('dmutils.request_id.uuid.uuid4', autospec=True)
+@mock.patch.object(RequestIdRequestMixin, "_traceid_random", autospec=True)
+@mock.patch.object(RequestIdRequestMixin, "_spanid_random", autospec=True)
 def test_request_header(
-    uuid4_mock,
+    spanid_random_mock,
+    traceid_random_mock,
     app,
     extra_config,
     extra_req_headers,
     expected_trace_id,
-    expect_uuid_call,
+    expect_trace_random_call,
     expected_span_id,
     expected_parent_span_id,
     expected_is_sampled,
@@ -503,7 +525,8 @@ def test_request_header(
 
     assert app.config.get("DM_REQUEST_ID_HEADER") == expected_dm_request_id_header_final_value
 
-    uuid4_mock.return_value = mock.Mock(hex=_GENERATED_TRACE_VALUE)
+    traceid_random_mock.randrange.side_effect = assert_args_and_return(_GENERATED_TRACE_VALUE, 1 << 128)
+    spanid_random_mock.randrange.side_effect = assert_args_and_return(_GENERATED_SPAN_VALUE, 1 << 64)
 
     with app.test_request_context(headers=extra_req_headers):
         assert request.request_id == request.trace_id == expected_trace_id
@@ -521,7 +544,8 @@ def test_request_header(
             "debug_flag": expected_debug_flag,
         }
 
-    assert uuid4_mock.called is expect_uuid_call
+    assert traceid_random_mock.randrange.called is expect_trace_random_call
+    assert spanid_random_mock.randrange.called is True
 
 
 @pytest.mark.parametrize(
@@ -529,7 +553,7 @@ def test_request_header(
         "extra_config",
         "extra_req_headers",
         "expected_trace_id",
-        "expect_uuid_call",
+        "expect_trace_random_call",
         "expected_span_id",
         "expected_parent_span_id",
         "expected_is_sampled",
@@ -539,15 +563,18 @@ def test_request_header(
         "expected_dm_request_id_header_final_value",
     ),
     _param_combinations,
+    ids=_abbreviate_id,
 )
-@mock.patch('dmutils.request_id.uuid.uuid4', autospec=True)
+@mock.patch.object(RequestIdRequestMixin, "_traceid_random", autospec=True)
+@mock.patch.object(RequestIdRequestMixin, "_spanid_random", autospec=True)
 def test_response_headers_regular_response(
-    uuid4_mock,
+    spanid_random_mock,
+    traceid_random_mock,
     app,
     extra_config,
     extra_req_headers,
     expected_trace_id,  # unused here
-    expect_uuid_call,
+    expect_trace_random_call,
     expected_span_id,  # unused here
     expected_parent_span_id,  # unused here
     expected_is_sampled,  # unused here
@@ -560,14 +587,15 @@ def test_response_headers_regular_response(
     request_id_init_app(app)
     client = app.test_client()
 
-    uuid4_mock.return_value = mock.Mock(hex=_GENERATED_TRACE_VALUE)
+    traceid_random_mock.randrange.side_effect = assert_args_and_return(_GENERATED_TRACE_VALUE, 1 << 128)
 
     with app.app_context():
         response = client.get('/', headers=extra_req_headers)
         # note using these mechanisms we're not able to test for the *absence* of a header
-        assert {k: v for k, v in response.headers.items() if k in expected_onwards_req_headers} == expected_resp_headers
+        assert dict(response.headers) == AnySupersetOf(expected_resp_headers)
 
-    assert uuid4_mock.called is expect_uuid_call
+    assert traceid_random_mock.randrange.called is expect_trace_random_call
+    assert spanid_random_mock.randrange.called is False
 
 
 @pytest.mark.parametrize(
@@ -575,7 +603,7 @@ def test_response_headers_regular_response(
         "extra_config",
         "extra_req_headers",
         "expected_trace_id",
-        "expect_uuid_call",
+        "expect_trace_random_call",
         "expected_span_id",
         "expected_parent_span_id",
         "expected_is_sampled",
@@ -585,15 +613,18 @@ def test_response_headers_regular_response(
         "expected_dm_request_id_header_final_value",
     ),
     _param_combinations,
+    ids=_abbreviate_id,
 )
-@mock.patch('dmutils.request_id.uuid.uuid4', autospec=True)
+@mock.patch.object(RequestIdRequestMixin, "_traceid_random", autospec=True)
+@mock.patch.object(RequestIdRequestMixin, "_spanid_random", autospec=True)
 def test_response_headers_error_response(
-    uuid4_mock,
+    spanid_random_mock,
+    traceid_random_mock,
     app,
     extra_config,
     extra_req_headers,
     expected_trace_id,  # unused here
-    expect_uuid_call,
+    expect_trace_random_call,
     expected_span_id,  # unused here
     expected_parent_span_id,  # unused here
     expected_is_sampled,  # unused here
@@ -606,7 +637,7 @@ def test_response_headers_error_response(
     request_id_init_app(app)
     client = app.test_client()
 
-    uuid4_mock.return_value = mock.Mock(hex=_GENERATED_TRACE_VALUE)
+    traceid_random_mock.randrange.side_effect = assert_args_and_return(_GENERATED_TRACE_VALUE, 1 << 128)
 
     @app.route('/')
     def error_route():
@@ -615,6 +646,7 @@ def test_response_headers_error_response(
     with app.app_context():
         response = client.get('/', headers=extra_req_headers)
         assert response.status_code == 500
-        assert {k: v for k, v in response.headers.items() if k in expected_onwards_req_headers} == expected_resp_headers
+        assert dict(response.headers) == AnySupersetOf(expected_resp_headers)
 
-    assert uuid4_mock.called is expect_uuid_call
+    assert traceid_random_mock.randrange.called is expect_trace_random_call
+    assert spanid_random_mock.randrange.called is False
