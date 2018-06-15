@@ -11,6 +11,8 @@ import mock
 
 from flask import request
 
+from dmtestutils.comparisons import AnySupersetOf
+
 from dmutils.logging import init_app, RequestExtraContextFilter, JSONFormatter, CustomLogFormatter
 from dmutils.logging import LOG_FORMAT, get_json_log_format
 
@@ -193,6 +195,59 @@ class TestJSONFormatter(object):
         result = json.loads(raw_result)
 
         assert result['message'].startswith("Too many missing keys when attempting to format")
+
+
+def test_log_context_handling_in_initialized_app_high_level(app_logtofile):
+    with open(app_logtofile.config["DM_LOG_PATH"], "r") as log_file:
+        # consume log initialization line
+        log_file.read()
+
+        with app_logtofile.test_request_context('/'):
+            test_extra_log_context = {
+                "ankles": "thinsocked",
+                "span_id": "beesWaxed",
+            }
+
+            request.get_extra_log_context = mock.Mock(spec_set=[])
+            request.get_extra_log_context.return_value = test_extra_log_context
+
+            app_logtofile.logger.info(
+                "Charming day {ankles}, {underleaves}, {parent_span_id}",
+                extra={"underleaves": "ample"},
+            )
+
+        # ensure buffers are flushed
+        logging.shutdown()
+
+        all_lines = tuple(json.loads(line) for line in log_file.read().splitlines())
+        assert all_lines == (
+            AnySupersetOf({
+                'message': "Missing keys when formatting log message: ('parent_span_id',)",
+            }),
+            AnySupersetOf({
+                "time": mock.ANY,
+                "application": mock.ANY,
+                "message": "Charming day thinsocked, ample, {parent_span_id: missing key}",
+                "underleaves": "ample",
+                "ankles": "thinsocked",
+                "spanId": "beesWaxed",
+                "parentSpanId": None,
+                "requestId": None,
+                "debugFlag": None,
+                "isSampled": None,
+            }),
+        )
+
+        for unexpected_key in (
+            "span_id",
+            "trace_id",
+            "traceId",
+            "request_id",
+            "debug_flag",
+            "is_sampled",
+            "parent_span_id",  # also ensuring "missing key" functionality didn't add a value for this
+        ):
+            assert not any(unexpected_key in line for line in all_lines)
 
 
 class TestCustomLogFormatter(object):
