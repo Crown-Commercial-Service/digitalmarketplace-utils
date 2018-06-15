@@ -162,19 +162,19 @@ class JSONFormatter(BaseJSONFormatter):
 
         log_record['logType'] = "application"
 
-        missing_keys = []
+        missing_keys = {}
         for attempt in range(self._max_missing_key_attempts):
             try:
-                log_record['message'] = log_record['message'].format(**log_record)
-
+                log_record['message'] = log_record['message'].format(**log_record, **missing_keys)
+            except KeyError as e:
+                missing_keys[e.args[0]] = f"{{{e.args[0]}: missing key}}"
+            else:
+                # execution should only ever reach this point once - when the .format() succeeds
                 if missing_keys:
-                    logger.warning("Missing keys when formatting log message: {}".format(missing_keys))
+                    logger.warning("Missing keys when formatting log message: {}".format(tuple(missing_keys.keys())))
 
                 break
 
-            except KeyError as e:
-                missing_keys.append(e.args[0])
-                log_record[e.args[0]] = f"{{{e.args[0]}: missing key}}"
         else:
             logger.exception("Too many missing keys when attempting to format log message: gave up")
 

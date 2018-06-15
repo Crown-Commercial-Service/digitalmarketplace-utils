@@ -176,7 +176,7 @@ class TestJSONFormatter(object):
         raw_result = self.dmbuffer.getvalue()
         result = json.loads(raw_result)
 
-        assert result['message'].startswith("Missing keys when formatting log message: ['barry']")
+        assert result['message'].startswith("Missing keys when formatting log message: ('barry',)")
         assert result['levelname'] == 'WARNING'
 
     def test_two_missing_keys_when_formatting_logs_a_warning(self):
@@ -184,7 +184,7 @@ class TestJSONFormatter(object):
         raw_result = self.dmbuffer.getvalue()
         result = json.loads(raw_result)
 
-        assert result['message'].startswith("Missing keys when formatting log message: ['barry', 'paul']")
+        assert result['message'].startswith("Missing keys when formatting log message: ('barry', 'paul')")
         assert result['levelname'] == 'WARNING'
 
     def test_failed_log_message_formatting_logs_an_error(self):
