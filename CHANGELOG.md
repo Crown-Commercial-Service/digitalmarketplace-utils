@@ -35,6 +35,22 @@ api_stubs.brief(framework_family='digital-outcomes-and-specialists')
 externals.get_brief_by_id(framework_family='digital-outcomes-and-specialists', brief_id=1234)
 ```
 
+## 37.1.0 (unintentional)
+
+As of this version, due to #399 the `dmutils.forms` module does **not** expose any of its own dependencies.
+Namely any code attempting to use the following names from `dmutils.forms` will fail:
+
+```python
+OrderedDict  # from collections
+chain        # from itertools
+re
+StringField  # from wtforms
+Regexp       # from wtforms.validators
+Length       # from wtforms.validators
+```
+
+Users should instead be importing these directly from their origin (indicated above).
+
 ## 37.0.0
 
 PR [#398](https://github.com/alphagov/digitalmarketplace-utils/pull/398)
