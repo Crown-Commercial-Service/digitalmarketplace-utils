@@ -1,5 +1,5 @@
-import uuid
 from itertools import chain
+from random import SystemRandom
 
 from flask import request, current_app
 
@@ -9,6 +9,8 @@ class RequestIdRequestMixin(object):
         A mixin intended for use against a flask Request class, implementing extraction (and partly generation) of
         headers approximately according to the "zipkin" scheme https://github.com/openzipkin/b3-propagation
     """
+    # a single class-wide random instance should be good enough for now
+    _spanid_random = _traceid_random = SystemRandom()
 
     @property
     def request_id(self):
@@ -21,7 +23,9 @@ class RequestIdRequestMixin(object):
             be used. Failing that, this will be an id we've generated and assigned ourselves.
         """
         if not hasattr(self, "_trace_id"):
-            self._trace_id = self._get_first_header(current_app.config['DM_TRACE_ID_HEADERS']) or str(uuid.uuid4().hex)
+            self._trace_id = self._get_first_header(
+                current_app.config['DM_TRACE_ID_HEADERS']
+            ) or self._get_new_trace_id()
         return self._trace_id
 
     @property
@@ -70,19 +74,30 @@ class RequestIdRequestMixin(object):
         else:
             return None
 
+    def _get_new_trace_id(self):
+        return hex(self._traceid_random.randrange(1 << 128))[2:]
+
+    def _get_new_span_id(self):
+        return hex(self._spanid_random.randrange(1 << 64))[2:]
+
     def get_onwards_request_headers(self):
         """
             Headers to add to any further (internal) http api requests we perform if we want that request to be
             considered part of this "trace id"
         """
+        new_span_id = self._get_new_span_id()
         return dict(chain(
             (
                 (header_name, self.trace_id)
                 for header_name in current_app.config['DM_TRACE_ID_HEADERS']
             ) if self.trace_id else (),
             (
-                (header_name, self.span_id)
+                (header_name, new_span_id)
                 for header_name in current_app.config['DM_SPAN_ID_HEADERS']
+            ) if self.trace_id else (),
+            (
+                (header_name, self.span_id)
+                for header_name in current_app.config['DM_PARENT_SPAN_ID_HEADERS']
             ) if self.span_id else (),
             (
                 (header_name, "1" if self.is_sampled else "0")
