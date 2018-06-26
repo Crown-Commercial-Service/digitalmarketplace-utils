@@ -282,6 +282,7 @@ def supplier_framework(
     declaration_status='complete',
     with_agreement=True,
     with_users=True,
+    application_company_details_confirmed=True,
 ):
     framework_family = _derive_framework_family(framework_slug) if not framework_family else framework_family
 
@@ -294,6 +295,7 @@ def supplier_framework(
             "agreementReturned": False,
             "agreementReturnedAt": None,
             "agreementStatus": None,
+            "applicationCompanyDetailsConfirmed": application_company_details_confirmed,
             "countersigned": False,
             "countersignedAt": None,
             "countersignedDetails": None,
@@ -303,7 +305,7 @@ def supplier_framework(
             "onFramework": on_framework,
             "prefillDeclarationFromFrameworkSlug": prefill_declaration_from_slug,
             "supplierId": supplier_id,
-            "supplierName": "My Little Company"
+            "supplierName": "My Little Company",
         }
     }
     if agreed_variations:

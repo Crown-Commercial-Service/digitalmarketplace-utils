@@ -271,6 +271,7 @@ class TestSupplierFramework:
                 'agreementReturned': True,
                 'agreementReturnedAt': '2017-05-17T14:31:27.118905Z',
                 'agreementStatus': 'countersigned',
+                "applicationCompanyDetailsConfirmed": True,
                 'countersigned': True,
                 'countersignedAt': '2017-06-15T08:41:46.390992Z',
                 'countersignedDetails': {
@@ -301,6 +302,7 @@ class TestSupplierFramework:
             on_framework=False,
             prefill_declaration_from_slug='digital-outcomes-and-specialists',
             declaration_status='started',
+            application_company_details_confirmed=False,
         ) == {
             'frameworkInterest': {
                 'agreedVariations': {
@@ -324,6 +326,7 @@ class TestSupplierFramework:
                 'agreementReturned': True,
                 'agreementReturnedAt': '2017-05-17T14:31:27.118905Z',
                 'agreementStatus': 'countersigned',
+                "applicationCompanyDetailsConfirmed": False,
                 'countersigned': True,
                 'countersignedAt': '2017-06-15T08:41:46.390992Z',
                 'countersignedDetails': {
@@ -369,6 +372,7 @@ class TestSupplierFramework:
             'agreementReturned': False,
             'agreementReturnedAt': None,
             'agreementStatus': None,
+            "applicationCompanyDetailsConfirmed": True,
             'countersigned': False,
             'countersignedAt': None,
             'countersignedDetails': None,
