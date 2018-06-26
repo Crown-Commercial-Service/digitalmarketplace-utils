@@ -1,1 +1,5 @@
 -e .
+
+# Dependencies not on PyPI must be listed here as well as in setup.py
+git+https://github.com/alphagov/Flask-FeatureFlags.git@1.0#egg=Flask-FeatureFlags==1.0
+

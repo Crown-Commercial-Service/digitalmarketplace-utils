@@ -2,6 +2,12 @@
 
 Records breaking changes from major version bumps
 
+## 40.0.0
+
+PR [414](https://github.com/alphagov/digitalmarketplace-utils/pull/414)
+
+Updated dependency on Flask-FeatureFlags v1.0 must be added to `requirements-app.txt` as this version is not on PyPI.
+
 ## 39.0.0
 
 PR [407](https://github.com/alphagov/digitalmarketplace-utils/pull/407)
