@@ -395,135 +395,189 @@ class TestSupplierFramework:
         assert set(supplier_framework['countersignedDetails'].keys()) == {'approvedByUserId'}
 
 
-def test_brief():
-    assert api_stubs.brief() \
-        == {
-        "briefs": {
-            "id": 1234,
-            "title": "I need a thing to do a thing",
-            "frameworkSlug": "digital-outcomes-and-specialists",
-            "frameworkName": "Digital Outcomes and Specialists",
-            "frameworkFramework": "digital-outcomes-and-specialists",
-            "lotSlug": "digital-specialists",
-            "status": "draft",
-            "users": [{"active": True,
-                       "role": "buyer",
-                       "emailAddress": "buyer@email.com",
-                       "id": 123,
-                       "name": "Buyer User"}],
-            "createdAt": "2016-03-29T10:11:12.000000Z",
-            "updatedAt": "2016-03-29T10:11:13.000000Z",
-            "clarificationQuestions": [],
-        }
-    }
+class TestBrief:
 
-    assert api_stubs.brief(
-        status='live',
-        framework_slug='a-framework-slug',
-        lot_slug='a-lot-slug', user_id=234,
-        framework_name='A Framework Name',
-        framework_family='a framework framework') \
-        == {
-        "briefs": {
-            "id": 1234,
-            "title": "I need a thing to do a thing",
-            "frameworkSlug": "a-framework-slug",
-            "frameworkName": "A Framework Name",
-            "frameworkFramework": "a framework framework",
-            "lotSlug": "a-lot-slug",
-            "status": "live",
-            "users": [{"active": True,
-                       "role": "buyer",
-                       "emailAddress": "buyer@email.com",
-                       "id": 234,
-                       "name": "Buyer User"}],
-            "createdAt": "2016-03-29T10:11:12.000000Z",
-            "updatedAt": "2016-03-29T10:11:13.000000Z",
-            "publishedAt": "2016-03-29T10:11:14.000000Z",
-            "applicationsClosedAt": "2016-04-07T00:00:00.000000Z",
-            "clarificationQuestionsClosedAt": "2016-04-02T00:00:00.000000Z",
-            "clarificationQuestionsAreClosed": False,
-            "clarificationQuestions": [],
+    def test_brief_defaults(self):
+        assert api_stubs.brief() \
+            == {
+            "briefs": {
+                "id": 1234,
+                "title": "I need a thing to do a thing",
+                "frameworkSlug": "digital-outcomes-and-specialists",
+                "frameworkStatus": "live",
+                "frameworkName": "Digital Outcomes and Specialists",
+                "frameworkFramework": "digital-outcomes-and-specialists",
+                "framework": {
+                    "family": "digital-outcomes-and-specialists",
+                    "name": "Digital Outcomes and Specialists",
+                    "slug": "digital-outcomes-and-specialists",
+                    "status": "live"
+                },
+                "isACopy": False,
+                "lotName": "Digital Specialists",
+                "lotSlug": "digital-specialists",
+                "status": "draft",
+                "users": [{"active": True,
+                           "role": "buyer",
+                           "emailAddress": "buyer@email.com",
+                           "id": 123,
+                           "name": "Buyer User"}],
+                "createdAt": "2016-03-29T10:11:12.000000Z",
+                "updatedAt": "2016-03-29T10:11:13.000000Z",
+                "clarificationQuestions": [],
+            }
         }
-    }
 
-    assert api_stubs.brief(clarification_questions=[{"question": "Why?", "answer": "Because"}]) \
-        == {
-        "briefs": {
-            "id": 1234,
-            "title": "I need a thing to do a thing",
-            "frameworkSlug": "digital-outcomes-and-specialists",
-            "frameworkName": "Digital Outcomes and Specialists",
-            "frameworkFramework": "digital-outcomes-and-specialists",
-            "lotSlug": "digital-specialists",
-            "status": "draft",
-            "users": [{"active": True,
-                       "role": "buyer",
-                       "emailAddress": "buyer@email.com",
-                       "id": 123,
-                       "name": "Buyer User"}],
-            "createdAt": "2016-03-29T10:11:12.000000Z",
-            "updatedAt": "2016-03-29T10:11:13.000000Z",
-            "clarificationQuestions": [{
-                "question": "Why?",
-                "answer": "Because"
-            }],
+    def test_brief_framework_and_lot(self):
+        assert api_stubs.brief(
+            status='live',
+            framework_slug='a-framework-slug',
+            framework_status='coming',
+            lot_name="A Lot Slug",
+            lot_slug='a-lot-slug',
+            user_id=234,
+            framework_name='A Framework Name',
+            framework_family='a framework framework') \
+            == {
+            "briefs": {
+                "id": 1234,
+                "title": "I need a thing to do a thing",
+                "frameworkSlug": "a-framework-slug",
+                "frameworkStatus": "coming",
+                "frameworkName": "A Framework Name",
+                "frameworkFramework": "a framework framework",
+                "framework": {
+                    "family": "a framework framework",
+                    "name": "A Framework Name",
+                    "slug": "a-framework-slug",
+                    "status": "coming"
+                },
+                "isACopy": False,
+                "lotSlug": "a-lot-slug",
+                "lotName": "A Lot Slug",
+                "status": "live",
+                "users": [{"active": True,
+                           "role": "buyer",
+                           "emailAddress": "buyer@email.com",
+                           "id": 234,
+                           "name": "Buyer User"}],
+                "createdAt": "2016-03-29T10:11:12.000000Z",
+                "updatedAt": "2016-03-29T10:11:13.000000Z",
+                "publishedAt": "2016-03-29T10:11:14.000000Z",
+                "applicationsClosedAt": "2016-04-07T00:00:00.000000Z",
+                "clarificationQuestionsClosedAt": "2016-04-02T00:00:00.000000Z",
+                "clarificationQuestionsAreClosed": False,
+                "clarificationQuestions": [],
+            }
         }
-    }
 
-    assert api_stubs.brief(status='live', clarification_questions_closed=True) \
-        == {
-        "briefs": {
-            "id": 1234,
-            "title": "I need a thing to do a thing",
-            "frameworkSlug": "digital-outcomes-and-specialists",
-            "frameworkName": "Digital Outcomes and Specialists",
-            "frameworkFramework": "digital-outcomes-and-specialists",
-            "lotSlug": "digital-specialists",
-            "status": "live",
-            "users": [{"active": True,
-                       "role": "buyer",
-                       "emailAddress": "buyer@email.com",
-                       "id": 123,
-                       "name": "Buyer User"}],
-            "createdAt": "2016-03-29T10:11:12.000000Z",
-            "updatedAt": "2016-03-29T10:11:13.000000Z",
-            "publishedAt": "2016-03-29T10:11:14.000000Z",
-            "applicationsClosedAt": "2016-04-07T00:00:00.000000Z",
-            "clarificationQuestionsClosedAt": "2016-04-02T00:00:00.000000Z",
-            "clarificationQuestionsAreClosed": True,
-            "clarificationQuestions": [],
+    def test_brief_clarification_questions(self):
+        assert api_stubs.brief(clarification_questions=[{"question": "Why?", "answer": "Because"}]) \
+            == {
+            "briefs": {
+                "id": 1234,
+                "title": "I need a thing to do a thing",
+                "frameworkSlug": "digital-outcomes-and-specialists",
+                "frameworkStatus": "live",
+                "frameworkName": "Digital Outcomes and Specialists",
+                "frameworkFramework": "digital-outcomes-and-specialists",
+                "framework": {
+                    "family": "digital-outcomes-and-specialists",
+                    "name": "Digital Outcomes and Specialists",
+                    "slug": "digital-outcomes-and-specialists",
+                    "status": "live"
+                },
+                "isACopy": False,
+                "lotName": "Digital Specialists",
+                "lotSlug": "digital-specialists",
+                "status": "draft",
+                "users": [{"active": True,
+                           "role": "buyer",
+                           "emailAddress": "buyer@email.com",
+                           "id": 123,
+                           "name": "Buyer User"}],
+                "createdAt": "2016-03-29T10:11:12.000000Z",
+                "updatedAt": "2016-03-29T10:11:13.000000Z",
+                "clarificationQuestions": [{
+                    "question": "Why?",
+                    "answer": "Because"
+                }],
+            }
         }
-    }
 
-    assert api_stubs.brief(
-        status='closed',
-        framework_slug='a-framework-slug',
-        lot_slug='a-lot-slug', user_id=234,
-        framework_name='A Framework Name') \
-        == {
-        "briefs": {
-            "id": 1234,
-            "title": "I need a thing to do a thing",
-            "frameworkSlug": "a-framework-slug",
-            "frameworkName": "A Framework Name",
-            "frameworkFramework": "digital-outcomes-and-specialists",
-            "lotSlug": "a-lot-slug",
-            "status": "closed",
-            "users": [{"active": True,
-                       "role": "buyer",
-                       "emailAddress": "buyer@email.com",
-                       "id": 234,
-                       "name": "Buyer User"}],
-            "createdAt": "2016-03-29T10:11:12.000000Z",
-            "updatedAt": "2016-03-29T10:11:13.000000Z",
-            "publishedAt": "2016-03-29T10:11:14.000000Z",
-            "applicationsClosedAt": "2016-04-07T00:00:00.000000Z",
-            "clarificationQuestionsClosedAt": "2016-04-02T00:00:00.000000Z",
-            "clarificationQuestionsAreClosed": False,
-            "clarificationQuestions": [],
+    def test_brief_clarification_questions_closed(self):
+        assert api_stubs.brief(status='live', clarification_questions_closed=True) \
+            == {
+            "briefs": {
+                "id": 1234,
+                "title": "I need a thing to do a thing",
+                "frameworkSlug": "digital-outcomes-and-specialists",
+                "frameworkStatus": "live",
+                "frameworkName": "Digital Outcomes and Specialists",
+                "frameworkFramework": "digital-outcomes-and-specialists",
+                "framework": {
+                    "family": "digital-outcomes-and-specialists",
+                    "name": "Digital Outcomes and Specialists",
+                    "slug": "digital-outcomes-and-specialists",
+                    "status": "live"
+                },
+                "isACopy": False,
+                "lotName": "Digital Specialists",
+                "lotSlug": "digital-specialists",
+                "status": "live",
+                "users": [{"active": True,
+                           "role": "buyer",
+                           "emailAddress": "buyer@email.com",
+                           "id": 123,
+                           "name": "Buyer User"}],
+                "createdAt": "2016-03-29T10:11:12.000000Z",
+                "updatedAt": "2016-03-29T10:11:13.000000Z",
+                "publishedAt": "2016-03-29T10:11:14.000000Z",
+                "applicationsClosedAt": "2016-04-07T00:00:00.000000Z",
+                "clarificationQuestionsClosedAt": "2016-04-02T00:00:00.000000Z",
+                "clarificationQuestionsAreClosed": True,
+                "clarificationQuestions": [],
+            }
         }
-    }
+
+    def test_closed_brief(self):
+        assert api_stubs.brief(
+            status='closed',
+            framework_slug='a-framework-slug',
+            lot_slug='a-lot-slug', user_id=234,
+            framework_name='A Framework Name') \
+            == {
+            "briefs": {
+                "id": 1234,
+                "title": "I need a thing to do a thing",
+                "frameworkSlug": "a-framework-slug",
+                "frameworkStatus": "live",
+                "frameworkName": "A Framework Name",
+                "frameworkFramework": "digital-outcomes-and-specialists",
+                "framework": {
+                    "family": "digital-outcomes-and-specialists",
+                    "name": "A Framework Name",
+                    "slug": "a-framework-slug",
+                    "status": "live"
+                },
+                "isACopy": False,
+                "lotName": "Digital Specialists",
+                "lotSlug": "a-lot-slug",
+                "status": "closed",
+                "users": [{"active": True,
+                           "role": "buyer",
+                           "emailAddress": "buyer@email.com",
+                           "id": 234,
+                           "name": "Buyer User"}],
+                "createdAt": "2016-03-29T10:11:12.000000Z",
+                "updatedAt": "2016-03-29T10:11:13.000000Z",
+                "publishedAt": "2016-03-29T10:11:14.000000Z",
+                "applicationsClosedAt": "2016-04-07T00:00:00.000000Z",
+                "clarificationQuestionsClosedAt": "2016-04-02T00:00:00.000000Z",
+                "clarificationQuestionsAreClosed": False,
+                "clarificationQuestions": [],
+            }
+        }
 
 
 def test_supplier():
