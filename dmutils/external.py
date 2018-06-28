@@ -15,6 +15,11 @@ def get_brief_by_id(framework_family, brief_id):
     raise NotImplementedError()
 
 
+@external.route('/<framework_family>/opportunities')
+def list_opportunities(framework_family):
+    raise NotImplementedError()
+
+
 @external.route('/g-cloud/suppliers')
 def suppliers_list_by_prefix():
     raise NotImplementedError()
