@@ -23,7 +23,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-         'Flask-FeatureFlags==0.6',
+         'Flask-FeatureFlags==1.0',
          'Flask-Script==2.0.6',
          'Flask-WTF==0.14.2',
          'Flask==0.10.1',
