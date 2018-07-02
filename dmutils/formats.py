@@ -94,6 +94,17 @@ def datetimeformat(value, default_value=None, localize=True):
     return _format_date(value, default_value, DISPLAY_DATETIME_FORMAT, localize=localize)
 
 
+def iso_datetime_format(value, default_value=None):
+    """
+    Example value: datetime.strptime("2018-07-25 23:59:59", "%Y-%m-%d %H:%M:%S")
+    Example output: '2018-07-25T23:59:59.000000Z'
+    :param value: some datetime that you want to format using ISO 8601 formatting
+    :param default_value: default to return if value is None
+    :return: string formatted per ISO 8601 in UTC, assuming the datetime passed in was UTC
+    """
+    return _format_date(value, default_value, DATETIME_FORMAT, localize=False)
+
+
 def utctoshorttimelongdateformat(value, default_value=None, localize=True):
     """
     Example value: datetime.strptime("2010-01-01 13:00:00", "%Y-%m-%d %H:%M:%S") OR "2010-01-01T13:00:00.000000Z"
