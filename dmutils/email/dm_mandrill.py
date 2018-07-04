@@ -53,3 +53,9 @@ def send_email(to_email_addresses, email_body, api_key, subject, from_email, fro
 
     logger.info("Sent {tags} response: id={id}, email={email_hash}",
                 extra={'tags': tags, 'id': result[0]['_id'], 'email_hash': hash_string(result[0]['email'])})
+
+
+def get_sent_emails(mandrill_api_key, tags, date_from=None):
+    mandrill_client = Mandrill(mandrill_api_key)
+
+    return mandrill_client.messages.search(tags=tags, date_from=date_from, limit=1000)

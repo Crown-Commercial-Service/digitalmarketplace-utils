@@ -7,7 +7,7 @@ import pytest
 import json
 
 from dmutils.config import init_app
-from dmutils.email.dm_mandrill import send_email
+from dmutils.email.dm_mandrill import send_email, get_sent_emails
 from dmutils.email.exceptions import EmailError
 from helpers import assert_external_service_log_entry, PatchExternalServiceLogConditionMixin
 
@@ -175,3 +175,15 @@ class TestMandrill(PatchExternalServiceLogConditionMixin):
                     )
 
             assert e.value.__context__ == exception
+
+    def test_calls_get_sent_emails_with_correct_params(self, email_app, mandrill):
+        with email_app.app_context():
+            mandrill.messages.search.return_value = [
+                {'_id': '123', 'email': '123'}
+            ]
+
+            get_sent_emails('api_key', ['password-resets'], date_from='2018-02-10')
+
+            assert mandrill.messages.search.call_args_list == [
+                mock.call(date_from='2018-02-10', limit=1000, tags=['password-resets'])
+            ]
