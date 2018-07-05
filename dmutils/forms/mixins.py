@@ -53,7 +53,7 @@ class DMFieldMixin:
     subclass of `wtforms.Field` in their base classes.
     '''
     def __init__(self, label=None, validators=None, hint=None, **kwargs):
-        self.hint = hint
+        self.hint = hint or getattr(self.__class__, 'hint', None)
 
         super().__init__(label=label, validators=validators, **kwargs)
 

@@ -48,6 +48,13 @@ class DMDecimalField(DMFieldMixin, wtforms.fields.DecimalField):
     pass
 
 
+class DMPoundsField(DMDecimalField):
+    unit = "£"
+    unit_in_full = "pounds"
+    unit_position = "before"
+    hint = "For example, 9900.95 for 9900 pounds and 95 pence"
+
+
 class DMHiddenField(DMFieldMixin, wtforms.fields.HiddenField):
     pass
 
@@ -135,6 +142,8 @@ class DMDateField(DMFieldMixin, wtforms.fields.Field):
     >>> form.date.data
     datetime.date(1999, 12, 31)
     '''
+
+    hint = "For example, 31 12 2020"
 
     # An internal class that defines the fields that make up the DateField.
     #
