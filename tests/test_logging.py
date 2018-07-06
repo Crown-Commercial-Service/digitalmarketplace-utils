@@ -11,7 +11,7 @@ import mock
 
 from flask import request
 
-from dmtestutils.comparisons import AnySupersetOf
+from dmtestutils.comparisons import AnySupersetOf, RestrictedAny
 
 from dmutils.logging import init_app, RequestExtraContextFilter, JSONFormatter, CustomLogFormatter
 from dmutils.logging import LOG_FORMAT, get_json_log_format
@@ -93,7 +93,13 @@ def test_app_after_request_logs_responses_with_info_level(app):
         logger.log.assert_called_once_with(
             logging.INFO,
             '{method} {url} {status}',
-            extra={'url': u'http://localhost/', 'status': 404, 'method': 'GET'}
+            extra={
+                "url": "http://localhost/",
+                "status": 404,
+                "method": "GET",
+                "_process": RestrictedAny(lambda value: isinstance(value, int)),
+                "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+            },
         )
 
 
@@ -109,7 +115,13 @@ def test_app_after_request_logs_5xx_responses_with_error_level(app):
         logger.log.assert_called_once_with(
             logging.ERROR,
             '{method} {url} {status}',
-            extra={'url': u'http://localhost/', 'status': 500, 'method': 'GET'}
+            extra={
+                "url": "http://localhost/",
+                "status": 500,
+                "method": "GET",
+                "_process": RestrictedAny(lambda value: isinstance(value, int)),
+                "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+            },
         )
 
 
