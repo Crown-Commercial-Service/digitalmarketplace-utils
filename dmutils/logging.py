@@ -39,6 +39,7 @@ def init_app(app):
             extra={
                 'method': request.method,
                 'url': request.url,
+                'endpoint': request.endpoint,
                 'status': response.status_code,
                 # pid and thread ident are both available on LogRecord by default, as `process` and `thread`
                 # respectively but I don't see a straightforward way of selectively including them only in certain
