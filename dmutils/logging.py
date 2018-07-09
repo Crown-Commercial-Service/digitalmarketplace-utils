@@ -2,6 +2,8 @@ from __future__ import absolute_import
 import logging
 import sys
 import re
+from os import getpid
+from threading import get_ident as get_thread_ident
 
 from flask import request, current_app
 from flask.ctx import has_request_context
@@ -37,7 +39,16 @@ def init_app(app):
             extra={
                 'method': request.method,
                 'url': request.url,
-                'status': response.status_code
+                'endpoint': request.endpoint,
+                'status': response.status_code,
+                # pid and thread ident are both available on LogRecord by default, as `process` and `thread`
+                # respectively but I don't see a straightforward way of selectively including them only in certain
+                # log messages - they are designed to be included when the formatter is being configured. This is why
+                # I'm manually grabbing them and putting them in as `extra` here, avoiding the existing parameter names
+                # to prevent LogRecord from complaining
+                '_process': getpid(),
+                # stringifying this as it could potentially be a long that json is unable to represent accurately
+                '_thread': str(get_thread_ident()),
             })
         return response
 
