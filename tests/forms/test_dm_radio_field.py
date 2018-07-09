@@ -4,14 +4,22 @@ import wtforms
 
 from dmutils.forms.fields import DMRadioField
 
-_choices = (
-    ('yes', 'Yes', 'A positive response.'),
-    ('no', 'No', 'A negative response.'),
-)
+_options = [
+    {
+        "label": "Yes",
+        "value": "yes",
+        "description": "A positive response."
+    },
+    {
+        "label": "No",
+        "value": "no",
+        "description": "A negative response."
+    }
+]
 
 
 class RadioForm(wtforms.Form):
-    field = DMRadioField(choices=_choices)
+    field = DMRadioField(options=_options)
 
 
 @pytest.fixture

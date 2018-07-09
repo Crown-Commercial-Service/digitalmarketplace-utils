@@ -25,7 +25,7 @@ import wtforms.fields
 from wtforms.utils import unset_value
 from wtforms.validators import Length
 
-from .mixins import DMFieldMixin
+from .mixins import DMFieldMixin, DMSelectFieldMixin
 
 from .filters import strip_whitespace
 from .validators import EmailValidator
@@ -63,33 +63,8 @@ class DMIntegerField(DMFieldMixin, wtforms.fields.IntegerField):
     pass
 
 
-class DMRadioField(DMFieldMixin, wtforms.fields.RadioField):
-    '''
-    A Digital Marketplace wrapper for `wtforms.RadioField`.
-
-    The `choices` argument for the constructor should be a sequence of
-    `(value, label, description)` tuples.
-
-    The `options` property is the choices in a format suitable for the
-    frontend toolkit.
-    '''
-    def __init__(self, label=None, validators=None, choices=None, **kwargs):
-        if choices:
-            # We do this the long way rather than using a comprehension because
-            # we want to be able to accept (value, label) tuples as well.
-            self.options = []
-            for choice in choices:
-                option = {}
-                option['value'] = choice[0]
-                option['label'] = choice[1]
-                if len(choice) > 2 and choice[2]:
-                    option['description'] = choice[2]
-                self.options.append(option)
-
-            # construct a choices argument suitable for wtforms.fields.RadioField
-            choices = [(option['value'], option['label']) for option in self.options]
-
-        super().__init__(label, validators, choices=choices, **kwargs)
+class DMRadioField(DMFieldMixin, DMSelectFieldMixin, wtforms.fields.RadioField):
+    type = "radio"
 
 
 class DMStringField(DMFieldMixin, wtforms.fields.StringField):

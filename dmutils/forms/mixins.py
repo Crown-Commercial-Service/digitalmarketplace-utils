@@ -35,6 +35,11 @@ or the very excellent `Python Cookbook`_ by David Beazley.
     http://dabeaz.com/cookbook.html
 '''
 
+from copy import copy
+
+from wtforms.compat import text_type
+from wtforms.fields import SelectField
+
 
 class DMFieldMixin:
     '''
@@ -71,3 +76,35 @@ class DMFieldMixin:
             return self.errors[0]
         except IndexError:
             return None
+
+
+class DMSelectFieldMixin(SelectField):
+    '''
+    A Digital Marketplace wrapper for selection fields.
+
+    The `options` argument for the constructor should be a dictionary with
+    `value`, label`, and `description` keys.
+
+    The `options` attribute is the choices in a format suitable for the
+    frontend toolkit.
+    '''
+    def __init__(self, label=None, validators=None, coerce=text_type, options=None, **kwargs):
+        super().__init__(label, validators, coerce, **kwargs)
+        self.options = copy(options)
+
+    @property
+    def choices(self):
+        return [(option['value'], option['label']) for option in self.options] if self.options else []
+
+    @choices.setter
+    def choices(self, value):
+        if value is None:
+            self.options = None
+        else:
+            for value, label in value:
+                self.options.append(
+                    {
+                        'label': label,
+                        'value': value,
+                    }
+                )
