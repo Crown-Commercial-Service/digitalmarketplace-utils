@@ -27,9 +27,35 @@ LOG_FORMAT_EXTRA_JSON_KEYS = (
 logger = logging.getLogger(__name__)
 
 
+def _common_request_extra_log_context():
+    return {
+        "method": request.method,
+        "url": request.url,
+        "endpoint": request.endpoint,
+        # pid and thread ident are both available on LogRecord by default, as `process` and `thread`
+        # respectively but I don't see a straightforward way of selectively including them only in certain
+        # log messages - they are designed to be included when the formatter is being configured. This is why
+        # I'm manually grabbing them and putting them in as `extra` here, avoiding the existing parameter names
+        # to prevent LogRecord from complaining
+        "_process": getpid(),
+        # stringifying this as it could potentially be a long that json is unable to represent accurately
+        "_thread": str(get_thread_ident()),
+    }
+
+
 def init_app(app):
     app.config.setdefault('DM_LOG_LEVEL', 'INFO')
     app.config.setdefault('DM_APP_NAME', 'none')
+
+    @app.before_request
+    def before_request():
+        if getattr(request, "is_sampled", False):
+            # emit an early log message to record that the request was received by the app
+            current_app.logger.log(
+                logging.DEBUG,
+                "Received request {method} {url}",
+                extra=_common_request_extra_log_context(),
+            )
 
     @app.after_request
     def after_request(response):
@@ -37,19 +63,10 @@ def init_app(app):
             logging.ERROR if response.status_code // 100 == 5 else logging.INFO,
             '{method} {url} {status}',
             extra={
-                'method': request.method,
-                'url': request.url,
-                'endpoint': request.endpoint,
-                'status': response.status_code,
-                # pid and thread ident are both available on LogRecord by default, as `process` and `thread`
-                # respectively but I don't see a straightforward way of selectively including them only in certain
-                # log messages - they are designed to be included when the formatter is being configured. This is why
-                # I'm manually grabbing them and putting them in as `extra` here, avoiding the existing parameter names
-                # to prevent LogRecord from complaining
-                '_process': getpid(),
-                # stringifying this as it could potentially be a long that json is unable to represent accurately
-                '_thread': str(get_thread_ident()),
-            })
+                "status": response.status_code,
+                **_common_request_extra_log_context(),
+            },
+        )
         return response
 
     logging.getLogger().addHandler(logging.NullHandler())
