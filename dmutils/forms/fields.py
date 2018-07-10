@@ -26,6 +26,13 @@ from wtforms.utils import unset_value
 from wtforms.validators import Length
 
 from .mixins import DMFieldMixin, DMSelectFieldMixin
+from .widgets import (
+    DMCheckboxInput,
+    DMDateInput,
+    DMRadioInput,
+    DMTextInput,
+    DMUnitInput,
+)
 
 from .filters import strip_whitespace
 from .validators import EmailValidator
@@ -37,6 +44,8 @@ __all__ = ['DMBooleanField', 'DMDecimalField', 'DMHiddenField', 'DMIntegerField'
 
 
 class DMBooleanField(DMFieldMixin, wtforms.fields.BooleanField):
+    widget = DMCheckboxInput()
+
     type = "checkbox"
 
     @property
@@ -49,6 +58,8 @@ class DMDecimalField(DMFieldMixin, wtforms.fields.DecimalField):
 
 
 class DMPoundsField(DMDecimalField):
+    widget = DMUnitInput()
+
     unit = "£"
     unit_in_full = "pounds"
     unit_position = "before"
@@ -64,14 +75,18 @@ class DMIntegerField(DMFieldMixin, wtforms.fields.IntegerField):
 
 
 class DMRadioField(DMFieldMixin, DMSelectFieldMixin, wtforms.fields.RadioField):
+    widget = DMRadioInput()
+
     type = "radio"
 
 
 class DMStringField(DMFieldMixin, wtforms.fields.StringField):
-    pass
+    widget = DMTextInput()
 
 
 class DMStripWhitespaceStringField(DMFieldMixin, wtforms.fields.StringField):
+    widget = DMTextInput()
+
     def __init__(self, label=None, **kwargs):
         kwargs['filters'] = tuple(chain(
             kwargs.get('filters', ()) or (),
@@ -117,6 +132,8 @@ class DMDateField(DMFieldMixin, wtforms.fields.Field):
     >>> form.date.data
     datetime.date(1999, 12, 31)
     '''
+
+    widget = DMDateInput()
 
     hint = "For example, 31 12 2020"
 
