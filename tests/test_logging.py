@@ -6,6 +6,7 @@ try:
 except ImportError:
     from io import StringIO
 import json
+import time
 
 import mock
 
@@ -123,6 +124,8 @@ def test_app_request_logs_responses_with_info_level(app, is_sampled):
                     "status": 404,
                     "method": "GET",
                     "endpoint": None,
+                    "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
+                    "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
                     "_process": RestrictedAny(lambda value: isinstance(value, int)),
                     "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
                 },
@@ -137,6 +140,7 @@ def test_app_request_logs_5xx_responses_with_error_level(app, is_sampled):
 
     @app.route('/')
     def error_route():
+        time.sleep(0.05)
         return 'error', 500
 
     # since app.logger is a read-only property we need to patch the Flask class
@@ -164,6 +168,8 @@ def test_app_request_logs_5xx_responses_with_error_level(app, is_sampled):
                     "status": 500,
                     "method": "GET",
                     "endpoint": "error_route",
+                    "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0.05 <= value),
+                    "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
                     "_process": RestrictedAny(lambda value: isinstance(value, int)),
                     "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
                 },

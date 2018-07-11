@@ -4,6 +4,7 @@ import sys
 import re
 from os import getpid
 from threading import get_ident as get_thread_ident
+import time
 
 from flask import request, current_app
 from flask.ctx import has_request_context
@@ -49,6 +50,11 @@ def init_app(app):
 
     @app.before_request
     def before_request():
+        # annotating these onto request instead of flask.g as they probably shouldn't be inheritable from a request-less
+        # application context
+        request.before_request_real_time = time.perf_counter()
+        request.before_request_process_time = time.process_time()
+
         if getattr(request, "is_sampled", False):
             # emit an early log message to record that the request was received by the app
             current_app.logger.log(
@@ -64,6 +70,14 @@ def init_app(app):
             '{method} {url} {status}',
             extra={
                 "status": response.status_code,
+                "duration_real": (
+                    (time.perf_counter() - request.before_request_real_time)
+                    if hasattr(request, "before_request_real_time") else None
+                ),
+                "duration_process": (
+                    (time.process_time() - request.before_request_process_time)
+                    if hasattr(request, "before_request_process_time") else None
+                ),
                 **_common_request_extra_log_context(),
             },
         )
