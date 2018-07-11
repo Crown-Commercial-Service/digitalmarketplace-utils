@@ -8,9 +8,12 @@ class DMJinjaWidgetBase:
 
     template_args = []
 
-    def __init__(self):
+    def __init__(self, hide_question=False):
         # we include common template arguments here to avoid repetition
         self.template_args = ["error", "name", "hint", "question", "value"] + self.template_args
+        if hide_question:
+            self.template_args.remove("question")
+
         self.template = None
 
     def __call__(self, field, **kwargs):
@@ -32,8 +35,8 @@ class DMSelectionButtonBase(DMJinjaWidgetBase):
     template_args = ["type", "inline", "options"]
     template_file = "toolkit/forms/selection-buttons.html"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.template_args.remove("value")
 
     def __call__(self, field, **kwargs):
