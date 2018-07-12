@@ -1,9 +1,9 @@
-from flask import Blueprint
+from flask import Blueprint, abort
 
 external = Blueprint('external', __name__)
 
-# Buyer frontend
 
+# Buyer frontend
 
 @external.route('/')
 def index():
@@ -12,11 +12,17 @@ def index():
 
 @external.route('/<framework_family>/opportunities/<brief_id>')
 def get_brief_by_id(framework_family, brief_id):
+    if framework_family == 'suppliers':
+        # nginx would otherwise route this pattern to the Brief Responses FE
+        abort(404)
     raise NotImplementedError()
 
 
 @external.route('/<framework_family>/opportunities')
 def list_opportunities(framework_family):
+    if framework_family == 'suppliers':
+        # nginx would otherwise route this pattern to the Brief Responses FE
+        abort(404)
     raise NotImplementedError()
 
 
