@@ -6,10 +6,12 @@ try:
 except ImportError:
     from io import StringIO
 import json
+import time
 
 import mock
 
 from flask import request
+import pytest
 
 from dmtestutils.comparisons import AnySupersetOf, RestrictedAny
 
@@ -85,46 +87,94 @@ def test_init_app_adds_stream_handler_with_plain_text_format_when_config_env_set
     assert isinstance(app.logger.handlers[0].formatter, CustomLogFormatter)
 
 
-def test_app_after_request_logs_responses_with_info_level(app):
+def _set_request_class_is_sampled(app, sampled):
+    class _Request(app.request_class):
+        is_sampled = sampled
+
+    app.request_class = _Request
+
+
+@pytest.mark.parametrize("is_sampled", (None, False, True,))
+def test_app_request_logs_responses_with_info_level(app, is_sampled):
+    if is_sampled is not None:
+        _set_request_class_is_sampled(app, is_sampled)
+
     # since app.logger is a read-only property we need to patch the Flask class
     with mock.patch('flask.Flask.logger') as logger:
         app.test_client().get('/')
 
-        logger.log.assert_called_once_with(
-            logging.INFO,
-            '{method} {url} {status}',
-            extra={
-                "url": "http://localhost/",
-                "status": 404,
-                "method": "GET",
-                "endpoint": None,
-                "_process": RestrictedAny(lambda value: isinstance(value, int)),
-                "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
-            },
-        )
+        assert logger.log.call_args_list == ([
+            mock.call(
+                logging.DEBUG,
+                'Received request {method} {url}',
+                extra={
+                    "url": "http://localhost/",
+                    "method": "GET",
+                    "endpoint": None,
+                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
+                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                },
+            ),
+        ] if is_sampled else []) + [
+            mock.call(
+                logging.INFO,
+                '{method} {url} {status}',
+                extra={
+                    "url": "http://localhost/",
+                    "status": 404,
+                    "method": "GET",
+                    "endpoint": None,
+                    "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
+                    "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
+                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
+                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                },
+            )
+        ]
 
 
-def test_app_after_request_logs_5xx_responses_with_error_level(app):
+@pytest.mark.parametrize("is_sampled", (None, False, True,))
+def test_app_request_logs_5xx_responses_with_error_level(app, is_sampled):
+    if is_sampled is not None:
+        _set_request_class_is_sampled(app, is_sampled)
+
     @app.route('/')
     def error_route():
+        time.sleep(0.05)
         return 'error', 500
 
     # since app.logger is a read-only property we need to patch the Flask class
     with mock.patch('flask.Flask.logger') as logger:
         app.test_client().get('/')
 
-        logger.log.assert_called_once_with(
-            logging.ERROR,
-            '{method} {url} {status}',
-            extra={
-                "url": "http://localhost/",
-                "status": 500,
-                "method": "GET",
-                "endpoint": "error_route",
-                "_process": RestrictedAny(lambda value: isinstance(value, int)),
-                "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
-            },
-        )
+        assert logger.log.call_args_list == ([
+            mock.call(
+                logging.DEBUG,
+                'Received request {method} {url}',
+                extra={
+                    "url": "http://localhost/",
+                    "method": "GET",
+                    "endpoint": "error_route",
+                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
+                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                },
+            ),
+        ] if is_sampled else []) + [
+            mock.call(
+                logging.ERROR,
+                '{method} {url} {status}',
+                extra={
+                    "url": "http://localhost/",
+                    "status": 500,
+                    "method": "GET",
+                    "endpoint": "error_route",
+                    "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0.05 <= value),
+                    "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
+                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
+                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                },
+            ),
+        ]
 
 
 class TestJSONFormatter(object):
