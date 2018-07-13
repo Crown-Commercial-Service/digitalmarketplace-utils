@@ -17,7 +17,7 @@ _logged_duration_partial = partial(
 
 
 timed_render_template = _logged_duration_partial(
-    message=lambda log_context: f"Spent >{SLOW_RENDER_THRESHOLD}s in render_template",
+    message="Spent {duration_real}s in render_template",
 )(render_template)
 timed_render_template.__doc__ = """
     This is a simple ``logged_duration``-wrapped version of flask's ``render_template`` which will output a ``DEBUG``
@@ -27,7 +27,7 @@ timed_render_template.__doc__ = """
 """
 
 timed_render_template_string = _logged_duration_partial(
-    message=lambda log_context: f"Spent >{SLOW_RENDER_THRESHOLD}s in render_template_string",
+    message="Spent {duration_real}s in render_template_string",
 )(render_template_string)
 timed_render_template_string.__doc__ = """
     See ``timed_render_template``, only for ``render_template_string``.
