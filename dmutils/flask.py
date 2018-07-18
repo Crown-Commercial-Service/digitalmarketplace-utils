@@ -5,7 +5,7 @@ from flask import render_template, render_template_string
 from dmutils.timing import logged_duration
 
 
-SLOW_RENDER_THRESHOLD = 0.25
+SLOW_RENDER_THRESHOLD = 0.5
 
 
 _logged_duration_partial = partial(
