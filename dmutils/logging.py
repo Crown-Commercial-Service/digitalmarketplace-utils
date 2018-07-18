@@ -38,9 +38,9 @@ def _common_request_extra_log_context():
         # log messages - they are designed to be included when the formatter is being configured. This is why
         # I'm manually grabbing them and putting them in as `extra` here, avoiding the existing parameter names
         # to prevent LogRecord from complaining
-        "_process": getpid(),
+        "process_": getpid(),
         # stringifying this as it could potentially be a long that json is unable to represent accurately
-        "_thread": str(get_thread_ident()),
+        "thread_": str(get_thread_ident()),
     }
 
 
