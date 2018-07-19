@@ -111,8 +111,8 @@ def test_app_request_logs_responses_with_info_level(app, is_sampled):
                     "url": "http://localhost/",
                     "method": "GET",
                     "endpoint": None,
-                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
-                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
+                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
                 },
             ),
         ] if is_sampled else []) + [
@@ -126,8 +126,8 @@ def test_app_request_logs_responses_with_info_level(app, is_sampled):
                     "endpoint": None,
                     "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
                     "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
-                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
-                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
+                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
                 },
             )
         ]
@@ -155,8 +155,8 @@ def test_app_request_logs_5xx_responses_with_error_level(app, is_sampled):
                     "url": "http://localhost/",
                     "method": "GET",
                     "endpoint": "error_route",
-                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
-                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
+                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
                 },
             ),
         ] if is_sampled else []) + [
@@ -170,8 +170,8 @@ def test_app_request_logs_5xx_responses_with_error_level(app, is_sampled):
                     "endpoint": "error_route",
                     "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0.05 <= value),
                     "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
-                    "_process": RestrictedAny(lambda value: isinstance(value, int)),
-                    "_thread": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
+                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
                 },
             ),
         ]
