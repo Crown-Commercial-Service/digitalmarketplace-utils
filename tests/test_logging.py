@@ -61,7 +61,6 @@ def test_request_extra_context_filter_no_method(app):
 
 
 def test_init_app_adds_stream_handler_without_log_path(app):
-    init_app(app)
 
     assert len(app.logger.handlers) == 1
     assert isinstance(app.logger.handlers[0], logging.StreamHandler)
@@ -85,6 +84,20 @@ def test_init_app_adds_stream_handler_with_plain_text_format_when_config_env_set
     assert len(app.logger.handlers) == 1
     assert isinstance(app.logger.handlers[0], logging.StreamHandler)
     assert isinstance(app.logger.handlers[0].formatter, CustomLogFormatter)
+
+
+def test_init_app_only_adds_handlers_to_defined_loggers(app):
+    for logger in logging.Logger.manager.loggerDict.values():
+        logger.handlers = []
+
+    init_app(app)
+
+    loggers = {
+        k for k, v in logging.Logger.manager.loggerDict.items() if v.handlers
+        and isinstance(v.handlers[0], logging.StreamHandler)
+    }
+
+    assert loggers == {'conftest', 'dmutils', 'dmapiclient', 'urllib3.util.retry'}
 
 
 def _set_request_class_is_sampled(app, sampled):
