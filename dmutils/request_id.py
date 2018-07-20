@@ -118,8 +118,9 @@ class RequestIdRequestMixin(object):
             "trace_id": self.trace_id,
             "span_id": self.span_id,
             "parent_span_id": self.parent_span_id,
-            "is_sampled": self.is_sampled,
-            "debug_flag": self.debug_flag,
+            # output these as 1|0 strings to match what's easily outputtable by nginx
+            "is_sampled": "1" if self.is_sampled else "0",
+            "debug_flag": "1" if self.debug_flag else "0",
         }
 
 
