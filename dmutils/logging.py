@@ -89,12 +89,17 @@ def init_app(app):
 
     handler = get_handler(app)
     loglevel = logging.getLevelName(app.config['DM_LOG_LEVEL'])
-    loggers = [app.logger, logging.getLogger('dmutils'), logging.getLogger('dmapiclient')]
+    loggers = [
+        app.logger,
+        logging.getLogger('dmutils'),
+        logging.getLogger('dmapiclient'),
+        logging.getLogger('urllib3.util.retry')
+    ]
     for logger in loggers:
         logger.addHandler(handler)
         logger.setLevel(loglevel)
 
-    app.logger.info("Logging configured")
+    app.logger.info('Logging configured')
 
 
 def configure_handler(handler, app, formatter):
