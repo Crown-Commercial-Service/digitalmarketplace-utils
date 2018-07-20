@@ -540,8 +540,8 @@ def test_request_header(
             "trace_id": expected_trace_id,
             "span_id": expected_span_id,
             "parent_span_id": expected_parent_span_id,
-            "is_sampled": expected_is_sampled,
-            "debug_flag": expected_debug_flag,
+            "is_sampled": "1" if expected_is_sampled else "0",
+            "debug_flag": "1" if expected_debug_flag else "0",
         }
 
     assert traceid_random_mock.randrange.called is expect_trace_random_call
