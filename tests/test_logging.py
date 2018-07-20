@@ -97,7 +97,7 @@ def test_init_app_only_adds_handlers_to_defined_loggers(app):
         and isinstance(v.handlers[0], logging.StreamHandler)
     }
 
-    assert loggers == {'conftest', 'dmutils', 'dmapiclient', 'urllib3.util.retry'}
+    assert loggers == {'conftest', 'dmutils', 'dmapiclient', 'flask_wtf.csrf', 'urllib3.util.retry'}
 
 
 def _set_request_class_is_sampled(app, sampled):

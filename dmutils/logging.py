@@ -93,7 +93,8 @@ def init_app(app):
         app.logger,
         logging.getLogger('dmutils'),
         logging.getLogger('dmapiclient'),
-        logging.getLogger('urllib3.util.retry')
+        logging.getLogger('flask_wtf.csrf'),
+        logging.getLogger('urllib3.util.retry'),
     ]
     for logger in loggers:
         logger.addHandler(handler)
