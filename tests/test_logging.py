@@ -100,6 +100,21 @@ def test_init_app_only_adds_handlers_to_defined_loggers(app):
     assert loggers == {'conftest', 'dmutils', 'dmapiclient', 'flask_wtf.csrf', 'urllib3.util.retry'}
 
 
+def test_urllib3_retry_logger_not_configured_for_search_api(app):
+    app.config['DM_APP_NAME'] = 'search-api'
+    for logger in logging.Logger.manager.loggerDict.values():
+        logger.handlers = []
+
+    init_app(app)
+
+    loggers = {
+        k for k, v in logging.Logger.manager.loggerDict.items() if v.handlers
+        and isinstance(v.handlers[0], logging.StreamHandler)
+    }
+
+    assert 'urllib3.util.retry' not in loggers
+
+
 def _set_request_class_is_sampled(app, sampled):
     class _Request(app.request_class):
         is_sampled = sampled

@@ -94,8 +94,12 @@ def init_app(app):
         logging.getLogger('dmutils'),
         logging.getLogger('dmapiclient'),
         logging.getLogger('flask_wtf.csrf'),
-        logging.getLogger('urllib3.util.retry'),
     ]
+    #  The Elasticsearch client used by the search-api uses urllib3 directly and manages retries itself.
+    #  This results in more logging than we want from urllib3, so we don't configure the logger for the search-api.
+    if app.config['DM_APP_NAME'] != 'search-api':
+        loggers.append(logging.getLogger('urllib3.util.retry'))
+
     for logger in loggers:
         logger.addHandler(handler)
         logger.setLevel(loglevel)
