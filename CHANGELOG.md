@@ -2,6 +2,13 @@
 
 Records breaking changes from major version bumps
 
+## 41.0.0
+
+PR [431](https://github.com/alphagov/digitalmarketplace-utils/pull/431)
+
+`forms.EmailValidator` no longer inherits from `wtforms.validators.Regexp` and its constructor now only accepts a
+single, keyword, argument `message`.
+
 ## 40.0.0
 
 PR [414](https://github.com/alphagov/digitalmarketplace-utils/pull/414)
