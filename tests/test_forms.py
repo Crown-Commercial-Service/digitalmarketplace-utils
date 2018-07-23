@@ -33,6 +33,10 @@ email_address_parametrization = ("email_address", (
     "@",
     "first.w@t.ch.",
     "second.w@t..h",
+    "a.b@strangeface.fellowthatsolike_sawhimbefore.chapwithawen",
+    "-@-.-",
+    "123@321.12",
+    "x@y.z",
 ))
 
 
@@ -51,13 +55,12 @@ class TestEmailFieldFormat(object):
             assert "test_email" in form.errors
 
     @pytest.mark.parametrize("email_address", (
-        "x@y.z",
+        "x@y.zz",
         "-second@wat.ch",
-        "123@321.12",
+        "123@321.go",
         "   helter-Skelter_pelter-Welter@Who.do-you.call.him\t",
-        "a..............b@strangeface.fellowthatsolike_sawhimbefore.Chapwithawen",
+        "a..............b@strangeface.fellowthatsolike-sawhimbefore.Chapwithawen",
         ".man_in_the_street.@other.man.in.the.street   \n",
-        "-@-.-",  # probably not actually valid
     ))
     def test_valid_emails(self, app, email_address):
         with app.app_context():
@@ -118,7 +121,7 @@ class EmailFieldCombinationTestForm(FlaskForm):
 
 class TestEmailFieldCombination(object):
     _invalid_address = "@inv@li..d.."
-    _valid_address = "v@li.d"
+    _valid_address = "v@l.id"
 
     _possibilities = (_valid_address, _invalid_address, "")
 
