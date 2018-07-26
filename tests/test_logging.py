@@ -1,11 +1,8 @@
-from __future__ import absolute_import
-import tempfile
-import logging
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 import json
+import logging
+import os.path
+import tempfile
 import time
 
 import mock
@@ -13,7 +10,7 @@ import mock
 from flask import request
 import pytest
 
-from dmtestutils.comparisons import AnySupersetOf, RestrictedAny
+from dmtestutils.comparisons import AnyStringMatching, AnySupersetOf, RestrictedAny
 
 from dmutils.logging import init_app, RequestExtraContextFilter, JSONFormatter, CustomLogFormatter
 from dmutils.logging import LOG_FORMAT, get_json_log_format
@@ -289,10 +286,19 @@ class TestJSONFormatter(object):
         assert result['message'].startswith("Too many missing keys when attempting to format")
 
 
-def test_log_context_handling_in_initialized_app_high_level(app_logtofile):
+@pytest.mark.parametrize("is_sampled", (False, True,))
+def test_log_context_handling_in_initialized_app_high_level(app_logtofile, is_sampled):
+    def _logging_call_site(app):
+        app.logger.info(
+            "Charming day {ankles}, {underleaves}, {parent_span_id}",
+            extra={"underleaves": "ample"},
+        )
+
     with open(app_logtofile.config["DM_LOG_PATH"], "r") as log_file:
         # consume log initialization line
         log_file.read()
+
+        _set_request_class_is_sampled(app_logtofile, is_sampled)
 
         with app_logtofile.test_request_context('/'):
             test_extra_log_context = {
@@ -303,18 +309,25 @@ def test_log_context_handling_in_initialized_app_high_level(app_logtofile):
             request.get_extra_log_context = mock.Mock(spec_set=[])
             request.get_extra_log_context.return_value = test_extra_log_context
 
-            app_logtofile.logger.info(
-                "Charming day {ankles}, {underleaves}, {parent_span_id}",
-                extra={"underleaves": "ample"},
-            )
+            # we perform the log call in a specifically designated & named function to exercise & be able to reliably
+            # assert the behaviour of the introspective aspects of our logging
+            _logging_call_site(app_logtofile)
 
         # ensure buffers are flushed
         logging.shutdown()
 
         all_lines = tuple(json.loads(line) for line in log_file.read().splitlines())
+
         assert all_lines == (
             AnySupersetOf({
-                'message': "Missing keys when formatting log message: ('parent_span_id',)",
+                "message": "Missing keys when formatting log message: ('parent_span_id',)",
+                # it may seem foolish and a bit fragile to include the following parameters in our assertions but
+                # properly testing introspective behaviour is always going to get a bit weird and meta in that regard.
+                "app_funcName": "_logging_call_site",
+                "app_pathname": os.path.normcase(_logging_call_site.__code__.co_filename),
+                "app_lineno": RestrictedAny(lambda value: isinstance(value, int)),
+                "lineno": RestrictedAny(lambda value: isinstance(value, int)),
+                "pathname": AnyStringMatching(r".+\/dmutils\/logging\.pyc?"),
             }),
             AnySupersetOf({
                 "time": mock.ANY,
@@ -327,8 +340,26 @@ def test_log_context_handling_in_initialized_app_high_level(app_logtofile):
                 "requestId": None,
                 "debugFlag": None,
                 "isSampled": None,
+                # as above, these parameters are included in the assertion to ensure our modifications haven't affected
+                # the regular logging introspection features
+                "lineno": RestrictedAny(lambda value: isinstance(value, int)),
+                "pathname": os.path.normcase(_logging_call_site.__code__.co_filename),
+                **({
+                    "app_funcName": "_logging_call_site",
+                    "app_pathname": os.path.normcase(_logging_call_site.__code__.co_filename),
+                    "app_lineno": RestrictedAny(lambda value: isinstance(value, int)),
+                } if is_sampled else {}),
             }),
         )
+
+        if not is_sampled:
+            # AppStackLocationFilter shouldn't have included information in this low-urgency message
+            for unexpected_key in (
+                "app_funcName",
+                "app_lineno",
+                "app_pathname",
+            ):
+                assert unexpected_key not in all_lines[1]
 
         for unexpected_key in (
             "span_id",

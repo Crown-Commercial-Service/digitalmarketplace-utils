@@ -9,17 +9,19 @@ from dmutils.logging import init_app
 
 
 @pytest.fixture
-def app():
+def app(request):
     app = Flask(__name__)
+    app.root_path = request.fspath.dirname
     init_app(app)
     return app
 
 
 # it's deceptively difficult to capture & inspect *actual* log output in pytest (no, capfd doesn't seem to work)
 @pytest.fixture
-def app_logtofile():
+def app_logtofile(request):
     with tempfile.NamedTemporaryFile() as f:
         app = Flask(__name__)
+        app.root_path = request.fspath.dirname
         app.config['DM_LOG_PATH'] = f.name
         init_app(app)
         yield app
