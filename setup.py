@@ -30,7 +30,7 @@ setup(
          'Flask-Login>=0.2.11',
          'boto3==1.4.8',
          'contextlib2==0.4.0',
-         'cryptography==1.9',
+         'cryptography==2.3',
          'inflection==0.3.1',
          'mailchimp3==2.0.11',
          'mandrill==1.0.57',
