@@ -3,6 +3,7 @@ import logging
 import sys
 import re
 from os import getpid
+import os.path
 from threading import get_ident as get_thread_ident
 import time
 
@@ -112,6 +113,7 @@ def configure_handler(handler, app, formatter):
     handler.setFormatter(formatter)
     handler.addFilter(AppNameFilter(app.config['DM_APP_NAME']))
     handler.addFilter(RequestExtraContextFilter())
+    handler.addFilter(AppStackLocationFilter("app_", app.root_path))
 
     return handler
 
@@ -142,6 +144,64 @@ class AppNameFilter(logging.Filter):
         record.app_name = self.app_name
 
         return record
+
+
+class BaseExtraStackLocationFilter(logging.Filter):
+    def __init__(self, param_prefix):
+        self._param_prefix = param_prefix
+
+    def is_interesting_frame(self, frame):
+        raise NotImplementedError
+
+    def enabled_for_record(self, record):
+        return True
+
+    def _findCaller(self):
+        """
+        Cut down copy of Python 3.6.6's logging.Logger.findCaller()
+
+        Find the stack frame of the caller so that we can note the source
+        file name, line number and function name.
+        """
+        f = logging.currentframe()
+        if f is not None:
+            f = f.f_back
+        while hasattr(f, "f_code"):
+            co = f.f_code
+            if self.is_interesting_frame(f):
+                return co.co_filename, f.f_lineno, co.co_name
+            f = f.f_back
+        return None, None, None
+
+    def filter(self, record):
+        if not self.enabled_for_record(record):
+            return record
+
+        rv = self._findCaller()
+
+        if rv != (None, None, None,):
+            for attr_name, attr_value in zip(("pathname", "lineno", "funcName",), rv):
+                setattr(record, self._param_prefix + attr_name, attr_value)
+
+        return record
+
+
+class AppStackLocationFilter(BaseExtraStackLocationFilter):
+    """
+        Filter which includes extra information on the first stack frame
+        that is from a module *within* the "app", based on the code location's
+        filename and a provided base file_path_prefix for the "app"
+    """
+    def __init__(self, param_prefix, file_path_prefix):
+        self._file_path_prefix = os.path.normcase(file_path_prefix)
+        super().__init__(param_prefix)
+
+    def is_interesting_frame(self, frame):
+        filename = os.path.normcase(frame.f_code.co_filename)
+        return os.path.commonpath((self._file_path_prefix, filename)) == self._file_path_prefix
+
+    def enabled_for_record(self, record):
+        return record.levelno >= logging.WARNING or (has_request_context() and getattr(request, "is_sampled", False))
 
 
 class RequestExtraContextFilter(logging.Filter):
