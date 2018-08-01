@@ -168,7 +168,12 @@ class BaseExtraStackLocationFilter(logging.Filter):
             f = f.f_back
         while hasattr(f, "f_code"):
             co = f.f_code
-            if self.is_interesting_frame(f):
+            try:
+                # do this in a try block to protect ourselves from faulty is_interesting_frame implementations
+                is_interesting_frame = self.is_interesting_frame(f)
+            except:  # noqa
+                is_interesting_frame = False
+            if is_interesting_frame:
                 return co.co_filename, f.f_lineno, co.co_name
             f = f.f_back
         return None, None, None
@@ -198,7 +203,12 @@ class AppStackLocationFilter(BaseExtraStackLocationFilter):
 
     def is_interesting_frame(self, frame):
         filename = os.path.normcase(frame.f_code.co_filename)
-        return os.path.commonpath((self._file_path_prefix, filename)) == self._file_path_prefix
+        return os.path.commonpath(
+            # regarding abspath here: there is a possibility due to https://bugs.python.org/issue20443 that absolutizing
+            # these file paths won't work correctly if our python process has done a chdir. I don't think we generally
+            # do that but a better solution might be to outlaw relative imports.
+            (os.path.abspath(self._file_path_prefix), os.path.abspath(filename))
+        ) == self._file_path_prefix
 
     def enabled_for_record(self, record):
         return record.levelno >= logging.WARNING or (has_request_context() and getattr(request, "is_sampled", False))
