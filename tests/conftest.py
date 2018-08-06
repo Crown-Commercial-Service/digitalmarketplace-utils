@@ -13,6 +13,7 @@ def app(request):
     app = Flask(__name__)
     app.root_path = request.fspath.dirname
     init_app(app)
+    app.config['SECRET_KEY'] = 'secret_key'
     return app
 
 
