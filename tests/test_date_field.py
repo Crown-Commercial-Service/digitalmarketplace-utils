@@ -5,14 +5,14 @@ from werkzeug.datastructures import MultiDict
 from wtforms import Form
 from wtforms.validators import DataRequired, InputRequired
 
-from dmutils.forms.fields import DateField
+from dmutils.forms.fields import DMDateField
 from dmutils.forms.validators import GreaterThan, FourDigitYear
 
 import datetime
 
 
 class DateForm(Form):
-    date = DateField()
+    date = DMDateField()
 
 
 def _data_fromtuple(t, prefix='date'):
@@ -58,11 +58,11 @@ def invalid_data(request):
 
 
 def test_create_date_field_with_validators():
-    assert DateField(validators=[InputRequired(), DataRequired()])
+    assert DMDateField(validators=[InputRequired(), DataRequired()])
 
 
 def test_date_field_has__value_method():
-    assert DateField._value
+    assert DMDateField._value
 
 
 def test_date_field__value_method_returns_raw_data(invalid_data):
@@ -122,7 +122,7 @@ def test_field__value_before_input_is_empty_dict():
 ))
 def test_data_required_error_message_matches_validation_message(invalid_data, message):
     class DateForm(Form):
-        date = DateField(validators=[DataRequired(message)])
+        date = DMDateField(validators=[DataRequired(message)])
 
     form = DateForm(invalid_data)
     form.validate()
@@ -140,7 +140,7 @@ def test_data_required_error_message_matches_validation_message(invalid_data, me
 ))
 def test_input_required_error_message_matches_validation_message(message, empty):
     class DateForm(Form):
-        date = DateField(validators=[InputRequired(message)])
+        date = DMDateField(validators=[InputRequired(message)])
 
     empty = MultiDict(empty)
     form = DateForm(empty)
@@ -154,7 +154,7 @@ def test_input_required_error_message_matches_validation_message(message, empty)
 ))
 def test_error_message_with_multiple_validators(invalid_data, message):
     class DateForm(Form):
-        date = DateField(validators=[InputRequired(), DataRequired(message)])
+        date = DMDateField(validators=[InputRequired(), DataRequired(message)])
 
     form = DateForm(invalid_data)
     form.validate()
@@ -163,7 +163,7 @@ def test_error_message_with_multiple_validators(invalid_data, message):
 
 def test_date_field_with_input_required_validator(valid_data):
     class DateForm(Form):
-        date = DateField(validators=[InputRequired()])
+        date = DMDateField(validators=[InputRequired()])
 
     form = DateForm(valid_data)
     assert form.validate()
@@ -171,7 +171,7 @@ def test_date_field_with_input_required_validator(valid_data):
 
 def test_date_field_with_data_required_validator(valid_data):
     class DateForm(Form):
-        date = DateField(validators=[DataRequired()])
+        date = DMDateField(validators=[DataRequired()])
 
     form = DateForm(valid_data)
     assert form.validate()
@@ -187,8 +187,8 @@ def test_date_field_with_data_required_validator(valid_data):
 ))
 def test_date_field_with_greater_than_validator(valid_data, timedelta):
     class DateForm(Form):
-        past = DateField()
-        date = DateField(validators=[GreaterThan('past')])
+        past = DMDateField()
+        date = DMDateField(validators=[GreaterThan('past')])
 
     # test validator being triggered
     future = DateForm(valid_data).date.data + timedelta
@@ -214,8 +214,8 @@ def test_date_field_with_greater_than_validator(valid_data, timedelta):
 
 def test_date_field_with_greater_than_validator_missing_past(valid_data):
     class DateForm(Form):
-        past = DateField()
-        date = DateField(validators=[GreaterThan('invalid_key')])
+        past = DMDateField()
+        date = DMDateField(validators=[GreaterThan('invalid_key')])
 
     form = DateForm(valid_data)
     assert not form.validate()
@@ -224,8 +224,8 @@ def test_date_field_with_greater_than_validator_missing_past(valid_data):
 
 def test_date_field_with_greater_than_validator_key_error(valid_data):
     class DateForm(Form):
-        past = DateField()
-        date = DateField(validators=[GreaterThan('invalid_key')])
+        past = DMDateField()
+        date = DMDateField(validators=[GreaterThan('invalid_key')])
 
     future = DateForm(valid_data).date.data - datetime.timedelta(days=1)
     future_data = _data_fromdate(future, 'past')
@@ -243,7 +243,7 @@ def test_date_field_with_greater_than_validator_key_error(valid_data):
 ))
 def test_date_form_with_y2k_validator(two_digit_date):
     class DateForm(Form):
-        date = DateField(validators=[FourDigitYear()])
+        date = DMDateField(validators=[FourDigitYear()])
 
     invalid_data = _data_fromtuple(two_digit_date)
     form = DateForm(invalid_data)
@@ -253,7 +253,7 @@ def test_date_form_with_y2k_validator(two_digit_date):
 
 def test_date_form_with_y2k_validator_accepts_four_digit_dates(valid_data):
     class DateForm(Form):
-        date = DateField(validators=[FourDigitYear()])
+        date = DMDateField(validators=[FourDigitYear()])
 
     form = DateForm(valid_data)
     assert form.validate()

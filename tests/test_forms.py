@@ -7,15 +7,16 @@ from wtforms.validators import DataRequired, Length, Optional
 from werkzeug.datastructures import ImmutableMultiDict
 import pytest
 
-from dmutils.forms import EmailField, remove_csrf_token, get_errors_from_wtform
+from dmutils.forms.fields import DMEmailField
+from dmutils.forms.helpers import remove_csrf_token, get_errors_from_wtform
 
 
 class EmailFieldFormatTestForm(FlaskForm):
-    test_email = EmailField("An Electronic Mailing Address")
+    test_email = DMEmailField("An Electronic Mailing Address")
 
 
 class MultipleFieldFormatTestForm(FlaskForm):
-    test_one = EmailField("Email address")
+    test_one = DMEmailField("Email address")
     test_two = StringField("Test Two", validators=[DataRequired(message="Enter text.")])
     test_three = StringField("Test Three", validators=[Length(min=100, max=100, message="Bad length.")])
     test_four = StringField("Test Four", validators=[DataRequired(message="Enter text.")])
@@ -89,7 +90,7 @@ class TestEmailFieldFormat(object):
 
     def test_default_length_and_message_can_be_overridden(self, app):
         class OverrideDefaultValidatorTestForm(FlaskForm):
-            test_email = EmailField(
+            test_email = DMEmailField(
                 "An Electronic Mailing Address",
                 validators=[Length(max=11, message='Only really short emails please')]
             )
@@ -108,15 +109,15 @@ class TestEmailFieldFormat(object):
 
 
 class EmailFieldCombinationTestForm(FlaskForm):
-    required_email = EmailField(
+    required_email = DMEmailField(
         "Required Electronic Mailing Address",
         validators=[DataRequired(message="No really, we want this")],
     )
-    optional_email = EmailField(
+    optional_email = DMEmailField(
         "Optional Electronic Mailing Address",
         validators=[Optional()],
     )
-    unspecified_email = EmailField("Voluntary Electronic Mailing Address")
+    unspecified_email = DMEmailField("Voluntary Electronic Mailing Address")
 
 
 class TestEmailFieldCombination(object):

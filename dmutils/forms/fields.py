@@ -1,43 +1,115 @@
 '''
-Fields for WTForms that are used within Digital Marketplace apps
+This module includes classes that should be used with WTForms within Digital Marketplace apps.
+
+They extend the classes found in `wtforms.fields`, and should be used instead of those.
+The advantage they provide is that they have been deliberately designed to be used with
+the Digital Marketplace frontend toolkit macros. If a particular field is missing, it
+should be added to this file.
+
+The main functionality is provided by the mixin class, `DMFieldMixin`. When a derived class
+includes `DMFieldMixin` in its base classes then the following extra features are provided:
+
+        - a `hint` property that can be set in the initialiser
+        - a `question` property that contains the label text
+        - a `value` property for the data that is displayed
+        - an `error` property for the field validation error
+
+For more details on how `DMFieldMixin`, see the documentation in `dmutils/forms/mixins.py`.
 '''
 
 import datetime
 from itertools import chain
 
-from wtforms import Field, Form, FormField
-from wtforms.fields import IntegerField, StringField
+import wtforms
+import wtforms.fields
 from wtforms.utils import unset_value
 from wtforms.validators import Length
+
+from .mixins import DMFieldMixin, DMSelectFieldMixin
+from .widgets import (
+    DMCheckboxInput,
+    DMDateInput,
+    DMRadioInput,
+    DMTextInput,
+    DMUnitInput,
+)
 
 from .filters import strip_whitespace
 from .validators import EmailValidator
 
 
-class StripWhitespaceStringField(StringField):
+__all__ = ['DMBooleanField', 'DMDecimalField', 'DMHiddenField', 'DMIntegerField',
+           'DMRadioField', 'DMStringField', 'DMEmailField', 'DMStripWhitespaceStringField',
+           'DMDateField']
+
+
+class DMBooleanField(DMFieldMixin, wtforms.fields.BooleanField):
+    widget = DMCheckboxInput(hide_question=True)
+
+    type = "checkbox"
+
+    @property
+    def options(self):
+        return [{"label": self.label.text, "value": self.data}]
+
+
+class DMDecimalField(DMFieldMixin, wtforms.fields.DecimalField):
+    pass
+
+
+class DMPoundsField(DMDecimalField):
+    widget = DMUnitInput()
+
+    unit = "£"
+    unit_in_full = "pounds"
+    unit_position = "before"
+    hint = "For example, 9900.95 for 9900 pounds and 95 pence"
+
+
+class DMHiddenField(DMFieldMixin, wtforms.fields.HiddenField):
+    pass
+
+
+class DMIntegerField(DMFieldMixin, wtforms.fields.IntegerField):
+    pass
+
+
+class DMRadioField(DMFieldMixin, DMSelectFieldMixin, wtforms.fields.RadioField):
+    widget = DMRadioInput()
+
+    type = "radio"
+
+
+class DMStringField(DMFieldMixin, wtforms.fields.StringField):
+    widget = DMTextInput()
+
+
+class DMStripWhitespaceStringField(DMFieldMixin, wtforms.fields.StringField):
+    widget = DMTextInput()
+
     def __init__(self, label=None, **kwargs):
         kwargs['filters'] = tuple(chain(
-            kwargs.get('filters', ()),
+            kwargs.get('filters', ()) or (),
             (
                 strip_whitespace,
             ),
         ))
-        super(StringField, self).__init__(label, **kwargs)
+        super().__init__(label, **kwargs)
 
 
-class EmailField(StripWhitespaceStringField):
+class DMEmailField(DMStripWhitespaceStringField):
     def __init__(self, label=None, **kwargs):
         kwargs["validators"] = tuple(chain(
-            kwargs.pop("validators", ()),
+            kwargs.pop("validators", ()) or (),
             (
                 EmailValidator(),
                 Length(max=511, message="Please enter an email address under 512 characters."),
             ),
         ))
-        super(EmailField, self).__init__(label, **kwargs)
+        super().__init__(label, **kwargs)
 
 
-class DateField(Field):
+class DMDateField(DMFieldMixin, wtforms.fields.Field):
     '''
     A date field(set) that uses a day, month and year field.
 
@@ -61,6 +133,10 @@ class DateField(Field):
     datetime.date(1999, 12, 31)
     '''
 
+    widget = DMDateInput()
+
+    hint = "For example, 31 12 2020"
+
     # An internal class that defines the fields that make up the DateField.
     #
     # Inheriting from wtforms.FormField has limitations on using validators.
@@ -69,14 +145,14 @@ class DateField(Field):
     # to turn the form data into integer values, and we then grab the data.
     #
     # The FormField instance is based on this class.
-    class _DateForm(Form):
-        day = IntegerField("Day")
-        month = IntegerField("Month")
-        year = IntegerField("Year")
+    class _DateForm(wtforms.Form):
+        day = wtforms.fields.IntegerField("Day")
+        month = wtforms.fields.IntegerField("Month")
+        year = wtforms.fields.IntegerField("Year")
 
-    def __init__(self, label=None, validators=None, separator='-', **kwargs):
-        super().__init__(label=label, validators=validators, **kwargs)
-        self.form_field = FormField(self._DateForm, separator=separator, **kwargs)
+    def __init__(self, label=None, validators=None, hint=None, separator='-', **kwargs):
+        super().__init__(label=label, validators=validators, hint=hint, **kwargs)
+        self.form_field = wtforms.fields.FormField(self._DateForm, separator=separator, **kwargs)
 
     def _value(self):
         '''
