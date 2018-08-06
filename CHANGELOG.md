@@ -2,6 +2,81 @@
 
 Records breaking changes from major version bumps
 
+## 42.0.0
+
+PR [#400](https://github.com/alphagov/digitalmarketplace-utils/pull/400)
+
+This bump introduces new classes for using WTForms with the frontend toolkit in a way that is unambiguous.
+
+The fields in `dmutils.forms.fields` module have been rewritten to use the new `DMFieldMixin`. Fields which use the mixin can be identified by the 'DM' prefix.
+This update also includes 'DM' widgets which are able to use our template macros from `digitalmarketplace-frontend-toolkit`. If the appropriate Jinja2 templates
+are loaded into the app, calling the class will render the form fully without further code.
+
+Apps which use this version of `dmutils` should aim to use the new classes everywhere where WTForms is used so that our code is consistent across the board.
+
+Old code:
+```
+# app/main/forms/form.py
+from flask_wtf import FlaskForm
+from dmutils.forms import StripWhitespaceStringField
+
+class NameForm(FlaskForm):
+    full_name = StripWhitespaceStringField()
+--
+# app/templates/name.html
+{%
+  with
+  name = "full_name",
+  question = "What is your name?",
+  hint = "Enter your full name.",
+  value = form.full_name.data,
+  error = errors.get("full_name", {}).get("message", None)
+%}
+  {% include "toolkit/forms/textbox.html" %}
+{% endwith %}
+```
+
+
+New code:
+```
+# app/main/forms/form.py
+from flask_wtf import FlaskForm
+from dmutils.forms.dm_fields import DMStripWhitespaceStringField
+
+class NameForm(FlaskForm):
+    full_name = DMStripWhitespaceStringField(
+      "What is your name?",
+      hint="Enter your full name.")
+--
+# app/templates/name.html
+{{ form.full_name }}
+```
+
+
+Alternatively (expanded form):
+```
+# app/main/forms/form.py
+from flask_wtf import FlaskForm
+from dmutils.forms.dm_fields import DMStripWhitespaceStringField
+
+class NameForm(FlaskForm):
+    full_name = DMStripWhitespaceStringField(
+      "What is your name?",
+      hint="Enter your full name.")
+--
+# app/templates/name.html
+{%
+  with
+  name = form.full_name.name,
+  question = form.full_name.question,
+  hint = form.full_name.hint,
+  value = form.full_name.value,
+  error = form.full_name.error
+%}
+  {% include "toolkit/forms/textbox.html" %}
+{% endwith %}
+```
+
 ## 41.0.0
 
 PR [431](https://github.com/alphagov/digitalmarketplace-utils/pull/431)
