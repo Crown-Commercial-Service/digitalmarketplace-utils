@@ -1,6 +1,6 @@
 import os
 from flask_featureflags.contrib.inline import InlineFeatureFlag
-from . import config, logging, proxy_fix, request_id, formats, filters
+from . import config, logging, proxy_fix, request_id, formats, filters, errors
 from flask_script import Manager, Server
 
 
@@ -66,6 +66,12 @@ def init_app(
         return dict(
             pluralize=pluralize,
             **(application.config['BASE_TEMPLATE_DATA'] or {}))
+
+    # Register error handlers for CSRF errors and common error status codes
+    application.register_error_handler(400, errors.csrf_handler)
+    application.register_error_handler(404, errors.render_error_page)
+    application.register_error_handler(503, errors.render_error_page)
+    application.register_error_handler(500, errors.render_error_page)
 
 
 def pluralize(count, singular, plural):
