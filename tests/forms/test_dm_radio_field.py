@@ -38,3 +38,12 @@ def test_options_is_a_list_of_dicts(form):
 
 def test_an_option_can_have_a_description(form):
     assert form.field.options[0]['description']
+
+
+def test_constructor_accepts_choices_parameter():
+    class RadioForm(wtforms.Form):
+        field = DMRadioField(choices=[("yes", "Yes"), ("no", "No")])
+
+    form = RadioForm()
+
+    assert form.field.choices
