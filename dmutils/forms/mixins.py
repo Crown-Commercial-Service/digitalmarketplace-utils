@@ -87,10 +87,15 @@ class DMSelectFieldMixin(SelectField):
 
     The `options` attribute is the choices in a format suitable for the
     frontend toolkit.
+
+    For backwards compatibility, the constructor will accept a `choices`
+    keyword argument. However, if both `options` and `choices` are specified
+    then `options` will take precedence.
     '''
     def __init__(self, label=None, validators=None, coerce=text_type, options=None, **kwargs):
         super().__init__(label, validators, coerce, **kwargs)
-        self.options = copy(options)
+        if options:
+            self.options = copy(options)
 
     @property
     def choices(self):
@@ -101,6 +106,7 @@ class DMSelectFieldMixin(SelectField):
         if value is None:
             self.options = None
         else:
+            self.options = []
             for value, label in value:
                 self.options.append(
                     {
