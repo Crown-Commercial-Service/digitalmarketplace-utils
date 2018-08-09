@@ -114,6 +114,6 @@ def studios_start_page(framework_slug):
     raise NotImplementedError()
 
 
-@external.route('/buyers/frameworks/<framework_slug>/requirements/<lot_slug>/<brief_id>/supplier/questions')
+@external.route('/buyers/frameworks/<framework_slug>/requirements/<lot_slug>/<brief_id>/supplier-questions')
 def supplier_questions(framework_slug, lot_slug, brief_id):
     raise NotImplementedError()
