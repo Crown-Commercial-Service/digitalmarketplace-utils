@@ -60,6 +60,17 @@ def test_render_error_page(render_template, exception, status_code, expected_tem
 
 
 @mock.patch('dmutils.errors.render_template')
+def test_render_error_page_with_custom_http_exception(render_template, app):
+    class CustomHTTPError(Exception):
+        def __init__(self):
+            self.status_code = 500
+
+    with app.test_request_context('/'):
+        assert render_error_page(CustomHTTPError()) == (render_template.return_value, 500)
+        assert render_template.call_args_list == [mock.call('errors/500.html')]
+
+
+@mock.patch('dmutils.errors.render_template')
 def test_render_error_page_for_unknown_status_code_defaults_to_500(render_template, app):
     with app.test_request_context('/'):
         assert render_error_page(ImATeapot()) == (render_template.return_value, 500)

@@ -50,6 +50,10 @@ def render_error_page(e=None, status_code=None):
         503: "errors/500.html",
     }
 
+    # Handle exceptions with .status_code, not .code (e.g. dmapiclient.HTTPError)
+    if hasattr(e, 'status_code'):
+        status_code = e.status_code
+
     if not status_code or status_code not in template_map:
         status_code = 500 if e.code not in template_map else e.code
 
