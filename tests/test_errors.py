@@ -3,8 +3,10 @@ import pytest
 
 from flask import session
 from flask_wtf.csrf import CSRFError
-from werkzeug.exceptions import BadRequest, NotFound, InternalServerError, ServiceUnavailable, ImATeapot
-from dmutils.errors import csrf_handler, render_error_page
+from werkzeug.exceptions import (
+    BadRequest, Forbidden, NotFound, InternalServerError, ServiceUnavailable, ImATeapot
+)
+from dmutils.errors import csrf_handler, redirect_to_login, render_error_page
 from dmutils.external import external as external_blueprint
 
 
@@ -44,6 +46,16 @@ def test_csrf_handler_sends_other_400s_to_render_error_page(render_template, app
 
         assert csrf_handler(BadRequest()) == (render_template.return_value, 400)
         assert render_template.call_args_list == [mock.call('errors/400.html')]
+
+
+def test_unauthorised_redirects_to_login(app):
+    with app.test_request_context('/'):
+        app.register_blueprint(external_blueprint)
+
+        response = redirect_to_login(Forbidden)
+
+        assert response.status_code == 302
+        assert response.location == '/user/login?next=%2F'
 
 
 @pytest.mark.parametrize('exception, status_code, expected_template', [

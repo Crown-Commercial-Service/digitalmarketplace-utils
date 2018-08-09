@@ -28,7 +28,14 @@ def csrf_handler(e):
         )
 
     flash('Your session has expired. Please log in again.', "error")
-    return redirect(url_for('external.render_login', next=request.path))
+    return redirect_to_login(e)
+
+
+def redirect_to_login(e):
+    if request.method == 'GET':
+        return redirect(url_for('external.render_login', next=request.path))
+    else:
+        return redirect(url_for('external.render_login'))
 
 
 def render_error_page(e=None, status_code=None):
