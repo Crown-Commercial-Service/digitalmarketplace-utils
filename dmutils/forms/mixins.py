@@ -38,7 +38,6 @@ or the very excellent `Python Cookbook`_ by David Beazley.
 from copy import copy
 
 from wtforms.compat import text_type
-from wtforms.fields import SelectField
 
 
 class DMFieldMixin:
@@ -78,7 +77,7 @@ class DMFieldMixin:
             return None
 
 
-class DMSelectFieldMixin(SelectField):
+class DMSelectFieldMixin:
     '''
     A Digital Marketplace wrapper for selection fields.
 
@@ -93,7 +92,7 @@ class DMSelectFieldMixin(SelectField):
     then `options` will take precedence.
     '''
     def __init__(self, label=None, validators=None, coerce=text_type, options=None, **kwargs):
-        super().__init__(label, validators, coerce, **kwargs)
+        super().__init__(label, validators=validators, coerce=coerce, **kwargs)
         if options:
             self.options = copy(options)
 
@@ -114,3 +113,10 @@ class DMSelectFieldMixin(SelectField):
                         'value': value,
                     }
                 )
+
+    @property
+    def value(self):
+        if not self.data or self.data == "None":
+            return None
+        else:
+            return self.data

@@ -52,6 +52,13 @@ class DMBooleanField(DMFieldMixin, wtforms.fields.BooleanField):
     def options(self):
         return [{"label": self.label.text, "value": self.data}]
 
+    @property
+    def value(self):
+        if not self.data or self.data == "None":
+            return []
+        else:
+            return [self.data]
+
 
 class DMDecimalField(DMFieldMixin, wtforms.fields.DecimalField):
     pass
@@ -74,7 +81,7 @@ class DMIntegerField(DMFieldMixin, wtforms.fields.IntegerField):
     pass
 
 
-class DMRadioField(DMFieldMixin, DMSelectFieldMixin, wtforms.fields.RadioField):
+class DMRadioField(DMSelectFieldMixin, DMFieldMixin, wtforms.fields.RadioField):
     widget = DMRadioInput()
 
     type = "radio"
