@@ -44,7 +44,7 @@ def render_error_page(e=None, status_code=None):
         status_code = 500
 
     template_map = {
-        400: "errors/500.html",
+        400: "errors/400.html",
         404: "errors/404.html",
         500: "errors/500.html",
         503: "errors/500.html",

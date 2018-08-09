@@ -43,11 +43,11 @@ def test_csrf_handler_sends_other_400s_to_render_error_page(render_template, app
         app.register_blueprint(external_blueprint)
 
         assert csrf_handler(BadRequest()) == (render_template.return_value, 400)
-        assert render_template.call_args_list == [mock.call('errors/500.html')]
+        assert render_template.call_args_list == [mock.call('errors/400.html')]
 
 
 @pytest.mark.parametrize('exception, status_code, expected_template', [
-    (BadRequest, 400, 'errors/500.html'),
+    (BadRequest, 400, 'errors/400.html'),
     (NotFound, 404, 'errors/404.html'),
     (InternalServerError, 500, 'errors/500.html'),
     (ServiceUnavailable, 503, 'errors/500.html'),
