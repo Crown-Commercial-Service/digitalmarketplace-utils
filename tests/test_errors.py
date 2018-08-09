@@ -63,11 +63,25 @@ def test_unauthorised_redirects_to_login(app):
     (NotFound, 404, 'errors/404.html'),
     (InternalServerError, 500, 'errors/500.html'),
     (ServiceUnavailable, 503, 'errors/500.html'),
+    (mock.Mock(code=None), 500, 'errors/500.html'),
 ])
 @mock.patch('dmutils.errors.render_template')
-def test_render_error_page(render_template, exception, status_code, expected_template, app):
+def test_render_error_page_with_exception(render_template, exception, status_code, expected_template, app):
     with app.test_request_context('/'):
         assert render_error_page(exception()) == (render_template.return_value, status_code)
+        assert render_template.call_args_list == [mock.call(expected_template)]
+
+
+@pytest.mark.parametrize('status_code, expected_template', [
+    (400, 'errors/400.html'),
+    (404, 'errors/404.html'),
+    (500, 'errors/500.html'),
+    (503, 'errors/500.html'),
+])
+@mock.patch('dmutils.errors.render_template')
+def test_render_error_page_with_status_code(render_template, status_code, expected_template, app):
+    with app.test_request_context('/'):
+        assert render_error_page(status_code=status_code) == (render_template.return_value, status_code)
         assert render_template.call_args_list == [mock.call(expected_template)]
 
 

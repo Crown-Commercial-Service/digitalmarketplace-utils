@@ -46,7 +46,7 @@ def render_error_page(e=None, status_code=None):
     :return: Flask render_template response. The error templates must be present in the app (either
     copied from the FE Toolkit, or a custom template for that app).
     """
-    if not e or status_code:
+    if not (e or status_code):
         # Something's gone wrong! To save going in an endless error loop let's just render a 500
         status_code = 500
 
@@ -57,11 +57,17 @@ def render_error_page(e=None, status_code=None):
         503: "errors/500.html",
     }
 
-    # Handle exceptions with .status_code, not .code (e.g. dmapiclient.HTTPError)
-    if hasattr(e, 'status_code'):
-        status_code = e.status_code
+    if not status_code:
+        # Handle exceptions with .status_code, not .code (e.g. dmapiclient.HTTPError)
+        if hasattr(e, 'status_code'):
+            status_code = e.status_code
+        elif hasattr(e, 'code'):
+            status_code = e.code
+        else:
+            # Map unknown status codes to 500
+            status_code = 500
 
-    if not status_code or status_code not in template_map:
-        status_code = 500 if e.code not in template_map else e.code
+    if status_code not in template_map:
+        status_code = 500
 
     return render_template(template_map[status_code]), status_code
