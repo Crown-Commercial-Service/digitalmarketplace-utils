@@ -47,3 +47,7 @@ def test_constructor_accepts_choices_parameter():
     form = RadioForm()
 
     assert form.field.choices
+
+
+def test_iter_choices(form):
+    assert list(form.field.iter_choices()) == [("yes", "Yes", False), ("no", "No", False)]
