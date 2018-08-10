@@ -1,5 +1,6 @@
 from flask import redirect, render_template, url_for, flash, session, request, current_app
 from flask_wtf.csrf import CSRFError
+from jinja2.exceptions import TemplateNotFound
 
 
 def csrf_handler(e):
@@ -70,4 +71,9 @@ def render_error_page(e=None, status_code=None):
     if status_code not in template_map:
         status_code = 500
 
-    return render_template(template_map[status_code]), status_code
+    try:
+        # Try app error templates first
+        return render_template(template_map[status_code]), status_code
+    except TemplateNotFound:
+        # Fall back to toolkit error templates
+        return render_template("toolkit/{}".format(template_map[status_code])), status_code

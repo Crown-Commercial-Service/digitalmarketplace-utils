@@ -6,6 +6,7 @@ from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import (
     BadRequest, Forbidden, NotFound, InternalServerError, ServiceUnavailable, ImATeapot
 )
+from jinja2.exceptions import TemplateNotFound
 from dmutils.errors import csrf_handler, redirect_to_login, render_error_page
 from dmutils.external import external as external_blueprint
 
@@ -101,3 +102,14 @@ def test_render_error_page_for_unknown_status_code_defaults_to_500(render_templa
     with app.test_request_context('/'):
         assert render_error_page(ImATeapot()) == (render_template.return_value, 500)
         assert render_template.call_args_list == [mock.call('errors/500.html')]
+
+
+@mock.patch('dmutils.errors.render_template')
+def test_render_error_page_falls_back_to_toolkit_templates(render_template, app):
+    render_template.side_effect = [TemplateNotFound('Oh dear'), "successful rendering"]
+    with app.test_request_context('/'):
+        assert render_error_page(ImATeapot()) == ("successful rendering", 500)
+        assert render_template.call_args_list == [
+            mock.call('errors/500.html'),
+            mock.call('toolkit/errors/500.html')
+        ]
