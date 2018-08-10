@@ -3,8 +3,11 @@ import pytest
 
 from flask import session
 from flask_wtf.csrf import CSRFError
-from werkzeug.exceptions import BadRequest, NotFound, InternalServerError, ServiceUnavailable, ImATeapot
-from dmutils.errors import csrf_handler, render_error_page
+from werkzeug.exceptions import (
+    BadRequest, Forbidden, NotFound, InternalServerError, ServiceUnavailable, ImATeapot
+)
+from jinja2.exceptions import TemplateNotFound
+from dmutils.errors import csrf_handler, redirect_to_login, render_error_page
 from dmutils.external import external as external_blueprint
 
 
@@ -43,20 +46,55 @@ def test_csrf_handler_sends_other_400s_to_render_error_page(render_template, app
         app.register_blueprint(external_blueprint)
 
         assert csrf_handler(BadRequest()) == (render_template.return_value, 400)
-        assert render_template.call_args_list == [mock.call('errors/500.html')]
+        assert render_template.call_args_list == [mock.call('errors/400.html')]
+
+
+def test_unauthorised_redirects_to_login(app):
+    with app.test_request_context('/'):
+        app.register_blueprint(external_blueprint)
+
+        response = redirect_to_login(Forbidden)
+
+        assert response.status_code == 302
+        assert response.location == '/user/login?next=%2F'
 
 
 @pytest.mark.parametrize('exception, status_code, expected_template', [
-    (BadRequest, 400, 'errors/500.html'),
+    (BadRequest, 400, 'errors/400.html'),
     (NotFound, 404, 'errors/404.html'),
     (InternalServerError, 500, 'errors/500.html'),
     (ServiceUnavailable, 503, 'errors/500.html'),
+    (mock.Mock(code=None), 500, 'errors/500.html'),
 ])
 @mock.patch('dmutils.errors.render_template')
-def test_render_error_page(render_template, exception, status_code, expected_template, app):
+def test_render_error_page_with_exception(render_template, exception, status_code, expected_template, app):
     with app.test_request_context('/'):
         assert render_error_page(exception()) == (render_template.return_value, status_code)
         assert render_template.call_args_list == [mock.call(expected_template)]
+
+
+@pytest.mark.parametrize('status_code, expected_template', [
+    (400, 'errors/400.html'),
+    (404, 'errors/404.html'),
+    (500, 'errors/500.html'),
+    (503, 'errors/500.html'),
+])
+@mock.patch('dmutils.errors.render_template')
+def test_render_error_page_with_status_code(render_template, status_code, expected_template, app):
+    with app.test_request_context('/'):
+        assert render_error_page(status_code=status_code) == (render_template.return_value, status_code)
+        assert render_template.call_args_list == [mock.call(expected_template)]
+
+
+@mock.patch('dmutils.errors.render_template')
+def test_render_error_page_with_custom_http_exception(render_template, app):
+    class CustomHTTPError(Exception):
+        def __init__(self):
+            self.status_code = 500
+
+    with app.test_request_context('/'):
+        assert render_error_page(CustomHTTPError()) == (render_template.return_value, 500)
+        assert render_template.call_args_list == [mock.call('errors/500.html')]
 
 
 @mock.patch('dmutils.errors.render_template')
@@ -64,3 +102,14 @@ def test_render_error_page_for_unknown_status_code_defaults_to_500(render_templa
     with app.test_request_context('/'):
         assert render_error_page(ImATeapot()) == (render_template.return_value, 500)
         assert render_template.call_args_list == [mock.call('errors/500.html')]
+
+
+@mock.patch('dmutils.errors.render_template')
+def test_render_error_page_falls_back_to_toolkit_templates(render_template, app):
+    render_template.side_effect = [TemplateNotFound('Oh dear'), "successful rendering"]
+    with app.test_request_context('/'):
+        assert render_error_page(ImATeapot()) == ("successful rendering", 500)
+        assert render_template.call_args_list == [
+            mock.call('errors/500.html'),
+            mock.call('toolkit/errors/500.html')
+        ]
