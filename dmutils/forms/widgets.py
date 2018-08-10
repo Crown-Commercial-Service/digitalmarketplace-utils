@@ -35,10 +35,6 @@ class DMSelectionButtonBase(DMJinjaWidgetBase):
     template_args = ["type", "inline", "options"]
     template_file = "toolkit/forms/selection-buttons.html"
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.template_args.remove("value")
-
     def __call__(self, field, **kwargs):
         kwargs["type"] = self.type
         return super().__call__(field, **kwargs)
