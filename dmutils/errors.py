@@ -39,7 +39,7 @@ def redirect_to_login(e):
         return redirect(url_for('external.render_login'))
 
 
-def render_error_page(e=None, status_code=None):
+def render_error_page(e=None, status_code=None, error_message=None):
     """
     Either an exception or a status code must be supplied.
     :param e: exception instance, e.g. Forbidden()
@@ -73,7 +73,7 @@ def render_error_page(e=None, status_code=None):
 
     try:
         # Try app error templates first
-        return render_template(template_map[status_code]), status_code
+        return render_template(template_map[status_code], error_message=error_message), status_code
     except TemplateNotFound:
         # Fall back to toolkit error templates
-        return render_template("toolkit/{}".format(template_map[status_code])), status_code
+        return render_template("toolkit/{}".format(template_map[status_code]), error_message=error_message), status_code
