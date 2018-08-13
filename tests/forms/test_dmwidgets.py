@@ -32,3 +32,10 @@ def test_template_render_args_are_populated_from_field(widget, field):
     for k in widget.template_args:
         assert k in dir(field)
         assert k in widget.template.render.call_args[1]
+
+
+def test_template_constants_are_passed_as_parameters_to_template_render(widget, field):
+    widget(field)
+    for k, v in widget.template_constants.items():
+        assert k in widget.template.render.call_args[1]
+        assert widget.template.render.call_args[1][k] == v
