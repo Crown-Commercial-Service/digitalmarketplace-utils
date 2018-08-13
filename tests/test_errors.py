@@ -4,7 +4,7 @@ import pytest
 from flask import session
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import (
-    BadRequest, Forbidden, NotFound, InternalServerError, ServiceUnavailable, ImATeapot
+    BadRequest, Forbidden, NotFound, Gone, InternalServerError, ServiceUnavailable, ImATeapot
 )
 from jinja2.exceptions import TemplateNotFound
 from dmutils.errors import csrf_handler, redirect_to_login, render_error_page
@@ -64,6 +64,7 @@ def test_unauthorised_redirects_to_login(app):
 @pytest.mark.parametrize('exception, status_code, expected_template', [
     (BadRequest, 400, 'errors/400.html'),
     (NotFound, 404, 'errors/404.html'),
+    (Gone, 410, 'errors/410.html'),
     (InternalServerError, 500, 'errors/500.html'),
     (ServiceUnavailable, 503, 'errors/500.html'),
     (mock.Mock(code=None), 500, 'errors/500.html'),
@@ -80,6 +81,7 @@ def test_render_error_page_with_exception(render_template, exception, status_cod
 @pytest.mark.parametrize('status_code, expected_template', [
     (400, 'errors/400.html'),
     (404, 'errors/404.html'),
+    (410, 'errors/410.html'),
     (500, 'errors/500.html'),
     (503, 'errors/500.html'),
 ])

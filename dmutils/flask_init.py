@@ -72,6 +72,7 @@ def init_app(
     application.register_error_handler(401, errors.redirect_to_login)
     application.register_error_handler(403, errors.redirect_to_login)
     application.register_error_handler(404, errors.render_error_page)
+    application.register_error_handler(410, errors.render_error_page)
     application.register_error_handler(503, errors.render_error_page)
     application.register_error_handler(500, errors.render_error_page)
 
