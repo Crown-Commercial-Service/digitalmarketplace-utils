@@ -56,9 +56,10 @@ class DMFieldMixin:
     Derived classes which include this mixin should have a
     subclass of `wtforms.Field` in their base classes.
     '''
-    def __init__(self, label=None, validators=None, hint=None, **kwargs):
+    def __init__(self, label=None, validators=None, hint=None, question_advice=None, **kwargs):
         super().__init__(label=label, validators=validators, **kwargs)
         self.hint = hint or getattr(self.__class__, 'hint', None)
+        self.question_advice = question_advice or getattr(self.__class__, 'question_advice', None)
         self.type = getattr(self.__class__, 'type', self.type)
 
     @property

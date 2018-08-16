@@ -11,6 +11,7 @@ class DMJinjaWidgetBase:
     name = None
     hint = None
     question = None
+    question_advice = None
     value = None
 
     def __init__(self, hide_question=False, **kwargs):

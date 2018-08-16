@@ -53,6 +53,12 @@ def test_template_context_includes_hint(widget, field):
     assert get_render_context(widget)["hint"] == "Hint text."
 
 
+def test_template_context_includes_question_advice(widget, field):
+    field.question_advice = "Advice text."
+    widget(field)
+    assert get_render_context(widget)["question_advice"] == "Advice text."
+
+
 def test_arguments_can_be_added_to_template_context_from_widget_constructor(widget_class, field):
     widget = widget_class(foo="bar")
     widget(field)

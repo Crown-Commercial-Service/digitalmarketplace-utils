@@ -157,8 +157,8 @@ class DMDateField(DMFieldMixin, wtforms.fields.Field):
         month = wtforms.fields.IntegerField("Month")
         year = wtforms.fields.IntegerField("Year")
 
-    def __init__(self, label=None, validators=None, hint=None, separator='-', **kwargs):
-        super().__init__(label=label, validators=validators, hint=hint, **kwargs)
+    def __init__(self, label=None, validators=None, hint=None, question_advice=None, separator='-', **kwargs):
+        super().__init__(label=label, validators=validators, hint=hint, question_advice=question_advice, **kwargs)
         self.form_field = wtforms.fields.FormField(self._DateForm, separator=separator, **kwargs)
 
     def _value(self):

@@ -24,3 +24,11 @@ def test_field_has_hint_property(field_class):
 
     form = TestForm()
     assert form.field.hint == 'Hint text.'
+
+
+def test_field_has_question_advice_property(field_class):
+    class TestForm(wtforms.Form):
+        field = field_class(question_advice="Advice text.")
+
+    form = TestForm()
+    assert form.field.question_advice == "Advice text."
