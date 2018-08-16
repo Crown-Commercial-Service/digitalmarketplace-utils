@@ -103,12 +103,22 @@ def init_manager(application, port, extra_directories=()):
         Server(port=port, extra_files=extra_files)
     )
 
+    def print_route(rule):
+        print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
+
     @manager.command
     def list_routes():
         """List URLs of all application routes."""
         for rule in sorted(manager.app.url_map.iter_rules(), key=lambda r: r.rule):
             if rule.endpoint.startswith("external"):
                 continue
-            print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
+            print_route(rule)
+
+    @manager.command
+    def list_external_routes():
+        """List URLs of all external routes."""
+        for rule in sorted(manager.app.url_map.iter_rules(), key=lambda r: r.rule):
+            if rule.endpoint.startswith("external"):
+                print_route(rule)
 
     return manager
