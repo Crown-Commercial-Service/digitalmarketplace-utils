@@ -66,6 +66,10 @@ class DMFieldMixin:
     def question(self):
         return self.label.text
 
+    @question.setter
+    def question(self, value):
+        self.label.text = value
+
     @property
     def value(self):
         return self._value()
