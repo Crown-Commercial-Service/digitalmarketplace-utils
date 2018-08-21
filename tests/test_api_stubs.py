@@ -302,6 +302,7 @@ class TestBrief:
         assert brief["briefs"]["publishedAt"] == "2016-03-29T10:11:14.000000Z"
         assert brief["briefs"]["applicationsClosedAt"] == "2016-04-07T00:00:00.000000Z"
         assert brief["briefs"]["clarificationQuestionsClosedAt"] == "2016-04-02T00:00:00.000000Z"
+        assert brief["briefs"]["clarificationQuestionsPublishedBy"] == "2016-04-02T00:00:00.000000Z"
 
 
 class TestSupplier:
