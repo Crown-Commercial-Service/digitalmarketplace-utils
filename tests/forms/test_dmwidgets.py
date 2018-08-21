@@ -65,6 +65,39 @@ def test_arguments_can_be_added_to_template_context_from_widget_constructor(widg
     assert get_render_context(widget)["foo"] == "bar"
 
 
+class TestDMTextArea:
+    @pytest.fixture()
+    def widget_class(self):
+        return monkeypatch_render(dmutils.forms.widgets.DMTextArea)
+
+    def test_dm_text_area_sends_large_is_true_to_template(self, widget, field):
+        widget(field)
+        assert get_render_context(widget)["large"] is True
+
+    @pytest.mark.parametrize("max_length_in_words", (1, 45, 100))
+    def test_dm_text_area_can_send_max_length_in_words_to_template(self, widget_class, max_length_in_words, field):
+        widget = widget_class()
+        widget(field)
+        assert "max_length_in_words" not in get_render_context(widget)
+
+        widget = widget_class(max_length_in_words=max_length_in_words)
+        widget(field)
+        assert get_render_context(widget)["max_length_in_words"] == max_length_in_words
+
+    def test_dm_text_area_max_words_template_constant_is_instance_variable(self, widget_class):
+        widget1 = widget_class(max_length_in_words=mock.sentinel.max_length1)
+        widget2 = widget_class(max_length_in_words=mock.sentinel.max_length2)
+
+        widget1(mock.Mock())
+        widget2(mock.Mock())
+
+        assert (
+            get_render_context(widget1)["max_length_in_words"]
+            !=
+            get_render_context(widget2)["max_length_in_words"]
+        )
+
+
 class TestDMDateInput:
     @pytest.fixture()
     def widget_class(self):

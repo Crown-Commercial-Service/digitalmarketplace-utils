@@ -1,7 +1,7 @@
 
 from flask import current_app
 
-__all__ = ["DMCheckboxInput", "DMDateInput", "DMRadioInput", "DMTextInput", "DMUnitInput"]
+__all__ = ["DMCheckboxInput", "DMDateInput", "DMRadioInput", "DMTextInput", "DMTextArea", "DMUnitInput"]
 
 
 class DMJinjaWidgetBase:
@@ -75,6 +75,16 @@ class DMRadioInput(DMSelectionButtonBase):
 
 class DMTextInput(DMJinjaWidgetBase):
     __template_file__ = "toolkit/forms/textbox.html"
+
+
+class DMTextArea(DMTextInput):
+    large = True
+
+    def __init__(self, max_length_in_words=None, **kwargs):
+        if max_length_in_words:
+            self.max_length_in_words = max_length_in_words
+
+        super().__init__(**kwargs)
 
 
 class DMUnitInput(DMTextInput):
