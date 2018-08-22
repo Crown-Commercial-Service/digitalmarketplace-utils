@@ -58,8 +58,14 @@ class DMFieldMixin:
     '''
     def __init__(self, label=None, validators=None, hint=None, question_advice=None, **kwargs):
         super().__init__(label=label, validators=validators, **kwargs)
-        self.hint = hint or getattr(self.__class__, 'hint', None)
-        self.question_advice = question_advice or getattr(self.__class__, 'question_advice', None)
+        if hint:
+            self.hint = hint
+        if question_advice:
+            self.question_advice = question_advice
+
+        # wtforms.Field overwrites self.type on init
+        # if we want to specify it on a subclass
+        # this line will bring it back
         self.type = getattr(self.__class__, 'type', self.type)
 
     @property
