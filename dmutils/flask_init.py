@@ -1,5 +1,4 @@
 import os
-from flask_featureflags.contrib.inline import InlineFeatureFlag
 from . import config, logging, proxy_fix, request_id, formats, filters, errors
 from flask_script import Manager, Server
 
@@ -10,7 +9,6 @@ def init_app(
         bootstrap=None,
         data_api_client=None,
         db=None,
-        feature_flags=None,
         login_manager=None,
         search_api_client=None,
 ):
@@ -31,11 +29,6 @@ def init_app(
         data_api_client.init_app(application)
     if db:
         db.init_app(application)
-    if feature_flags:
-        # Standardize FeatureFlags, only accept inline config variables
-        feature_flags.init_app(application)
-        feature_flags.clear_handlers()
-        feature_flags.add_handler(InlineFeatureFlag())
     if login_manager:
         login_manager.init_app(application)
     if search_api_client:

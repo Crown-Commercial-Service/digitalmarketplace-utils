@@ -50,7 +50,7 @@ def additional_check(key, value):
                                  None,
                                  False,
                                  [],
-                                 {'flags': {}, 'status': 'ok', 'version': 'release-0', 'disk': 'OK (90% free)'},
+                                 {'status': 'ok', 'version': 'release-0', 'disk': 'OK (90% free)'},
                                  200
                              ),
                              (  # Test case #2 - data api client OK, ignore_deps = False, result: 200
@@ -59,7 +59,7 @@ def additional_check(key, value):
                                  None,
                                  False,
                                  [],
-                                 {'flags': {}, 'api_status': {'status': 'ok'}, 'status': 'ok', 'version': 'release-0',
+                                 {'api_status': {'status': 'ok'}, 'status': 'ok', 'version': 'release-0',
                                   'disk': 'OK (90% free)'},
                                  200
                              ),
@@ -69,7 +69,7 @@ def additional_check(key, value):
                                  'ok',
                                  False,
                                  [],
-                                 {'flags': {}, 'search_api_status': {'status': 'ok'}, 'status': 'ok',
+                                 {'search_api_status': {'status': 'ok'}, 'status': 'ok',
                                   'version': 'release-0', 'disk': 'OK (90% free)'},
                                  200
                              ),
@@ -79,7 +79,7 @@ def additional_check(key, value):
                                  'ok',
                                  False,
                                  [],
-                                 {'flags': {}, 'api_status': {'status': 'ok'}, 'search_api_status': {'status': 'ok'},
+                                 {'api_status': {'status': 'ok'}, 'search_api_status': {'status': 'ok'},
                                   'status': 'ok', 'version': 'release-0', 'disk': 'OK (90% free)'},
                                  200
                              ),
@@ -90,7 +90,7 @@ def additional_check(key, value):
                                  False,
                                  [additional_check('k', 'v'), additional_check('k2', 'v2')],
                                  {
-                                     'flags': {}, 'api_status': {'status': 'ok'}, 'search_api_status': {'status': 'ok'},
+                                     'api_status': {'status': 'ok'}, 'search_api_status': {'status': 'ok'},
                                      'status': 'ok', 'version': 'release-0', 'disk': 'OK (90% free)',
                                      'k': 'v', 'k2': 'v2'
                                  },
@@ -111,8 +111,7 @@ def additional_check(key, value):
                                  'ok',
                                  False,
                                  [],
-                                 {'flags': {},
-                                  'api_status': {'status': 'error'},
+                                 {'api_status': {'status': 'error'},
                                   'search_api_status': {'status': 'ok'},
                                   'status': 'error',
                                   'version': 'release-0',
@@ -126,8 +125,7 @@ def additional_check(key, value):
                                  'error',
                                  False,
                                  [],
-                                 {'flags': {},
-                                  'api_status': {'status': 'error'},
+                                 {'api_status': {'status': 'error'},
                                   'search_api_status': {'status': 'error'},
                                   'status': 'error',
                                   'version': 'release-0',
