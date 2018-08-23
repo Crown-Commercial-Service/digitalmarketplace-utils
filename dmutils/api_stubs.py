@@ -210,13 +210,14 @@ def brief(status="draft",
         }
     }
 
-    if status in ("live", "closed"):
+    if status is not "draft":
         brief["briefs"]["publishedAt"] = "2016-03-29T10:11:14.000000Z"
         brief["briefs"]["applicationsClosedAt"] = "2016-04-07T00:00:00.000000Z"
         brief["briefs"]["clarificationQuestionsClosedAt"] = "2016-04-02T00:00:00.000000Z"
         brief["briefs"]["clarificationQuestionsAreClosed"] = clarification_questions_closed
         brief["briefs"]["clarificationQuestionsPublishedBy"] = "2016-04-02T00:00:00.000000Z"
-    elif status is "withdrawn":
+
+    if status is "withdrawn":
         brief["briefs"]["withdrawnAt"] = "2016-05-07T00:00:00.000000Z"
     elif status is "unsuccessful":
         brief["briefs"]["unsuccessfulAt"] = "2016-05-07T00:00:00.000000Z"

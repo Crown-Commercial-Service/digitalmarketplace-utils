@@ -295,8 +295,16 @@ class TestBrief:
         brief = api_stubs.brief(status='live', clarification_questions_closed=True)
         assert brief["briefs"]["clarificationQuestionsAreClosed"] is True
 
-    def test_if_status_is_closed_brief_contains_milestone_dates(self):
-        brief = api_stubs.brief(status="closed")
+    @pytest.mark.parametrize("status", (
+        "live",
+        "closed",
+        "awarded",
+        "unsuccessful",
+        "withdrawn",
+        "cancelled",
+    ))
+    def test_if_status_is_not_draft_brief_contains_milestone_dates(self, status):
+        brief = api_stubs.brief(status=status)
         assert "createdAt" in brief["briefs"]
         assert "updatedAt" in brief["briefs"]
         assert "publishedAt" in brief["briefs"]
