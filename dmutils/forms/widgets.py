@@ -1,43 +1,57 @@
 
 from flask import current_app
 
-__all__ = ["DMCheckboxInput", "DMDateInput", "DMRadioInput", "DMTextInput", "DMUnitInput"]
+__all__ = ["DMCheckboxInput", "DMDateInput", "DMRadioInput", "DMTextInput", "DMTextArea", "DMUnitInput"]
 
 
 class DMJinjaWidgetBase:
 
-    template_args = []
+    # we include common template arguments here to avoid repetition
+    error = None
+    name = None
+    hint = None
+    question = None
+    question_advice = None
+    value = None
 
-    def __init__(self, hide_question=False):
-        # we include common template arguments here to avoid repetition
-        self.template_args = ["error", "name", "hint", "question", "value"] + self.template_args
+    def __init__(self, hide_question=False, **kwargs):
+        self.__template__ = None
+
+        self.__context__ = {}
+        self.__context__.update({k: getattr(self, k) for k in dir(self) if not k.startswith("_")})
+        # kwargs can be used to add constants to the template context
+        self.__context__.update(kwargs)
+
         if hide_question:
-            self.template_args.remove("question")
-
-        self.template = None
+            del self.__context__["question"]
 
     def __call__(self, field, **kwargs):
-        # get the template variables from the field
-        for attr in self.template_args:
-            if hasattr(field, attr):
-                kwargs.setdefault(attr, getattr(field, attr))
+        context = {}
+        context.update(self.__context__)
+        context.update(kwargs)
 
+        # get the template variables from the field
+        for attr in self.__context__:
+            if self.__context__[attr] is None:
+                context[attr] = getattr(field, attr)
+
+        return self._render(context)
+
+    def _render(self, *args, **kwargs):
         # cache the template
         # this cannot be done in __init__ as the flask app may not exist
-        if not self.template:
-            self.template = current_app.jinja_env.get_template(self.template_file)
+        if not self.__template__:
+            self.__template__ = current_app.jinja_env.get_template(self.__template_file__)
 
-        html = self.template.render(**kwargs)
-        return html
+        return self.__template__.render(*args, **kwargs)
 
 
 class DMSelectionButtonBase(DMJinjaWidgetBase):
-    template_args = ["type", "inline", "options"]
-    template_file = "toolkit/forms/selection-buttons.html"
+    __template_file__ = "toolkit/forms/selection-buttons.html"
 
-    def __call__(self, field, **kwargs):
-        kwargs["type"] = self.type
-        return super().__call__(field, **kwargs)
+    type = None
+    inline = None
+    options = None
 
 
 class DMCheckboxInput(DMSelectionButtonBase):
@@ -45,15 +59,14 @@ class DMCheckboxInput(DMSelectionButtonBase):
 
 
 class DMDateInput(DMJinjaWidgetBase):
-    template_file = "toolkit/forms/date.html"
+    __template_file__ = "toolkit/forms/date.html"
 
-    def __init__(self):
-        super().__init__()
-        self.template_args.remove("value")
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        del self.__context__["value"]
 
     def __call__(self, field, **kwargs):
-        kwargs["data"] = field.value
-        return super().__call__(field, **kwargs)
+        return super().__call__(field, data=field.value, **kwargs)
 
 
 class DMRadioInput(DMSelectionButtonBase):
@@ -61,8 +74,20 @@ class DMRadioInput(DMSelectionButtonBase):
 
 
 class DMTextInput(DMJinjaWidgetBase):
-    template_file = "toolkit/forms/textbox.html"
+    __template_file__ = "toolkit/forms/textbox.html"
+
+
+class DMTextArea(DMTextInput):
+    large = True
+
+    def __init__(self, max_length_in_words=None, **kwargs):
+        if max_length_in_words:
+            self.max_length_in_words = max_length_in_words
+
+        super().__init__(**kwargs)
 
 
 class DMUnitInput(DMTextInput):
-    template_args = ["unit_in_full", "unit", "unit_position"]
+    unit = None
+    unit_in_full = None
+    unit_position = None
