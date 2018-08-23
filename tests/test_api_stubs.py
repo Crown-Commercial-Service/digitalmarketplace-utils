@@ -297,12 +297,24 @@ class TestBrief:
 
     def test_if_status_is_closed_brief_contains_milestone_dates(self):
         brief = api_stubs.brief(status="closed")
-        assert brief["briefs"]["createdAt"] == "2016-03-29T10:11:12.000000Z"
-        assert brief["briefs"]["updatedAt"] == "2016-03-29T10:11:13.000000Z"
-        assert brief["briefs"]["publishedAt"] == "2016-03-29T10:11:14.000000Z"
-        assert brief["briefs"]["applicationsClosedAt"] == "2016-04-07T00:00:00.000000Z"
-        assert brief["briefs"]["clarificationQuestionsClosedAt"] == "2016-04-02T00:00:00.000000Z"
-        assert brief["briefs"]["clarificationQuestionsPublishedBy"] == "2016-04-02T00:00:00.000000Z"
+        assert "createdAt" in brief["briefs"]
+        assert "updatedAt" in brief["briefs"]
+        assert "publishedAt" in brief["briefs"]
+        assert "applicationsClosedAt" in brief["briefs"]
+        assert "clarificationQuestionsClosedAt" in brief["briefs"]
+        assert "clarificationQuestionsPublishedBy" in brief["briefs"]
+
+    def test_if_status_is_withdrawn_brief_contains_milestone_dates(self):
+        brief = api_stubs.brief(status="withdrawn")
+        assert "withdrawnAt" in brief["briefs"]
+
+    def test_if_status_is_unsuccessful_brief_contains_milestone_dates(self):
+        brief = api_stubs.brief(status="unsuccessful")
+        assert "unsuccessfulAt" in brief["briefs"]
+
+    def test_if_status_is_cancelled_brief_contains_milestone_dates(self):
+        brief = api_stubs.brief(status="cancelled")
+        assert "cancelledAt" in brief["briefs"]
 
 
 class TestSupplier:
