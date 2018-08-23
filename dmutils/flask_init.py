@@ -1,6 +1,7 @@
 import os
 from . import config, logging, proxy_fix, request_id, formats, filters, errors
 from flask_script import Manager, Server
+from flask_wtf.csrf import CSRFError
 
 
 def init_app(
@@ -61,7 +62,8 @@ def init_app(
             **(application.config['BASE_TEMPLATE_DATA'] or {}))
 
     # Register error handlers for CSRF errors and common error status codes
-    application.register_error_handler(400, errors.csrf_handler)
+    application.register_error_handler(CSRFError, errors.csrf_handler)
+    application.register_error_handler(400, errors.render_error_page)
     application.register_error_handler(401, errors.redirect_to_login)
     application.register_error_handler(403, errors.redirect_to_login)
     application.register_error_handler(404, errors.render_error_page)

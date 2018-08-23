@@ -38,19 +38,6 @@ def test_csrf_handler_redirects_to_login(current_app, user_session, app):
             ]
 
 
-@mock.patch('dmutils.errors.render_template')
-def test_csrf_handler_sends_other_400s_to_render_error_page(render_template, app):
-
-    with app.test_request_context('/'):
-        app.config['WTF_CSRF_ENABLED'] = True
-        app.register_blueprint(external_blueprint)
-
-        assert csrf_handler(BadRequest()) == (render_template.return_value, 400)
-        assert render_template.call_args_list == [
-            mock.call('errors/400.html', error_message=None)
-        ]
-
-
 def test_unauthorised_redirects_to_login(app):
     with app.test_request_context('/'):
         app.register_blueprint(external_blueprint)

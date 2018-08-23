@@ -1,23 +1,15 @@
 from flask import redirect, render_template, url_for, flash, session, request, current_app
-from flask_wtf.csrf import CSRFError
 from jinja2.exceptions import TemplateNotFound
 
 
-def csrf_handler(e):
+def csrf_handler(csrf_error):
     """
-    Workaround for a bug in Flask 0.10.1.
-    CSRFErrors are caught under 400 BadRequest exceptions, so this heavy-handed solution
-     catches all 400s, and immediately discards non-CSRFError instances.
-
-    :param e: CSRF exception instance
+    :param csrf_error: CSRF exception instance
     :param session: Flask session instance
     :param request: Flask request instance
     :param logger: app logger instance
     :return: redirect to login with flashed error message
     """
-    if not isinstance(e, CSRFError):
-        return render_error_page(e)
-
     if 'user_id' not in session:
         current_app.logger.info(
             u'csrf.session_expired: Redirecting user to log in page'
@@ -29,7 +21,7 @@ def csrf_handler(e):
         )
 
     flash('Your session has expired. Please log in again.', "error")
-    return redirect_to_login(e)
+    return redirect_to_login(csrf_error)
 
 
 def redirect_to_login(e):
