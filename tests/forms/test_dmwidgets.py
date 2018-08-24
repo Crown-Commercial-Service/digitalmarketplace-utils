@@ -19,13 +19,13 @@ def monkeypatch_render(cls):
 
 
 @pytest.fixture(params=dmutils.forms.widgets.__all__)
-def widget_class(request):
+def widget_factory(request):
     return monkeypatch_render(getattr(dmutils.forms.widgets, request.param))
 
 
 @pytest.fixture
-def widget(widget_class):
-    return widget_class()
+def widget(widget_factory):
+    return widget_factory()
 
 
 @pytest.fixture
@@ -59,15 +59,15 @@ def test_template_context_includes_question_advice(widget, field):
     assert get_render_context(widget)["question_advice"] == "Advice text."
 
 
-def test_arguments_can_be_added_to_template_context_from_widget_constructor(widget_class, field):
-    widget = widget_class(foo="bar")
+def test_arguments_can_be_added_to_template_context_from_widget_constructor(widget_factory, field):
+    widget = widget_factory(foo="bar")
     widget(field)
     assert get_render_context(widget)["foo"] == "bar"
 
 
 class TestDMTextArea:
     @pytest.fixture()
-    def widget_class(self):
+    def widget_factory(self):
         return monkeypatch_render(dmutils.forms.widgets.DMTextArea)
 
     def test_dm_text_area_sends_large_is_true_to_template(self, widget, field):
@@ -75,18 +75,18 @@ class TestDMTextArea:
         assert get_render_context(widget)["large"] is True
 
     @pytest.mark.parametrize("max_length_in_words", (1, 45, 100))
-    def test_dm_text_area_can_send_max_length_in_words_to_template(self, widget_class, max_length_in_words, field):
-        widget = widget_class()
+    def test_dm_text_area_can_send_max_length_in_words_to_template(self, widget_factory, max_length_in_words, field):
+        widget = widget_factory()
         widget(field)
         assert "max_length_in_words" not in get_render_context(widget)
 
-        widget = widget_class(max_length_in_words=max_length_in_words)
+        widget = widget_factory(max_length_in_words=max_length_in_words)
         widget(field)
         assert get_render_context(widget)["max_length_in_words"] == max_length_in_words
 
-    def test_dm_text_area_max_words_template_constant_is_instance_variable(self, widget_class):
-        widget1 = widget_class(max_length_in_words=mock.sentinel.max_length1)
-        widget2 = widget_class(max_length_in_words=mock.sentinel.max_length2)
+    def test_dm_text_area_max_words_template_constant_is_instance_variable(self, widget_factory):
+        widget1 = widget_factory(max_length_in_words=mock.sentinel.max_length1)
+        widget2 = widget_factory(max_length_in_words=mock.sentinel.max_length2)
 
         widget1(mock.Mock())
         widget2(mock.Mock())
@@ -100,7 +100,7 @@ class TestDMTextArea:
 
 class TestDMDateInput:
     @pytest.fixture()
-    def widget_class(self):
+    def widget_factory(self):
         return monkeypatch_render(dmutils.forms.widgets.DMDateInput)
 
     def test_dm_date_input_does_not_send_value_to_template(self, widget, field):
@@ -114,7 +114,7 @@ class TestDMDateInput:
 
 class TestDMSelectionButtons:
     @pytest.fixture(params=["DMCheckboxInput", "DMRadioInput"])
-    def widget_class(self, request):
+    def widget_factory(self, request):
         return monkeypatch_render(getattr(dmutils.forms.widgets, request.param))
 
     def test_dm_selection_buttons_send_type_to_render(self, widget, field):
