@@ -2,6 +2,23 @@
 
 Records breaking changes from major version bumps
 
+## 43.0.0
+
+PR [#447](https://github.com/alphagov/digitalmarketplace-utils/pull/447)
+
+This bump removes any handling of [FeatureFlags](https://pypi.org/project/Flask-FeatureFlags/) (in e.g. app init code)
+and removes FeatureFlags as a dependency.
+
+Specifically, `dmutils.flask_init.init_app(...)` no longer accepts a `feature_flags` argument and performs no
+initialization of FeatureFlags for the app.
+
+`dmutils.status.enabled_since(...)` has been removed.
+
+`dmutils.status.get_app_status(...)` no longer adds a `flags` key to its json dictionary.
+
+The dependency on Flask has been upgraded to Flask 0.12, so potentially apps are going to have to make changes
+in concordance with http://flask.pocoo.org/docs/0.12/changelog/
+
 ## 42.0.0
 
 PR [#400](https://github.com/alphagov/digitalmarketplace-utils/pull/400)

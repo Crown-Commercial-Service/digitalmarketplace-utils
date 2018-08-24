@@ -1,7 +1,5 @@
 from . import config, formats, logging, proxy_fix, request_id
 from .flask_init import init_app, init_manager
 
-import flask_featureflags  # noqa
 
-
-__version__ = '42.8.2'
+__version__ = '43.0.0'

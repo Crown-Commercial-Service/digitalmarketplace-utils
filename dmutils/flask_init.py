@@ -1,7 +1,7 @@
 import os
-from flask_featureflags.contrib.inline import InlineFeatureFlag
 from . import config, logging, proxy_fix, request_id, formats, filters, errors
 from flask_script import Manager, Server
+from flask_wtf.csrf import CSRFError
 
 
 def init_app(
@@ -10,7 +10,6 @@ def init_app(
         bootstrap=None,
         data_api_client=None,
         db=None,
-        feature_flags=None,
         login_manager=None,
         search_api_client=None,
 ):
@@ -31,11 +30,6 @@ def init_app(
         data_api_client.init_app(application)
     if db:
         db.init_app(application)
-    if feature_flags:
-        # Standardize FeatureFlags, only accept inline config variables
-        feature_flags.init_app(application)
-        feature_flags.clear_handlers()
-        feature_flags.add_handler(InlineFeatureFlag())
     if login_manager:
         login_manager.init_app(application)
     if search_api_client:
@@ -68,7 +62,8 @@ def init_app(
             **(application.config['BASE_TEMPLATE_DATA'] or {}))
 
     # Register error handlers for CSRF errors and common error status codes
-    application.register_error_handler(400, errors.csrf_handler)
+    application.register_error_handler(CSRFError, errors.csrf_handler)
+    application.register_error_handler(400, errors.render_error_page)
     application.register_error_handler(401, errors.redirect_to_login)
     application.register_error_handler(403, errors.redirect_to_login)
     application.register_error_handler(404, errors.render_error_page)

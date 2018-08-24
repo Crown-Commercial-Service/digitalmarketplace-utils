@@ -23,10 +23,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-         'Flask-FeatureFlags==1.0',
          'Flask-Script==2.0.6',
          'Flask-WTF==0.14.2',
-         'Flask==0.10.1',
+         'Flask==0.12.4',
          'Flask-Login>=0.2.11',
          'boto3==1.4.8',
          'contextlib2==0.4.0',
