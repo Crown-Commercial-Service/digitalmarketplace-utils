@@ -33,7 +33,7 @@ class DMJinjaWidgetBase:
         # get the template variables from the field
         for attr in self.__context__:
             if self.__context__[attr] is None:
-                context[attr] = getattr(field, attr)
+                context[attr] = getattr(field, attr, None)
 
         return self._render(context)
 

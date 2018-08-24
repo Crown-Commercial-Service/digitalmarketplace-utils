@@ -65,6 +65,13 @@ def test_arguments_can_be_added_to_template_context_from_widget_constructor(widg
     assert get_render_context(widget)["foo"] == "bar"
 
 
+def test_template_context_argument_will_default_to_none_if_not_in_field(widget, field):
+    del field.question_advice
+
+    widget(field)
+    assert get_render_context(widget)["question_advice"] is None
+
+
 class TestDMTextArea:
     @pytest.fixture()
     def widget_factory(self):
