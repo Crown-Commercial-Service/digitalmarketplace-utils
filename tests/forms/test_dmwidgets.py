@@ -2,7 +2,10 @@
 import mock
 import pytest
 
+import dmutils.forms.mixins
 import dmutils.forms.widgets
+
+import wtforms
 
 
 def get_render_context(widget):
@@ -28,9 +31,14 @@ def widget(widget_factory):
     return widget_factory()
 
 
+# We need this to limit what is accessed on our field mock
+class FieldSpec(dmutils.forms.mixins.DMFieldMixin, wtforms.Field):
+    pass
+
+
 @pytest.fixture
 def field():
-    return mock.Mock()
+    return mock.Mock(spec=FieldSpec)
 
 
 def test_calling_widget_calls_template_render(widget, field):
@@ -38,7 +46,8 @@ def test_calling_widget_calls_template_render(widget, field):
     assert widget._render.called
 
 
-def test_template_context_is_populated_from_field(widget, field):
+def test_template_context_is_populated_from_field(widget):
+    field = mock.Mock()  # use a blank mock to collect all attributes
     widget(field)
     for k in widget.__context__:
         if widget.__context__[k] is not None:
@@ -66,8 +75,6 @@ def test_arguments_can_be_added_to_template_context_from_widget_constructor(widg
 
 
 def test_template_context_argument_will_default_to_none_if_not_in_field(widget, field):
-    del field.question_advice
-
     widget(field)
     assert get_render_context(widget)["question_advice"] is None
 
