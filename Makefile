@@ -3,7 +3,7 @@ VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo $$(pwd)/venv || echo $$V
 
 .PHONY: virtualenv
 virtualenv:
-	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv -p python3 venv || true
+	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && python3 -m venv venv || true
 
 .PHONY: requirements-dev
 requirements-dev: virtualenv requirements-dev.txt
