@@ -5,6 +5,10 @@ import hashlib
 import re
 
 
+# List of characters that could be used to separate email addresses,
+# in decreasing precedence order.
+EMAIL_ADDRESS_SEPARATORS = [";", ",", "/"]
+
 # Largely copied from https://github.com/alphagov/notifications-utils/blob/\
 #   67889886ec1476136d12e7f32787a7dbd0574cc2/notifications_utils/recipients.py
 #
@@ -67,3 +71,36 @@ def validate_email_address(email_address):
         return False
 
     return True
+
+
+def get_email_addresses(string, separators=EMAIL_ADDRESS_SEPARATORS):
+    """
+    Returns a list of email addresses from a string.
+
+    It does not validate the email addresses.
+
+    @param separators   list of characters that could be
+                        used to separate email addresses
+
+    >>> from dmutils.email.helpers import email_addresses
+    >>> email_addresses("bob@blob.com ")
+    ['bob@blob.com']
+    >>> email_addresses("bob@blob.com; bob.blob@job.com")
+    ['bob@blob.com', 'bob.blob@job.com']
+    >>> email_addresses("bob@blob.com /  bob.blob@job.com")
+    ['bob@blob.com', 'bob.blob@job.com']
+    >>> email_addresses("bob@invalid;bob.blob@job.com")
+    ['bob@invalid', 'bob.blob@job.com']
+    >>> email_addresses("bob@blob;bob.blob@job.com;bob@blob..invalid")
+    ['bob@blob', 'bob.blob@job.com', 'bob@blob..invalid']
+    """
+
+    addresses = [string]
+    for sep in separators:
+        if sep in string:
+            addresses = string.split(sep)
+            break  # earlier separators take precedence
+
+    addresses = [s.strip() for s in addresses if s]
+
+    return addresses
