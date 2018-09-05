@@ -7,7 +7,9 @@ import re
 
 # List of characters that could be used to separate email addresses,
 # in decreasing precedence order.
-EMAIL_ADDRESS_SEPARATORS = [";", ",", "/"]
+# Space (" ") should almost always be at the end of this list, otherwise
+# it can cause weird issues when there are separators surrounded by space.
+EMAIL_ADDRESS_SEPARATORS = [";", ",", "/", " "]
 
 # Largely copied from https://github.com/alphagov/notifications-utils/blob/\
 #   67889886ec1476136d12e7f32787a7dbd0574cc2/notifications_utils/recipients.py
@@ -101,6 +103,7 @@ def get_email_addresses(string, separators=EMAIL_ADDRESS_SEPARATORS):
             addresses = string.split(sep)
             break  # earlier separators take precedence
 
-    addresses = [s.strip() for s in addresses if s]
+    addresses = (s.strip() for s in addresses)
+    addresses = [s for s in addresses if s]  # remove empty strings that can be left in by the algorithm
 
     return addresses

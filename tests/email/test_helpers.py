@@ -22,8 +22,12 @@ from dmutils.email.helpers import get_email_addresses
             ["bob@blob"]),
         ("bob@blob.com;bob.blob@job..com",
             ["bob@blob.com", "bob.blob@job..com"]),
+        ("mary.shelley@example.email; ada.lovelace@email.example; ",
+            ["mary.shelley@example.email", "ada.lovelace@email.example"]),
+        ("joan.d'arc@example.email dorothy.vaughn@email.example ",
+            ["joan.d'arc@example.email", "dorothy.vaughn@email.example"]),
         ("Please send emails to bob@blob.com",
-            ["Please send emails to bob@blob.com"]),
+            ["Please", "send", "emails", "to", "bob@blob.com"]),
     )
 )
 def test_get_email_addresses_returns_list_of_valid_email_addresses(multiple_email_addresses, expected):
