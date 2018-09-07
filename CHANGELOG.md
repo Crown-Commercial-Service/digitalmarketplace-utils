@@ -2,6 +2,17 @@
 
 Records breaking changes from major version bumps
 
+
+## 44.0.0
+
+PR [#455](https://github.com/alphagov/digitalmarketplace-utils/pull/455)
+
+Upgrade flask to from 0.12.4 to 1.0.2. This has breaking changes for flask apps and therefore has breaking changes for users relying on init_app.
+
+Apps should upgrade to `Flask==1.0.2` using the changelog here http://flask.pocoo.org/docs/1.0/changelog/#version-1-0-2 taking care to note
+the breaking changes in [v1.0](http://flask.pocoo.org/docs/1.0/changelog/#version-1-0) 
+
+
 ## 43.0.0
 
 PR [#447](https://github.com/alphagov/digitalmarketplace-utils/pull/447)
