@@ -90,7 +90,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
             (u'\u00a3baz', u'\u00a3baz_p13n'),
         ])
         self.standard_args = {
-            'email_address': self.email_address,
+            'to_email_address': self.email_address,
             'template_id': self.template_id,
             'personalisation': self.personalisation
         }
@@ -234,17 +234,6 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s='
             )
 
-    def test_get_error_message(self, dm_notify_client, notify_example_http_error):
-        """Test error message format."""
-        actual = dm_notify_client.get_error_message(self.email_address, notify_example_http_error)
-        expected = (
-            u'Error sending message to example@example.com: 400 ValidationError: email_address '
-            u'Not a valid email address, 400 ValidationError: template_id is not a valid UUID, '
-            u'400 ValidationError: Won\u2019t send unless you give us \u00a3\u00a3\u00a3'
-        )
-
-        assert actual == expected
-
     def test_cache_not_instantiated_with_allow_resend(self, dm_notify_client):
         """The cache shouldn't be touched until we pass `allow_resend=False` to `send_email`."""
         with mock.patch(self.client_class_str + '.' + 'send_email_notification'):
@@ -328,16 +317,33 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
                 )
 
-    def test_replacement_address_allows_resend(self):
-        """
-            Test the replacement_email_address mechanism doesn't make calls to different addresses look like resends.
-            Also tests behaviour when used outside a flask app context.
-        """
+    def test_behaviour_outside_flask_app_context(self):
+        """If logger is supplied then app context is not required"""
         dm_notify_client = DMNotifyClient(
             _test_api_key,
             logger=mock.Mock(),
-            redirect_domains_to_address={"example.gov.uk": "ellpod@bomo.ol"},
         )
+
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
+            dm_notify_client.send_email("email@example.com", "template_id")
+
+            assert send_email_notification_mock.call_args \
+                == mock.call(
+                    "email@example.com",
+                    "template_id",
+                    personalisation=None,
+                    reference=mock.ANY,
+                )
+
+    def test_replacement_address_allows_resend(self, app):
+        """
+            Test the replacement_email_address mechanism doesn't make calls to different addresses look like resends.
+        """
+        with app.app_context():
+            dm_notify_client = DMNotifyClient(
+                _test_api_key,
+                redirect_domains_to_address={"example.gov.uk": "ellpod@bomo.ol"},
+            )
 
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
             with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
@@ -387,3 +393,33 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 with assert_external_service_log_entry(service='Notify', description='send_email', count=1):
                     dm_notify_client.send_email(self.email_address + 'foo', self.template_id, allow_resend=False)
                     dm_notify_client.send_email(self.email_address + 'foo', self.template_id, allow_resend=False)
+
+    def test_constructor_can_retrieve_api_key_from_app_config(self, app):
+        api_key = "notify-api-key-" + _test_api_key
+        app.config["DM_NOTIFY_API_KEY"] = api_key
+
+        with mock.patch("dmutils.email.dm_notify.DMNotifyClient._client_class") as notify_client_mock:
+            with app.app_context():
+                DMNotifyClient()
+
+            assert notify_client_mock.call_args \
+                == mock.call(
+                    api_key,
+                    mock.ANY,
+                )
+
+    def test_can_use_templates_from_app_config(self, app):
+        app.config["NOTIFY_TEMPLATES"] = {"template_name": "template-id"}
+
+        with app.app_context():
+            dm_notify_client = DMNotifyClient(_test_api_key)
+
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
+            dm_notify_client.send_email("email@example.com", "template_name")
+            assert send_email_notification_mock.call_args \
+                == mock.call(
+                    "email@example.com",
+                    "template-id",
+                    personalisation=None,
+                    reference=mock.ANY,
+                )
