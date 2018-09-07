@@ -109,8 +109,8 @@ _messages_expected = OrderedDict((
                 'error': "{name}: {street} - {duration_process}s",
             },
             {
-                'success': AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
-                'error': AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
+                'success': AnyStringMatching(r"flask\.app\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
+                'error': AnyStringMatching(r"flask\.app\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
             },
         ),
     ),
@@ -302,7 +302,7 @@ def _expect_log(
     ))
 )
 def test_logged_duration_mock_logger(
-    app,
+    app_with_mocked_logger,
     # value to set the is_sampled flag to on the mock request
     is_sampled,
     # how long to sleep in seconds
@@ -320,9 +320,8 @@ def test_logged_duration_mock_logger(
     # sequence of log dicts to expect to be output as json logs
     expected_call_args_list,
 ):
-    with app.test_request_context("/", headers={}):
+    with app_with_mocked_logger.test_request_context("/", headers={}):
         request.is_sampled = is_sampled
-        mock_logger = mock.Mock(spec_set=("log",))
 
         with (mock_time_functions() if mock_time else actual_time_functions()) as (
             _sleep,
@@ -331,19 +330,19 @@ def test_logged_duration_mock_logger(
         ):
             with (null_context_manager() if raise_exception is None else pytest.raises(raise_exception)):
                 with timing.logged_duration(
-                    logger=mock_logger,
+                    logger=app_with_mocked_logger.logger,
                     message=message,
                     log_level=log_level,
                     condition=condition,
                 ) as log_context:
-                    assert mock_logger.log.call_args_list == []
+                    assert app_with_mocked_logger.logger.log.call_args_list == []
                     _sleep(sleep_time)
                     if inject_context is not None:
                         log_context.update(inject_context)
                     if raise_exception is not None:
                         raise raise_exception("Boo")
 
-    assert mock_logger.log.call_args_list == expected_call_args_list
+    assert app_with_mocked_logger.logger.log.call_args_list == expected_call_args_list
 
 
 @pytest.mark.parametrize(
@@ -378,7 +377,7 @@ def test_logged_duration_mock_logger(
                         if ("street" in str(message) and "street" not in (inject_context or {})) else ()
                     ),
                     AnySupersetOf({
-                        "name": "conftest.foobar",
+                        "name": "flask.app.foobar",
                         "levelname": logging.getLevelName(log_level),
                         "message": _messages_expected[message][1].get('error' if raise_exception else 'success'),
                         "duration_real": RestrictedAny(
@@ -447,7 +446,7 @@ def test_logged_duration_mock_logger(
                     "key": "D#",
                     "duration_real": RestrictedAny(lambda value: 0.48 < value < 0.6),
                     "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
-                    "name": "conftest.foobar",
+                    "name": "flask.app.foobar",
                 }),),
             ),
             (
@@ -485,7 +484,7 @@ def test_logged_duration_mock_logger(
                         ),
                         "duration_real": RestrictedAny(lambda value: 0.18 < value < 0.35),
                         "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
-                        "name": "conftest.foobar",
+                        "name": "flask.app.foobar",
                     }),
                 ),
             ),
@@ -493,7 +492,7 @@ def test_logged_duration_mock_logger(
     ))
 )
 def test_logged_duration_real_logger(
-    app_logtofile,
+    app_with_stream_logger,
     # value to set the is_sampled flag to on the mock request
     is_sampled,
     # how long to sleep in seconds
@@ -511,33 +510,30 @@ def test_logged_duration_real_logger(
     # sequence of log dicts to expect to be output as json logs
     expected_logs,
 ):
-    with open(app_logtofile.config["DM_LOG_PATH"], "r") as log_file:
-        # consume log initialization line
-        log_file.read()
+    app, stream = app_with_stream_logger
 
-        with app_logtofile.test_request_context("/", headers={}):
-            request.is_sampled = is_sampled
+    with app.test_request_context("/", headers={}):
+        request.is_sampled = is_sampled
 
-            with (mock_time_functions() if mock_time else actual_time_functions()) as (
-                _sleep,
-                _perf_counter,
-                _process_time,
-            ):
-                with (null_context_manager() if raise_exception is None else pytest.raises(raise_exception)):
-                    with timing.logged_duration(
-                        logger=app_logtofile.logger.getChild("foobar"),
-                        message=message,
-                        log_level=log_level,
-                        condition=condition,
-                    ) as log_context:
-                        _sleep(sleep_time)
-                        if inject_context is not None:
-                            log_context.update(inject_context)
-                        if raise_exception is not None:
-                            raise raise_exception("Boo")
+        with (mock_time_functions() if mock_time else actual_time_functions()) as (
+            _sleep,
+            _perf_counter,
+            _process_time,
+        ):
+            with (null_context_manager() if raise_exception is None else pytest.raises(raise_exception)):
+                with timing.logged_duration(
+                    logger=app.logger.getChild("foobar"),
+                    message=message,
+                    log_level=log_level,
+                    condition=condition,
+                ) as log_context:
+                    _sleep(sleep_time)
+                    if inject_context is not None:
+                        log_context.update(inject_context)
+                    if raise_exception is not None:
+                        raise raise_exception("Boo")
 
-        # ensure buffers are flushed
-        logging.shutdown()
+    stream.seek(0)
+    all_lines = tuple(json.loads(line) for line in stream.read().splitlines())
 
-        all_lines = tuple(json.loads(line) for line in log_file.read().splitlines())
-        assert all_lines == expected_logs
+    assert all_lines == (AnySupersetOf({"levelname": "INFO", "message": "Logging configured"}),) + expected_logs

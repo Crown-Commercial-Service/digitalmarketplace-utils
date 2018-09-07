@@ -94,7 +94,7 @@ def test_init_app_only_adds_handlers_to_defined_loggers(app):
         and isinstance(v.handlers[0], logging.StreamHandler)
     }
 
-    assert loggers == {'conftest', 'dmutils', 'dmapiclient', 'flask_wtf.csrf', 'urllib3.util.retry'}
+    assert loggers == {'flask.app', 'dmutils', 'dmapiclient', 'flask_wtf.csrf', 'urllib3.util.retry'}
 
 
 def test_urllib3_retry_logger_not_configured_for_search_api(app):
@@ -119,87 +119,105 @@ def _set_request_class_is_sampled(app, sampled):
     app.request_class = _Request
 
 
-@pytest.mark.parametrize("is_sampled", (None, False, True,))
-def test_app_request_logs_responses_with_info_level(app, is_sampled):
+@pytest.mark.parametrize("is_sampled", (None, False))
+def test_app_request_logs_responses_with_info_level_not_sampled(app_with_mocked_logger, is_sampled):
     if is_sampled is not None:
-        _set_request_class_is_sampled(app, is_sampled)
+        _set_request_class_is_sampled(app_with_mocked_logger, is_sampled)
 
-    # since app.logger is a read-only property we need to patch the Flask class
-    with mock.patch('flask.Flask.logger') as logger:
-        app.test_client().get('/')
+    app_with_mocked_logger.test_client().get('/')
 
-        assert logger.log.call_args_list == ([
-            mock.call(
-                logging.DEBUG,
-                'Received request {method} {url}',
-                extra={
-                    "url": "http://localhost/",
-                    "method": "GET",
-                    "endpoint": None,
-                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
-                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
-                },
-            ),
-        ] if is_sampled else []) + [
-            mock.call(
-                logging.INFO,
-                '{method} {url} {status}',
-                extra={
-                    "url": "http://localhost/",
-                    "status": 404,
-                    "method": "GET",
-                    "endpoint": None,
-                    "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
-                    "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
-                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
-                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
-                },
-            )
-        ]
+    expected_call = mock.call(
+        logging.INFO,
+        '{method} {url} {status}',
+        extra={
+            "url": "http://localhost/",
+            "status": 404,
+            "method": "GET",
+            "endpoint": None,
+            "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
+            "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
+            "process_": RestrictedAny(lambda value: isinstance(value, int)),
+            "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+        },
+    )
+
+    assert app_with_mocked_logger.logger.log.call_args_list == [expected_call]
 
 
-@pytest.mark.parametrize("is_sampled", (None, False, True,))
-def test_app_request_logs_5xx_responses_with_error_level(app, is_sampled):
+def test_app_request_logs_responses_with_info_level_sampled(app_with_mocked_logger):
+    _set_request_class_is_sampled(app_with_mocked_logger, True)
+
+    app_with_mocked_logger.test_client().get('/')
+
+    expected_call = mock.call(
+        logging.DEBUG,
+        'Received request {method} {url}',
+        extra={
+            "url": "http://localhost/",
+            "method": "GET",
+            "endpoint": None,
+            "process_": RestrictedAny(lambda value: isinstance(value, int)),
+            "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+        },
+    )
+
+    assert expected_call in app_with_mocked_logger.logger.log.call_args_list
+
+
+@pytest.mark.parametrize("is_sampled", (None, False,))
+def test_app_request_logs_5xx_responses_with_error_level_not_sampled(app_with_mocked_logger, is_sampled):
     if is_sampled is not None:
-        _set_request_class_is_sampled(app, is_sampled)
+        _set_request_class_is_sampled(app_with_mocked_logger, is_sampled)
 
-    @app.route('/')
+    @app_with_mocked_logger.route('/')
     def error_route():
         time.sleep(0.05)
         return 'error', 500
 
-    # since app.logger is a read-only property we need to patch the Flask class
-    with mock.patch('flask.Flask.logger') as logger:
-        app.test_client().get('/')
+    app_with_mocked_logger.test_client().get('/')
 
-        assert logger.log.call_args_list == ([
-            mock.call(
-                logging.DEBUG,
-                'Received request {method} {url}',
-                extra={
-                    "url": "http://localhost/",
-                    "method": "GET",
-                    "endpoint": "error_route",
-                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
-                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
-                },
-            ),
-        ] if is_sampled else []) + [
-            mock.call(
-                logging.ERROR,
-                '{method} {url} {status}',
-                extra={
-                    "url": "http://localhost/",
-                    "status": 500,
-                    "method": "GET",
-                    "endpoint": "error_route",
-                    "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0.05 <= value),
-                    "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
-                    "process_": RestrictedAny(lambda value: isinstance(value, int)),
-                    "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
-                },
-            ),
-        ]
+    assert app_with_mocked_logger.logger.log.call_args_list == [
+        mock.call(
+            logging.ERROR,
+            '{method} {url} {status}',
+            extra={
+                "url": "http://localhost/",
+                "status": 500,
+                "method": "GET",
+                "endpoint": "error_route",
+                "duration_real": RestrictedAny(lambda value: isinstance(value, float) and 0.05 <= value),
+                "duration_process": RestrictedAny(lambda value: isinstance(value, float) and 0 < value),
+                "process_": RestrictedAny(lambda value: isinstance(value, int)),
+                "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+            },
+        )
+    ]
+
+
+def test_app_request_logs_5xx_responses_with_error_level_sampled(app_with_mocked_logger):
+
+    _set_request_class_is_sampled(app_with_mocked_logger, True)
+
+    @app_with_mocked_logger.route('/')
+    def error_route():
+        time.sleep(0.05)
+        return 'error', 500
+
+    app_with_mocked_logger.test_client().get('/')
+
+    expected_call = mock.call(
+        logging.DEBUG,
+        'Received request {method} {url}',
+        extra={
+            "url": "http://localhost/",
+            "method": "GET",
+            "endpoint": "error_route",
+            "process_": RestrictedAny(lambda value: isinstance(value, int)),
+            "thread_": RestrictedAny(lambda value: isinstance(value, (str, bytes,))),
+        },
+    )
+
+    assert expected_call in app_with_mocked_logger.logger.log.call_args_list
 
 
 class TestJSONFormatter(object):
@@ -287,20 +305,18 @@ class TestJSONFormatter(object):
 
 
 @pytest.mark.parametrize("is_sampled", (False, True,))
-def test_log_context_handling_in_initialized_app_high_level(app_logtofile, is_sampled):
+def test_log_context_handling_in_initialized_app_high_level(app_with_stream_logger, is_sampled):
+    app, stream = app_with_stream_logger
+
     def _logging_call_site(app):
         app.logger.info(
             "Charming day {ankles}, {underleaves}, {parent_span_id}",
             extra={"underleaves": "ample"},
         )
 
-    with open(app_logtofile.config["DM_LOG_PATH"], "r") as log_file:
-        # consume log initialization line
-        log_file.read()
+        _set_request_class_is_sampled(app_with_stream_logger, is_sampled)
 
-        _set_request_class_is_sampled(app_logtofile, is_sampled)
-
-        with app_logtofile.test_request_context('/'):
+        with app.test_request_context('/'):
             test_extra_log_context = {
                 "ankles": "thinsocked",
                 "span_id": "beesWaxed",
@@ -311,12 +327,9 @@ def test_log_context_handling_in_initialized_app_high_level(app_logtofile, is_sa
 
             # we perform the log call in a specifically designated & named function to exercise & be able to reliably
             # assert the behaviour of the introspective aspects of our logging
-            _logging_call_site(app_logtofile)
+            _logging_call_site(app)
 
-        # ensure buffers are flushed
-        logging.shutdown()
-
-        all_lines = tuple(json.loads(line) for line in log_file.read().splitlines())
+        all_lines = tuple(json.loads(line) for line in stream.read().splitlines())
 
         assert all_lines == (
             AnySupersetOf({

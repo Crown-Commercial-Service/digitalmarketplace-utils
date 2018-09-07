@@ -1,8 +1,10 @@
-import tempfile
-
-import pytest
-from flask import Flask
 import mock
+import pytest
+
+from flask import Flask
+from io import StringIO
+from logging import Logger, StreamHandler
+
 from boto.ec2.cloudwatch import CloudWatchConnection
 
 from dmutils.logging import init_app
@@ -17,15 +19,26 @@ def app(request):
     return app
 
 
-# it's deceptively difficult to capture & inspect *actual* log output in pytest (no, capfd doesn't seem to work)
 @pytest.fixture
-def app_logtofile(request):
-    with tempfile.NamedTemporaryFile() as f:
-        app = Flask(__name__)
-        app.root_path = request.fspath.dirname
-        app.config['DM_LOG_PATH'] = f.name
-        init_app(app)
-        yield app
+def app_with_stream_logger(request):
+    """Force StreamHandler to use our StringIO object.
+
+    In the dmutils.logging.get_handler method we default to StreamHandler(sys.stdout), if we override sys.stdout to our
+    stream it is possible to check the contents of the stream for the correct log entries.
+    """
+    stream = StringIO()
+    with mock.patch('dmutils.logging.logging.StreamHandler', return_value=StreamHandler(stream)):
+        # Use the above app fixture method to return the app and return our stream
+        yield app(request), stream
+
+
+@pytest.fixture
+def app_with_mocked_logger(request):
+    """Patch `create_logger` to return a mock logger that is made accessible on `app.logger`
+    """
+    with mock.patch('flask.app.create_logger', return_value=mock.Mock(spec=Logger('flask.app'), handlers=[])):
+        # Use the above app fixture method to return the app
+        yield app(request)
 
 
 @pytest.yield_fixture
