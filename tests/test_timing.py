@@ -533,7 +533,6 @@ def test_logged_duration_real_logger(
                     if raise_exception is not None:
                         raise raise_exception("Boo")
 
-    stream.seek(0)
-    all_lines = tuple(json.loads(line) for line in stream.read().splitlines())
+    all_lines = tuple(json.loads(line) for line in stream.getvalue().splitlines())
 
     assert all_lines == (AnySupersetOf({"levelname": "INFO", "message": "Logging configured"}),) + expected_logs
