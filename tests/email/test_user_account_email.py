@@ -46,7 +46,7 @@ class TestSendUserAccountEmail:
 
             self.notify_client.send_email.assert_called_once_with(
                 'test@example.gov.uk',
-                template_id='this-would-be-the-id-of-the-template',
+                template_name='this-would-be-the-id-of-the-template',
                 personalisation={
                     'url': 'http://localhost/user/create/mocked-token'
                 },
@@ -76,7 +76,7 @@ class TestSendUserAccountEmail:
 
             self.notify_client.send_email.assert_called_once_with(
                 'test@example.gov.uk',
-                template_id=current_app.config['NOTIFY_TEMPLATES']['create_user_account'],
+                template_name=current_app.config['NOTIFY_TEMPLATES']['create_user_account'],
                 personalisation={
                     'url': 'http://localhost/user/create/mocked-token',
                     'user': 'Digital Marketplace Team',
@@ -86,9 +86,8 @@ class TestSendUserAccountEmail:
             )
             assert session['email_sent_to'] == 'test@example.gov.uk'
 
-    @mock.patch('dmutils.email.user_account_email.current_app')
     @mock.patch('dmutils.email.user_account_email.abort')
-    def test_abort_with_503_if_send_email_fails_with_EmailError(self, abort, current_app, email_app):
+    def test_abort_with_503_if_send_email_fails_with_EmailError(self, abort, email_app):
         with email_app.test_request_context():
             self.notify_client.send_email.side_effect = EmailError('OMG!')
 
@@ -98,12 +97,4 @@ class TestSendUserAccountEmail:
                 current_app.config['NOTIFY_TEMPLATES']['create_user_account']
             )
 
-            current_app.logger.error.assert_called_once_with(
-                "{code}: Create user email for email_hash {email_hash} failed to send. Error: {error}",
-                extra={
-                    'error': 'OMG!',
-                    'email_hash': 'KmmJkEa5sLyv7vuxG3xja3S3fnnM6Rgq5EZY0S_kCjE=',
-                    'code': 'buyercreate.fail'
-                }
-            )
             abort.assert_called_once_with(503, response="Failed to send user creation email.")

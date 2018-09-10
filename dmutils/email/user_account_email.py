@@ -3,8 +3,8 @@ from . import DMNotifyClient, generate_token, EmailError
 from .helpers import hash_string
 
 
-def send_user_account_email(role, email_address, template_id, extra_token_data={}, personalisation={}):
-    notify_client = DMNotifyClient(current_app.config['DM_NOTIFY_API_KEY'])
+def send_user_account_email(role, email_address, template_name, extra_token_data={}, personalisation={}):
+    notify_client = DMNotifyClient()
 
     token_data = {
         'role': role,
@@ -26,17 +26,10 @@ def send_user_account_email(role, email_address, template_id, extra_token_data={
     try:
         notify_client.send_email(
             email_address,
-            template_id=template_id,
+            template_name=template_name,
             personalisation=personalisation_with_link,
             reference='create-user-account-{}'.format(hash_string(email_address))
         )
         session['email_sent_to'] = email_address
     except EmailError as e:
-        current_app.logger.error(
-            "{code}: Create user email for email_hash {email_hash} failed to send. Error: {error}",
-            extra={
-                'error': str(e),
-                'email_hash': hash_string(email_address),
-                'code': '{}create.fail'.format(role)
-            })
         abort(503, response="Failed to send user creation email.")
