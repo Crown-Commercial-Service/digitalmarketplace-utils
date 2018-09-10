@@ -7,7 +7,7 @@ import pytest
 import json
 
 from dmutils.config import init_app
-from dmutils.email.dm_mandrill import send_email, get_sent_emails
+from dmutils.email.dm_mandrill import DMMandrillClient
 from dmutils.email.exceptions import EmailError
 from helpers import assert_external_service_log_entry, PatchExternalServiceLogConditionMixin
 
@@ -29,6 +29,11 @@ def email_app(app):
     yield app
 
 
+@pytest.fixture
+def client():
+    return DMMandrillClient('api_key', logger=logging.getLogger("mandrill"))
+
+
 def _get_json_decode_error():
     try:
         json.loads('')
@@ -41,7 +46,7 @@ class TestMandrill(PatchExternalServiceLogConditionMixin):
         super().setup()
         self.logger = logging.getLogger('mandrill')
 
-    def test_calls_send_email_with_correct_params(self, email_app, mandrill):
+    def test_calls_send_email_with_correct_params(self, email_app, mandrill, client):
         with email_app.app_context():
             mandrill.messages.send.return_value = [
                 {'_id': '123', 'email': '123'}
@@ -70,35 +75,31 @@ class TestMandrill(PatchExternalServiceLogConditionMixin):
             }
 
             with assert_external_service_log_entry(extra_modules=['mandrill']):
-                send_email(
+                client.send_email(
                     'email_address',
-                    'body',
-                    'api_key',
-                    'subject',
                     'from_email',
                     'from_name',
+                    'body',
+                    'subject',
                     ['password-resets'],
-                    logger=self.logger
                 )
 
             mandrill.messages.send.assert_called_once_with(message=expected_call, async=True)
 
-    def test_calls_send_email_to_multiple_addresses(self, email_app, mandrill):
+    def test_calls_send_email_to_multiple_addresses(self, email_app, mandrill, client):
         with email_app.app_context():
 
             mandrill.messages.send.return_value = [
                 {'_id': '123', 'email': '123'}]
 
             with assert_external_service_log_entry(extra_modules=['mandrill']):
-                send_email(
+                client.send_email(
                     ['email_address1', 'email_address2'],
-                    'body',
-                    'api_key',
-                    'subject',
                     'from_email',
                     'from_name',
+                    'body',
+                    'subject',
                     ['password-resets'],
-                    logger=self.logger
                 )
 
             assert mandrill.messages.send.call_args[1]['message']['to'] == [
@@ -111,7 +112,7 @@ class TestMandrill(PatchExternalServiceLogConditionMixin):
                 {'rcpt': 'email_address2'},
             ]
 
-    def test_calls_send_email_with_alternative_reply_to(self, email_app, mandrill):
+    def test_calls_send_email_with_alternative_reply_to(self, email_app, mandrill, client):
         with email_app.app_context():
             mandrill.messages.send.return_value = [
                 {'_id': '123', 'email': '123'}]
@@ -139,16 +140,14 @@ class TestMandrill(PatchExternalServiceLogConditionMixin):
             }
 
             with assert_external_service_log_entry(extra_modules=['mandrill']):
-                send_email(
+                client.send_email(
                     'email_address',
-                    'body',
-                    'api_key',
-                    'subject',
                     'from_email',
                     'from_name',
+                    'body',
+                    'subject',
                     ['password-resets'],
                     reply_to='reply_address',
-                    logger=self.logger
                 )
 
             mandrill.messages.send.assert_called_once_with(message=expected_call, async=True)
@@ -157,32 +156,30 @@ class TestMandrill(PatchExternalServiceLogConditionMixin):
         Exception('this is an error'),  # all exceptions should be caught and turned into an EmailError
         _get_json_decode_error(),  # but we are particularly interested in knowing that JSON errors are handled
     ])
-    def test_should_throw_exception_if_mandrill_fails(self, email_app, mandrill, exception):
+    def test_should_throw_exception_if_mandrill_fails(self, email_app, mandrill, client, exception):
         with email_app.app_context():
             mandrill.messages.send.side_effect = exception
 
             with pytest.raises(EmailError) as e:
                 with assert_external_service_log_entry(successful_call=False, extra_modules=['mandrill']):
-                    send_email(
+                    client.send_email(
                         'email_address',
-                        'body',
-                        'api_key',
-                        'subject',
                         'from_email',
                         'from_name',
+                        'body',
+                        'subject',
                         ['password-resets'],
-                        logger=self.logger
                     )
 
             assert e.value.__context__ == exception
 
-    def test_calls_get_sent_emails_with_correct_params(self, email_app, mandrill):
+    def test_calls_get_sent_emails_with_correct_params(self, email_app, mandrill, client):
         with email_app.app_context():
             mandrill.messages.search.return_value = [
                 {'_id': '123', 'email': '123'}
             ]
 
-            get_sent_emails('api_key', ['password-resets'], date_from='2018-02-10')
+            client.get_sent_emails(['password-resets'], date_from='2018-02-10')
 
             assert mandrill.messages.search.call_args_list == [
                 mock.call(date_from='2018-02-10', limit=1000, tags=['password-resets'])
