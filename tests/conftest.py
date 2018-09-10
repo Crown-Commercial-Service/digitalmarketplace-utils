@@ -1,4 +1,5 @@
 import mock
+import os
 import pytest
 
 from flask import Flask
@@ -8,6 +9,20 @@ from logging import Logger, StreamHandler
 from boto.ec2.cloudwatch import CloudWatchConnection
 
 from dmutils.logging import init_app
+
+
+@pytest.fixture(scope='session', autouse=True)
+def log_to_null():
+    """Replace stdout logging with logging to dev/null in tests only.
+
+    A handler is set to stdout by default for dev envs. Turn this off for tests to make the output less noisy. Other
+    handlers are unaffected.
+
+    See digitalmarketplace-utils/dmutils/logging.py::get_handler
+    """
+    with open(os.devnull, 'w') as null:
+        with mock.patch('dmutils.logging.sys.stdout', null):
+            yield
 
 
 @pytest.fixture
