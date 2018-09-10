@@ -2,7 +2,33 @@
 
 Records breaking changes from major version bumps
 
-## 43.0.0
+## 44.0.0
+
+PR [#455](https://github.com/alphagov/digitalmarketplace-utils/pull/455)
+
+Upgrade flask to from 0.12.4 to 1.0.2. This has breaking changes for flask apps and therefore has breaking changes for users relying on init_app.
+
+Apps should upgrade to `Flask==1.0.2` using the changelog here http://flask.pocoo.org/docs/1.0/changelog/#version-1-0-2 taking care to note
+the breaking changes in [v1.0](http://flask.pocoo.org/docs/1.0/changelog/#version-1-0) 
+
+
+Updates to DMNotifyClient and addition of `DMMandrillClient`:
+
+`DMNotifyClient.__init__ `parameter logger is now keyword-only
+
+`DMNotifyClient.get_error_message` method has been deleted
+
+`DMNotifyClient.send_email` parameter email_address has been renamed to to_email_address
+
+`DMNotifyClient.get_reference` parameter email_adress has been renamed to to_email_address
+
+dm_mandrill now contains a single class `DMMandrillClient`
+
+`dm_mandrill.send_email` has been deleted. Its functionality has been moved to `DMMandrillClient.send_email`, however the function signature has changed.
+
+`dm_mandrill.get_sent_emails` has been deleted. Its functionality has been moved to `DMMandrillClient.get_sent_emails`, however the function signature has changed.
+
+## 43.0.0
 
 PR [#447](https://github.com/alphagov/digitalmarketplace-utils/pull/447)
 
@@ -19,7 +45,7 @@ initialization of FeatureFlags for the app.
 The dependency on Flask has been upgraded to Flask 0.12, so potentially apps are going to have to make changes
 in concordance with http://flask.pocoo.org/docs/0.12/changelog/
 
-## 42.0.0
+## 42.0.0
 
 PR [#400](https://github.com/alphagov/digitalmarketplace-utils/pull/400)
 

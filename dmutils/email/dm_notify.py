@@ -17,21 +17,35 @@ class DMNotifyClient:
 
     def __init__(
             self,
-            govuk_notify_api_key,
+            govuk_notify_api_key=None,
             govuk_notify_base_url='https://api.notifications.service.gov.uk',
-            logger=None,
             redirect_domains_to_address=None,
+            *,
+            logger=None,
+            templates=None,
     ):
         """
-            :param govuk_notify_api_key:
+            :param govuk_notify_api_key: defaults to current_app.config["DM_NOTIFY_API_KEY"]
             :param govuk_notify_base_url:
-            :param logger: logger to log progress to, taken from current_app if Falsey
             :param redirect_domains_to_address: dictionary mapping email domain to redirected email address - emails
                 sent to a email with a domain in this mapping will instead be sent to the corresponding value set here.
                 if `redirect_domains_to_address` is `None` will fall back to looking for a
                 `DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS` setting in the current flask app's config (if available).
+
+        The following arguments are keyword-only and should only be used if you want to operate outside
+        of a Flask app context.
+            :param logger: logger to log progress to, taken from current_app if Falsey
+            :param templates: a dictionary of template names to template uuids, so that you can use
+                descriptive names when specifying a template. This defaults to current_app.config["NOTIFY_TEMPLATES"].
         """
+        if govuk_notify_api_key is None:
+            govuk_notify_api_key = current_app.config["DM_NOTIFY_API_KEY"]
+
+        if templates is None:
+            self.templates = current_app.config.get("NOTIFY_TEMPLATES", {}) if current_app else {}
+
         self.logger = logger or current_app.logger
+
         self.client = self._client_class(govuk_notify_api_key, govuk_notify_base_url)
         self._redirect_domains_to_address = (
             current_app.config.get("DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS")
@@ -66,11 +80,11 @@ class DMNotifyClient:
         return reference in self.get_delivered_references()
 
     @staticmethod
-    def get_reference(email_address, template_id, personalisation=None):
+    def get_reference(to_email_address, template_id, personalisation=None):
         """
         Method to return the standard reference given the variables the email is sent with.
 
-        :param email_address: Emails recipient
+        :param to_email_address: Emails recipient
         :param template_id: Emails template ID on Notify
         :param personalisation: Template parameters
         :return: Hashed string 'reference' to be passed to client.send_email_notification or self.send_email
@@ -78,42 +92,54 @@ class DMNotifyClient:
         personalisation_string = u','.join(
             list(map(lambda x: u'{}'.format(x), personalisation.values()))
         ) if personalisation else u''
-        details_string = u'|'.join([email_address, template_id, personalisation_string])
+        details_string = u'|'.join([to_email_address, template_id, personalisation_string])
         return hash_string(details_string)
 
-    @staticmethod
-    def get_error_message(email_address, error):
-        """Format a logical error message from the error response."""
-        messages = []
-        message_prefix = u'Error sending message to {email_address}: '.format(email_address=email_address)
-        message_string = u'{status_code} {error}: {message}'
+    def _log_email_error_message(self, to_email_address, template_name, reference, error):
+        """Format a logical error message from the error response and send it to the logger"""
 
-        for message in error.message:
-            format_kwargs = {
-                'status_code': error.status_code,
-                'error': message['error'],
-                'message': message['message'],
-            }
-            messages.append(message_string.format(**format_kwargs))
-        return message_prefix + u', '.join(messages)
+        error_messages = []
+        for error_message in error.message:
+            error_messages.append(
+                "{status_code} {error}: {message}".format(
+                    status_code=error.status_code,
+                    error=error_message["error"],
+                    message=error_message["message"],
+                )
+            )
 
-    def send_email(self, email_address, template_id, personalisation=None, allow_resend=True, reference=None):
+        self.logger.error(
+            "Error sending email: {error_messages}",
+            extra={
+                "client": self.__class__,
+                "reference": reference,
+                "template_name": template_name,
+                "to_email_address": hash_string(to_email_address),
+                "error_messages": error_messages,
+            },
+        )
+
+    def send_email(self, to_email_address, template_name, personalisation=None, allow_resend=True, reference=None):
         """
         Method to send an email using the Notify api.
 
-        :param email_address: String email address for recipient
-        :param template_id: Template accessible on the Notify account whose  api_key you instantiated the class with
+        :param to_email_address: String email address for recipient
+        :param template_name: Template accessible on the Notify account whose api_key you instantiated the class with.
+                              Can either be a UUID or a key to the current_app.config["NOTIFY_TEMPLATES"] dictionary.
         :param personalisation: The template variables, dict
         :param allow_resend: if False instantiate the delivered reference cache and ensure we are not sending duplicates
         :return: response from the api. For more information see https://github.com/alphagov/notifications-python-client
         """
-        reference = reference or self.get_reference(email_address, template_id, personalisation)
+        template_id = self.templates.get(template_name, template_name)
+        reference = reference or self.get_reference(to_email_address, template_id, personalisation)
+
         if not allow_resend and self.has_been_sent(reference):
             self.logger.info(
-                "Email {reference} (template {template_id}) has already been sent to {email_address} through Notify",
+                "Email with reference '{reference}' has already been sent",
                 extra=dict(
-                    email_address=hash_string(email_address),
-                    template_id=template_id,
+                    client=self.client.__class__,
+                    to_email_address=hash_string(to_email_address),
+                    template_name=template_name,
                     reference=reference,
                 ),
             )
@@ -125,9 +151,9 @@ class DMNotifyClient:
             self._redirect_domains_to_address
             and self._redirect_domains_to_address.get(
                 # splitting at rightmost @ should reliably give us the domain
-                email_address.rsplit("@", 1)[-1].lower()
+                to_email_address.rsplit("@", 1)[-1].lower()
             )
-        ) or email_address
+        ) or to_email_address
 
         try:
             with log_external_request(service='Notify'):
@@ -139,7 +165,7 @@ class DMNotifyClient:
                 )
 
         except HTTPError as e:
-            self.logger.error(self.get_error_message(hash_string(email_address), e))
+            self._log_email_error_message(to_email_address, template_name, reference, e)
             raise EmailError(str(e))
 
         self._update_cache(reference)
