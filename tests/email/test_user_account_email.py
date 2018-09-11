@@ -46,7 +46,7 @@ class TestSendUserAccountEmail:
 
             self.notify_client.send_email.assert_called_once_with(
                 'test@example.gov.uk',
-                template_name='this-would-be-the-id-of-the-template',
+                template_name_or_id='this-would-be-the-id-of-the-template',
                 personalisation={
                     'url': 'http://localhost/user/create/mocked-token'
                 },
@@ -76,7 +76,7 @@ class TestSendUserAccountEmail:
 
             self.notify_client.send_email.assert_called_once_with(
                 'test@example.gov.uk',
-                template_name=current_app.config['NOTIFY_TEMPLATES']['create_user_account'],
+                template_name_or_id=current_app.config['NOTIFY_TEMPLATES']['create_user_account'],
                 personalisation={
                     'url': 'http://localhost/user/create/mocked-token',
                     'user': 'Digital Marketplace Team',

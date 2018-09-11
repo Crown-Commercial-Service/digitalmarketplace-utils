@@ -3,7 +3,7 @@ from . import DMNotifyClient, generate_token, EmailError
 from .helpers import hash_string
 
 
-def send_user_account_email(role, email_address, template_name, extra_token_data={}, personalisation={}):
+def send_user_account_email(role, email_address, template_name_or_id, extra_token_data={}, personalisation={}):
     notify_client = DMNotifyClient()
 
     token_data = {
@@ -26,7 +26,7 @@ def send_user_account_email(role, email_address, template_name, extra_token_data
     try:
         notify_client.send_email(
             email_address,
-            template_name=template_name,
+            template_name_or_id=template_name_or_id,
             personalisation=personalisation_with_link,
             reference='create-user-account-{}'.format(hash_string(email_address))
         )
