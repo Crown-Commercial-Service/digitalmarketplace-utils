@@ -12,6 +12,13 @@ from dmutils.timing import logged_duration_for_external_request as log_external_
 PAGINATION_SIZE = 1000
 
 
+def get_response_from_request_exception(exc):
+    try:
+        return exc.response.json()
+    except (AttributeError, ValueError, JSONDecodeError):
+        return {}
+
+
 class DMMailChimpClient(object):
 
     def __init__(
@@ -56,7 +63,10 @@ class DMMailChimpClient(object):
                 "Mailchimp failed to create campaign for '{campaign_title}'".format(
                     campaign_title=campaign_data.get("settings", {}).get("title")
                 ),
-                extra={"error": str(e)}
+                extra={
+                    "error": str(e),
+                    "mailchimp_response": get_response_from_request_exception(e),
+                },
             )
         return False
 
@@ -67,7 +77,10 @@ class DMMailChimpClient(object):
         except RequestException as e:
             self.logger.error(
                 "Mailchimp failed to set content for campaign id '{0}'".format(campaign_id),
-                extra={"error": str(e)}
+                extra={
+                    "error": str(e),
+                    "mailchimp_response": get_response_from_request_exception(e),
+                },
             )
         return False
 
@@ -79,7 +92,10 @@ class DMMailChimpClient(object):
         except RequestException as e:
             self.logger.error(
                 "Mailchimp failed to send campaign id '{0}'".format(campaign_id),
-                extra={"error": str(e)}
+                extra={
+                    "error": str(e),
+                    "mailchimp_response": get_response_from_request_exception(e),
+                }
             )
         return False
 
@@ -97,28 +113,31 @@ class DMMailChimpClient(object):
                     }
                 )
         except RequestException as e:
+            response = get_response_from_request_exception(e)
+
             # As defined in mailchimp API documentation, this particular error message may arise if a user has requested
             # mailchimp to never add them to mailchimp lists. In this case, we resort to allowing a failed API call (but
             # log) as a user of this method would unlikely be able to do anything as we have no control over this
             # behaviour.
-            try:
-                if getattr(e, "response", None) is not None and (
-                    "looks fake or invalid, please enter a real email address." in e.response.json().get("detail", "")
-                ):
-                    self.logger.error(
-                        f"Expected error: Mailchimp failed to add user ({hashed_email}) to list ({list_id}). "
-                        "API error: The email address looks fake or invalid, please enter a real email address.",
-                        extra={"error": str(e)}
-                    )
-                    return True
-            except JSONDecodeError:
-                pass
+            if "looks fake or invalid, please enter a real email address." in response.get("detail", ""):
+                self.logger.error(
+                    f"Expected error: Mailchimp failed to add user ({hashed_email}) to list ({list_id}). "
+                    "API error: The email address looks fake or invalid, please enter a real email address.",
+                    extra={
+                        "error": str(e),
+                        "mailchimp_response": response,
+                    }
+                )
+                return True
             self.logger.error(
                 "Mailchimp failed to add user ({}) to list ({})".format(
                     hashed_email,
                     list_id
                 ),
-                extra={"error": str(e)}
+                extra={
+                    "error": str(e),
+                    "mailchimp_response": response,
+                }
             )
             return False
 
