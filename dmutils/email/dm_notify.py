@@ -95,7 +95,7 @@ class DMNotifyClient:
         details_string = u'|'.join([to_email_address, template_id, personalisation_string])
         return hash_string(details_string)
 
-    def _log_email_error_message(self, to_email_address, template_name, reference, error):
+    def _log_email_error_message(self, to_email_address, template_name_or_id, reference, error):
         """Format a logical error message from the error response and send it to the logger"""
 
         error_messages = []
@@ -113,24 +113,31 @@ class DMNotifyClient:
             extra={
                 "client": self.__class__,
                 "reference": reference,
-                "template_name": template_name,
+                "template_name_or_id": template_name_or_id,
                 "to_email_address": hash_string(to_email_address),
                 "error_messages": error_messages,
             },
         )
 
-    def send_email(self, to_email_address, template_name, personalisation=None, allow_resend=True, reference=None):
+    def send_email(
+        self,
+        to_email_address,
+        template_name_or_id,
+        personalisation=None,
+        allow_resend=True,
+        reference=None,
+    ):
         """
         Method to send an email using the Notify api.
 
         :param to_email_address: String email address for recipient
-        :param template_name: Template accessible on the Notify account whose api_key you instantiated the class with.
-                              Can either be a UUID or a key to the current_app.config["NOTIFY_TEMPLATES"] dictionary.
+        :param template_name_or_id: Template accessible on the Notify account,
+                                    can either be a key to the `templates` dictionary or a Notify template ID.
         :param personalisation: The template variables, dict
         :param allow_resend: if False instantiate the delivered reference cache and ensure we are not sending duplicates
         :return: response from the api. For more information see https://github.com/alphagov/notifications-python-client
         """
-        template_id = self.templates.get(template_name, template_name)
+        template_id = self.templates.get(template_name_or_id, template_name_or_id)
         reference = reference or self.get_reference(to_email_address, template_id, personalisation)
 
         if not allow_resend and self.has_been_sent(reference):
@@ -139,7 +146,7 @@ class DMNotifyClient:
                 extra=dict(
                     client=self.client.__class__,
                     to_email_address=hash_string(to_email_address),
-                    template_name=template_name,
+                    template_name_or_id=template_name_or_id,
                     reference=reference,
                 ),
             )
@@ -165,7 +172,7 @@ class DMNotifyClient:
                 )
 
         except HTTPError as e:
-            self._log_email_error_message(to_email_address, template_name, reference, e)
+            self._log_email_error_message(to_email_address, template_name_or_id, reference, e)
             raise EmailError(str(e))
 
         self._update_cache(reference)

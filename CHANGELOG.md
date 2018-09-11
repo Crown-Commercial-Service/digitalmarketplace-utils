@@ -9,7 +9,7 @@ PR [#455](https://github.com/alphagov/digitalmarketplace-utils/pull/455)
 Upgrade flask to from 0.12.4 to 1.0.2. This has breaking changes for flask apps and therefore has breaking changes for users relying on init_app.
 
 Apps should upgrade to `Flask==1.0.2` using the changelog here http://flask.pocoo.org/docs/1.0/changelog/#version-1-0-2 taking care to note
-the breaking changes in [v1.0](http://flask.pocoo.org/docs/1.0/changelog/#version-1-0) 
+the breaking changes in [v1.0](http://flask.pocoo.org/docs/1.0/changelog/#version-1-0)
 
 
 Updates to DMNotifyClient and addition of `DMMandrillClient`:
@@ -19,6 +19,8 @@ Updates to DMNotifyClient and addition of `DMMandrillClient`:
 `DMNotifyClient.get_error_message` method has been deleted
 
 `DMNotifyClient.send_email` parameter email_address has been renamed to to_email_address
+
+`DMNotifyClient.send_email` parameter template_id has been renamed to template_name_or_id
 
 `DMNotifyClient.get_reference` parameter email_adress has been renamed to to_email_address
 
