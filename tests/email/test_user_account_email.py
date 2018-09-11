@@ -19,17 +19,24 @@ def email_app(app):
     yield app
 
 
-class TestSendUserAccountEmail():
+class TestSendUserAccountEmail:
 
-    @mock.patch('dmutils.email.user_account_email.generate_token')
-    @mock.patch('dmutils.email.user_account_email.DMNotifyClient')
+    def setup(self):
+        self.generate_token_patch = mock.patch("dmutils.email.user_account_email.generate_token", autospec=True)
+        self.notify_client_patch = mock.patch("dmutils.email.user_account_email.DMNotifyClient", autospec=True)
+
+        self.generate_token = self.generate_token_patch.start()
+        self.notify_client = self.notify_client_patch.start().return_value
+
+    def teardown(self):
+        self.notify_client_patch.stop()
+        self.generate_token_patch.stop()
+
     def test_correctly_calls_notify_client_for_buyer(
-        self, DMNotifyClient, generate_token, email_app
+        self, email_app
     ):
         with email_app.test_request_context():
-            generate_token.return_value = 'mocked-token'
-            notify_client_mock = mock.Mock()
-            DMNotifyClient.return_value = notify_client_mock
+            self.generate_token.return_value = 'mocked-token'
 
             send_user_account_email(
                 'buyer',
@@ -37,7 +44,7 @@ class TestSendUserAccountEmail():
                 current_app.config['NOTIFY_TEMPLATES']['create_user_account']
             )
 
-            notify_client_mock.send_email.assert_called_once_with(
+            self.notify_client.send_email.assert_called_once_with(
                 'test@example.gov.uk',
                 template_id='this-would-be-the-id-of-the-template',
                 personalisation={
@@ -47,15 +54,11 @@ class TestSendUserAccountEmail():
             )
             assert session['email_sent_to'] == 'test@example.gov.uk'
 
-    @mock.patch('dmutils.email.user_account_email.generate_token')
-    @mock.patch('dmutils.email.user_account_email.DMNotifyClient')
     def test_correctly_calls_notify_client_for_supplier(
-        self, DMNotifyClient, generate_token, email_app
+        self, email_app
     ):
         with email_app.test_request_context():
-            generate_token.return_value = 'mocked-token'
-            notify_client_mock = mock.Mock()
-            DMNotifyClient.return_value = notify_client_mock
+            self.generate_token.return_value = 'mocked-token'
 
             send_user_account_email(
                 'supplier',
@@ -71,7 +74,7 @@ class TestSendUserAccountEmail():
                 }
             )
 
-            notify_client_mock.send_email.assert_called_once_with(
+            self.notify_client.send_email.assert_called_once_with(
                 'test@example.gov.uk',
                 template_id=current_app.config['NOTIFY_TEMPLATES']['create_user_account'],
                 personalisation={
@@ -85,12 +88,9 @@ class TestSendUserAccountEmail():
 
     @mock.patch('dmutils.email.user_account_email.current_app')
     @mock.patch('dmutils.email.user_account_email.abort')
-    @mock.patch('dmutils.email.user_account_email.DMNotifyClient')
-    def test_abort_with_503_if_send_email_fails_with_EmailError(self, DMNotifyClient, abort, current_app, email_app):
+    def test_abort_with_503_if_send_email_fails_with_EmailError(self, abort, current_app, email_app):
         with email_app.test_request_context():
-            notify_client_mock = mock.Mock()
-            notify_client_mock.send_email.side_effect = EmailError('OMG!')
-            DMNotifyClient.return_value = notify_client_mock
+            self.notify_client.send_email.side_effect = EmailError('OMG!')
 
             send_user_account_email(
                 'buyer',
