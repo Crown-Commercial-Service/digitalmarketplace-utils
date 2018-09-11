@@ -14,13 +14,16 @@ the breaking changes in [v1.0](http://flask.pocoo.org/docs/1.0/changelog/#versio
 
 Updates to DMNotifyClient and addition of `DMMandrillClient`:
 
-`DMNotifyClient.__init__ `parameter logger is now keyword-only
+`DMNotifyClient.__init__ `parameter `logger` is now keyword-only
 
 `DMNotifyClient.get_error_message` method has been deleted
 
-`DMNotifyClient.send_email` parameter email_address has been renamed to to_email_address
+`DMNotifyClient.send_email` parameter `email_address` has been renamed to `to_email_address`
 
-`DMNotifyClient.get_reference` parameter email_adress has been renamed to to_email_address
+`DMNotifyClient.send_email` parameter `template_id` has been renamed to `template_name` and has gained the ability
+to look up a template's uuid by "name" from `current_app.config["NOTIFY_TEMPLATES"]`.
+
+`DMNotifyClient.get_reference` parameter `email_address` has been renamed to `to_email_address`
 
 dm_mandrill now contains a single class `DMMandrillClient`
 
