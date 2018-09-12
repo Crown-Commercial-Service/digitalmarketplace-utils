@@ -36,10 +36,21 @@ class StatusError(Exception):
         self.message = message
 
 
-def get_app_status(data_api_client=None,
-                   search_api_client=None,
-                   ignore_dependencies=False,
-                   additional_checks=None):
+def _perform_additional_checks(additional_checks, response_data, error_messages):
+    for additional_check in additional_checks:
+        try:
+            response_data.update(additional_check())
+        except StatusError as e:
+            error_messages.append(e.message)
+
+
+def get_app_status(
+    data_api_client=None,
+    search_api_client=None,
+    ignore_dependencies=False,
+    additional_checks=None,
+    additional_checks_internal=None,
+):
     """Generates output for `_status` endpoints on apps
 
     :param current_app: The flask `current_app` global.
@@ -49,6 +60,8 @@ def get_app_status(data_api_client=None,
     :param additional_checks: A sequence of callables that return dicts of data to be injected into the final JSON
                               response or raise StatusErrors if they need to log an error that should fail the
                               check (this will cause the endpoint to return a 500).
+    :param additional_checks_internal: Similar to `additional_checks`, but will be called even if
+                                       ignore_dependencies=True
     :return: A dictionary describing the current state of the app with, at least, a 'status' key with a value of 'ok'
              or 'error'.
     """
@@ -75,12 +88,11 @@ def get_app_status(data_api_client=None,
             if search_api_status['status'].lower() != 'ok':
                 error_messages.append('Error connecting to the Search API.')
 
-        for additional_check in (additional_checks or []):
-            try:
-                response_data.update(additional_check())
+        if additional_checks:
+            _perform_additional_checks(additional_checks, response_data, error_messages)
 
-            except StatusError as e:
-                error_messages.append(e.message)
+    if additional_checks_internal:
+        _perform_additional_checks(additional_checks_internal, response_data, error_messages)
 
     if error_messages:
         response_data['status'] = 'error'
