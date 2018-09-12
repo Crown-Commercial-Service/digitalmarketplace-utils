@@ -4,7 +4,7 @@ import json
 import mock
 import pytest
 
-from dmutils.status import get_disk_space_status, get_app_status
+from dmutils.status import get_disk_space_status, get_app_status, StatusError
 
 
 def statvfs_fixture(total_blocks, free_blocks):
@@ -41,6 +41,7 @@ def additional_check(key, value):
                          'search_api_status, '
                          'ignore_dependencies, '
                          'additional_checks, '
+                         'additional_checks_internal, '
                          'expected_json, '
                          'expected_http_status',
                          (
@@ -50,6 +51,7 @@ def additional_check(key, value):
                                  None,
                                  False,
                                  [],
+                                 [],
                                  {'status': 'ok', 'version': 'release-0', 'disk': 'OK (90% free)'},
                                  200
                              ),
@@ -58,6 +60,7 @@ def additional_check(key, value):
                                  'ok',
                                  None,
                                  False,
+                                 [],
                                  [],
                                  {'api_status': {'status': 'ok'}, 'status': 'ok', 'version': 'release-0',
                                   'disk': 'OK (90% free)'},
@@ -69,6 +72,7 @@ def additional_check(key, value):
                                  'ok',
                                  False,
                                  [],
+                                 [],
                                  {'search_api_status': {'status': 'ok'}, 'status': 'ok',
                                   'version': 'release-0', 'disk': 'OK (90% free)'},
                                  200
@@ -79,16 +83,18 @@ def additional_check(key, value):
                                  'ok',
                                  False,
                                  [],
+                                 [],
                                  {'api_status': {'status': 'ok'}, 'search_api_status': {'status': 'ok'},
                                   'status': 'ok', 'version': 'release-0', 'disk': 'OK (90% free)'},
                                  200
                              ),
-                             (  # Test case #5 - data+search api clients OK, ignore_deps = False, +2 checks, result: 500
+                             (  # Test case #5 - data+search api clients OK, ignore_deps = False, +2 checks, result: 200
                                  ('OK', 90),
                                  'ok',
                                  'ok',
                                  False,
                                  [additional_check('k', 'v'), additional_check('k2', 'v2')],
+                                 [],
                                  {
                                      'api_status': {'status': 'ok'}, 'search_api_status': {'status': 'ok'},
                                      'status': 'ok', 'version': 'release-0', 'disk': 'OK (90% free)',
@@ -102,6 +108,7 @@ def additional_check(key, value):
                                  'ok',
                                  True,
                                  [additional_check('k', 'v'), additional_check('k2', 'v2')],
+                                 [],
                                  {'status': 'ok', 'disk': 'OK (90% free)'},
                                  200,
                              ),
@@ -110,6 +117,7 @@ def additional_check(key, value):
                                  'error',
                                  'ok',
                                  False,
+                                 [],
                                  [],
                                  {'api_status': {'status': 'error'},
                                   'search_api_status': {'status': 'ok'},
@@ -124,6 +132,7 @@ def additional_check(key, value):
                                  'error',
                                  'error',
                                  False,
+                                 [],
                                  [],
                                  {'api_status': {'status': 'error'},
                                   'search_api_status': {'status': 'error'},
@@ -140,6 +149,7 @@ def additional_check(key, value):
                                  'error',
                                  True,
                                  [],
+                                 [],
                                  {'status': 'ok', 'disk': 'OK (90% free)'},
                                  200,
                              ),
@@ -149,8 +159,50 @@ def additional_check(key, value):
                                  'error',
                                  True,
                                  [],
+                                 [],
                                  {'status': 'error', 'disk': 'LOW (1% free)',
                                   'message': ['Disk space low: 1% remaining.']},
+                                 500,
+                             ),
+                             (  # Test case #10 - data+search api clients OK, ignore_deps=False, +1,1 checks, result:200
+                                 ('OK', 80),
+                                 'ok',
+                                 'ok',
+                                 False,
+                                 [additional_check('passout', 'checks')],
+                                 [additional_check('Habeas', 'Corpus')],
+                                 {
+                                     'api_status': {'status': 'ok'}, 'search_api_status': {'status': 'ok'},
+                                     'status': 'ok', 'version': 'release-0', 'disk': 'OK (80% free)',
+                                     'passout': 'checks', 'Habeas': 'Corpus'
+                                 },
+                                 200,
+                             ),
+                             (  # Test case #11 - data+search api clients OK, ignore_deps=True, +1,2 checks, result:200
+                                 ('OK', 88),
+                                 'ok',
+                                 'ok',
+                                 True,
+                                 [additional_check('spellingbee', 'conundrum')],
+                                 [additional_check('limp', 'galleypage'), additional_check('gauging', 'symmetry')],
+                                 {
+                                     'status': 'ok', 'disk': 'OK (88% free)',
+                                     'limp': 'galleypage', 'gauging': 'symmetry'
+                                 },
+                                 200,
+                             ),
+                             (  # Test case #12 - data+search api clients OK, ignore_deps=True, +1,2 checks (1 fails),
+                                #                 result:500
+                                 ('OK', 50),
+                                 'ok',
+                                 'ok',
+                                 True,
+                                 [additional_check('embarra', 'two ars')],
+                                 [additional_check('unpar', 'one ar'), mock.Mock(side_effect=StatusError("double es"))],
+                                 {
+                                     'status': 'error', 'disk': 'OK (50% free)', 'message': ['double es'],
+                                     'unpar': 'one ar',
+                                 },
                                  500,
                              ),
                          ))
@@ -160,6 +212,7 @@ def test_get_app_status(app,
                         search_api_status,
                         ignore_dependencies,
                         additional_checks,
+                        additional_checks_internal,
                         expected_json,
                         expected_http_status):
     app.config['VERSION'] = 'release-0'
@@ -181,7 +234,8 @@ def test_get_app_status(app,
             response, status_code = get_app_status(data_api_client=data_api_client,
                                                    search_api_client=search_api_client,
                                                    ignore_dependencies=ignore_dependencies,
-                                                   additional_checks=additional_checks)
+                                                   additional_checks=additional_checks,
+                                                   additional_checks_internal=additional_checks_internal)
 
     assert json.loads(response.data) == expected_json
     assert status_code == expected_http_status
