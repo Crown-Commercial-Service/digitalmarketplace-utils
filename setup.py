@@ -24,7 +24,7 @@ setup(
     include_package_data=True,
     install_requires=[
          'Flask-Script==2.0.6',
-         'Flask-WTF==0.14.2',
+         'Flask-WTF>=0.14.2',
          'Flask<1.1,>=1.0.2',
          'Flask-Login>=0.2.11',
          'boto3==1.7.83',
