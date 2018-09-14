@@ -38,7 +38,7 @@ setup(
          'odfpy==1.3.6',
          'python-json-logger==0.1.4',
          'pytz',
-         'unicodecsv==0.14.1',
+         'unicodecsv>=0.14.1',
          'Werkzeug==0.14.1',
          'workdays>=1.4',
     ],
