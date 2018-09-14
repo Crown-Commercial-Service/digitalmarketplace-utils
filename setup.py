@@ -39,7 +39,7 @@ setup(
          'python-json-logger==0.1.4',
          'pytz',
          'unicodecsv>=0.14.1',
-         'Werkzeug==0.14.1',
+         'Werkzeug',
          'workdays>=1.4',
     ],
 )
