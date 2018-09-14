@@ -156,6 +156,43 @@ class TestDMBooleanField:
     def field_class(self):
         return dmutils.forms.fields.DMBooleanField
 
+    def test_default_type_is_checkbox(self, field_class):
+        class Form(wtforms.Form):
+            field = field_class()
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "checkbox"
+
+    def test_type_can_be_customised(self, widget_class, field_class):
+        class Form(wtforms.Form):
+            field = field_class(widget=widget_class(type="foo"))
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "foo"
+
+
+class TestDMRadioField:
+    @pytest.fixture
+    def widget_class(self):
+        return dmutils.forms.widgets.DMRadioInput
+
+    @pytest.fixture
+    def field_class(self):
+        return dmutils.forms.fields.DMRadioField
+
+    def test_default_type_is_radio(self, field_class):
+        class Form(wtforms.Form):
+            field = field_class()
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "radio"
+
     def test_type_can_be_customised(self, widget_class, field_class):
         class Form(wtforms.Form):
             field = field_class(widget=widget_class(type="foo"))
