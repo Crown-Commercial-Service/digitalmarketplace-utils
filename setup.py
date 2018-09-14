@@ -33,7 +33,7 @@ setup(
          'cryptography==2.3',
          'mailchimp3==2.0.11',
          'mandrill>=1.0.57',
-         'monotonic==0.3',
+         'monotonic>=0.3',
          'notifications-python-client<6.0.0,>=5.0.1',
          'odfpy==1.3.6',
          'python-json-logger==0.1.4',
