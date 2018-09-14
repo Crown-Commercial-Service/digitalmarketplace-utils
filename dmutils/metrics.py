@@ -3,7 +3,7 @@ from datetime import datetime
 
 from boto.ec2.cloudwatch import connect_to_region
 from flask import current_app, _app_ctx_stack as stack
-from contextlib2 import ContextDecorator
+from contextlib import ContextDecorator
 from monotonic import monotonic
 
 
