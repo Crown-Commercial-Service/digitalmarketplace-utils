@@ -44,9 +44,7 @@ __all__ = ['DMBooleanField', 'DMDecimalField', 'DMHiddenField', 'DMIntegerField'
 
 
 class DMBooleanField(DMFieldMixin, wtforms.fields.BooleanField):
-    widget = DMCheckboxInput(hide_question=True)
-
-    type = "checkbox"
+    widget = DMCheckboxInput(type="checkbox", hide_question=True)
 
     @property
     def options(self):

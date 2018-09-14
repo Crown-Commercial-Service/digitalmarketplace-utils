@@ -2,6 +2,7 @@
 import mock
 import pytest
 
+import dmutils.forms.fields
 import dmutils.forms.mixins
 import dmutils.forms.widgets
 
@@ -79,6 +80,18 @@ def test_template_context_argument_will_default_to_none_if_not_in_field(widget, 
     assert get_render_context(widget)["question_advice"] is None
 
 
+def test_arguments_to_widget_constructor_change_widget_attributes(widget_factory, field):
+    widget = widget_factory(foo="bar")
+    assert widget.foo == "bar"
+
+
+def test_arguments_to_widget_constructors_take_precedence_over_field_class_attributes(widget_factory, field):
+    widget = widget_factory(foo="bar")
+    field.__class__.foo = "baz"
+    widget(field)
+    assert get_render_context(widget)["foo"] == "bar"
+
+
 class TestDMTextArea:
     @pytest.fixture()
     def widget_factory(self):
@@ -134,3 +147,22 @@ class TestDMSelectionButtons:
     def test_dm_selection_buttons_send_type_to_render(self, widget, field):
         widget(field)
         assert "type" in get_render_context(widget)
+
+
+class TestDMBooleanField:
+    @pytest.fixture
+    def widget_factory(self):
+        return monkeypatch_render(dmutils.forms.widgets.DMSelectionButtonBase)
+
+    @pytest.fixture
+    def field_factory(self):
+        return dmutils.forms.fields.DMBooleanField
+
+    def test_type_can_be_customised(self, widget_factory, field_factory):
+        class Form(wtforms.Form):
+            field = field_factory(widget=widget_factory(type="foo"))
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "foo"
