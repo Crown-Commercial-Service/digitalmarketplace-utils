@@ -40,6 +40,6 @@ setup(
          'pytz==2015.4',
          'unicodecsv==0.14.1',
          'Werkzeug==0.14.1',
-         'workdays==1.4'
+         'workdays==1.4',
     ],
 )
