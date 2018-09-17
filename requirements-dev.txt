@@ -1,15 +1,15 @@
 -r requirements.txt
 
-coverage==3.7.1
+coverage
 coveralls
 flake8==3.5.0
-flake8-per-file-ignores==0.4.0
-freezegun==0.3.4
-hypothesis==3.6.1
-mock==2.0.0
+flake8-per-file-ignores
+freezegun
+hypothesis<4.0.0,>=3.6.1
+mock
 moto==1.3.5
-pytest==3.2.3
-pytest-cov==2.5.1
-testfixtures==6.0.2
+pytest
+pytest-cov
+testfixtures<7.0.0,>=6.0.2
 
 git+https://github.com/alphagov/digitalmarketplace-test-utils.git@1.4.0#egg=digitalmarketplace-test-utils==1.4.0
