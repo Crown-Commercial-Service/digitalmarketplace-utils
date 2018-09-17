@@ -2,6 +2,7 @@
 import mock
 import pytest
 
+import dmutils.forms.fields
 import dmutils.forms.mixins
 import dmutils.forms.widgets
 
@@ -10,25 +11,24 @@ import wtforms
 
 def get_render_context(widget):
     call = widget._render.call_args
-    return dict(*call[0], **call[1])
+    return dict(call[0][1], **call[1])
 
 
-def monkeypatch_render(cls):
-    def factory(*args, **kwargs):
-        instance = cls(*args, **kwargs)
-        instance._render = mock.Mock()
-        return instance
-    return factory
+@pytest.fixture(autouse=True)
+def render():
+    patch = mock.patch("dmutils.forms.widgets.DMJinjaWidgetBase._render", autospec=True)
+    yield patch.start()
+    patch.stop()
 
 
 @pytest.fixture(params=dmutils.forms.widgets.__all__)
-def widget_factory(request):
-    return monkeypatch_render(getattr(dmutils.forms.widgets, request.param))
+def widget_class(request):
+    return getattr(dmutils.forms.widgets, request.param)
 
 
 @pytest.fixture
-def widget(widget_factory):
-    return widget_factory()
+def widget(widget_class):
+    return widget_class()
 
 
 # We need this to limit what is accessed on our field mock
@@ -68,8 +68,8 @@ def test_template_context_includes_question_advice(widget, field):
     assert get_render_context(widget)["question_advice"] == "Advice text."
 
 
-def test_arguments_can_be_added_to_template_context_from_widget_constructor(widget_factory, field):
-    widget = widget_factory(foo="bar")
+def test_arguments_can_be_added_to_template_context_from_widget_constructor(widget_class, field):
+    widget = widget_class(foo="bar")
     widget(field)
     assert get_render_context(widget)["foo"] == "bar"
 
@@ -79,43 +79,54 @@ def test_template_context_argument_will_default_to_none_if_not_in_field(widget, 
     assert get_render_context(widget)["question_advice"] is None
 
 
+def test_arguments_to_widget_constructor_change_widget_attributes(widget_class, field):
+    widget = widget_class(foo="bar")
+    assert widget.foo == "bar"
+
+
+def test_arguments_to_widget_constructors_take_precedence_over_field_class_attributes(widget_class, field):
+    widget = widget_class(foo="bar")
+    field.__class__.foo = "baz"
+    widget(field)
+    assert get_render_context(widget)["foo"] == "bar"
+
+
 class TestDMTextArea:
     @pytest.fixture()
-    def widget_factory(self):
-        return monkeypatch_render(dmutils.forms.widgets.DMTextArea)
+    def widget_class(self):
+        return dmutils.forms.widgets.DMTextArea
 
     def test_dm_text_area_sends_large_is_true_to_template(self, widget, field):
         widget(field)
         assert get_render_context(widget)["large"] is True
 
     @pytest.mark.parametrize("max_length_in_words", (1, 45, 100))
-    def test_dm_text_area_can_send_max_length_in_words_to_template(self, widget_factory, max_length_in_words, field):
-        widget = widget_factory()
+    def test_dm_text_area_can_send_max_length_in_words_to_template(self, widget_class, max_length_in_words, field):
+        widget = widget_class()
         widget(field)
         assert "max_length_in_words" not in get_render_context(widget)
 
-        widget = widget_factory(max_length_in_words=max_length_in_words)
+        widget = widget_class(max_length_in_words=max_length_in_words)
         widget(field)
         assert get_render_context(widget)["max_length_in_words"] == max_length_in_words
 
-    def test_dm_text_area_max_words_template_constant_is_instance_variable(self, widget_factory):
-        widget1 = widget_factory(max_length_in_words=mock.sentinel.max_length1)
-        widget2 = widget_factory(max_length_in_words=mock.sentinel.max_length2)
+    def test_dm_text_area_max_words_template_constant_is_instance_variable(self, widget_class):
+        widget1 = widget_class(max_length_in_words=mock.sentinel.max_length1)
+        widget2 = widget_class(max_length_in_words=mock.sentinel.max_length2)
 
         widget1(mock.Mock())
-        widget2(mock.Mock())
+        max_length1 = get_render_context(widget1)["max_length_in_words"]
 
-        assert (
-            get_render_context(widget1)["max_length_in_words"]
-            !=
-            get_render_context(widget2)["max_length_in_words"]
-        )
+        widget2(mock.Mock())
+        max_length2 = get_render_context(widget2)["max_length_in_words"]
+
+        assert max_length1 != max_length2
 
 
 class TestDMDateInput:
     @pytest.fixture()
-    def widget_factory(self):
-        return monkeypatch_render(dmutils.forms.widgets.DMDateInput)
+    def widget_class(self):
+        return dmutils.forms.widgets.DMDateInput
 
     def test_dm_date_input_does_not_send_value_to_template(self, widget, field):
         widget(field)
@@ -128,9 +139,65 @@ class TestDMDateInput:
 
 class TestDMSelectionButtons:
     @pytest.fixture(params=["DMCheckboxInput", "DMRadioInput"])
-    def widget_factory(self, request):
-        return monkeypatch_render(getattr(dmutils.forms.widgets, request.param))
+    def widget_class(self, request):
+        return getattr(dmutils.forms.widgets, request.param)
 
     def test_dm_selection_buttons_send_type_to_render(self, widget, field):
         widget(field)
         assert "type" in get_render_context(widget)
+
+
+class TestDMBooleanField:
+    @pytest.fixture
+    def widget_class(self):
+        return dmutils.forms.widgets.DMSelectionButtonBase
+
+    @pytest.fixture
+    def field_class(self):
+        return dmutils.forms.fields.DMBooleanField
+
+    def test_default_type_is_checkbox(self, field_class):
+        class Form(wtforms.Form):
+            field = field_class()
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "checkbox"
+
+    def test_type_can_be_customised(self, widget_class, field_class):
+        class Form(wtforms.Form):
+            field = field_class(widget=widget_class(type="foo"))
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "foo"
+
+
+class TestDMRadioField:
+    @pytest.fixture
+    def widget_class(self):
+        return dmutils.forms.widgets.DMRadioInput
+
+    @pytest.fixture
+    def field_class(self):
+        return dmutils.forms.fields.DMRadioField
+
+    def test_default_type_is_radio(self, field_class):
+        class Form(wtforms.Form):
+            field = field_class()
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "radio"
+
+    def test_type_can_be_customised(self, widget_class, field_class):
+        class Form(wtforms.Form):
+            field = field_class(widget=widget_class(type="foo"))
+
+        form = Form()
+        form.field()
+
+        assert get_render_context(form.field.widget)["type"] == "foo"

@@ -17,23 +17,36 @@ class DMJinjaWidgetBase:
     def __init__(self, hide_question=False, **kwargs):
         self.__template__ = None
 
-        self.__context__ = {}
-        self.__context__.update({k: getattr(self, k) for k in dir(self) if not k.startswith("_")})
-        # kwargs can be used to add constants to the template context
-        self.__context__.update(kwargs)
+        self.__context__ = {k: getattr(self, k) for k in dir(self) if not k.startswith("_")}
+        self.__constructor_kwargs__ = kwargs
+
+        self.__dict__.update(kwargs)
 
         if hide_question:
             del self.__context__["question"]
 
     def __call__(self, field, **kwargs):
+
+        # get the template variables
+        # precedence (decreasing order)
+        # - kwargs to __call__
+        # - kwargs to constructor
+        # - field values
+        # - widget defaults
+
         context = {}
         context.update(self.__context__)
-        context.update(kwargs)
 
-        # get the template variables from the field
-        for attr in self.__context__:
+        for attr in context:
+            # we don't want the type from the field because
+            # this is just the class name of the field
+            if attr == "type":
+                continue
             if hasattr(field, attr):
                 context[attr] = getattr(field, attr)
+
+        context.update(self.__constructor_kwargs__)
+        context.update(kwargs)
 
         return self._render(context)
 

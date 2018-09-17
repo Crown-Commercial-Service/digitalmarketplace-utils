@@ -46,8 +46,6 @@ __all__ = ['DMBooleanField', 'DMDecimalField', 'DMHiddenField', 'DMIntegerField'
 class DMBooleanField(DMFieldMixin, wtforms.fields.BooleanField):
     widget = DMCheckboxInput(hide_question=True)
 
-    type = "checkbox"
-
     @property
     def options(self):
         return [{"label": self.label.text, "value": self.data}]
@@ -83,8 +81,6 @@ class DMIntegerField(DMFieldMixin, wtforms.fields.IntegerField):
 
 class DMRadioField(DMSelectFieldMixin, DMFieldMixin, wtforms.fields.RadioField):
     widget = DMRadioInput()
-
-    type = "radio"
 
 
 class DMStringField(DMFieldMixin, wtforms.fields.StringField):
