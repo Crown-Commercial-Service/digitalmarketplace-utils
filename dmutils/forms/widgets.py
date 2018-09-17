@@ -38,6 +38,10 @@ class DMJinjaWidgetBase:
         context.update(self.__context__)
 
         for attr in context:
+            # we don't want the type from the field because
+            # this is just the class name of the field
+            if attr == "type":
+                continue
             if hasattr(field, attr):
                 context[attr] = getattr(field, attr)
 
