@@ -25,13 +25,17 @@ def log_to_null():
             yield
 
 
-@pytest.fixture
-def app(request):
+def create_app(request):
     app = Flask(__name__)
     app.root_path = request.fspath.dirname
     init_app(app)
     app.config['SECRET_KEY'] = 'secret_key'
     return app
+
+
+@pytest.fixture
+def app(request):
+    return create_app(request)
 
 
 @pytest.fixture
@@ -44,7 +48,7 @@ def app_with_stream_logger(request):
     stream = StringIO()
     with mock.patch('dmutils.logging.logging.StreamHandler', return_value=StreamHandler(stream)):
         # Use the above app fixture method to return the app and return our stream
-        yield app(request), stream
+        yield create_app(request), stream
 
 
 @pytest.fixture
@@ -53,7 +57,7 @@ def app_with_mocked_logger(request):
     """
     with mock.patch('flask.app.create_logger', return_value=mock.Mock(spec=Logger('flask.app'), handlers=[])):
         # Use the above app fixture method to return the app
-        yield app(request)
+        yield create_app(request)
 
 
 @pytest.yield_fixture

@@ -23,7 +23,7 @@ from dmutils.documents import (
 
 class TestGenerateFilename(unittest.TestCase):
     def test_filename_format(self):
-        self.assertEquals(
+        self.assertEqual(
             'slug/documents/2/1-pricing-document-123.pdf',
             generate_file_name(
                 'slug', 'documents', 2, 1,
@@ -33,7 +33,7 @@ class TestGenerateFilename(unittest.TestCase):
 
     def test_default_suffix_is_datetime(self):
         with freeze_time('2015-01-02 03:04:05'):
-            self.assertEquals(
+            self.assertEqual(
                 'slug/documents/2/1-pricing-document-2015-01-02-0304.pdf',
                 generate_file_name(
                     'slug', 'documents', 2, 1,
@@ -65,7 +65,7 @@ class TestValidateDocuments(unittest.TestCase):
         file1 = MockFile(b"*", 'file1')
         file2 = MockFile(b"", 'file2')
         file3 = MockFile(b"*" * 10, 'file3')
-        self.assertEquals(
+        self.assertEqual(
             filter_empty_files({'f1': file1, 'f2': file2, 'f3': file3}),
             {'f1': file1, 'f3': file3}
         )
@@ -142,7 +142,7 @@ class TestUploadDocument(unittest.TestCase):
     def test_document_upload(self):
         uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
-            self.assertEquals(
+            self.assertEqual(
                 upload_document(
                     uploader,
                     'documents',
@@ -163,7 +163,7 @@ class TestUploadDocument(unittest.TestCase):
     def test_document_private_upload(self):
         uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
-            self.assertEquals(
+            self.assertEqual(
                 upload_document(
                     uploader,
                     'documents',
@@ -200,7 +200,7 @@ class TestUploadDocument(unittest.TestCase):
     def test_document_upload_with_other_upload_type(self):
         uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
-            self.assertEquals(
+            self.assertEqual(
                 upload_document(
                     uploader,
                     'submissions',
@@ -221,7 +221,7 @@ class TestUploadDocument(unittest.TestCase):
     def test_document_upload_with_invalid_upload_type(self):
         uploader = mock.Mock()
         with pytest.raises(AssertionError):
-            self.assertEquals(
+            self.assertEqual(
                 upload_document(
                     uploader,
                     'invalid',
