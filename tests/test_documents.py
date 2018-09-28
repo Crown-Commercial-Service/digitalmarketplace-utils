@@ -1,6 +1,4 @@
 # coding: utf-8
-import unittest
-
 import mock
 import pytest
 from freezegun import freeze_time
@@ -21,27 +19,23 @@ from dmutils.documents import (
     degenerate_document_path_and_return_doc_name, generate_download_filename)
 
 
-class TestGenerateFilename(unittest.TestCase):
+class TestGenerateFilename:
     def test_filename_format(self):
-        self.assertEqual(
-            'slug/documents/2/1-pricing-document-123.pdf',
-            generate_file_name(
-                'slug', 'documents', 2, 1,
-                'pricingDocumentURL', 'test.pdf',
-                suffix='123'
-            ))
+        assert generate_file_name(
+            'slug', 'documents', 2, 1,
+            'pricingDocumentURL', 'test.pdf',
+            suffix='123'
+        ) == 'slug/documents/2/1-pricing-document-123.pdf'
 
     def test_default_suffix_is_datetime(self):
         with freeze_time('2015-01-02 03:04:05'):
-            self.assertEqual(
-                'slug/documents/2/1-pricing-document-2015-01-02-0304.pdf',
-                generate_file_name(
-                    'slug', 'documents', 2, 1,
-                    'pricingDocumentURL', 'test.pdf',
-                ))
+            assert generate_file_name(
+                'slug', 'documents', 2, 1,
+                'pricingDocumentURL', 'test.pdf',
+            ) == 'slug/documents/2/1-pricing-document-2015-01-02-0304.pdf'
 
 
-class TestValidateDocuments(unittest.TestCase):
+class TestValidateDocuments:
     def test_get_extension(self):
         assert get_extension('what.jpg') == '.jpg'
         assert get_extension('what the.jpg') == '.jpg'
@@ -65,94 +59,77 @@ class TestValidateDocuments(unittest.TestCase):
         file1 = MockFile(b"*", 'file1')
         file2 = MockFile(b"", 'file2')
         file3 = MockFile(b"*" * 10, 'file3')
-        self.assertEqual(
-            filter_empty_files({'f1': file1, 'f2': file2, 'f3': file3}),
-            {'f1': file1, 'f3': file3}
-        )
+        assert filter_empty_files({'f1': file1, 'f2': file2, 'f3': file3}) == {'f1': file1, 'f3': file3}
 
     def test_file_is_less_than_5mb(self):
-        self.assertTrue(file_is_less_than_5mb(MockFile(b"*", 'file1')))
+        assert file_is_less_than_5mb(MockFile(b"*", 'file1'))
 
     def test_file_is_more_than_5mb(self):
-        self.assertFalse(file_is_less_than_5mb(MockFile(b"*" * 5400001, 'file1')))
+        assert not file_is_less_than_5mb(MockFile(b"*" * 5400001, 'file1'))
 
     def test_file_is_open_document_format(self):
-        self.assertTrue(file_is_open_document_format(MockFile(b"*", 'file1.pdf')))
+        assert file_is_open_document_format(MockFile(b"*", 'file1.pdf'))
 
     def test_file_is_not_open_document_format(self):
-        self.assertFalse(file_is_open_document_format(MockFile(b"*", 'file1.doc')))
+        assert not file_is_open_document_format(MockFile(b"*", 'file1.doc'))
 
     def test_file_is_pdf(self):
-        self.assertTrue(file_is_pdf(MockFile(b"*", 'file.pdf')))
-        self.assertFalse(file_is_pdf(MockFile(b"*", 'file.doc')))
+        assert file_is_pdf(MockFile(b"*", 'file.pdf'))
+        assert not file_is_pdf(MockFile(b"*", 'file.doc'))
 
     def test_file_is_csv(self):
-        self.assertTrue(file_is_csv(MockFile(b"*", 'file.csv')))
-        self.assertFalse(file_is_csv(MockFile(b"*", 'file.sit')))
+        assert file_is_csv(MockFile(b"*", 'file.csv'))
+        assert not file_is_csv(MockFile(b"*", 'file.sit'))
 
     def test_file_is_zip(self):
-        self.assertTrue(file_is_zip(MockFile(b"*", 'file.zip')))
-        self.assertFalse(file_is_zip(MockFile(b"*", 'file.sit')))
+        assert file_is_zip(MockFile(b"*", 'file.zip'))
+        assert not file_is_zip(MockFile(b"*", 'file.sit'))
 
     def test_file_is_image(self):
-        self.assertTrue(file_is_image(MockFile(b"*", 'file.jpg')))
-        self.assertTrue(file_is_image(MockFile(b"*", 'file.jpeg')))
-        self.assertTrue(file_is_image(MockFile(b"*", 'file.png')))
-        self.assertFalse(file_is_image(MockFile(b"*", 'file.pdf')))
+        assert file_is_image(MockFile(b"*", 'file.jpg'))
+        assert file_is_image(MockFile(b"*", 'file.jpeg'))
+        assert file_is_image(MockFile(b"*", 'file.png'))
+        assert not file_is_image(MockFile(b"*", 'file.pdf'))
 
     def test_validate_documents(self):
-        self.assertEqual(
-            validate_documents({'file1': MockFile(b"*", 'file1.pdf')}),
-            {}
-        )
+        assert validate_documents({'file1': MockFile(b"*", 'file1.pdf')}) == {}
 
     def test_validate_documents_not_open_document_format(self):
-        self.assertEqual(
-            validate_documents({'file1': MockFile(b"*", 'file1.doc')}),
-            {'file1': 'file_is_open_document_format'}
-        )
+        assert validate_documents({'file1': MockFile(b"*", 'file1.doc')}) == {'file1': 'file_is_open_document_format'}
 
     def test_validate_documents_not_less_than_5mb(self):
-        self.assertEqual(
-            validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.pdf')}),
-            {'file1': 'file_is_less_than_5mb'}
-        )
+        assert validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.pdf')}) == {
+            'file1': 'file_is_less_than_5mb'
+        }
 
     def test_validate_documents_not_open_document_above_5mb(self):
-        self.assertEqual(
-            validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.doc')}),
-            {'file1': 'file_is_open_document_format'}
-        )
+        assert validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.doc')}) == {
+            'file1': 'file_is_open_document_format'
+        }
 
     def test_validate_multiple_documents(self):
-        self.assertEqual(
-            validate_documents({
-                'file1': MockFile(b"*" * 5400001, 'file1.pdf'),
-                'file2': MockFile(b"*", 'file1.pdf'),
-                'file3': MockFile(b"*", 'file1.doc'),
-            }),
-            {
-                'file1': 'file_is_less_than_5mb',
-                'file3': 'file_is_open_document_format',
-            }
-        )
+        assert validate_documents({
+            'file1': MockFile(b"*" * 5400001, 'file1.pdf'),
+            'file2': MockFile(b"*", 'file1.pdf'),
+            'file3': MockFile(b"*", 'file1.doc'),
+        }) == {
+            'file1': 'file_is_less_than_5mb',
+            'file3': 'file_is_open_document_format',
+        }
 
 
-class TestUploadDocument(unittest.TestCase):
+class TestUploadDocument:
     def test_document_upload(self):
         uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
-            self.assertEqual(
-                upload_document(
-                    uploader,
-                    'documents',
-                    'http://assets',
-                    {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
-                    "pricingDocumentURL",
-                    MockFile(b"*", 'file.pdf')
-                ),
-                'http://assets/g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf'
-            )
+            assert upload_document(
+                uploader,
+                'documents',
+                'http://assets',
+                {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
+                "pricingDocumentURL",
+                MockFile(b"*", 'file.pdf')
+            ) == 'http://assets/g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf'
 
         uploader.save.assert_called_once_with(
             'g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf',
@@ -163,18 +140,15 @@ class TestUploadDocument(unittest.TestCase):
     def test_document_private_upload(self):
         uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
-            self.assertEqual(
-                upload_document(
-                    uploader,
-                    'documents',
-                    'http://assets',
-                    {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
-                    "pricingDocumentURL",
-                    MockFile(b"*", 'file.pdf'),
-                    public=False
-                ),
-                'http://assets/g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf'
-            )
+            assert upload_document(
+                uploader,
+                'documents',
+                'http://assets',
+                {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
+                "pricingDocumentURL",
+                MockFile(b"*", 'file.pdf'),
+                public=False
+            ) == 'http://assets/g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf'
 
         uploader.save.assert_called_once_with(
             'g-cloud-6/documents/5/123-pricing-document-2015-01-02-0405.pdf',
@@ -188,29 +162,26 @@ class TestUploadDocument(unittest.TestCase):
         # wants to access a property of the exception rather than for it to continue in happy ignorance
         uploader.save.side_effect = ClientError(mock.MagicMock(), 'Forbidden')
         with freeze_time('2015-01-02 04:05:00'):
-            self.assertFalse(upload_document(
+            assert not upload_document(
                 uploader,
                 'documents',
                 'http://assets',
                 {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
                 "pricingDocumentURL",
                 MockFile(b"*", 'file.pdf')
-            ))
+            )
 
     def test_document_upload_with_other_upload_type(self):
         uploader = mock.Mock()
         with freeze_time('2015-01-02 04:05:00'):
-            self.assertEqual(
-                upload_document(
-                    uploader,
-                    'submissions',
-                    'http://assets',
-                    {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
-                    "pricingDocumentURL",
-                    MockFile(b"*", 'file.pdf')
-                ),
-                'http://assets/g-cloud-6/submissions/5/123-pricing-document-2015-01-02-0405.pdf'
-            )
+            assert upload_document(
+                uploader,
+                'submissions',
+                'http://assets',
+                {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
+                "pricingDocumentURL",
+                MockFile(b"*", 'file.pdf')
+            ) == 'http://assets/g-cloud-6/submissions/5/123-pricing-document-2015-01-02-0405.pdf'
 
         uploader.save.assert_called_once_with(
             'g-cloud-6/submissions/5/123-pricing-document-2015-01-02-0405.pdf',
@@ -221,22 +192,19 @@ class TestUploadDocument(unittest.TestCase):
     def test_document_upload_with_invalid_upload_type(self):
         uploader = mock.Mock()
         with pytest.raises(AssertionError):
-            self.assertEqual(
-                upload_document(
-                    uploader,
-                    'invalid',
-                    'http://assets',
-                    {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
-                    "pricingDocumentURL",
-                    MockFile(b"*", 'file.pdf')
-                ),
-                'http://assets/g-cloud-6/submissions/5/123-pricing-document-2015-01-02-0405.pdf'
-            )
+            assert upload_document(
+                uploader,
+                'invalid',
+                'http://assets',
+                {'id': "123", 'supplierId': 5, 'frameworkSlug': 'g-cloud-6'},
+                "pricingDocumentURL",
+                MockFile(b"*", 'file.pdf')
+            ) == 'http://assets/g-cloud-6/submissions/5/123-pricing-document-2015-01-02-0405.pdf'
 
         assert not uploader.save.called
 
 
-class TestUploadServiceDocuments(object):
+class TestUploadServiceDocuments:
     def setup(self):
         self.section = mock.Mock()
         self.section.get_question_ids.return_value = ['pricingDocumentURL']
