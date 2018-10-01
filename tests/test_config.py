@@ -57,3 +57,20 @@ def test_init_app_fails_if_integer_field_is_not_inty(app, os_environ):
 
         with pytest.raises(ValueError):
             init_app(app)
+
+
+@pytest.mark.parametrize(
+    'dm_env, expected_flask_env',
+    [
+        ('development', 'development'),
+        ('preview', 'production'),
+        ('staging', 'production'),
+        ('production', 'production'),
+    ]
+)
+def test_init_app_sets_flask_env(dm_env, expected_flask_env, app, os_environ):
+    with app.app_context():
+        os_environ.update({'DM_ENVIRONMENT': dm_env})
+        init_app(app)
+
+        assert app.config['ENV'] == expected_flask_env

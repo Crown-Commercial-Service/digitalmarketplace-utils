@@ -15,6 +15,13 @@ def init_app(app):
     app.config['DM_ENVIRONMENT'] = os.environ.get('DM_ENVIRONMENT',
                                                   'development')
 
+    # From Flask 1.0 onwards, ENV is set to either 'production' (default) or 'development'.
+    # If set as 'development' then debug mode will be enabled.
+    # If left as 'production' when running a local development server, it gives an unsettling warning message.
+    # See http://flask.pocoo.org/docs/1.0/config/#environment-and-debug-features
+    if app.config['DM_ENVIRONMENT'] == 'development':
+        app.config['ENV'] = 'development'
+
 
 def _convert_to_boolean_or_fail(key, value):
     result = convert_to_boolean(value)
