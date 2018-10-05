@@ -14,9 +14,13 @@ from dmutils.email.dm_mailchimp import DMMailChimpClient
 from helpers import assert_external_service_log_entry, PatchExternalServiceLogConditionMixin
 
 
+# Mailchimp client checks the first part of the key against a regex: ^[0-9a-f]{32}$
+DUMMY_MAILCHIMP_API_KEY = "1234567890abcdef1234567890abcdef-us5"
+
+
 class TestMailchimp(PatchExternalServiceLogConditionMixin):
     def test_create_campaign(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', 'logger')
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, 'logger')
         with mock.patch.object(dm_mailchimp_client._client.campaigns, 'create', autospec=True) as create:
             create.return_value = {"id": "100"}
 
@@ -27,7 +31,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             create.assert_called_once_with({"example": "data"})
 
     def test_log_error_message_if_error_creating_campaign(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
         with mock.patch.object(dm_mailchimp_client._client.campaigns, 'create', autospec=True) as create:
             create.side_effect = RequestException("error message")
             with mock.patch.object(dm_mailchimp_client.logger, 'error', autospec=True) as error:
@@ -40,7 +44,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 )
 
     def test_set_campaign_content(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', 'logger')
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, 'logger')
         with mock.patch.object(dm_mailchimp_client._client.campaigns.content, 'update', autospec=True) as update:
             campaign_id = '1'
             html_content = {'html': '<p>One or two words</p>'}
@@ -52,7 +56,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             dm_mailchimp_client._client.campaigns.content.update.assert_called_once_with(campaign_id, html_content)
 
     def test_log_error_message_if_error_setting_campaign_content(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.campaigns.content, 'update', autospec=True) as update:
             update.side_effect = RequestException("error message")
 
@@ -66,7 +70,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     def test_send_campaign(self):
         campaign_id = "1"
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
         with mock.patch.object(dm_mailchimp_client._client.campaigns.actions, 'send', autospec=True) as send:
             with assert_external_service_log_entry():
                 res = dm_mailchimp_client.send_campaign(campaign_id)
@@ -75,7 +79,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             send.assert_called_once_with(campaign_id)
 
     def test_log_error_message_if_error_sending_campaign(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.campaigns.actions, 'send', autospec=True) as send:
             send.side_effect = RequestException("error sending")
 
@@ -90,7 +94,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_subscribe_new_email_to_list(self, get_email_hash):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
 
@@ -110,7 +114,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_log_error_message_if_error_subscribing_email_to_list(self, get_email_hash):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
             # The 400 response from MailChimp is actually falsey
@@ -129,7 +133,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_returns_true_if_expected_error_subscribing_email_to_list(self, get_email_hash):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
             response = mock.MagicMock(__bool__=False)
@@ -148,7 +152,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_handles_responses_with_invalid_json(self, get_email_hash):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
             response = mock.Mock()
@@ -164,20 +168,23 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].levelname == 'ERROR'
 
     def test_subscribe_new_emails_to_list(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
         with mock.patch.object(dm_mailchimp_client, 'subscribe_new_email_to_list', autospec=True):
             dm_mailchimp_client.subscribe_new_email_to_list.return_value = True
 
             with assert_external_service_log_entry(count=2):
-                res = dm_mailchimp_client.subscribe_new_emails_to_list('list_id',
-                                                                       ['email1@example.com', 'email2@example.com'])
-            calls = [mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')]
+                res = dm_mailchimp_client.subscribe_new_emails_to_list(
+                    'list_id',
+                    ['email1@example.com', 'email2@example.com']
+                )
 
             assert res is True
-            dm_mailchimp_client.subscribe_new_email_to_list.assert_has_calls(calls)
+            assert dm_mailchimp_client.subscribe_new_email_to_list.call_args_list == [
+                mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')
+            ]
 
     def test_subscribe_new_emails_to_list_tries_all_emails_returns_false_on_error(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', mock.MagicMock())
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
         with mock.patch.object(
                 dm_mailchimp_client, 'subscribe_new_email_to_list', autospec=True) as subscribe_new_email_to_list:
             subscribe_new_email_to_list.side_effect = [False, True]
@@ -195,12 +202,12 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     def test_get_email_hash_lowers(self):
         """Email must be lowercased before hashing as per api documentation."""
-        DMMailChimpClient.get_email_hash("foo@EXAMPLE.com") == DMMailChimpClient.get_email_hash("foo@example.com")
+        assert DMMailChimpClient.get_email_hash("foo@EXAMPLE.com") == \
+            DMMailChimpClient.get_email_hash("foo@example.com")
 
     def test_get_email_addresses_from_list_generates_emails(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
-
             all_members.side_effect = [
                 {
                     "members": [
@@ -227,7 +234,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             ]
 
     def test_default_timeout_retry_performs_no_retries(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
             all_members.side_effect = HTTPError(response=mock.Mock(status_code=504))
             with pytest.raises(HTTPError):
@@ -238,7 +245,9 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             ]
 
     def test_timeout_retry_performs_retries(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'), retries=2)
+        dm_mailchimp_client = DMMailChimpClient(
+            'username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'), retries=2
+        )
         with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
             all_members.side_effect = HTTPError(response=mock.Mock(status_code=504))
             with pytest.raises(HTTPError):
@@ -251,7 +260,9 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             ]
 
     def test_success_does_not_perform_retry(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'), retries=2)
+        dm_mailchimp_client = DMMailChimpClient(
+            'username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'), retries=2
+        )
         with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
             all_members.side_effect = [
                 {
@@ -272,9 +283,8 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             ]
 
     def test_offset_increments_until_no_members(self):
-        dm_mailchimp_client = DMMailChimpClient('username', 'api key', logging.getLogger('mailchimp'))
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
-
             all_members.side_effect = [
                 {"members": [{"email_address": "user1@example.com"}]},
                 {"members": [{"email_address": "user2@example.com"}]},
