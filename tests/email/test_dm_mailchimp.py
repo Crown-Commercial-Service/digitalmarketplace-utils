@@ -173,12 +173,15 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             dm_mailchimp_client.subscribe_new_email_to_list.return_value = True
 
             with assert_external_service_log_entry(count=2):
-                res = dm_mailchimp_client.subscribe_new_emails_to_list('list_id',
-                                                                       ['email1@example.com', 'email2@example.com'])
-            calls = [mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')]
+                res = dm_mailchimp_client.subscribe_new_emails_to_list(
+                    'list_id',
+                    ['email1@example.com', 'email2@example.com']
+                )
 
             assert res is True
-            dm_mailchimp_client.subscribe_new_email_to_list.assert_has_calls(calls)
+            assert dm_mailchimp_client.subscribe_new_email_to_list.call_args_list == [
+                mock.call('list_id', 'email1@example.com'), mock.call('list_id', 'email2@example.com')
+            ]
 
     def test_subscribe_new_emails_to_list_tries_all_emails_returns_false_on_error(self):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
@@ -199,12 +202,12 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     def test_get_email_hash_lowers(self):
         """Email must be lowercased before hashing as per api documentation."""
-        DMMailChimpClient.get_email_hash("foo@EXAMPLE.com") == DMMailChimpClient.get_email_hash("foo@example.com")
+        assert DMMailChimpClient.get_email_hash("foo@EXAMPLE.com") == \
+            DMMailChimpClient.get_email_hash("foo@example.com")
 
     def test_get_email_addresses_from_list_generates_emails(self):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
-
             all_members.side_effect = [
                 {
                     "members": [
@@ -282,7 +285,6 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
     def test_offset_increments_until_no_members(self):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
-
             all_members.side_effect = [
                 {"members": [{"email_address": "user1@example.com"}]},
                 {"members": [{"email_address": "user2@example.com"}]},
