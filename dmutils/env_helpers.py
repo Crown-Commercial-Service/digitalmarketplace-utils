@@ -16,6 +16,7 @@ def get_api_endpoint_from_stage(stage, app='api'):
     dev_ports = {
         'api': 5000,
         'search-api': 5001,
+        'antivirus-api': 5008,
     }
 
     if stage in ['local', 'dev', 'development']:
