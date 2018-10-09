@@ -34,6 +34,21 @@ class TestGetAPIEndpointFromStage:
     def test_get_search_api_endpoint_for_non_dev_environments(self, stage, expected_result):
         assert get_api_endpoint_from_stage(stage, app='search-api') == expected_result
 
+    @pytest.mark.parametrize('stage', ['local', 'dev', 'development'])
+    def test_get_antivirus_api_endpoint_for_dev_environments(self, stage):
+        assert get_api_endpoint_from_stage(stage, app='antivirus-api') == 'http://localhost:5008'
+
+    @pytest.mark.parametrize(
+        'stage, expected_result',
+        [
+            ('preview', 'https://antivirus-api.preview.marketplace.team'),
+            ('staging', 'https://antivirus-api.staging.marketplace.team'),
+            ('production', 'https://antivirus-api.digitalmarketplace.service.gov.uk')
+        ]
+    )
+    def test_get_antivirus_api_endpoint_for_non_dev_environments(self, stage, expected_result):
+        assert get_api_endpoint_from_stage(stage, app='antivirus-api') == expected_result
+
 
 class TestGetWebUrlFromStage:
 
