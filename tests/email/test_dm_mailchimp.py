@@ -132,7 +132,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].levelname == 'ERROR'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_returns_true_if_expected_error_subscribing_email_to_list(self, get_email_hash):
+    def test_returns_true_if_expected_invalid_email_error_subscribing_email_to_list(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
@@ -144,11 +144,41 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
             assert res is True
-            assert log_catcher.records[1].msg == "Expected error: Mailchimp failed to add user (foo) to list (" \
-                                                 "list_id). API error: The email address looks fake or invalid, " \
-                                                 "please enter a real email address."
+            assert log_catcher.records[1].msg == (
+                "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
+                "API error: The email address looks fake or invalid, please enter a real email address."
+            )
             assert log_catcher.records[1].error == "error sending"
             assert log_catcher.records[1].levelname == 'ERROR'
+
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_returns_true_if_expected_already_subscribed_email_error(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True
+        ) as create_or_update:
+
+            response = mock.MagicMock(__bool__=False)
+            expected_error = "user@example.com is already a list member. Use PUT to insert or update list members."
+
+            response.status_code = 400
+            response.message = (
+                "Bad Request for url: https://us5.api.mailchimp.com/3.0/lists/list_id/members/member_id"
+            )
+            response.json.return_value = {"detail": expected_error}
+            create_or_update.side_effect = HTTPError("400 Client Error", response=response)
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+            assert res is True
+            assert log_catcher.records[1].msg == (
+                "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
+                "API error: This email address is already subscribed."
+            )
+            assert log_catcher.records[1].error == "400 Client Error"
+            assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_handles_responses_with_invalid_json(self, get_email_hash):
@@ -169,8 +199,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
     def test_subscribe_new_emails_to_list(self):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
-        with mock.patch.object(dm_mailchimp_client, 'subscribe_new_email_to_list', autospec=True):
-            dm_mailchimp_client.subscribe_new_email_to_list.return_value = True
+        with mock.patch.object(dm_mailchimp_client, 'subscribe_new_email_to_list', autospec=True, return_value=True):
 
             with assert_external_service_log_entry(count=2):
                 res = dm_mailchimp_client.subscribe_new_emails_to_list(
