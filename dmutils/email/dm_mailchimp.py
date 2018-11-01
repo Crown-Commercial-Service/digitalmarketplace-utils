@@ -100,7 +100,7 @@ class DMMailChimpClient(object):
         return False
 
     def subscribe_new_email_to_list(self, list_id, email_address):
-        """ Will subscribe email address to list if they do not already exist in that list else do nothing"""
+        """Will subscribe email address to list if they do not already exist in that list else do nothing"""
         hashed_email = self.get_email_hash(email_address)
         try:
             with log_external_request(service='Mailchimp'):
@@ -113,31 +113,32 @@ class DMMailChimpClient(object):
                     }
                 )
         except RequestException as e:
+            # Some errors we don't care about but do want to log. Find and log them here.
             response = get_response_from_request_exception(e)
 
-            # As defined in mailchimp API documentation, this particular error message may arise if a user has requested
-            # mailchimp to never add them to mailchimp lists. In this case, we resort to allowing a failed API call (but
-            # log) as a user of this method would unlikely be able to do anything as we have no control over this
-            # behaviour.
             if "looks fake or invalid, please enter a real email address." in response.get("detail", ""):
+                # As defined in mailchimp API documentation, this particular error message may arise if a user has
+                # requested mailchimp to never add them to mailchimp lists. In this case, we resort to allowing a
+                # failed API call (but log) as a user of this method would unlikely be able to do anything as we have
+                # no control over this behaviour.
                 self.logger.error(
                     f"Expected error: Mailchimp failed to add user ({hashed_email}) to list ({list_id}). "
                     "API error: The email address looks fake or invalid, please enter a real email address.",
-                    extra={
-                        "error": str(e),
-                        "mailchimp_response": response,
-                    }
+                    extra={"error": str(e), "mailchimp_response": response}
                 )
                 return True
+            elif 'is already a list member.' in response.get("detail", ""):
+                # If a user is already a list member we receive a 400 error as documented in the tests for this error
+                self.logger.warning(
+                    f"Expected error: Mailchimp failed to add user ({hashed_email}) to list ({list_id}). "
+                    "API error: This email address is already subscribed.",
+                    extra={"error": str(e), "mailchimp_response": response}
+                )
+                return True
+            # Otherwise this was an unexpected error and should be logged as such
             self.logger.error(
-                "Mailchimp failed to add user ({}) to list ({})".format(
-                    hashed_email,
-                    list_id
-                ),
-                extra={
-                    "error": str(e),
-                    "mailchimp_response": response,
-                }
+                f"Mailchimp failed to add user ({hashed_email}) to list ({list_id})",
+                extra={"error": str(e), "mailchimp_response": response}
             )
             return False
 
