@@ -2,12 +2,14 @@ import os
 import datetime
 import re
 
+import fleep
+
 try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse
 
-from .s3 import S3ResponseError, get_file_size, FILE_SIZE_LIMIT
+from .s3 import S3ResponseError, get_file_size
 
 
 BAD_SUPPLIER_NAME_CHARACTERS = ['#', '%', '&', '{', '}', '\\', '<', '>', '*', '?', '/', '$',
@@ -132,56 +134,93 @@ def upload_service_documents(uploader, upload_type, documents_url, service, requ
     return files, errors
 
 
-# some of the more... seemingly oddly specific functions here are apparently referenced by validators, hence their
-# existence
-
-
 def file_is_not_empty(file_contents):
     return not file_is_empty(file_contents)
 
 
-def file_is_empty(file_contents):
-    empty = len(file_contents.read(1)) == 0
-    file_contents.seek(0)
-    return empty
+def file_is_empty(file_object):
+    return len(get_first_128_bytes(file_object)) == 0
 
 
 def file_is_less_than_5mb(file_):
-    return get_file_size(file_) < FILE_SIZE_LIMIT
+    return get_file_size(file_) < 5400000
+
+
+def get_first_128_bytes(file_object):
+    """Get the contents of a file like object but replace the pointer when we're finished"""
+    position = file_object.tell()
+    file_object.seek(0)
+    contents = file_object.read(128)
+    file_object.seek(position)
+    return contents
+
+
+def get_extension(filename):
+    file_name, file_extension = os.path.splitext(filename)
+    return file_extension.lower()
+
+
+def get_possible_extensions_from_format(file_object):
+    """
+    Pass the first 128 bytes from the file object to fleep for a list of possible extensions
+
+    We don't need to load the whole file into memory to let fleep determine the file type. Apparently the first 128
+    bytes are sufficient: https://github.com/floyernick/fleep-py/blob/994bc2c274482d80ab13d89d8f7343eb316d3e44/
+        fleep/__init__.py#L55
+
+    :param file_object: File object open as bytes.
+    :return: list(str): Possible file formats.
+    """
+    return fleep.get(get_first_128_bytes(file_object)).extension
+
+
+def extension_matches_possible_file_formats(file_object, extension):
+    """
+    Pass the first 128 bytes from the file object to fleep and the supplied extension.
+
+    :param file_object: File object open as bytes.
+    :param extension: File object open as bytes.
+    :return: boolean: Does extension match guess at format?
+    """
+    return fleep.get(get_first_128_bytes(file_object)).extension_matches(extension.strip('.'))
 
 
 def file_is_open_document_format(file_object):
-    return get_extension(file_object.filename) in [
-        ".pdf", ".pda", ".odt", ".ods", ".odp"
-    ]
+    extension = get_extension(file_object.filename)
+
+    return (
+        extension in [".pdf", ".odt", ".ods", ".odp"]
+        and extension_matches_possible_file_formats(file_object, extension)
+    )
 
 
 def file_is_pdf(file_object):
-    """Checks file extension as being PDF."""
-    return get_extension(file_object.filename) in [
-        ".pdf", ".pda"
-    ]
+    """Checks file extension and format as being PDF."""
+    extension = get_extension(file_object.filename)
+
+    return extension == ".pdf" and extension_matches_possible_file_formats(file_object, extension)
 
 
 def file_is_csv(file_object):
-    """Checks file extension as being CSV."""
-    return get_extension(file_object.filename) in [
-        ".csv"
-    ]
+    """Checks file extension as being CSV and checks format does not match something other than CSV."""
+    extension = get_extension(file_object.filename)
+
+    return extension == ".csv" and get_possible_extensions_from_format(file_object) == []
 
 
 def file_is_zip(file_object):
-    """Checks file extension as being ZIP."""
-    return get_extension(file_object.filename) in [
-        ".zip"
-    ]
+    """Checks file extension and format as being ZIP."""
+    extension = get_extension(file_object.filename)
+
+    return extension == ".zip" and extension_matches_possible_file_formats(file_object, extension)
 
 
 def file_is_image(file_object):
-    """Checks file extension as being JPG. or PNG."""
-    return get_extension(file_object.filename) in [
-        ".jpg", ".jpeg", ".png"
-    ]
+    """Checks file extension and format as being JPG. or PNG. JPEG is normalised to JPG"""
+    extension = get_extension(file_object.filename)
+    extension = extension if extension != '.jpeg' else '.jpg'
+
+    return extension in [".jpg", ".png"] and extension_matches_possible_file_formats(file_object, extension)
 
 
 def generate_file_name(framework_slug, upload_type, supplier_id, service_id, field, filename, suffix=None):
@@ -208,11 +247,6 @@ def generate_file_name(framework_slug, upload_type, supplier_id, service_id, fie
 
 def default_file_suffix():
     return datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M")
-
-
-def get_extension(filename):
-    file_name, file_extension = os.path.splitext(filename)
-    return file_extension.lower()
 
 
 def get_signed_url(bucket, path, base_url):
