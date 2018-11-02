@@ -6,7 +6,8 @@ from dmutils.external import external
 @pytest.mark.parametrize(
     'url', [
         '/suppliers/opportunities',
-        '/suppliers/opportunities/1234'
+        '/suppliers/opportunities/1234',
+        '/suppliers/services/1234',
     ]
 )
 def test_external_routes_raise_404_if_suppliers_given_as_framework_family(app, url):
@@ -22,7 +23,8 @@ def test_external_routes_raise_404_if_suppliers_given_as_framework_family(app, u
         '/digital-outcomes-and-specialists/opportunities',
         '/digital-outcomes-and-specialists/opportunities/1234',
         '/foo/opportunities',
-        '/foo/opportunities/1234'
+        '/foo/opportunities/1234',
+        '/foo/services/1234',
     ]
 )
 def test_external_routes_raise_500_if_anything_else_given_as_framework_family(app, url):
