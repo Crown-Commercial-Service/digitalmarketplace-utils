@@ -31,7 +31,7 @@ setup(
          'botocore<1.11.0',
          'contextlib2>=0.4.0',
          'cryptography<2.4,>=2.3',
-         'mailchimp3<4,>=3.0.5',
+         'mailchimp3<2.1.0,>=2.0.11',
          'mandrill>=1.0.57',
          'monotonic>=0.3',
          'notifications-python-client<6.0.0,>=5.0.1',
