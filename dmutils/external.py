@@ -26,6 +26,14 @@ def list_opportunities(framework_family):
     raise NotImplementedError()
 
 
+@external.route('/<framework_family>/services/<service_id>')
+def direct_award_service_page(framework_family, service_id):
+    if framework_family == 'suppliers':
+        # nginx would otherwise route this pattern to the Supplier FE
+        abort(404)
+    raise NotImplementedError()
+
+
 @external.route('/g-cloud/suppliers')
 def suppliers_list_by_prefix():
     raise NotImplementedError()
