@@ -1,10 +1,9 @@
 # coding: utf-8
 import mock
 import pytest
-from freezegun import freeze_time
 
-from helpers import MockFile
 from botocore.exceptions import ClientError
+from freezegun import freeze_time
 
 from dmutils.documents import (
     generate_file_name, get_extension,
@@ -17,6 +16,8 @@ from dmutils.documents import (
     sanitise_supplier_name, file_is_pdf, file_is_zip, file_is_image,
     file_is_csv, generate_timestamped_document_upload_path,
     degenerate_document_path_and_return_doc_name, generate_download_filename)
+
+from helpers import MockFile
 
 
 class TestGenerateFilename:
@@ -63,44 +64,69 @@ class TestValidateDocuments:
 
     def test_file_is_less_than_5mb(self):
         assert file_is_less_than_5mb(MockFile(b"*", 'file1'))
-
-    def test_file_is_more_than_5mb(self):
         assert not file_is_less_than_5mb(MockFile(b"*" * 5400001, 'file1'))
 
-    def test_file_is_open_document_format(self):
-        assert file_is_open_document_format(MockFile(b"*", 'file1.pdf'))
-
-    def test_file_is_not_open_document_format(self):
-        assert not file_is_open_document_format(MockFile(b"*", 'file1.doc'))
-
     def test_file_is_pdf(self):
-        assert file_is_pdf(MockFile(b"*", 'file.pdf'))
-        assert not file_is_pdf(MockFile(b"*", 'file.doc'))
-
-    def test_file_is_csv(self):
-        assert file_is_csv(MockFile(b"*", 'file.csv'))
-        assert not file_is_csv(MockFile(b"*", 'file.sit'))
+        assert file_is_pdf(MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read(), 'test_pdf.pdf')) is True
+        assert file_is_pdf(MockFile(open('tests/test_files/test_image.jpg', 'rb').read(), 'test_pdf.pdf')) is False
+        assert file_is_pdf(MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read(), 'test_image.jpg')) is False
+        assert file_is_pdf(MockFile(open('tests/test_files/test_image.jpg', 'rb').read(), 'test_image.jpg')) is False
 
     def test_file_is_zip(self):
-        assert file_is_zip(MockFile(b"*", 'file.zip'))
-        assert not file_is_zip(MockFile(b"*", 'file.sit'))
+        assert file_is_zip(MockFile(open('tests/test_files/test_zip.zip', 'rb').read(), 'test_zip.zip')) is True
+        assert file_is_zip(MockFile(open('tests/test_files/test_image.jpg', 'rb').read(), 'test_image.zip')) is False
+        assert file_is_zip(MockFile(open('tests/test_files/test_zip.zip', 'rb').read(), 'test_image.jpg')) is False
+        assert file_is_zip(MockFile(open('tests/test_files/test_image.jpg', 'rb').read(), 'test_image.jpg')) is False
 
-    def test_file_is_image(self):
-        assert file_is_image(MockFile(b"*", 'file.jpg'))
-        assert file_is_image(MockFile(b"*", 'file.jpeg'))
-        assert file_is_image(MockFile(b"*", 'file.png'))
-        assert not file_is_image(MockFile(b"*", 'file.pdf'))
+    @pytest.mark.parametrize('extension', ('.jpg', '.jpeg', '.png'))
+    def test_file_is_image(self, extension):
+        file_name = 'test_image{}'.format(extension)
+        test_file_contents = open('tests/test_files/' + file_name, 'rb').read()
+
+        assert file_is_image(MockFile(test_file_contents, file_name)) is True
+        assert file_is_image(MockFile(test_file_contents, 'test_zip.zip')) is False
+        assert file_is_image(MockFile(open('tests/test_files/test_zip.zip', 'rb').read(), file_name)) is False
+        assert file_is_image(MockFile(open('tests/test_files/test_zip.zip', 'rb').read(), 'test_zip.zip')) is False
+
+    @pytest.mark.parametrize('extension', ('pdf', 'odp', 'ods', 'odt'))
+    def test_file_is_open_document_format(self, extension):
+        file_name = 'test_{}.{}'.format(extension, extension)
+        test_file_contents = open('tests/test_files/' + file_name, 'rb').read()
+        invalid_file_contents = open('tests/test_files/test_image.jpg', 'rb').read()
+
+        assert file_is_open_document_format(MockFile(test_file_contents, file_name)) is True
+        assert file_is_open_document_format(MockFile(test_file_contents, 'test_file.doc')) is False
+        assert file_is_open_document_format(MockFile(invalid_file_contents, file_name)) is False
+        assert file_is_open_document_format(MockFile(invalid_file_contents, 'test_image.jpg')) is False
+
+    def test_file_is_csv(self):
+        """
+        Our CSV checking is more lenient than other file checking it checks that a file is not of another file type
+        we check for.
+        """
+        # Check a bytestring with valid extensions
+        assert file_is_csv(MockFile(b"a,b,c,d\n1,2,3,4", 'file1.csv')) is True
+        assert file_is_csv(MockFile(b"", 'file1.csv')) is True
+        # Check a bytestring with invalid extensions
+        assert file_is_csv(MockFile(b"a,b,c,d\n1,2,3,4", 'file1.tsv')) is False
+        assert file_is_csv(MockFile(b"", 'file1.tsv')) is False
+        # Check an image file with valid extension
+        assert file_is_csv(MockFile(open('tests/test_files/test_image.jpg', 'rb').read(), 'file1.csv')) is False
+        # Check an image file with invalid extension
+        assert file_is_csv(MockFile(open('tests/test_files/test_image.jpg', 'rb').read(), 'file1.jpg')) is False
 
     def test_validate_documents(self):
-        assert validate_documents({'file1': MockFile(b"*", 'file1.pdf')}) == {}
+        assert validate_documents(
+            {'file1': MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read(), 'test_pdf.pdf')}
+        ) == {}
 
     def test_validate_documents_not_open_document_format(self):
         assert validate_documents({'file1': MockFile(b"*", 'file1.doc')}) == {'file1': 'file_is_open_document_format'}
 
     def test_validate_documents_not_less_than_5mb(self):
-        assert validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.pdf')}) == {
-            'file1': 'file_is_less_than_5mb'
-        }
+        big_pdf = MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read() + b"*" * 5400001, 'test_pdf.pdf')
+
+        assert validate_documents({'file1': big_pdf}) == {'file1': 'file_is_less_than_5mb'}
 
     def test_validate_documents_not_open_document_above_5mb(self):
         assert validate_documents({'file1': MockFile(b"*" * 5400001, 'file1.doc')}) == {
@@ -108,9 +134,12 @@ class TestValidateDocuments:
         }
 
     def test_validate_multiple_documents(self):
+        big_pdf = MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read() + b"*" * 5400001, 'test_pdf.pdf')
+        pdf = MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read(), 'test_pdf.pdf')
+
         assert validate_documents({
-            'file1': MockFile(b"*" * 5400001, 'file1.pdf'),
-            'file2': MockFile(b"*", 'file1.pdf'),
+            'file1': big_pdf,
+            'file2': pdf,
             'file3': MockFile(b"*", 'file1.doc'),
         }) == {
             'file1': 'file_is_less_than_5mb',
@@ -215,9 +244,10 @@ class TestUploadServiceDocuments:
         }
         self.uploader = mock.Mock()
         self.documents_url = 'http://localhost'
+        self.test_pdf = MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read(), 'test_pdf.pdf')
 
     def test_upload_service_documents(self):
-        request_files = {'pricingDocumentURL': MockFile(b"*" * 100, 'q1.pdf')}
+        request_files = {'pricingDocumentURL': self.test_pdf}
 
         with freeze_time('2015-10-04 14:36:05'):
             files, errors = upload_service_documents(
@@ -231,7 +261,7 @@ class TestUploadServiceDocuments:
         assert len(errors) == 0
 
     def test_upload_private_service_documents(self):
-        request_files = {'pricingDocumentURL': MockFile(b"*" * 100, 'q1.pdf')}
+        request_files = {'pricingDocumentURL': self.test_pdf}
 
         with freeze_time('2015-10-04 14:36:05'):
             files, errors = upload_service_documents(
