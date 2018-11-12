@@ -43,7 +43,7 @@ def make_clean(virtualenv_name):
 
 def exit_failure(messages, code=1):
     for message in messages:
-        logger.error(message.decode('utf-8'))
+        logger.error(message)
     exit(code)
 
 
@@ -60,29 +60,29 @@ if __name__ == '__main__':
     venv.main(args=(virtualenv_name,))
 
     logger.info(f'Installing requirements from {target} in virtualenv: {virtualenv_name}')
-    install_cmd = subprocess.Popen(
+    install_cmd = subprocess.run(
         [f'{virtualenv_name}/bin/pip', 'install', '-r', target],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-    stdout, stderr = install_cmd.communicate()
-    if install_cmd.poll() >= 1:
+    stdout, stderr = str(install_cmd.stdout.decode('utf-8')), str(install_cmd.stderr.decode('utf-8'))
+    if install_cmd.returncode >= 1:
         make_clean(virtualenv_name)
         exit_failure([stdout, stderr])
 
     logger.info(f'Freezing installed requirements in virtualenv: {virtualenv_name}')
-    freeze_cmd = subprocess.Popen(
+    freeze_cmd = subprocess.run(
         [f'{virtualenv_name}/bin/pip', 'freeze', '-r', target],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-    stdout, stderr = freeze_cmd.communicate()
-    if freeze_cmd.poll() >= 1:
+    stdout, stderr = str(freeze_cmd.stdout.decode('utf-8')), str(freeze_cmd.stderr.decode('utf-8'))
+    if freeze_cmd.returncode >= 1:
         make_clean(virtualenv_name)
         exit_failure([stdout, stderr])
 
     # Check for case mismatch error
-    case_error = re.findall('Requirement file \[.+?\] contains (.+?), but that package is not installed', str(stderr))
+    case_error = re.findall('Requirement file \[.+?\] contains (.+?), but that package is not installed', stderr)
     if case_error:
         make_clean(virtualenv_name)
         exit_failure(
@@ -100,7 +100,7 @@ if __name__ == '__main__':
             '\n',
             re.search(
                 '## The following requirements were added by pip freeze:.+',
-                stdout.decode("utf-8"),
+                stdout,
                 re.MULTILINE + re.DOTALL
             ).group()
         )
