@@ -63,33 +63,38 @@ if __name__ == '__main__':
     install_cmd = subprocess.run(
         [f'{virtualenv_name}/bin/pip', 'install', '-r', target],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
+        universal_newlines=True
     )
-    stdout, stderr = str(install_cmd.stdout.decode('utf-8')), str(install_cmd.stderr.decode('utf-8'))
+
     if install_cmd.returncode >= 1:
         make_clean(virtualenv_name)
-        exit_failure([stdout, stderr])
+        exit_failure([install_cmd.stdout, install_cmd.stderr])
 
     logger.info(f'Freezing installed requirements in virtualenv: {virtualenv_name}')
     freeze_cmd = subprocess.run(
         [f'{virtualenv_name}/bin/pip', 'freeze', '-r', target],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
+        universal_newlines=True
     )
-    stdout, stderr = str(freeze_cmd.stdout.decode('utf-8')), str(freeze_cmd.stderr.decode('utf-8'))
+
     if freeze_cmd.returncode >= 1:
         make_clean(virtualenv_name)
-        exit_failure([stdout, stderr])
+        exit_failure([freeze_cmd.stdout, freeze_cmd.stderr])
 
     # Check for case mismatch error
-    case_error = re.findall('Requirement file \[.+?\] contains (.+?), but that package is not installed', stderr)
+    case_error = re.findall(
+        'Requirement file \[.+?\] contains (.+?), but that package is not installed',
+        freeze_cmd.stderr
+    )
     if case_error:
         make_clean(virtualenv_name)
         exit_failure(
             [
                 f'Possible case mismatch between installed name and package name detected for {requirement}'
                 for requirement in case_error
-            ] + [stderr, stdout]
+            ] + [freeze_cmd.stderr, freeze_cmd.stdout]
         )
 
     logger.info(f'Constructing new requirements file: {outfile} from frozen environment: {virtualenv_name}')
@@ -100,7 +105,7 @@ if __name__ == '__main__':
             '\n',
             re.search(
                 '## The following requirements were added by pip freeze:.+',
-                stdout,
+                freeze_cmd.stdout,
                 re.MULTILINE + re.DOTALL
             ).group()
         )
