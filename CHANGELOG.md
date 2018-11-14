@@ -2,6 +2,24 @@
 
 Records breaking changes from major version bumps
 
+## 45.0.0
+
+PR [#474](https://github.com/alphagov/digitalmarketplace-utils/pull/474)
+
+Rename dmutils/repoutils/freeze-requirements.py > dmutils/repoutils/freeze_requirements.py as per [pep8](https://www.python.org/dev/peps/pep-0008/#package-and-module-names)
+
+Old code:
+
+```
+python -m dmutils.repoutils.freeze-requirements requirements-app.txt
+```
+
+New code:
+
+```
+python -m dmutils.repoutils.freeze_requirements requirements-app.tx
+```
+
 ## 44.0.0
 
 PR [#455](https://github.com/alphagov/digitalmarketplace-utils/pull/455)
