@@ -7,8 +7,8 @@ This will error out on the pip
 error caused by `pip install` being case insensitive and the `pip freeze` command being case sensitive.
 
 Usage:
-    freeze-requirements <target>
-    freeze-requirements <target> [options]
+    freeze_requirements <target>
+    freeze_requirements <target> [options]
 
 Options:
     <target>             A requirements file for us to freeze
@@ -17,9 +17,9 @@ Options:
     -h, --help           Show this screen
 
 Examples:
-    python -m dmutils.repoutils.freeze-requirements requirements-app.txt
-    freeze-requirements.py requirements-app.txt --verbose
-    python -m dmutils.repoutils.freeze-requirements requirements-app.txt --outfile=not-requirements.txt --verbose
+    python -m dmutils.repoutils.freeze_requirements requirements-app.txt
+    freeze_requirements.py requirements-app.txt --verbose
+    python -m dmutils.repoutils.freeze_requirements requirements-app.txt --outfile=not-requirements.txt --verbose
 """
 import logging
 import re
@@ -30,7 +30,7 @@ import venv
 from docopt import docopt
 
 
-logger = logging.getLogger('freeze-requirements')
+logger = logging.getLogger('freeze_requirements')
 
 
 def make_clean(virtualenv_name):
