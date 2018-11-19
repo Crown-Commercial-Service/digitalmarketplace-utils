@@ -75,6 +75,7 @@ if __name__ == '__main__':
     logger.info(f'Freezing installed requirements in virtualenv: {virtualenv_name}')
     with open(target, 'rb') as requirements_file, tempfile.NamedTemporaryFile() as tmp:
         tmp.write(re.sub(b"--.+?\n", b"", requirements_file.read()))
+        tmp.seek(0)
         freeze_cmd = subprocess.run(
             [f'{virtualenv_name}/bin/pip', 'freeze', '-r', f'{tmp.name}'],
             stdout=subprocess.PIPE,
