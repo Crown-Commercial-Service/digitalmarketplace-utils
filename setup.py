@@ -43,4 +43,5 @@ setup(
          'Werkzeug',
          'workdays>=1.4',
     ],
+    python_requires="==3.6.*",
 )
