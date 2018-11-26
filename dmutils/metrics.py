@@ -1,10 +1,10 @@
 import copy
 from datetime import datetime
+import time
 
 from boto.ec2.cloudwatch import connect_to_region
 from flask import current_app, _app_ctx_stack as stack
 from contextlib import ContextDecorator
-from monotonic import monotonic
 
 
 def flask_client():
@@ -75,10 +75,10 @@ class Timer(ContextDecorator):
         self.name = name
 
     def __enter__(self):
-        self.start = monotonic()
+        self.start = time.perf_counter()
 
     def __exit__(self, *exc):
-        elapsed = monotonic() - self.start
+        elapsed = time.perf_counter() - self.start
         self.client._put_metric(
             self.name,
             int(elapsed * 1000),
