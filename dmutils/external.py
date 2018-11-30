@@ -12,24 +12,24 @@ def index():
 
 @external.route('/<framework_family>/opportunities/<brief_id>')
 def get_brief_by_id(framework_family, brief_id):
-    if framework_family == 'suppliers':
-        # nginx would otherwise route this pattern to the Brief Responses FE
+    # The Buyer FE currently hardcodes this route to 'digital-outcomes-and-specialists'
+    if framework_family != 'digital-outcomes-and-specialists':
         abort(404)
     raise NotImplementedError()
 
 
 @external.route('/<framework_family>/opportunities')
 def list_opportunities(framework_family):
-    if framework_family == 'suppliers':
-        # nginx would otherwise route this pattern to the Brief Responses FE
+    # The Buyer FE currently hardcodes this route to 'digital-outcomes-and-specialists'
+    if framework_family != 'digital-outcomes-and-specialists':
         abort(404)
     raise NotImplementedError()
 
 
 @external.route('/<framework_family>/services/<service_id>')
 def direct_award_service_page(framework_family, service_id):
-    if framework_family == 'suppliers':
-        # nginx would otherwise route this pattern to the Supplier FE
+    # The Buyer FE currently hardcodes this route to 'g-cloud'
+    if framework_family != 'g-cloud':
         abort(404)
     raise NotImplementedError()
 

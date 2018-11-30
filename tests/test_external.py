@@ -10,7 +10,7 @@ from dmutils.external import external
         '/suppliers/services/1234',
     ]
 )
-def test_external_routes_raise_404_if_suppliers_given_as_framework_family(app, url):
+def test_external_routes_raise_404_if_invalid_framework_family_given(app, url):
     app.register_blueprint(external)
     client = app.test_client()
     with app.app_context():
@@ -22,12 +22,11 @@ def test_external_routes_raise_404_if_suppliers_given_as_framework_family(app, u
     'url', [
         '/digital-outcomes-and-specialists/opportunities',
         '/digital-outcomes-and-specialists/opportunities/1234',
-        '/foo/opportunities',
-        '/foo/opportunities/1234',
-        '/foo/services/1234',
+        '/g-cloud/services/1234',
     ]
 )
-def test_external_routes_raise_500_if_anything_else_given_as_framework_family(app, url):
+def test_external_routes_raise_500_if_valid_framework_family_given(app, url):
+    # A valid framework should get routed to the Buyer FE
     app.register_blueprint(external)
     client = app.test_client()
     with app.app_context():
