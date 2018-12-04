@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """Tests for the Digital Marketplace MailChimp integration."""
 import logging
-import types
-from json.decoder import JSONDecodeError
-
 import mock
 import pytest
+import types
 
+from json.decoder import JSONDecodeError
 from requests import RequestException
 from requests.exceptions import HTTPError
 
 from dmutils.email.dm_mailchimp import DMMailChimpClient
+
 from helpers import assert_external_service_log_entry, PatchExternalServiceLogConditionMixin
 
 
