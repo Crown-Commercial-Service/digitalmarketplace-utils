@@ -145,3 +145,16 @@ def test_api_validation_error_handler(app):
                 "error": "Hippogriff",
             }
             assert response.status_code == 400
+
+
+def test_api_unauth(app):
+    with app.test_request_context('/'):
+        try:
+            raise UnauthorizedWWWAuthenticate(www_authenticate="lemur", description="Bogeyman's trick")
+        except UnauthorizedWWWAuthenticate as e:
+            response = json_error_handler(e)
+            assert json.loads(response.get_data()) == {
+                "error": "Bogeyman's trick",
+            }
+            assert response.status_code == 401
+            assert response.headers["www-authenticate"] == "lemur"
