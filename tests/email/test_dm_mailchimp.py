@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """Tests for the Digital Marketplace MailChimp integration."""
 import logging
-import types
-from json.decoder import JSONDecodeError
-
 import mock
 import pytest
+import types
 
+from json.decoder import JSONDecodeError
 from requests import RequestException
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectTimeout
 
 from dmutils.email.dm_mailchimp import DMMailChimpClient
+
 from helpers import assert_external_service_log_entry, PatchExternalServiceLogConditionMixin
 
 
@@ -261,6 +261,22 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 mock.call('list_id', count=100, offset=0),
                 mock.call('list_id', count=100, offset=100),
             ]
+
+    @mock.patch('dmutils.email.dm_mailchimp.MailChimp', autospec=True)
+    def test_timeout_default_is_passed_to_client(self, mailchimp_client):
+        DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        args, kwargs = mailchimp_client.call_args
+
+        assert kwargs['timeout'] == 25
+
+    def test_timeout_exception_is_not_propagated_for_create_or_update(self):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(
+                dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
+            create_or_update.side_effect = ConnectTimeout()
+
+            assert dm_mailchimp_client.subscribe_new_email_to_list('a_list_id', 'example@example.com') is False
+            assert create_or_update.called is True
 
     def test_default_timeout_retry_performs_no_retries(self):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))

@@ -28,7 +28,7 @@ class DMMailChimpClient(object):
         logger,
         retries=0
     ):
-        self._client = MailChimp(mc_user=mailchimp_username, mc_secret=mailchimp_api_key)
+        self._client = MailChimp(mc_user=mailchimp_username, mc_secret=mailchimp_api_key, timeout=25)
         self.logger = logger
         self.retries = retries
 
