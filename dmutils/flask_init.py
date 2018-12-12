@@ -1,7 +1,33 @@
+from collections import OrderedDict
 import os
-from . import config, logging, proxy_fix, request_id, formats, filters, errors
+from types import MappingProxyType
+
+from dmutils import config, logging, proxy_fix, request_id, formats, filters
+from dmutils.errors import api as api_errors, frontend as fe_errors
 from flask_script import Manager, Server
 from flask_wtf.csrf import CSRFError
+from werkzeug.exceptions import default_exceptions
+
+
+frontend_error_handlers = MappingProxyType(OrderedDict((
+    (CSRFError, fe_errors.csrf_handler,),
+    (400, fe_errors.render_error_page,),
+    (401, fe_errors.redirect_to_login,),
+    (403, fe_errors.redirect_to_login,),
+    (404, fe_errors.render_error_page,),
+    (410, fe_errors.render_error_page,),
+    (503, fe_errors.render_error_page,),
+    (500, fe_errors.render_error_page,),
+)))
+
+
+api_error_handlers = MappingProxyType(OrderedDict(
+    (
+        (api_errors.ValidationError, api_errors.validation_error_handler,),
+    ) + tuple(
+        (code, api_errors.json_error_handler) for code in default_exceptions
+    ),
+))
 
 
 def init_app(
@@ -12,6 +38,7 @@ def init_app(
         db=None,
         login_manager=None,
         search_api_client=None,
+        error_handlers=frontend_error_handlers,
 ):
 
     application.config.from_object(config_object)
@@ -61,15 +88,8 @@ def init_app(
             pluralize=pluralize,
             **(application.config['BASE_TEMPLATE_DATA'] or {}))
 
-    # Register error handlers for CSRF errors and common error status codes
-    application.register_error_handler(CSRFError, errors.csrf_handler)
-    application.register_error_handler(400, errors.render_error_page)
-    application.register_error_handler(401, errors.redirect_to_login)
-    application.register_error_handler(403, errors.redirect_to_login)
-    application.register_error_handler(404, errors.render_error_page)
-    application.register_error_handler(410, errors.render_error_page)
-    application.register_error_handler(503, errors.render_error_page)
-    application.register_error_handler(500, errors.render_error_page)
+    for exc_or_code, handler in error_handlers.items():
+        application.register_error_handler(exc_or_code, handler)
 
 
 def pluralize(count, singular, plural):

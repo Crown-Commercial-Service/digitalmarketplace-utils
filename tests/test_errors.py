@@ -1,3 +1,4 @@
+import json
 import mock
 import pytest
 
@@ -7,12 +8,15 @@ from werkzeug.exceptions import (
     BadRequest, Forbidden, NotFound, Gone, InternalServerError, ServiceUnavailable, ImATeapot
 )
 from jinja2.exceptions import TemplateNotFound
-from dmutils.errors import csrf_handler, redirect_to_login, render_error_page
+
+from dmutils.authentication import UnauthorizedWWWAuthenticate
+from dmutils.errors.frontend import csrf_handler, redirect_to_login, render_error_page
+from dmutils.errors.api import json_error_handler, validation_error_handler, ValidationError
 from dmutils.external import external as external_blueprint
 
 
 @pytest.mark.parametrize('user_session', (True, False))
-@mock.patch('dmutils.errors.current_app')
+@mock.patch('dmutils.errors.frontend.current_app')
 def test_csrf_handler_redirects_to_login(current_app, user_session, app):
 
     with app.test_request_context('/'):
@@ -56,7 +60,7 @@ def test_unauthorised_redirects_to_login(app):
     (ServiceUnavailable, 503, 'errors/500.html'),
     (mock.Mock(code=None), 500, 'errors/500.html'),
 ])
-@mock.patch('dmutils.errors.render_template')
+@mock.patch('dmutils.errors.frontend.render_template')
 def test_render_error_page_with_exception(render_template, exception, status_code, expected_template, app):
     with app.test_request_context('/'):
         assert render_error_page(exception()) == (render_template.return_value, status_code)
@@ -72,14 +76,14 @@ def test_render_error_page_with_exception(render_template, exception, status_cod
     (500, 'errors/500.html'),
     (503, 'errors/500.html'),
 ])
-@mock.patch('dmutils.errors.render_template')
+@mock.patch('dmutils.errors.frontend.render_template')
 def test_render_error_page_with_status_code(render_template, status_code, expected_template, app):
     with app.test_request_context('/'):
         assert render_error_page(status_code=status_code) == (render_template.return_value, status_code)
         assert render_template.call_args_list == [mock.call(expected_template, error_message=None)]
 
 
-@mock.patch('dmutils.errors.render_template')
+@mock.patch('dmutils.errors.frontend.render_template')
 def test_render_error_page_with_custom_http_exception(render_template, app):
     class CustomHTTPError(Exception):
         def __init__(self):
@@ -90,14 +94,14 @@ def test_render_error_page_with_custom_http_exception(render_template, app):
         assert render_template.call_args_list == [mock.call('errors/500.html', error_message=None)]
 
 
-@mock.patch('dmutils.errors.render_template')
+@mock.patch('dmutils.errors.frontend.render_template')
 def test_render_error_page_for_unknown_status_code_defaults_to_500(render_template, app):
     with app.test_request_context('/'):
         assert render_error_page(ImATeapot()) == (render_template.return_value, 500)
         assert render_template.call_args_list == [mock.call('errors/500.html', error_message=None)]
 
 
-@mock.patch('dmutils.errors.render_template')
+@mock.patch('dmutils.errors.frontend.render_template')
 def test_render_error_page_falls_back_to_toolkit_templates(render_template, app):
     render_template.side_effect = [TemplateNotFound('Oh dear'), "successful rendering"]
     with app.test_request_context('/'):
@@ -108,7 +112,7 @@ def test_render_error_page_falls_back_to_toolkit_templates(render_template, app)
         ]
 
 
-@mock.patch('dmutils.errors.render_template')
+@mock.patch('dmutils.errors.frontend.render_template')
 def test_render_error_page_passes_error_message_as_context(render_template, app):
     render_template.side_effect = [TemplateNotFound('Oh dear'), "successful rendering"]
     with app.test_request_context('/'):
@@ -117,3 +121,40 @@ def test_render_error_page_passes_error_message_as_context(render_template, app)
             mock.call('errors/500.html', error_message="Hole in Teapot"),
             mock.call('toolkit/errors/500.html', error_message="Hole in Teapot")
         ]
+
+
+def test_api_json_error_handler(app):
+    with app.test_request_context('/'):
+        try:
+            raise ImATeapot("Simply teapot all over me!")
+        except ImATeapot as e:
+            response = json_error_handler(e)
+            assert json.loads(response.get_data()) == {
+                "error": "Simply teapot all over me!",
+            }
+            assert response.status_code == 418
+
+
+def test_api_validation_error_handler(app):
+    with app.test_request_context('/'):
+        try:
+            raise ValidationError("Hippogriff")
+        except ValidationError as e:
+            response = validation_error_handler(e)
+            assert json.loads(response.get_data()) == {
+                "error": "Hippogriff",
+            }
+            assert response.status_code == 400
+
+
+def test_api_unauth(app):
+    with app.test_request_context('/'):
+        try:
+            raise UnauthorizedWWWAuthenticate(www_authenticate="lemur", description="Bogeyman's trick")
+        except UnauthorizedWWWAuthenticate as e:
+            response = json_error_handler(e)
+            assert json.loads(response.get_data()) == {
+                "error": "Bogeyman's trick",
+            }
+            assert response.status_code == 401
+            assert response.headers["www-authenticate"] == "lemur"
