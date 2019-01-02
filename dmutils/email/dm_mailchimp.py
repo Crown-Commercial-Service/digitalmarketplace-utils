@@ -3,6 +3,8 @@
 
 from json.decoder import JSONDecodeError
 from hashlib import md5
+from typing import Mapping, Sequence
+
 from requests.exceptions import RequestException, HTTPError
 
 from mailchimp3 import MailChimp
@@ -161,3 +163,35 @@ class DMMailChimpClient(object):
             offset += pagination_size
 
             yield from [member['email_address'] for member in member_data['members']]
+
+    def get_lists_for_email(self, email_address: str) -> Sequence[Mapping]:
+        """
+            Returns a sequence of all lists the email_address has an association with (note: even if that association is
+            "unsubscribed" or "cleaned").
+        """
+        with log_external_request(service='Mailchimp'):
+            return tuple(
+                {
+                    "list_id": mailing_list["id"],
+                    "name": mailing_list["name"],
+                } for mailing_list in self._client.lists.all(get_all=True, email=email_address)["lists"]
+            )
+
+    def permanently_remove_email_from_list(self, email_address: str, list_id: str) -> bool:
+        """
+            Permanently (very permanently) erases all trace of an email address from a given list
+        """
+        hashed_email = self.get_email_hash(email_address)
+        try:
+            with log_external_request(service='Mailchimp'):
+                self._client.lists.members.delete_permanent(
+                    list_id=list_id,
+                    subscriber_hash=hashed_email,
+                )
+            return True
+        except RequestException as e:
+            self.logger.error(
+                f"Mailchimp failed to permanently remove user ({hashed_email}) from list ({list_id})",
+                extra={"error": str(e), "mailchimp_response": get_response_from_request_exception(e)},
+            )
+        return False
