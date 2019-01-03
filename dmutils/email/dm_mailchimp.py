@@ -3,7 +3,8 @@
 
 from json.decoder import JSONDecodeError
 from hashlib import md5
-from typing import Mapping, Sequence
+from logging import Logger
+from typing import Callable, Iterator, Mapping, Sequence, Union
 
 from requests.exceptions import RequestException, HTTPError
 
@@ -25,22 +26,22 @@ class DMMailChimpClient(object):
 
     def __init__(
         self,
-        mailchimp_username,
-        mailchimp_api_key,
-        logger,
-        retries=0
+        mailchimp_username: str,
+        mailchimp_api_key: str,
+        logger: Logger,
+        retries: int=0,
     ):
         self._client = MailChimp(mc_user=mailchimp_username, mc_api=mailchimp_api_key, timeout=25)
         self.logger = logger
         self.retries = retries
 
     @staticmethod
-    def get_email_hash(email_address):
+    def get_email_hash(email_address: Union[str, bytes]) -> bytes:
         """md5 hashing of lower cased emails has been chosen by mailchimp to identify email addresses"""
         formatted_email_address = str(email_address.lower()).encode('utf-8')
         return md5(formatted_email_address).hexdigest()
 
-    def timeout_retry(self, method):
+    def timeout_retry(self, method: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             for i in range(1 + self.retries):
                 try:
@@ -55,7 +56,7 @@ class DMMailChimpClient(object):
 
         return wrapper
 
-    def create_campaign(self, campaign_data):
+    def create_campaign(self, campaign_data: Mapping) -> Union[str, bool]:
         try:
             with log_external_request(service='Mailchimp'):
                 campaign = self._client.campaigns.create(campaign_data)
@@ -72,7 +73,7 @@ class DMMailChimpClient(object):
             )
         return False
 
-    def set_campaign_content(self, campaign_id, content_data):
+    def set_campaign_content(self, campaign_id: str, content_data: Mapping):
         try:
             with log_external_request(service='Mailchimp'):
                 return self._client.campaigns.content.update(campaign_id, content_data)
@@ -86,7 +87,7 @@ class DMMailChimpClient(object):
             )
         return False
 
-    def send_campaign(self, campaign_id):
+    def send_campaign(self, campaign_id: str):
         try:
             with log_external_request(service='Mailchimp'):
                 self._client.campaigns.actions.send(campaign_id)
@@ -101,7 +102,7 @@ class DMMailChimpClient(object):
             )
         return False
 
-    def subscribe_new_email_to_list(self, list_id, email_address):
+    def subscribe_new_email_to_list(self, list_id: str, email_address: str):
         """Will subscribe email address to list if they do not already exist in that list else do nothing"""
         hashed_email = self.get_email_hash(email_address)
         try:
@@ -144,7 +145,7 @@ class DMMailChimpClient(object):
             )
             return False
 
-    def subscribe_new_emails_to_list(self, list_id, email_addresses):
+    def subscribe_new_emails_to_list(self, list_id: str, email_addresses: str) -> bool:
         success = True
         for email_address in email_addresses:
             with log_external_request(service='Mailchimp'):
@@ -152,7 +153,7 @@ class DMMailChimpClient(object):
                     success = False
         return success
 
-    def get_email_addresses_from_list(self, list_id, pagination_size=100):
+    def get_email_addresses_from_list(self, list_id: str, pagination_size: int=100) -> Iterator[str]:
         offset = 0
         while True:
             member_data = self.timeout_retry(
