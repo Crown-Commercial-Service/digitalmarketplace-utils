@@ -364,3 +364,74 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                     mock.call('a_list_id', count=100, offset=600),
                     mock.call('a_list_id', count=100, offset=700),
                 ]
+
+    def test_get_lists_for_email(self):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(dm_mailchimp_client._client.lists, 'all', autospec=True) as all_lists:
+            all_lists.return_value = {
+                "lists": [
+                    {"id": "gadz00ks", "name": "Pistachios", "irrelevant": "custard"},
+                    {"id": "1886", "name": "Square the circle", "meaningless": 3.1415},
+                ],
+                "pigeon": "pasty",
+            }
+
+            with assert_external_service_log_entry(extra_modules=['mailchimp'], count=1):
+                result = dm_mailchimp_client.get_lists_for_email("trousers.potato@purse.net")
+
+            assert tuple(result) == (
+                {"list_id": "gadz00ks", "name": "Pistachios"},
+                {"list_id": "1886", "name": "Square the circle"},
+            )
+
+            assert all_lists.call_args_list == [
+                mock.call(get_all=True, email="trousers.potato@purse.net"),
+            ]
+
+    def test_permanently_remove_email_from_list_success(self):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members,
+            'delete_permanent',
+            autospec=True,
+        ) as del_perm:
+            del_perm.return_value = {"don't rely": "on me"}
+
+            with assert_external_service_log_entry(extra_modules=['mailchimp'], count=1):
+                result = dm_mailchimp_client.permanently_remove_email_from_list(
+                    "trousers.potato@purse.net",
+                    "modern_society",
+                )
+
+            assert result is True
+
+            assert del_perm.call_args_list == [
+                mock.call(
+                    list_id="modern_society",
+                    subscriber_hash="ee5ae5f54bdf3394d48ea4e79e6d0e39",
+                ),
+            ]
+
+    def test_permanently_remove_email_from_list_failure(self):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members,
+            'delete_permanent',
+            autospec=True,
+        ) as del_perm:
+            del_perm.side_effect = RequestException("No thoroughfare")
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp'], count=1):
+                result = dm_mailchimp_client.permanently_remove_email_from_list(
+                    "Trousers.Potato@purse.net",
+                    "p_kellys_budget",
+                )
+
+            assert result is False
+
+            assert del_perm.call_args_list == [
+                mock.call(
+                    list_id="p_kellys_budget",
+                    subscriber_hash="ee5ae5f54bdf3394d48ea4e79e6d0e39",
+                ),
+            ]
