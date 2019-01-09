@@ -9,13 +9,46 @@ from json.decoder import JSONDecodeError
 from requests import RequestException
 from requests.exceptions import HTTPError, ConnectTimeout
 
-from dmutils.email.dm_mailchimp import DMMailChimpClient
+from dmutils.email.dm_mailchimp import DMMailChimpClient, get_response_from_exception
+from mailchimp3.mailchimpclient import MailChimpError
 
 from helpers import assert_external_service_log_entry, PatchExternalServiceLogConditionMixin
 
 
 # Mailchimp client checks the first part of the key against a regex: ^[0-9a-f]{32}$
 DUMMY_MAILCHIMP_API_KEY = "1234567890abcdef1234567890abcdef-us5"
+
+
+class TestGetResponseFromException:
+
+    def test_request_exception(self):
+        exception = RequestException('error message')
+        with mock.patch.object(exception, 'response', autospec=True) as response:
+            response.json.return_value = {'detail': 'error'}
+            result = get_response_from_exception(exception)
+
+            assert exception.response.json.called
+            assert result == {'detail': 'error'}
+
+    @pytest.mark.parametrize('error', (AttributeError(), ValueError(), JSONDecodeError('message', '', 0)))
+    def test_exception_on_json_decode(self, error):
+        exception = RequestException('error message')
+        with mock.patch.object(exception, 'response', autospec=True) as response:
+            response.json.side_effect = error
+            result = get_response_from_exception(exception)
+
+            assert exception.response.json.called
+            assert result == {}
+
+    def test_mail_chimp_error(self):
+        exception = MailChimpError({'detail': 'error'})
+
+        assert get_response_from_exception(exception) == {'detail': 'error'}
+
+    def test_unrelated_exception(self):
+        exception = IndexError('error message')
+
+        assert get_response_from_exception(exception) == {}
 
 
 class TestMailchimp(PatchExternalServiceLogConditionMixin):
@@ -30,17 +63,24 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert res == "100"
             create.assert_called_once_with({"example": "data"})
 
-    def test_log_error_message_if_error_creating_campaign(self):
+    @pytest.mark.parametrize(
+        ('exception', 'expected_error'),
+        [
+            (RequestException("error message"), {"error": "error message"}),
+            (MailChimpError({"request": "failed", "status": 500}), {'error': '{"request": "failed", "status": 500}'})
+        ]
+    )
+    def test_log_error_message_if_error_creating_campaign(self, exception, expected_error):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
         with mock.patch.object(dm_mailchimp_client._client.campaigns, 'create', autospec=True) as create:
-            create.side_effect = RequestException("error message")
+            create.side_effect = exception
             with mock.patch.object(dm_mailchimp_client.logger, 'error', autospec=True) as error:
                 with assert_external_service_log_entry(successful_call=False):
                     res = dm_mailchimp_client.create_campaign({"example": "data", 'settings': {'title': 'Foo'}})
 
                 assert res is False
                 error.assert_called_once_with(
-                    "Mailchimp failed to create campaign for 'campaign title'", extra={"error": "error message"}
+                    "Mailchimp failed to create campaign for 'campaign title'", extra=expected_error
                 )
 
     def test_set_campaign_content(self):
@@ -55,10 +95,17 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert res == html_content
             dm_mailchimp_client._client.campaigns.content.update.assert_called_once_with(campaign_id, html_content)
 
-    def test_log_error_message_if_error_setting_campaign_content(self):
+    @pytest.mark.parametrize(
+        ('exception', 'expected_error'),
+        [
+            (RequestException("error message"), "error message"),
+            (MailChimpError({'request': 'failed', 'status': 500}), "{'request': 'failed', 'status': 500}")
+        ]
+    )
+    def test_log_error_message_if_error_setting_campaign_content(self, exception, expected_error):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.campaigns.content, 'update', autospec=True) as update:
-            update.side_effect = RequestException("error message")
+            update.side_effect = exception
 
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.set_campaign_content('1', {"html": "some html"})
@@ -66,7 +113,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert res is False
 
             assert log_catcher.records[1].msg == "Mailchimp failed to set content for campaign id '1'"
-            assert log_catcher.records[1].error == "error message"
+            assert log_catcher.records[1].error == expected_error
 
     def test_send_campaign(self):
         campaign_id = "1"
@@ -78,10 +125,17 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert res is True
             send.assert_called_once_with(campaign_id)
 
-    def test_log_error_message_if_error_sending_campaign(self):
+    @pytest.mark.parametrize(
+        ('exception', 'expected_error'),
+        [
+            (RequestException("error sending"), "error sending"),
+            (MailChimpError({'request': 'failed', 'status': 500}), "{'request': 'failed', 'status': 500}")
+        ]
+    )
+    def test_log_error_message_if_error_sending_campaign(self, exception, expected_error):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(dm_mailchimp_client._client.campaigns.actions, 'send', autospec=True) as send:
-            send.side_effect = RequestException("error sending")
+            send.side_effect = exception
 
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.send_campaign("1")
@@ -90,7 +144,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
 
             assert log_catcher.records[1].msg == "Mailchimp failed to send campaign id '1'"
             assert log_catcher.records[1].levelname == 'ERROR'
-            assert log_catcher.records[1].error == "error sending"
+            assert log_catcher.records[1].error == expected_error
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_subscribe_new_email_to_list(self, get_email_hash):
@@ -113,7 +167,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             )
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_log_error_message_if_error_subscribing_email_to_list(self, get_email_hash):
+    def test_log_request_exception_error_message_if_error_subscribing_email_to_list(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
@@ -132,7 +186,23 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].levelname == 'ERROR'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_returns_true_if_expected_invalid_email_error_subscribing_email_to_list(self, get_email_hash):
+    def test_log_mailchimp_error_error_message_if_error_subscribing_email_to_list(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(
+                dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
+            create_or_update.side_effect = MailChimpError({'request': 'failed', 'status': 500})
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+            assert res is False
+
+            assert log_catcher.records[1].msg == "Mailchimp failed to add user (foo) to list (list_id)"
+            assert log_catcher.records[1].error == "{'request': 'failed', 'status': 500}"
+            assert log_catcher.records[1].levelname == 'ERROR'
+
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_create_or_update_returns_true_for_expected_request_exception(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
@@ -149,6 +219,33 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 "API error: The email address looks fake or invalid, please enter a real email address."
             )
             assert log_catcher.records[1].error == "error sending"
+            assert log_catcher.records[1].levelname == 'ERROR'
+
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_create_or_update_returns_true_for_expected_mailchimp_error(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(
+                dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
+            create_or_update.side_effect = MailChimpError(
+                {
+                    "detail": "foo looks fake or invalid, please enter a real email address.",
+                    'request': 'failed',
+                    'status': 500
+                }
+            )
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+            assert res is True
+            assert log_catcher.records[1].msg == (
+                "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
+                "API error: The email address looks fake or invalid, please enter a real email address."
+            )
+            assert log_catcher.records[1].error == (
+                "{'detail': 'foo looks fake or invalid, please enter a real email address.', "
+                "'request': 'failed', 'status': 500}"
+            )
             assert log_catcher.records[1].levelname == 'ERROR'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
@@ -412,14 +509,15 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 ),
             ]
 
-    def test_permanently_remove_email_from_list_failure(self):
+    @pytest.mark.parametrize("exception", (RequestException("No thoroughfare"), MailChimpError({"status": 500})))
+    def test_permanently_remove_email_from_list_failure(self, exception):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
             dm_mailchimp_client._client.lists.members,
             'delete_permanent',
             autospec=True,
         ) as del_perm:
-            del_perm.side_effect = RequestException("No thoroughfare")
+            del_perm.side_effect = exception
 
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp'], count=1):
                 result = dm_mailchimp_client.permanently_remove_email_from_list(

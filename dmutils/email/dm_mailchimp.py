@@ -9,17 +9,22 @@ from typing import Callable, Iterator, Mapping, Sequence, Union
 from requests.exceptions import RequestException, HTTPError
 
 from mailchimp3 import MailChimp
+from mailchimp3.mailchimpclient import MailChimpError
 
 from dmutils.timing import logged_duration_for_external_request as log_external_request
 
 PAGINATION_SIZE = 1000
 
 
-def get_response_from_request_exception(exc):
-    try:
-        return exc.response.json()
-    except (AttributeError, ValueError, JSONDecodeError):
-        return {}
+def get_response_from_exception(exc):
+    if isinstance(exc, RequestException):
+        try:
+            return exc.response.json()
+        except (AttributeError, ValueError, JSONDecodeError):
+            pass
+    if isinstance(exc, MailChimpError):
+        return exc.args[0]
+    return {}
 
 
 class DMMailChimpClient(object):
@@ -61,14 +66,14 @@ class DMMailChimpClient(object):
             with log_external_request(service='Mailchimp'):
                 campaign = self._client.campaigns.create(campaign_data)
             return campaign['id']
-        except RequestException as e:
+        except (RequestException, MailChimpError) as e:
             self.logger.error(
                 "Mailchimp failed to create campaign for '{campaign_title}'".format(
                     campaign_title=campaign_data.get("settings", {}).get("title")
                 ),
                 extra={
                     "error": str(e),
-                    "mailchimp_response": get_response_from_request_exception(e),
+                    "mailchimp_response": get_response_from_exception(e),
                 },
             )
         return False
@@ -77,12 +82,12 @@ class DMMailChimpClient(object):
         try:
             with log_external_request(service='Mailchimp'):
                 return self._client.campaigns.content.update(campaign_id, content_data)
-        except RequestException as e:
+        except (RequestException, MailChimpError) as e:
             self.logger.error(
                 "Mailchimp failed to set content for campaign id '{0}'".format(campaign_id),
                 extra={
                     "error": str(e),
-                    "mailchimp_response": get_response_from_request_exception(e),
+                    "mailchimp_response": get_response_from_exception(e),
                 },
             )
         return False
@@ -92,12 +97,12 @@ class DMMailChimpClient(object):
             with log_external_request(service='Mailchimp'):
                 self._client.campaigns.actions.send(campaign_id)
             return True
-        except RequestException as e:
+        except (RequestException, MailChimpError) as e:
             self.logger.error(
                 "Mailchimp failed to send campaign id '{0}'".format(campaign_id),
                 extra={
                     "error": str(e),
-                    "mailchimp_response": get_response_from_request_exception(e),
+                    "mailchimp_response": get_response_from_exception(e),
                 }
             )
         return False
@@ -115,10 +120,9 @@ class DMMailChimpClient(object):
                         "status_if_new": "subscribed"
                     }
                 )
-        except RequestException as e:
+        except (RequestException, MailChimpError) as e:
             # Some errors we don't care about but do want to log. Find and log them here.
-            response = get_response_from_request_exception(e)
-
+            response = get_response_from_exception(e)
             if "looks fake or invalid, please enter a real email address." in response.get("detail", ""):
                 # As defined in mailchimp API documentation, this particular error message may arise if a user has
                 # requested mailchimp to never add them to mailchimp lists. In this case, we resort to allowing a
@@ -190,9 +194,9 @@ class DMMailChimpClient(object):
                     subscriber_hash=hashed_email,
                 )
             return True
-        except RequestException as e:
+        except (RequestException, MailChimpError) as e:
             self.logger.error(
                 f"Mailchimp failed to permanently remove user ({hashed_email}) from list ({list_id})",
-                extra={"error": str(e), "mailchimp_response": get_response_from_request_exception(e)},
+                extra={"error": str(e), "mailchimp_response": get_response_from_exception(e)},
             )
         return False
