@@ -115,7 +115,25 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 self.email_address,
                 self.template_id,
                 personalisation=None,
-                reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
+                reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0=',
+                email_reply_to_id=None
+            )
+
+    def test_send_email_passes_correct_reply_to(self, dm_notify_client, notify_send_email):
+        """
+        Test the `send_email` function with a `reply_to_address_id` and confirm it's passed through
+        """
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+            email_mock.return_value = notify_send_email
+
+            dm_notify_client.send_email(self.email_address, self.template_id, reply_to_address_id='123456789')
+
+            email_mock.assert_called_with(
+                self.email_address,
+                self.template_id,
+                personalisation=None,
+                reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0=',
+                email_reply_to_id='123456789'
             )
 
     @pytest.mark.parametrize("redirect_app_config,redirect_constructor,expected_redirected_address", tuple(
@@ -181,6 +199,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     personalisation=None,
                     # NOTE how reference is unaffected by any of this
                     reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0=',
+                    email_reply_to_id=None
                 )
 
     def test_send_email_with_external_reference(self, dm_notify_client, notify_send_email):
@@ -193,7 +212,8 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 self.email_address,
                 self.template_id,
                 personalisation=None,
-                reference='abc'
+                reference='abc',
+                email_reply_to_id=None
             )
 
     def test_personalisation_passed(self, dm_notify_client, notify_send_email):
@@ -212,7 +232,8 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation,
-                reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s='
+                reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s=',
+                email_reply_to_id=None
             )
 
     def test_personalisation_appears_in_reference(self, dm_notify_client, notify_send_email):
@@ -231,7 +252,8 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 self.email_address,
                 self.template_id,
                 personalisation=personalisation,
-                reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s='
+                reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s=',
+                email_reply_to_id=None
             )
 
     def test_cache_not_instantiated_with_allow_resend(self, dm_notify_client):
@@ -314,7 +336,8 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     self.email_address,
                     self.template_id,
                     personalisation=None,
-                    reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0='
+                    reference='niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0=',
+                    email_reply_to_id=None
                 )
 
     def test_behaviour_outside_flask_app_context(self):
@@ -333,6 +356,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     "template_id",
                     personalisation=None,
                     reference=mock.ANY,
+                    email_reply_to_id=None
                 )
 
     def test_replacement_address_allows_resend(self, app):
@@ -360,13 +384,15 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                         "ellpod@bomo.ol",
                         self.template_id,
                         personalisation=None,
-                        reference="oq2Xi6D6ymviEtVK8Gr9I0675Q8KcjfAz3IO9sfX8a0="
+                        reference="oq2Xi6D6ymviEtVK8Gr9I0675Q8KcjfAz3IO9sfX8a0=",
+                        email_reply_to_id=None
                     ),
                     mock.call(
                         "ellpod@bomo.ol",
                         self.template_id,
                         personalisation=None,
-                        reference='Q_0wRa57Pj4BEIWGop9gOLoxhkCsVMsE2UOZeOnZyas='
+                        reference='Q_0wRa57Pj4BEIWGop9gOLoxhkCsVMsE2UOZeOnZyas=',
+                        email_reply_to_id=None
                     ),
                 ]
 
@@ -422,4 +448,5 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     "template-id",
                     personalisation=None,
                     reference=mock.ANY,
+                    email_reply_to_id=None
                 )
