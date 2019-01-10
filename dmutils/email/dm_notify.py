@@ -126,6 +126,7 @@ class DMNotifyClient:
         personalisation=None,
         allow_resend=True,
         reference=None,
+        reply_to_address_id=None
     ):
         """
         Method to send an email using the Notify api.
@@ -135,6 +136,7 @@ class DMNotifyClient:
                                     can either be a key to the `templates` dictionary or a Notify template ID.
         :param personalisation: The template variables, dict
         :param allow_resend: if False instantiate the delivered reference cache and ensure we are not sending duplicates
+        :param reply_to_address_id: String id of reply-to email address. Must be set up in Notify config before use
         :return: response from the api. For more information see https://github.com/alphagov/notifications-python-client
         """
         template_id = self.templates.get(template_name_or_id, template_name_or_id)
@@ -148,6 +150,7 @@ class DMNotifyClient:
                     to_email_address=hash_string(to_email_address),
                     template_name_or_id=template_name_or_id,
                     reference=reference,
+                    reply_to_address_id=reply_to_address_id
                 ),
             )
             return
@@ -169,6 +172,7 @@ class DMNotifyClient:
                     template_id,
                     personalisation=personalisation,
                     reference=reference,
+                    email_reply_to_id=reply_to_address_id
                 )
 
         except HTTPError as e:
