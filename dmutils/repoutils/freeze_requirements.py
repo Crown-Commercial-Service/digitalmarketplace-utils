@@ -60,6 +60,14 @@ if __name__ == '__main__':
     logger.info(f'Creating virtualenv: {virtualenv_name}')
     venv.main(args=(virtualenv_name,))
 
+    logger.info(f'Upgrading pip version in virtualenv: {virtualenv_name}')
+    install_cmd = subprocess.run(
+        [f'{virtualenv_name}/bin/pip', 'install', '--upgrade', 'pip'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True
+    )
+
     logger.info(f'Installing requirements from {target} in virtualenv: {virtualenv_name}')
     install_cmd = subprocess.run(
         [f'{virtualenv_name}/bin/pip', 'install', '-r', target],
