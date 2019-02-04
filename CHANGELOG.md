@@ -2,6 +2,12 @@
 
 Records breaking changes from major version bumps
 
+## 46.0.0
+
+PR [#488](https://github.com/alphagov/digitalmarketplace-utils/pull/488)
+
+Removal of `DMMandrillClient`.
+
 ## 45.0.0
 
 PR [#474](https://github.com/alphagov/digitalmarketplace-utils/pull/474)
