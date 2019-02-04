@@ -61,7 +61,7 @@ def assert_log_entry(modules, message, count=1):
 def assert_external_service_log_entry(service='\w+', description='.+', successful_call=True, extra_modules=None,
                                       count=1):
     """An extension of assert_log_entry specialised to inspect for the standardised message that is logged when
-    making calls to backing services (Notify, Mandrill, S3, etc).
+    making calls to backing services (Notify, S3, etc).
 
     `service` and `description` both take regex patterns for matching values."""
     if successful_call:

@@ -10,7 +10,7 @@ Digital Marketplace utils
 * Digital Marketplace API clients
 * Formatting utilities for Digital Marketplace
 * Digital Marketplace logging for Flask using JSON Logging
-* Utility functions/libraries for Amazon S3, Mailchimp/Mandrill, Cloudwatch
+* Utility functions/libraries for Amazon S3, Mailchimp, Notify, Cloudwatch
 * Helper code for Flask configuration
 * A formed version of Flask Feature Flags
 
