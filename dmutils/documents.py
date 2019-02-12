@@ -293,7 +293,7 @@ def degenerate_document_path_and_return_doc_name(document_path):
     the `document_name` param (i.e. removes all framework slug, supplier id and bucket category
     information)
     """
-    return re.split('/\d+-', document_path)[-1]
+    return re.split(r'/\d+-', document_path)[-1]
 
 
 def sanitise_supplier_name(supplier_name):

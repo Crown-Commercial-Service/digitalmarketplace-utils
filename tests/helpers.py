@@ -58,7 +58,7 @@ def assert_log_entry(modules, message, count=1):
                                                f'`{message}`: expected {count}'
 
 
-def assert_external_service_log_entry(service='\w+', description='.+', successful_call=True, extra_modules=None,
+def assert_external_service_log_entry(service=r'\w+', description='.+', successful_call=True, extra_modules=None,
                                       count=1):
     """An extension of assert_log_entry specialised to inspect for the standardised message that is logged when
     making calls to backing services (Notify, S3, etc).
