@@ -151,6 +151,7 @@ def test_preserve_line_breaks(_autoescape):
 
 
 def test_sub_country_codes():
+    assert sub_country_codes(None) is None
     assert sub_country_codes("") == ""
     assert sub_country_codes("This text contains no country codes") == "This text contains no country codes"
     assert sub_country_codes("country:GB") == "United Kingdom"

@@ -115,8 +115,11 @@ def sub_country_codes(text):
         except KeyError:
             return country_code
 
-    return re.sub(
-        r"country:(?P<country_code>[A-Z][A-Z])",
-        replace_match_with_country_name,
-        text
-    )
+    try:
+        return re.sub(
+            r"country:(?P<country_code>[A-Z][A-Z])",
+            replace_match_with_country_name,
+            text
+        )
+    except TypeError:
+        return text
