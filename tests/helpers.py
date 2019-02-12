@@ -38,7 +38,7 @@ def assert_log_entry(modules, message, count=1):
     further inspections.
 
     Example:
-        with assert_log_entry(message=AnyStringMatching('^My unknown string with a random word \w+$', count=2)) as logs:
+        with assert_log_entry(message=AnyStringMatching('^My unknown string with a random word \w+$', count=2)) as logs: # noqa
             do_something_that_produces_a_log()
 
         assert any('some other log message' in record.msg for record in logs.records)
