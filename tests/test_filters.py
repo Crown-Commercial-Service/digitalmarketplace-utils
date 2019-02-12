@@ -6,7 +6,7 @@ import pytest
 
 from flask import Markup
 
-from dmutils.filters import capitalize_first, format_links, nbsp, smartjoin, preserve_line_breaks
+from dmutils.filters import capitalize_first, format_links, nbsp, smartjoin, preserve_line_breaks, sub_country_codes
 
 
 def test_smartjoin_for_more_than_one_item():
@@ -148,3 +148,25 @@ def test_preserve_line_breaks(_autoescape):
     assert preserve_line_breaks(eval_ctx_mock, '\n') == '\n'
     assert preserve_line_breaks(eval_ctx_mock, 'You’ll be eating 🍕') == 'You’ll be eating 🍕'
     assert preserve_line_breaks(eval_ctx_mock, '\r\n\r\n  \r\n\r\n  \t\v \r\n\r\n') == '<br><br>'
+
+
+def test_sub_country_codes():
+    assert sub_country_codes("") == ""
+    assert sub_country_codes("This text contains no country codes") == "This text contains no country codes"
+    assert sub_country_codes("country:GB") == "United Kingdom"
+    assert sub_country_codes("The country:GB consists of four nations") == "The United Kingdom consists of four nations"
+    assert sub_country_codes("The UK consists of four nations") == "The UK consists of four nations"
+    assert sub_country_codes("country:XY is not a valid country code") == "XY is not a valid country code"
+    assert sub_country_codes("country:XY") == "XY"
+
+    assert sub_country_codes(
+        """
+        There are three Latin American countries that straddle the equator:
+        country:BR, country:EC, and country:CO.
+        """
+    ) == (
+        """
+        There are three Latin American countries that straddle the equator:
+        Brazil, Ecuador, and Colombia.
+        """
+    )

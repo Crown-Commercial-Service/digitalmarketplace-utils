@@ -31,6 +31,7 @@ setup(
          'botocore<1.11.0',
          'contextlib2>=0.4.0',
          'cryptography<2.4,>=2.3',
+         'govuk-country-register==0.2.2',
          'mailchimp3==3.0.6',
          'fleep<1.1,>=1.0.1',
          'notifications-python-client<6.0.0,>=5.0.1',
