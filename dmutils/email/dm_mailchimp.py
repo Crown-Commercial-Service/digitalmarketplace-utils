@@ -34,7 +34,7 @@ class DMMailChimpClient(object):
         mailchimp_username: str,
         mailchimp_api_key: str,
         logger: Logger,
-        retries: int=0,
+        retries: int = 0,
     ):
         self._client = MailChimp(mc_user=mailchimp_username, mc_api=mailchimp_api_key, timeout=25)
         self.logger = logger
@@ -157,7 +157,7 @@ class DMMailChimpClient(object):
                     success = False
         return success
 
-    def get_email_addresses_from_list(self, list_id: str, pagination_size: int=100) -> Iterator[str]:
+    def get_email_addresses_from_list(self, list_id: str, pagination_size: int = 100) -> Iterator[str]:
         offset = 0
         while True:
             member_data = self.timeout_retry(
