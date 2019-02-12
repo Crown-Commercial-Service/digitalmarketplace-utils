@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+
+import govuk_country_register
 import re
 from jinja2 import evalcontextfilter, Markup, escape
 
@@ -96,3 +98,25 @@ def preserve_line_breaks(eval_ctx, value):
         result = Markup(result)
 
     return result
+
+
+def sub_country_codes(text):
+    """Replace country codes with country common name
+
+    :param text:    text containing country codes in the form 'country:AA'
+                    where AA is a two-letter ISO 3166-2 alpha-2 country code
+    :return:        text containing country names, or the country code if not found
+    """
+
+    def replace_match_with_country_name(match):
+        country_code = match["country_code"]
+        try:
+            return govuk_country_register.to_country(country_code)
+        except KeyError:
+            return country_code
+
+    return re.sub(
+        r"country:(?P<country_code>[A-Z][A-Z])",
+        replace_match_with_country_name,
+        text
+    )
