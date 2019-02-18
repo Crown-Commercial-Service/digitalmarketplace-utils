@@ -38,7 +38,7 @@ def assert_log_entry(modules, message, count=1):
     further inspections.
 
     Example:
-        with assert_log_entry(message=AnyStringMatching('^My unknown string with a random word \w+$', count=2)) as logs:
+        with assert_log_entry(message=AnyStringMatching('^My unknown string with a random word \w+$', count=2)) as logs: # noqa
             do_something_that_produces_a_log()
 
         assert any('some other log message' in record.msg for record in logs.records)
@@ -58,7 +58,7 @@ def assert_log_entry(modules, message, count=1):
                                                f'`{message}`: expected {count}'
 
 
-def assert_external_service_log_entry(service='\w+', description='.+', successful_call=True, extra_modules=None,
+def assert_external_service_log_entry(service=r'\w+', description='.+', successful_call=True, extra_modules=None,
                                       count=1):
     """An extension of assert_log_entry specialised to inspect for the standardised message that is logged when
     making calls to backing services (Notify, S3, etc).

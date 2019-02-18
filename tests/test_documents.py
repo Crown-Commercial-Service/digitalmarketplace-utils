@@ -358,7 +358,7 @@ def test_sanitise_supplier_name():
     assert sanitise_supplier_name(u'Kev\'s Butties') == 'Kevs_Butties'
     assert sanitise_supplier_name(u'   Supplier A   ') == 'Supplier_A'
     assert sanitise_supplier_name(u'Kev & Sons. | Ltd') == 'Kev_and_Sons_Ltd'
-    assert sanitise_supplier_name(u'\ / : * ? \' " < > |') == '_'
+    assert sanitise_supplier_name(u'\ / : * ? \' " < > |') == '_' # noqa
     assert sanitise_supplier_name(u'kev@the*agency') == 'kevtheagency'
     assert sanitise_supplier_name(u"Ψ is a silly character") == "is_a_silly_character"
 

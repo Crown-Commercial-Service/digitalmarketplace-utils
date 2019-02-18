@@ -31,5 +31,5 @@ def send_user_account_email(role, email_address, template_name_or_id, extra_toke
             reference='create-user-account-{}'.format(hash_string(email_address))
         )
         session['email_sent_to'] = email_address
-    except EmailError as e:
+    except EmailError:
         abort(503, response="Failed to send user creation email.")

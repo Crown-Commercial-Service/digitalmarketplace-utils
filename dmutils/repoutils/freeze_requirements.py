@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     # Check for case mismatch error
     case_error = re.findall(
-        'Requirement file \[.+?\] contains (.+?), but that package is not installed',
+        r'Requirement file \[.+?\] contains (.+?), but that package is not installed',
         freeze_cmd.stderr
     )
     if case_error:
