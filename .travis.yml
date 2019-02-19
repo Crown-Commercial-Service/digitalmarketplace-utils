@@ -3,9 +3,9 @@ python:
   - "3.6"
 install:
   - export BOTO_CONFIG=/dev/null
-  - pip install -r requirements-dev.txt
+  - make requirements-dev
 script:
-  - ./scripts/run_tests.sh --cov=dmutils --cov-report=term-missing
+  - make test PYTEST_ARGS="--cov=dmutils --cov-report=term-missing"
 after_success:
   - coveralls
 notifications:

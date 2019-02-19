@@ -28,7 +28,6 @@ setup(
          'Flask<1.1,>=1.0.2',
          'Flask-Login>=0.2.11',
          'boto3==1.7.83',
-         'botocore<1.11.0',
          'contextlib2>=0.4.0',
          'cryptography<2.4,>=2.3',
          'govuk-country-register==0.2.2',
