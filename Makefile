@@ -7,7 +7,7 @@ virtualenv:
 
 .PHONY: requirements-dev
 requirements-dev: virtualenv requirements-dev.txt
-	${VIRTUALENV_ROOT}/bin/pip install -r requirements-dev.txt
+	${VIRTUALENV_ROOT}/bin/pip install -Ur requirements-dev.txt
 
 .PHONY: test
 test: show-environment test-flake8 test-python
