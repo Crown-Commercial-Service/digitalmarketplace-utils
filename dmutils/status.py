@@ -1,6 +1,10 @@
 import math
 import os
+import sys
 from flask import jsonify, current_app
+
+
+from dmutils.timing import logged_duration
 
 
 def get_version_label(path):
@@ -39,7 +43,18 @@ class StatusError(Exception):
 def _perform_additional_checks(additional_checks, response_data, error_messages):
     for additional_check in additional_checks:
         try:
-            response_data.update(additional_check())
+            with logged_duration(
+                logger=current_app.logger,
+                message=(
+                    lambda log_context: logged_duration.default_message(log_context) + " ({check_function})"
+                ),
+                condition=(
+                    lambda log_context: logged_duration.default_condition(log_context) or sys.exc_info()[0] is not None
+                ),
+            ) as log_context:
+                log_context["check_function"] = str(additional_check)
+                check_result = additional_check()
+            response_data.update(check_result)
         except StatusError as e:
             error_messages.append(e.message)
 
