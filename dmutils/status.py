@@ -95,6 +95,10 @@ def get_app_status(
         _perform_additional_checks(additional_checks_internal, response_data, error_messages)
 
     if error_messages:
+        current_app.logger.error(
+            "Request completed with error_messages = {error_messages}",
+            extra={"error_messages": error_messages},
+        )
         response_data['status'] = 'error'
         response_data['message'] = error_messages
 
