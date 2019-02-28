@@ -11,7 +11,7 @@ from dmutils.documents import (
     file_is_less_than_5mb,
     file_is_open_document_format,
     validate_documents,
-    upload_document, upload_service_documents,
+    upload_document, upload_service_documents, upload_declaration_documents,
     get_signed_url, get_agreement_document_path, get_document_path,
     sanitise_supplier_name, file_is_pdf, file_is_zip, file_is_image,
     file_is_csv, generate_timestamped_document_upload_path,
@@ -27,6 +27,14 @@ class TestGenerateFilename:
             'pricingDocumentURL', 'test.pdf',
             suffix='123'
         ) == 'slug/documents/2/1-pricing-document-123.pdf'
+
+    @pytest.mark.parametrize('question_name', ('modernSlaveryStatement', 'modernSlaveryStatementOptional'))
+    def test_filename_format_with_null_service_id(self, question_name):
+        assert generate_file_name(
+            'slug', 'documents', 2, None,
+            question_name, 'test.pdf',
+            suffix='123'
+        ) == 'slug/documents/2/modern-slavery-statement-123.pdf'
 
     def test_default_suffix_is_datetime(self):
         with freeze_time('2015-01-02 03:04:05'):
@@ -218,6 +226,24 @@ class TestUploadDocument:
             acl='public-read'
         )
 
+    def test_document_upload_with_null_service_id(self):
+        uploader = mock.Mock()
+        with freeze_time('2015-01-02 04:05:00'):
+            assert upload_document(
+                uploader,
+                'documents',
+                'http://assets',
+                {'supplierId': 5, 'frameworkSlug': 'g-cloud-11'},
+                "modernSlaveryStatement",
+                MockFile(b"*", 'file.pdf')
+            ) == 'http://assets/g-cloud-11/documents/5/modern-slavery-statement-2015-01-02-0405.pdf'
+
+        uploader.save.assert_called_once_with(
+            'g-cloud-11/documents/5/modern-slavery-statement-2015-01-02-0405.pdf',
+            mock.ANY,
+            acl='public-read'
+        )
+
     def test_document_upload_with_invalid_upload_type(self):
         uploader = mock.Mock()
         with pytest.raises(AssertionError):
@@ -307,6 +333,86 @@ class TestUploadServiceDocuments:
 
         assert files is None
         assert 'pricingDocumentURL' in errors
+
+
+class TestUploadDeclarationDocuments:
+    def setup(self):
+        self.section = mock.Mock()
+        self.section.get_question_ids.return_value = ['modernSlaveryStatement']
+        self.uploader = mock.Mock()
+        self.documents_url = 'http://localhost'
+        self.test_pdf = MockFile(open('tests/test_files/test_pdf.pdf', 'rb').read(), 'test_pdf.pdf')
+
+    def test_upload_declaration_documents(self):
+        request_files = {'modernSlaveryStatement': self.test_pdf}
+
+        with freeze_time('2015-10-04 14:36:05'):
+            files, errors = upload_declaration_documents(
+                self.uploader, 'documents', self.documents_url,
+                request_files, self.section,
+                'g-cloud-11', 12345
+            )
+
+        self.uploader.save.assert_called_with(
+            'g-cloud-11/documents/12345/modern-slavery-statement-2015-10-04-1436.pdf', mock.ANY, acl='public-read')
+
+        assert 'modernSlaveryStatement' in files
+        assert len(errors) == 0
+
+    def test_upload_private_declaration_documents(self):
+        request_files = {'modernSlaveryStatement': self.test_pdf}
+
+        with freeze_time('2015-10-04 14:36:05'):
+            files, errors = upload_declaration_documents(
+                self.uploader, 'documents', self.documents_url,
+                request_files, self.section,
+                'g-cloud-11', 12345,
+                public=False)
+
+        self.uploader.save.assert_called_with(
+            'g-cloud-11/documents/12345/modern-slavery-statement-2015-10-04-1436.pdf',
+            mock.ANY,
+            acl='bucket-owner-full-control'
+        )
+
+        assert 'modernSlaveryStatement' in files
+        assert len(errors) == 0
+
+    def test_empty_files_are_filtered(self):
+        request_files = {'modernSlaveryStatement': MockFile(b"", 'q1.pdf')}
+
+        files, errors = upload_declaration_documents(
+            self.uploader, 'documents', self.documents_url,
+            request_files, self.section,
+            'g-cloud-11', 12345
+        )
+
+        assert len(files) == 0
+        assert len(errors) == 0
+
+    def test_only_files_in_section_are_uploaded(self):
+        request_files = {'serviceDefinitionDocumentURL': MockFile(b"*" * 100, 'q1.pdf')}
+
+        files, errors = upload_declaration_documents(
+            self.uploader, 'documents', self.documents_url,
+            request_files, self.section,
+            'g-cloud-11', 12345
+        )
+
+        assert len(files) == 0
+        assert len(errors) == 0
+
+    def test_upload_with_validation_errors(self):
+        request_files = {'modernSlaveryStatement': MockFile(b"*" * 100, 'q1.bad')}
+
+        files, errors = upload_declaration_documents(
+            self.uploader, 'documents', self.documents_url,
+            request_files, self.section,
+            'g-cloud-11', 12345
+        )
+
+        assert files is None
+        assert 'modernSlaveryStatement' in errors
 
 
 @pytest.mark.parametrize('base_url,expected', [

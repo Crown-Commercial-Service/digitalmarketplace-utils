@@ -87,7 +87,7 @@ def upload_document(uploader, upload_type, documents_url, service, field, file_c
         service['frameworkSlug'],
         upload_type,
         service['supplierId'],
-        service['id'],
+        service.get('id'),
         field,
         file_contents.filename
     )
@@ -105,6 +105,17 @@ def upload_document(uploader, upload_type, documents_url, service, field, file_c
     )
 
     return full_url
+
+
+def upload_declaration_documents(
+    uploader, upload_type, documents_url, request_files, section, framework_slug, supplier_id, public=True
+):
+    # Provide a pseudo 'service' without a Service ID, to construct the filename
+    return upload_service_documents(
+        uploader, upload_type, documents_url,
+        {"frameworkSlug": framework_slug, "supplierId": supplier_id},
+        request_files, section, public=public
+    )
 
 
 def upload_service_documents(uploader, upload_type, documents_url, service, request_files, section, public=True):
@@ -232,13 +243,25 @@ def generate_file_name(framework_slug, upload_type, supplier_id, service_id, fie
         'termsAndConditionsDocumentURL': 'terms-and-conditions',
         'sfiaRateDocumentURL': 'sfia-rate-card',
         'pricingDocumentURL': 'pricing-document',
+        'modernSlaveryStatement': 'modern-slavery-statement',
+        'modernSlaveryStatementOptional': 'modern-slavery-statement',
     }
 
-    return '{}/{}/{}/{}-{}-{}{}'.format(
+    if service_id:
+        return '{}/{}/{}/{}-{}-{}{}'.format(
+            framework_slug,
+            upload_type,
+            supplier_id,
+            service_id,
+            ID_TO_FILE_NAME_SUFFIX[field],
+            suffix,
+            get_extension(filename)
+        )
+
+    return '{}/{}/{}/{}-{}{}'.format(
         framework_slug,
         upload_type,
         supplier_id,
-        service_id,
         ID_TO_FILE_NAME_SUFFIX[field],
         suffix,
         get_extension(filename)
