@@ -164,6 +164,18 @@ class TestDecodePasswordReset:
                 else:
                     assert decode_password_reset_token(token, data_api_client) == {'error': 'token_invalid'}
 
+    def test_decode_password_reset_token_user_inactive(
+        self, email_app, data_api_client, password_reset_token
+    ):
+        with freeze_time('2016-01-01T12:00:00.30Z'):
+            token = generate_token(password_reset_token, "Key", 'PassSalt')
+
+        data_api_client.get_user.return_value["users"]["active"] = False
+
+        with freeze_time('2016-01-01T13:00:00.30Z'):
+            with email_app.app_context():
+                assert decode_password_reset_token(token, data_api_client) == {'error': 'user_inactive'}
+
 
 class TestDecodeInvitationToken:
 
