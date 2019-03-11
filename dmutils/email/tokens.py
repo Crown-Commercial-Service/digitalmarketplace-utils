@@ -113,6 +113,10 @@ def decode_password_reset_token(token, data_api_client):
         DATETIME_FORMAT
     )
 
+    if not user["users"]["active"]:
+        current_app.logger.info("Error changing password: target user is not active.")
+        return {'error': 'user_inactive'}
+
     # Check if the token was created before the last password change
     # (allow 1 second leeway for reset tokens generated for the 'Your password was changed' email link)
     if token_timestamp + timedelta(seconds=1) < user_last_changed_password_at:
