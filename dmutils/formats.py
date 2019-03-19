@@ -10,6 +10,7 @@ DISPLAY_SHORT_DATE_FORMAT = '%-d %B'
 DISPLAY_NO_DAY_DATE_FORMAT = '%-d %B %Y'
 DISPLAY_DATE_FORMAT = '%A %-d %B %Y'
 DISPLAY_TIME_FORMAT = '%H:%M:%S'
+DISPLAY_TIME_TZ_FORMAT = '%-I:%M%p %Z'
 DISPLAY_DATETIME_FORMAT = '%A %-d %B %Y at %I:%M%p %Z'
 DISPLAY_SHORTTIME_LONGDATE_FORMAT = '%-I%p %Z, %A %-d %B %Y'
 
@@ -23,6 +24,17 @@ def timeformat(value, default_value=None):
     Currently (Jan 2018) only used in admin app tables.
     """
     return _format_date(value, default_value, DISPLAY_TIME_FORMAT, localize=False)
+
+
+def displaytimeformat(value, default_value=None):
+    """
+    Example value: datetime.strptime("2018-07-25 08:15:00", "%Y-%m-%d %H:%M:%S")
+    Example output: '9:15am BST'
+
+    "timeformat_with_tz" is used for events which are less than a few hours away.
+    Currently (Mar 2019) only used in timeout warnings to users.
+    """
+    return _format_date(value, default_value, DISPLAY_TIME_TZ_FORMAT, localize=True)
 
 
 def shortdateformat(value, default_value=None):

@@ -78,6 +78,7 @@ def init_app(
     application.add_template_filter(formats.dateformat)
     application.add_template_filter(formats.datetimeformat)
     application.add_template_filter(formats.datetodatetimeformat)
+    application.add_template_filter(formats.displaytimeformat)
     application.add_template_filter(formats.shortdateformat)
     application.add_template_filter(formats.timeformat)
     application.add_template_filter(formats.utcdatetimeformat)
