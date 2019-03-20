@@ -30,6 +30,7 @@ setup(
          'boto3<2,>=1.7.83',
          'contextlib2>=0.4.0',
          'cryptography<2.4,>=2.3',
+         'gds-metrics>=0.2.0,<1',
          'govuk-country-register>=0.3.0',
          'mailchimp3==3.0.6',
          'fleep<1.1,>=1.0.1',
