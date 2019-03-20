@@ -2,6 +2,12 @@
 
 Records breaking changes from major version bumps
 
+## 47.0.0
+
+PR [#504](https://github.com/alphagov/digitalmarketplace-utils/pull/504)
+
+Removal of `dmutils.metrics`. This code is no longer used.
+
 ## 46.0.0
 
 PR [#488](https://github.com/alphagov/digitalmarketplace-utils/pull/488)
