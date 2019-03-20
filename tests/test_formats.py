@@ -2,6 +2,7 @@
 from dmutils.formats import (
     dateformat,
     datetimeformat,
+    displaytimeformat,
     iso_datetime_format,
     datetodatetimeformat,
     monthyearformat,
@@ -103,6 +104,24 @@ def test_monthyearformat(dt, default_value, formatted_date):
 ))
 def test_datetimeformat(dt, formatted_datetime):
     assert datetimeformat(dt) == formatted_datetime
+
+
+@pytest.mark.parametrize("dt, formatted_time", (
+    (datetime(2012, 11, 10, 9, 8, 7, 6), "9:08am GMT"),
+    ("2012-11-10T09:08:07.0Z", "9:08am GMT"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6), "10:08am BST"),
+    ("2012-08-10T09:08:07.0Z", "10:08am BST"),
+    (datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc), "10:08am BST"),
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), "10:08am BST"),
+    (datetime(2012, 8, 1, 22, 59, 7, 6, tzinfo=pytz.utc), "11:59pm BST"),
+    # Daylight savings edge case
+    (datetime(2012, 3, 25, 0, 59, 7, 6, tzinfo=pytz.utc), "12:59am GMT"),
+    (datetime(2012, 3, 25, 1, 59, 7, 6, tzinfo=pytz.utc), "2:59am BST"),
+    # Fall back to default if no valid date supplied
+    (None, None),
+))
+def test_displaytimeformat(dt, formatted_time):
+    assert displaytimeformat(dt) == formatted_time
 
 
 @pytest.mark.parametrize("dt, formatted_datetime", (
