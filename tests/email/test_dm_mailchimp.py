@@ -323,6 +323,42 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert res is False
             subscribe_new_email_to_list.assert_has_calls(calls)
 
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_resubscribe_email_to_list(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, mock.MagicMock())
+        with mock.patch.object(dm_mailchimp_client._client.lists.members, 'update', autospec=True) as mc_update:
+            mc_update.return_value = {"response": "data"}
+            with assert_external_service_log_entry():
+                res = dm_mailchimp_client.resubscribe_email_to_list('list_id', 'example@example.com')
+
+            assert res == {"response": "data"}
+            mc_update.assert_called_once_with(
+                'list_id',
+                "foo",
+                {
+                    "email_address": "example@example.com",
+                    "status": "pending"
+                }
+            )
+
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_resubscribe_email_to_list_returns_false_on_error(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(dm_mailchimp_client._client.lists.members, 'update', autospec=True) as mc_update:
+            # The 400 response from MailChimp is actually falsey
+            response = mock.MagicMock(__bool__=False)
+            response.json.return_value = {"detail": "Unexpected error."}
+            mc_update.side_effect = RequestException("error sending", response=response)
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.resubscribe_email_to_list('list_id', 'example@example.com')
+
+            assert res is False
+
+            assert log_catcher.records[1].msg == "Mailchimp failed to resubscribe deleted user (foo) to list (list_id)"
+            assert log_catcher.records[1].error == "error sending"
+            assert log_catcher.records[1].levelname == 'ERROR'
+
     def test_get_email_hash(self):
         assert DMMailChimpClient.get_email_hash("example@example.com") == '23463b99b62a72f26ed677cc556c44e8'
 

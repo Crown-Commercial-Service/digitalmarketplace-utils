@@ -157,6 +157,27 @@ class DMMailChimpClient(object):
                     success = False
         return success
 
+    def resubscribe_email_to_list(self, list_id: str, email_address: str):
+        """Attempt to resubscribe a deleted user (a confirmation email is sent to them)"""
+        hashed_email = self.get_email_hash(email_address)
+        try:
+            with log_external_request(service='Mailchimp'):
+                return self._client.lists.members.update(
+                    list_id,
+                    hashed_email,
+                    {
+                        "email_address": email_address,
+                        "status": "pending"
+                    }
+                )
+        except (RequestException, MailChimpError) as e:
+            response = get_response_from_exception(e)
+            self.logger.error(
+                f"Mailchimp failed to resubscribe deleted user ({hashed_email}) to list ({list_id})",
+                extra={"error": str(e), "mailchimp_response": response}
+            )
+            return False
+
     def get_email_addresses_from_list(self, list_id: str, pagination_size: int = 100) -> Iterator[str]:
         offset = 0
         while True:
