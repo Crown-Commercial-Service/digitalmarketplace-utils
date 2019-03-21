@@ -142,6 +142,16 @@ class DMMailChimpClient(object):
                     extra={"error": str(e), "mailchimp_response": response}
                 )
                 return True
+            elif 'The contact must re-subscribe to get back on the list.' in response.get('detail', ''):
+                # User has previously unsubscribed and must confirm their resubscription via email
+                self.logger.warning(
+                    f"Expected error: Mailchimp cannot automatically subscribe user ({hashed_email}) to list "
+                    "({list_id}) as the user has been permanently deleted and must manually re-subscribe. "
+                    "A confirmation email will be sent.",
+                    extra={"error": str(e), "mailchimp_response": response}
+                )
+                return self.resubscribe_email_to_list(list_id, email_address)
+
             # Otherwise this was an unexpected error and should be logged as such
             self.logger.error(
                 f"Mailchimp failed to add user ({hashed_email}) to list ({list_id})",

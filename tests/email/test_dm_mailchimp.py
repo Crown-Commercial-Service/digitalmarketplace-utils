@@ -277,6 +277,40 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].error == "400 Client Error"
             assert log_catcher.records[1].levelname == 'WARNING'
 
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.resubscribe_email_to_list", return_value=True)
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_calls_resubscribe_method_if_user_previously_unsubscribed_error(self, get_email_hash, resubscribe_email):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True
+        ) as create_or_update:
+
+            response = mock.MagicMock(__bool__=False)
+            expected_error = "user@example.com was permanently deleted and cannot be re-imported. " \
+                             "The contact must re-subscribe to get back on the list."
+
+            response.status_code = 400
+            response.message = (
+                "Bad Request for url: https://us5.api.mailchimp.com/3.0/lists/list_id/members/member_id"
+            )
+            response.json.return_value = {"detail": expected_error}
+            create_or_update.side_effect = HTTPError("400 Client Error", response=response)
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+            assert res is True
+            assert log_catcher.records[1].msg == (
+                "Expected error: Mailchimp cannot automatically subscribe user (foo) to list ({list_id}) as the user "
+                "has been permanently deleted and must manually re-subscribe. A confirmation email will be sent."
+            )
+            assert log_catcher.records[1].error == "400 Client Error"
+            assert log_catcher.records[1].levelname == 'WARNING'
+            assert resubscribe_email.call_args_list == [
+                mock.call('list_id', 'example@example.com')
+            ]
+
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_handles_responses_with_invalid_json(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
