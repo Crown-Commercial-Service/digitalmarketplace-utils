@@ -108,11 +108,18 @@ class DMMailChimpClient(object):
         return False
 
     def subscribe_new_email_to_list(self, list_id: str, email_address: str):
-        """Will subscribe email address to list if they do not already exist in that list else do nothing"""
+        """
+        Will subscribe email address to list if they do not already exist in that list else do nothing.
+        Possible return values:
+        True:          User error, e.g. already on list, fake/invalid email (status 4xx)
+        False:         Unexpected error, e.g. cannot connect to Mailchimp (status 5xx)
+        deleted_user:  Mailchimp can't subscribe a deleted user (status 400)
+        anything else: User successfully subscribed (status 200)
+        """
         hashed_email = self.get_email_hash(email_address)
         try:
             with log_external_request(service='Mailchimp'):
-                return self._client.lists.members.create_or_update(
+                self._client.lists.members.create_or_update(
                     list_id,
                     hashed_email,
                     {
@@ -120,6 +127,7 @@ class DMMailChimpClient(object):
                         "status_if_new": "subscribed"
                     }
                 )
+                return {"status": "success", "error_type": None, "status_code": 200}
         except (RequestException, MailChimpError) as e:
             # Some errors we don't care about but do want to log. Find and log them here.
             response = get_response_from_exception(e)
@@ -133,7 +141,7 @@ class DMMailChimpClient(object):
                     "API error: The email address looks fake or invalid, please enter a real email address.",
                     extra={"error": str(e), "mailchimp_response": response}
                 )
-                return True
+                return {"status": "error", "error_type": "invalid_email", "status_code": 400}
             elif 'is already a list member.' in response.get("detail", ""):
                 # If a user is already a list member we receive a 400 error as documented in the tests for this error
                 self.logger.warning(
@@ -141,13 +149,22 @@ class DMMailChimpClient(object):
                     "API error: This email address is already subscribed.",
                     extra={"error": str(e), "mailchimp_response": response}
                 )
-                return True
+                return {"status": "error", "error_type": "already_subscribed", "status_code": 400}
+            elif 'The contact must re-subscribe to get back on the list.' in response.get('detail', ''):
+                # User has been deleted and cannot be programmatically resubscribed
+                self.logger.warning(
+                    f"Expected error: Mailchimp cannot automatically subscribe user ({hashed_email}) to list "
+                    f"({list_id}) as the user has been permanently deleted.",
+                    extra={"error": str(e), "mailchimp_response": response}
+                )
+                return {"status": "error", "error_type": "deleted_user", "status_code": 400}
+
             # Otherwise this was an unexpected error and should be logged as such
             self.logger.error(
                 f"Mailchimp failed to add user ({hashed_email}) to list ({list_id})",
                 extra={"error": str(e), "mailchimp_response": response}
             )
-            return False
+            return {"status": "error", "error_type": "unexpected_error", "status_code": 500}
 
     def subscribe_new_emails_to_list(self, list_id: str, email_addresses: str) -> bool:
         success = True
