@@ -156,7 +156,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry():
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res == {"response": "data"}
+            assert res == {"status": "success", 'error_type': None, 'status_code': 200}
             create_or_update.assert_called_once_with(
                 'list_id',
                 "foo",
@@ -179,7 +179,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res is False
+            assert res == {"status": "error", "error_type": "unexpected_error", "status_code": 500}
 
             assert log_catcher.records[1].msg == "Mailchimp failed to add user (foo) to list (list_id)"
             assert log_catcher.records[1].error == "error sending"
@@ -195,7 +195,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res is False
+            assert res == {"status": "error", "error_type": "unexpected_error", "status_code": 500}
 
             assert log_catcher.records[1].msg == "Mailchimp failed to add user (foo) to list (list_id)"
             assert log_catcher.records[1].error == "{'request': 'failed', 'status': 500}"
@@ -213,7 +213,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res is True
+            assert res == {"status": "error", "error_type": "invalid_email", "status_code": 400}
             assert log_catcher.records[1].msg == (
                 "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
                 "API error: The email address looks fake or invalid, please enter a real email address."
@@ -237,7 +237,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res is True
+            assert res == {"status": "error", "error_type": "invalid_email", "status_code": 400}
             assert log_catcher.records[1].msg == (
                 "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
                 "API error: The email address looks fake or invalid, please enter a real email address."
@@ -269,10 +269,40 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res is True
+            assert res == {"status": "error", "error_type": "already_subscribed", "status_code": 400}
             assert log_catcher.records[1].msg == (
                 "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
                 "API error: This email address is already subscribed."
+            )
+            assert log_catcher.records[1].error == "400 Client Error"
+            assert log_catcher.records[1].levelname == 'WARNING'
+
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_returns_error_string_if_user_previously_unsubscribed_error(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True
+        ) as create_or_update:
+
+            response = mock.MagicMock(__bool__=False)
+            expected_error = "user@example.com was permanently deleted and cannot be re-imported. " \
+                             "The contact must re-subscribe to get back on the list."
+
+            response.status_code = 400
+            response.message = (
+                "Bad Request for url: https://us5.api.mailchimp.com/3.0/lists/list_id/members/member_id"
+            )
+            response.json.return_value = {"detail": expected_error}
+            create_or_update.side_effect = HTTPError("400 Client Error", response=response)
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+            assert res == {"status": "error", "error_type": "deleted_user", "status_code": 400}
+            assert log_catcher.records[1].msg == (
+                "Expected error: Mailchimp cannot automatically subscribe user (foo) to list (list_id) as the user "
+                "has been permanently deleted."
             )
             assert log_catcher.records[1].error == "400 Client Error"
             assert log_catcher.records[1].levelname == 'WARNING'
@@ -289,7 +319,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res is False
+            assert res == {'error_type': 'unexpected_error', 'status': 'error', 'status_code': 500}
             assert log_catcher.records[1].msg == 'Mailchimp failed to add user (foo) to list (list_id)'
             assert log_catcher.records[1].error == "error sending"
             assert log_catcher.records[1].levelname == 'ERROR'
@@ -372,7 +402,8 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
             create_or_update.side_effect = ConnectTimeout()
 
-            assert dm_mailchimp_client.subscribe_new_email_to_list('a_list_id', 'example@example.com') is False
+            assert dm_mailchimp_client.subscribe_new_email_to_list('a_list_id', 'example@example.com') == \
+                {"status": "error", "error_type": "unexpected_error", "status_code": 500}
             assert create_or_update.called is True
 
     def test_default_timeout_retry_performs_no_retries(self):

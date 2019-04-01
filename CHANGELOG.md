@@ -2,6 +2,22 @@
 
 Records breaking changes from major version bumps
 
+## 48.0.0
+
+PR [#504](https://github.com/alphagov/digitalmarketplace-utils/pull/509)
+
+`DMMailChimpClient.subscribe_new_email_to_list` now returns an error payload instead of a boolean.
+
+Example responses:
+
+```
+{"status": "success", "status_code": 200, "error_type": None}
+{"status": "error", "status_code": 400, "error_type": "invalid_email"}
+{"status": "error", "status_code": 400, "error_type": "already_subscribed"}
+{"status": "error", "status_code": 400, "error_type": "deleted_user"}
+{"status": "error", "status_code": 500, "error_type": "unexpected_error"}
+```
+
 ## 47.0.0
 
 PR [#504](https://github.com/alphagov/digitalmarketplace-utils/pull/504)
