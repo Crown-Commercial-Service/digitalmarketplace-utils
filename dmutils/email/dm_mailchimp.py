@@ -119,7 +119,7 @@ class DMMailChimpClient(object):
         hashed_email = self.get_email_hash(email_address)
         try:
             with log_external_request(service='Mailchimp'):
-                self._client.lists.members.create_or_update(
+                resp = self._client.lists.members.create_or_update(
                     list_id,
                     hashed_email,
                     {
@@ -127,7 +127,8 @@ class DMMailChimpClient(object):
                         "status_if_new": "subscribed"
                     }
                 )
-                return {"status": "success", "error_type": None, "status_code": 200}
+                resp.update({"status": "success", "error_type": None, "status_code": 200})
+                return resp
         except (RequestException, MailChimpError) as e:
             # Some errors we don't care about but do want to log. Find and log them here.
             response = get_response_from_exception(e)

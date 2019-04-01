@@ -156,7 +156,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             with assert_external_service_log_entry():
                 res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
 
-            assert res == {"status": "success", 'error_type': None, 'status_code': 200}
+            assert res == {"status": "success", 'error_type': None, 'status_code': 200, "response": "data"}
             create_or_update.assert_called_once_with(
                 'list_id',
                 "foo",
