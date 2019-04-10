@@ -159,6 +159,14 @@ class DMMailChimpClient(object):
                     extra={"error": str(e), "mailchimp_response": response}
                 )
                 return {"status": "error", "error_type": "deleted_user", "status_code": 400}
+            elif response.get('status') == 400:
+                # Some other validation error
+                self.logger.warning(
+                    f"Expected error: Mailchimp failed to add user ({hashed_email}) to list ({list_id}). "
+                    "API error: The email address was invalid.",
+                    extra={"error": str(e), "mailchimp_response": response}
+                )
+                return {"status": "error", "error_type": "invalid_email", "status_code": 400}
 
             # Otherwise this was an unexpected error and should be logged as such
             self.logger.error(

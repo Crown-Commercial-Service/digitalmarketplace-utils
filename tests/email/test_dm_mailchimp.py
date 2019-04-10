@@ -308,6 +308,33 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_returns_error_payload_if_email_fails_validation(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True
+        ) as create_or_update:
+            create_or_update.side_effect = MailChimpError(
+                {
+                    "detail": "Please provide a valid email address.",
+                    'title': 'Invalid Resource',
+                    'status': 400
+                }
+            )
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+            assert res == {"status": "error", "error_type": "invalid_email", "status_code": 400}
+            assert log_catcher.records[1].msg == (
+                "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
+                "API error: The email address was invalid."
+            )
+            assert log_catcher.records[1].error == "{'detail': 'Please provide a valid email address.', " \
+                "'title': 'Invalid Resource', 'status': 400}"
+            assert log_catcher.records[1].levelname == 'WARNING'
+
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_handles_responses_with_invalid_json(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
