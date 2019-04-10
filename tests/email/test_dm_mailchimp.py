@@ -219,7 +219,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 "API error: The email address looks fake or invalid, please enter a real email address."
             )
             assert log_catcher.records[1].error == "error sending"
-            assert log_catcher.records[1].levelname == 'ERROR'
+            assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_create_or_update_returns_error_payload_for_expected_mailchimp_error(self, get_email_hash):
@@ -230,7 +230,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 {
                     "detail": "foo looks fake or invalid, please enter a real email address.",
                     'request': 'failed',
-                    'status': 500
+                    'status': 400
                 }
             )
 
@@ -244,9 +244,9 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             )
             assert log_catcher.records[1].error == (
                 "{'detail': 'foo looks fake or invalid, please enter a real email address.', "
-                "'request': 'failed', 'status': 500}"
+                "'request': 'failed', 'status': 400}"
             )
-            assert log_catcher.records[1].levelname == 'ERROR'
+            assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
     def test_returns_error_payload_if_expected_already_subscribed_email_error(self, get_email_hash):
