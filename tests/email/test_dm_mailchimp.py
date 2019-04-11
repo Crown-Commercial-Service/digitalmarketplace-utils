@@ -186,7 +186,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].levelname == 'ERROR'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_log_mailchimp_error_error_message_if_error_subscribing_email_to_list(self, get_email_hash):
+    def test_log_mailchimp_error_unexpected_error_payload_if_error_subscribing_email_to_list(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
@@ -202,7 +202,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].levelname == 'ERROR'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_create_or_update_returns_true_for_expected_request_exception(self, get_email_hash):
+    def test_create_or_update_returns_error_payload_for_expected_request_exception(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
@@ -219,10 +219,10 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 "API error: The email address looks fake or invalid, please enter a real email address."
             )
             assert log_catcher.records[1].error == "error sending"
-            assert log_catcher.records[1].levelname == 'ERROR'
+            assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_create_or_update_returns_true_for_expected_mailchimp_error(self, get_email_hash):
+    def test_create_or_update_returns_error_payload_for_expected_mailchimp_error(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
         with mock.patch.object(
                 dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True) as create_or_update:
@@ -230,7 +230,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 {
                     "detail": "foo looks fake or invalid, please enter a real email address.",
                     'request': 'failed',
-                    'status': 500
+                    'status': 400
                 }
             )
 
@@ -244,12 +244,12 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             )
             assert log_catcher.records[1].error == (
                 "{'detail': 'foo looks fake or invalid, please enter a real email address.', "
-                "'request': 'failed', 'status': 500}"
+                "'request': 'failed', 'status': 400}"
             )
-            assert log_catcher.records[1].levelname == 'ERROR'
+            assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_returns_true_if_expected_already_subscribed_email_error(self, get_email_hash):
+    def test_returns_error_payload_if_expected_already_subscribed_email_error(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
 
         with mock.patch.object(
@@ -278,7 +278,7 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
             assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
-    def test_returns_error_string_if_user_previously_unsubscribed_error(self, get_email_hash):
+    def test_returns_error_payload_if_user_previously_unsubscribed_error(self, get_email_hash):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
 
         with mock.patch.object(
@@ -305,6 +305,33 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 "has been permanently deleted."
             )
             assert log_catcher.records[1].error == "400 Client Error"
+            assert log_catcher.records[1].levelname == 'WARNING'
+
+    @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
+    def test_returns_error_payload_if_email_fails_validation(self, get_email_hash):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members, 'create_or_update', autospec=True
+        ) as create_or_update:
+            create_or_update.side_effect = MailChimpError(
+                {
+                    "detail": "Please provide a valid email address.",
+                    'title': 'Invalid Resource',
+                    'status': 400
+                }
+            )
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp']) as log_catcher:
+                res = dm_mailchimp_client.subscribe_new_email_to_list('list_id', 'example@example.com')
+
+            assert res == {"status": "error", "error_type": "invalid_email", "status_code": 400}
+            assert log_catcher.records[1].msg == (
+                "Expected error: Mailchimp failed to add user (foo) to list (list_id). "
+                "API error: The email address was invalid."
+            )
+            assert log_catcher.records[1].error == "{'detail': 'Please provide a valid email address.', " \
+                "'title': 'Invalid Resource', 'status': 400}"
             assert log_catcher.records[1].levelname == 'WARNING'
 
     @mock.patch("dmutils.email.dm_mailchimp.DMMailChimpClient.get_email_hash", return_value="foo")
