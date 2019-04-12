@@ -9,7 +9,7 @@ import re
 # in decreasing precedence order.
 # Space (" ") should almost always be at the end of this list, otherwise
 # it can cause weird issues when there are separators surrounded by space.
-EMAIL_ADDRESS_SEPARATORS = [";", ",", "/", " "]
+EMAIL_ADDRESS_SEPARATORS = [";", ",", "/", "&", " "]
 
 # Largely copied from https://github.com/alphagov/notifications-utils/blob/\
 #   67889886ec1476136d12e7f32787a7dbd0574cc2/notifications_utils/recipients.py
@@ -84,17 +84,19 @@ def get_email_addresses(string, separators=EMAIL_ADDRESS_SEPARATORS):
     @param separators   list of characters that could be
                         used to separate email addresses
 
-    >>> from dmutils.email.helpers import email_addresses
-    >>> email_addresses("bob@blob.com ")
+    >>> from dmutils.email.helpers import get_email_addresses
+    >>> get_email_addresses("bob@blob.com ")
     ['bob@blob.com']
-    >>> email_addresses("bob@blob.com; bob.blob@job.com")
+    >>> get_email_addresses("bob@blob.com; bob.blob@job.com")
     ['bob@blob.com', 'bob.blob@job.com']
-    >>> email_addresses("bob@blob.com /  bob.blob@job.com")
+    >>> get_email_addresses("bob@blob.com /  bob.blob@job.com")
     ['bob@blob.com', 'bob.blob@job.com']
-    >>> email_addresses("bob@invalid;bob.blob@job.com")
+    >>> get_email_addresses("bob@invalid;bob.blob@job.com")
     ['bob@invalid', 'bob.blob@job.com']
-    >>> email_addresses("bob@blob;bob.blob@job.com;bob@blob..invalid")
+    >>> get_email_addresses("bob@blob;bob.blob@job.com;bob@blob..invalid")
     ['bob@blob', 'bob.blob@job.com', 'bob@blob..invalid']
+    >>> get_email_addresses("bob@blob & bob.blob@job.com")
+    ['bob@blob', 'bob.blob@job.com']
     """
 
     addresses = [string]
