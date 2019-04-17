@@ -207,8 +207,8 @@ def test_render_error_page_passes_error_message_as_context(render_template, app_
         ]
 
 
-def test_api_json_error_handler(app):
-    with app.test_request_context('/'):
+def test_api_json_error_handler(app_with_mocked_logger):
+    with app_with_mocked_logger.test_request_context('/'):
         try:
             raise ImATeapot("Simply teapot all over me!")
         except ImATeapot as e:
@@ -217,10 +217,11 @@ def test_api_json_error_handler(app):
                 "error": "Simply teapot all over me!",
             }
             assert response.status_code == 418
+            assert app_with_mocked_logger.logger.warning.mock_calls == []
 
 
-def test_api_validation_error_handler(app):
-    with app.test_request_context('/'):
+def test_api_validation_error_handler(app_with_mocked_logger):
+    with app_with_mocked_logger.test_request_context('/'):
         try:
             raise ValidationError("Hippogriff")
         except ValidationError as e:
@@ -229,10 +230,11 @@ def test_api_validation_error_handler(app):
                 "error": "Hippogriff",
             }
             assert response.status_code == 400
+            assert app_with_mocked_logger.logger.warning.mock_calls == []
 
 
-def test_api_unauth(app):
-    with app.test_request_context('/'):
+def test_api_unauth(app_with_mocked_logger):
+    with app_with_mocked_logger.test_request_context('/'):
         try:
             raise UnauthorizedWWWAuthenticate(www_authenticate="lemur", description="Bogeyman's trick")
         except UnauthorizedWWWAuthenticate as e:
@@ -242,3 +244,19 @@ def test_api_unauth(app):
             }
             assert response.status_code == 401
             assert response.headers["www-authenticate"] == "lemur"
+            assert app_with_mocked_logger.logger.warning.mock_calls == []
+
+
+def test_api_internal_server_error(app_with_mocked_logger):
+    with app_with_mocked_logger.test_request_context('/'):
+        try:
+            raise InternalServerError(description="Bip!")
+        except InternalServerError as e:
+            response = json_error_handler(e)
+            assert json.loads(response.get_data()) == {
+                "error": "Bip!",
+            }
+            assert response.status_code == 500
+            assert app_with_mocked_logger.logger.warning.mock_calls == [
+                mock.call('Generating error response', exc_info=True, extra={'e': e})
+            ]
