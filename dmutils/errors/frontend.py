@@ -39,6 +39,8 @@ def render_error_page(e=None, status_code=None, error_message=None):
     :return: Flask render_template response. The error templates must be present in the app (either
     copied from the FE Toolkit, or a custom template for that app).
     """
+    orig_e, orig_status_code, orig_error_message = e, status_code, error_message
+
     if not (e or status_code):
         # Something's gone wrong! To save going in an endless error loop let's just render a 500
         status_code = 500
@@ -63,6 +65,18 @@ def render_error_page(e=None, status_code=None, error_message=None):
 
     if status_code not in template_map:
         status_code = 500
+
+    if status_code > 499:
+        # this is a last ditch effort at outputting a traceback hopefully explaining why we're returning a 5xx.
+        # unfortunately flask can't always be trusted to do this on its own. this ends up being a suitable place to
+        # do it because these handlers are called by flask while a view-generated exception is still being serviced.
+        # we're still emitting a log message even if there's no current exception because the fact that there is no
+        # exception *itself* tells us something about why we ended up at a 5xx.
+        current_app.logger.warning("Rendering error page", exc_info=True, extra={
+            "e": orig_e,
+            "status_code": orig_status_code,
+            "error_message": orig_error_message,
+        })
 
     try:
         # Try app error templates first
