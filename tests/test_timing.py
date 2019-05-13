@@ -166,7 +166,7 @@ def _expect_log(
 ):
     """return whether to expect a log line to be output or not"""
     return (
-        (condition is timing.logged_duration.default_condition and is_sampled)
+        (condition is timing.logged_duration.default_condition and (is_sampled or sleep_time > 0.5))
         or (condition is _duration_real_gt_075 and sleep_time >= 0.08)
         or (condition is _default_and_no_exception and is_sampled and raise_exception is None)
         or (condition is timing.exceeds_slow_external_call_threshold

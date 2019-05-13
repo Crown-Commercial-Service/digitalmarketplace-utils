@@ -9,6 +9,7 @@ from flask.ctx import has_request_context
 
 
 SLOW_EXTERNAL_CALL_THRESHOLD = 0.25
+SLOW_DEFAULT_CALL_THRESHOLD = 0.5
 
 
 def _logged_duration_default_message(log_context):
@@ -18,7 +19,9 @@ def _logged_duration_default_message(log_context):
 
 
 def _logged_duration_default_condition(log_context):
-    return has_request_context() and getattr(request, "is_sampled", False)
+    return has_request_context() and (
+        getattr(request, "is_sampled", False) or log_context.get("duration_real", 0) > SLOW_DEFAULT_CALL_THRESHOLD
+    )
 
 
 def _logged_duration_default_log_func(logger, message, log_level, log_context):
