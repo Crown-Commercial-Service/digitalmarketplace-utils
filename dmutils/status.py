@@ -83,7 +83,13 @@ def get_app_status(
     error_messages = []
     response_data = {'status': 'ok'}
 
-    disk_status = get_disk_space_status()
+    with logged_duration(
+        logger=current_app.logger,
+        message=(
+            lambda log_context: logged_duration.default_message(log_context) + " (get_disk_space_status)"
+        ),
+    ):
+        disk_status = get_disk_space_status()
     response_data['disk'] = f'{disk_status[0]} ({disk_status[1]}% free)'
     if disk_status[0].lower() != 'ok':
         error_messages.append(f'Disk space low: {disk_status[1]}% remaining.')
