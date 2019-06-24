@@ -6,10 +6,13 @@ from dateutil.parser import parse as parse_time
 import logging
 import mimetypes
 import os
+import urllib.parse as urlparse
 
 # a bit of a lie here - retains compatibility with consumers that were importing boto2's S3ResponseError from here. this
 # is the exception boto3 raises in (mostly) the same situations.
 from botocore.exceptions import ClientError as S3ResponseError
+
+from flask import has_app_context, current_app
 
 from .formats import DATETIME_FORMAT
 from .timing import logged_duration_for_external_request as log_external_request
@@ -137,6 +140,25 @@ class S3(object):
                 },
                 ExpiresIn=expires_in,
             )
+
+    def get_full_signed_url(self, *args, assets_url=None, **kwargs):
+        """ Create a signed S3 document url, replacing its base url with `assets_url` if provided,
+            else will attempt to use DM_ASSETS_URL flask config parameter.
+
+            Otherwise arguments are the same as for `get_signed_url`
+        """
+        url = self.get_signed_url(*args, **kwargs)
+        if url is None:
+            return None
+
+        if assets_url is None:
+            if not has_app_context():
+                raise TypeError("assets_url argument must be provided if no app context is available")
+            assets_url = current_app.config["DM_ASSETS_URL"]
+
+        parsed_url = urlparse.urlparse(url)
+        parsed_assets_url = urlparse.urlparse(assets_url)
+        return parsed_url._replace(netloc=parsed_assets_url.netloc, scheme=parsed_assets_url.scheme).geturl()
 
     def _get_key(self, path):
         path = self._normalize_path(path)
