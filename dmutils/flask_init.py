@@ -4,6 +4,7 @@ from types import MappingProxyType
 
 from dmutils import config, logging, proxy_fix, request_id, formats, filters
 from dmutils.errors import api as api_errors, frontend as fe_errors
+from dmutils.urls import SafePurePathConverter
 from flask_script import Manager, Server
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import default_exceptions
@@ -61,6 +62,9 @@ def init_app(
         login_manager.init_app(application)
     if search_api_client:
         search_api_client.init_app(application)
+
+    # allow us to use <safepurepath:...> components in route patterns
+    application.url_map.converters["safepurepath"] = SafePurePathConverter
 
     @application.after_request
     def add_header(response):
