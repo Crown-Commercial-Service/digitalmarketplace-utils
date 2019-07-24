@@ -81,7 +81,8 @@ def upload_document(uploader, upload_type, documents_url, service, field, file_c
              failed
 
     """
-    assert upload_type in ['documents', 'submissions']
+    if upload_type not in ('documents', 'submissions',):
+        raise ValueError(f"Unexpected upload_type {upload_type!r}")
 
     file_path = generate_file_name(
         service['frameworkSlug'],
@@ -119,7 +120,8 @@ def upload_declaration_documents(
 
 
 def upload_service_documents(uploader, upload_type, documents_url, service, request_files, section, public=True):
-    assert upload_type in ['documents', 'submissions']
+    if upload_type not in ('documents', 'submissions',):
+        raise ValueError(f"Unexpected upload_type {upload_type!r}")
 
     files = {field: request_files[field] for field in section.get_question_ids(type="upload")
              if field in request_files}

@@ -246,7 +246,7 @@ class TestUploadDocument:
 
     def test_document_upload_with_invalid_upload_type(self):
         uploader = mock.Mock()
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             assert upload_document(
                 uploader,
                 'invalid',
