@@ -75,10 +75,12 @@ class RequestIdRequestMixin(object):
             return None
 
     def _get_new_trace_id(self):
-        return hex(self._traceid_random.randrange(1 << 128))[2:]
+        bitlen = 128
+        return hex(self._traceid_random.randrange(1 << bitlen))[2:].rjust(bitlen // 4, "0")
 
     def _get_new_span_id(self):
-        return hex(self._spanid_random.randrange(1 << 64))[2:]
+        bitlen = 64
+        return hex(self._spanid_random.randrange(1 << bitlen))[2:].rjust(bitlen // 4, "0")
 
     def get_onwards_request_headers(self):
         """

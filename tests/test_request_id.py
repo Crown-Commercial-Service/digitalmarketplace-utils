@@ -548,6 +548,36 @@ def test_request_header(
     assert spanid_random_mock.randrange.called is True
 
 
+@mock.patch.object(RequestIdRequestMixin, "_traceid_random", autospec=True)
+@mock.patch.object(RequestIdRequestMixin, "_spanid_random", autospec=True)
+def test_request_header_zero_padded(
+    spanid_random_mock,
+    traceid_random_mock,
+    app,
+):
+    request_id_init_app(app)
+
+    traceid_random_mock.randrange.side_effect = assert_args_and_return(0xbeef, 1 << 128)
+    spanid_random_mock.randrange.side_effect = assert_args_and_return(0xa, 1 << 64)
+
+    with app.test_request_context():
+        assert request.request_id == request.trace_id == "0000000000000000000000000000beef"
+        assert request.span_id is None
+        assert request.get_onwards_request_headers() == {
+            "DM-Request-ID": "0000000000000000000000000000beef",
+            "X-B3-TraceId": "0000000000000000000000000000beef",
+            "X-B3-SpanId": "000000000000000a",
+        }
+        assert request.get_extra_log_context() == AnySupersetOf({
+            'parent_span_id': None,
+            'span_id': None,
+            'trace_id': '0000000000000000000000000000beef',
+        })
+
+    assert traceid_random_mock.randrange.called is True
+    assert spanid_random_mock.randrange.called is True
+
+
 @pytest.mark.parametrize(
     (
         "extra_config",
