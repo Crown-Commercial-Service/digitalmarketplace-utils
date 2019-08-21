@@ -7,13 +7,13 @@ from logging import Logger, StreamHandler
 
 from boto.ec2.cloudwatch import CloudWatchConnection
 
-from dmutils.logging import init_app
+from dmutils.logging import init_app as logging_init_app
 
 
 def create_app(request):
     app = Flask(__name__)
     app.root_path = request.fspath.dirname
-    init_app(app)
+    logging_init_app(app)
     app.config['SECRET_KEY'] = 'secret_key'
     return app
 
