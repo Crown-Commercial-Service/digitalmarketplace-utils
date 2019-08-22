@@ -7,6 +7,7 @@ from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import (
     BadRequest, Forbidden, NotFound, Gone, InternalServerError, ServiceUnavailable, ImATeapot
 )
+from werkzeug.http import dump_cookie
 from jinja2.exceptions import TemplateNotFound
 
 from dmutils.authentication import UnauthorizedWWWAuthenticate
@@ -15,11 +16,22 @@ from dmutils.errors.api import json_error_handler, validation_error_handler, Val
 from dmutils.external import external as external_blueprint
 
 
+@pytest.mark.parametrize('cookie_probe_expect_present', (True, False))
 @pytest.mark.parametrize('user_session', (True, False))
 @mock.patch('dmutils.errors.frontend.current_app')
-def test_csrf_handler_redirects_to_login(current_app, user_session, app):
+def test_csrf_handler_redirects_to_login(current_app, user_session, app, cookie_probe_expect_present):
+    current_app.config = {
+        "DM_COOKIE_PROBE_COOKIE_NAME": "foo",
+        "DM_COOKIE_PROBE_COOKIE_VALUE": "bar",
+        "DM_COOKIE_PROBE_EXPECT_PRESENT": cookie_probe_expect_present,
+    }
 
-    with app.test_request_context('/'):
+    with app.test_request_context('/', environ_base={
+        "HTTP_COOKIE": dump_cookie(
+            current_app.config["DM_COOKIE_PROBE_COOKIE_NAME"],
+            current_app.config["DM_COOKIE_PROBE_COOKIE_VALUE"],
+        ),
+    }):
         app.config['WTF_CSRF_ENABLED'] = True
         app.register_blueprint(external_blueprint)
 
@@ -40,6 +52,39 @@ def test_csrf_handler_redirects_to_login(current_app, user_session, app):
             assert current_app.logger.info.call_args_list == [
                 mock.call('csrf.session_expired: Redirecting user to log in page')
             ]
+
+
+@pytest.mark.parametrize('cookie_kv', (
+    ("boo", "par",),
+    ("foo", "blah",),
+    None,
+))
+@mock.patch('dmutils.cookie_probe.current_app')
+@mock.patch('dmutils.errors.frontend.render_template')
+def test_cookie_probe_incorrect(render_template, current_app, app, cookie_kv):
+    current_app.config = {
+        "DM_COOKIE_PROBE_COOKIE_NAME": "foo",
+        "DM_COOKIE_PROBE_COOKIE_VALUE": "bar",
+        "DM_COOKIE_PROBE_EXPECT_PRESENT": True,
+    }
+    render_template.return_value = "<html>Oh dear</html>"
+
+    with app.test_request_context('/', environ_base=cookie_kv and {
+        "HTTP_COOKIE": dump_cookie(*cookie_kv),
+    }):
+        app.config['WTF_CSRF_ENABLED'] = True
+        app.register_blueprint(external_blueprint)
+
+        response, status_code = csrf_handler(CSRFError())
+
+        assert response == render_template.return_value
+        assert status_code == 400
+        assert render_template.mock_calls == [
+            mock.call(
+                "errors/400.html",
+                error_message="This feature requires cookies to be enabled for correct operation",
+            )
+        ]
 
 
 def test_unauthorised_redirects_to_login(app):

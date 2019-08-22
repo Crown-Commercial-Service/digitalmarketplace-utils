@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from flask import current_app, request
 
 
 DEFAULT_DM_COOKIE_PROBE_COOKIE_NAME = "dm_cookie_probe"
@@ -27,3 +28,23 @@ def init_app(app):
             max_age=app.config["DM_COOKIE_PROBE_COOKIE_MAX_AGE"],
         )
         return response
+
+
+def expected_probe_cookie_missing() -> bool:
+    # DM_COOKIE_PROBE_EXPECT_PRESENT controls whether we expect the probe cookie to be present at all - allowing the
+    # check to be rolled out and enabled gracefully among multiple frontends.
+    is_missing = current_app.config.get(
+        "DM_COOKIE_PROBE_EXPECT_PRESENT",
+        DEFAULT_DM_COOKIE_PROBE_EXPECT_PRESENT
+    ) and (
+        request.cookies.get(
+            current_app.config.get("DM_COOKIE_PROBE_COOKIE_NAME", DEFAULT_DM_COOKIE_PROBE_COOKIE_NAME)
+        ) != current_app.config.get("DM_COOKIE_PROBE_COOKIE_VALUE", DEFAULT_DM_COOKIE_PROBE_COOKIE_VALUE)
+    )
+
+    if is_missing:
+        current_app.logger.info(
+            "cookie_probe.failed: cookies probably not working for this user"
+        )
+
+    return bool(is_missing)
