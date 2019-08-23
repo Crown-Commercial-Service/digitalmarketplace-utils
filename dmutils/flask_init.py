@@ -2,7 +2,7 @@ from collections import OrderedDict
 import os
 from types import MappingProxyType
 
-from dmutils import config, logging, proxy_fix, request_id, formats, filters
+from dmutils import config, logging, proxy_fix, request_id, formats, filters, cookie_probe
 from dmutils.errors import api as api_errors, frontend as fe_errors
 from dmutils.urls import SafePurePathConverter
 from flask_script import Manager, Server
@@ -51,6 +51,7 @@ def init_app(
     logging.init_app(application)
     proxy_fix.init_app(application)
     request_id.init_app(application)
+    cookie_probe.init_app(application)
 
     if bootstrap:
         bootstrap.init_app(application)

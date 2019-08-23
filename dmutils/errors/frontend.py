@@ -1,6 +1,8 @@
 from flask import redirect, render_template, url_for, flash, session, request, current_app
 from jinja2.exceptions import TemplateNotFound
 
+from dmutils import cookie_probe
+
 
 def csrf_handler(csrf_error):
     """
@@ -10,7 +12,14 @@ def csrf_handler(csrf_error):
     :param logger: app logger instance
     :return: redirect to login with flashed error message
     """
-    if 'user_id' not in session:
+    # The "cookie probe" check is performed here because the first point at which a typical session will suffer
+    # from cookies not working is when a CSRF token fails to validate
+    if cookie_probe.expected_probe_cookie_missing():
+        return render_error_page(
+            status_code=400,
+            error_message="This feature requires cookies to be enabled for correct operation",
+        )
+    elif 'user_id' not in session:
         current_app.logger.info(
             u'csrf.session_expired: Redirecting user to log in page'
         )
