@@ -1,6 +1,7 @@
 from functools import partial
 
 from flask import render_template, render_template_string
+from flask_gzip import Gzip
 
 from dmutils.timing import logged_duration
 
@@ -32,3 +33,24 @@ timed_render_template_string = _logged_duration_partial(
 timed_render_template_string.__doc__ = """
     See ``timed_render_template``, only for ``render_template_string``.
 """
+
+
+class DMGzipMiddleware(Gzip):
+    compress_by_default: bool
+
+    def __init__(self, *args, compress_by_default: bool = False, **kwargs):
+        kwargs.setdefault("minimum_size", 8192)
+        self.compress_by_default = compress_by_default
+        super().__init__(*args, **kwargs)
+
+    def after_request(self, response):
+        x_compression_safe = response.headers.pop("X-Compression-Safe", None)
+        compress = {"0": False, "1": True}.get(x_compression_safe, self.compress_by_default)
+
+        # flask_gzip makes the minimum_size comparison itself, but we want to avoid outputting a misleading
+        # logged_duration message if it's going to be prevented in the superclass.
+        if compress and len(response.get_data()) >= self.minimum_size:
+            with logged_duration(message="Spent {duration_real}s compressing response"):
+                return super().after_request(response)
+        else:
+            return response
