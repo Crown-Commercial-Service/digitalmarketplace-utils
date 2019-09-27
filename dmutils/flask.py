@@ -1,4 +1,5 @@
 from functools import partial
+import warnings
 
 from flask import render_template, render_template_string
 from flask_gzip import Gzip
@@ -45,7 +46,14 @@ class DMGzipMiddleware(Gzip):
 
     def after_request(self, response):
         x_compression_safe = response.headers.pop("X-Compression-Safe", None)
-        compress = {"0": False, "1": True}.get(x_compression_safe, self.compress_by_default)
+        known_values = {"0": False, "1": True}
+        compress = known_values.get(x_compression_safe, self.compress_by_default)
+
+        if x_compression_safe not in known_values and x_compression_safe != "" and x_compression_safe is not None:
+            warnings.warn(
+                f"{self.__class__.__name__} received unknown X-Compression-Safe header value {x_compression_safe!r} - "
+                "falling back to default"
+            )
 
         # flask_gzip makes the minimum_size comparison itself, but we want to avoid outputting a misleading
         # logged_duration message if it's going to be prevented in the superclass.
