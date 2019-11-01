@@ -69,7 +69,10 @@ def init_app(
 
     @application.after_request
     def add_header(response):
-        response.headers['X-Frame-Options'] = 'DENY'
+        # Block sites from rendering our views inside <iframe>, <embed>, etc by default.
+        # Individual views may set their own value (e.g. 'SAMEORIGIN')
+        if not response.headers.get('X-Frame-Options'):
+            response.headers.setdefault('X-Frame-Options', 'DENY')
         return response
 
     # Make filters accessible in templates.
