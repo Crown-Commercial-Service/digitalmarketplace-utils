@@ -2,6 +2,12 @@
 
 Records breaking changes from major version bumps
 
+## 49.0.0
+
+PR [#540](https://github.com/alphagov/digitalmarketplace-scripts/pull/540)
+
+Change the default search api port for development environments.
+
 ## 48.0.0
 
 PR [#504](https://github.com/alphagov/digitalmarketplace-utils/pull/509)
