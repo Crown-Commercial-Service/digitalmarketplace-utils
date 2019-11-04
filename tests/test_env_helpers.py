@@ -1,12 +1,19 @@
+from unittest.mock import patch
+
 import pytest
+
 from dmutils.env_helpers import get_api_endpoint_from_stage, get_assets_endpoint_from_stage, get_web_url_from_stage
 
 
 class TestGetAPIEndpointFromStage:
 
-    @pytest.mark.parametrize('stage', ['local', 'dev', 'development'])
+    @pytest.mark.parametrize("stage", ["local", "dev", "development"])
     def test_get_api_endpoint_for_dev_environments(self, stage):
-        assert get_api_endpoint_from_stage(stage) == 'http://localhost:5000'
+        with patch.dict("os.environ", {}):
+            assert get_api_endpoint_from_stage(stage) == "http://localhost:5000"
+
+        with patch.dict("os.environ", {"DM_API_PORT": "9000"}):
+            assert get_api_endpoint_from_stage(stage) == "http://localhost:9000"
 
     @pytest.mark.parametrize(
         'stage, expected_result',
@@ -19,9 +26,13 @@ class TestGetAPIEndpointFromStage:
     def test_get_api_endpoint_for_non_dev_environments(self, stage, expected_result):
         assert get_api_endpoint_from_stage(stage) == expected_result
 
-    @pytest.mark.parametrize('stage', ['local', 'dev', 'development'])
+    @pytest.mark.parametrize("stage", ["local", "dev", "development"])
     def test_get_search_api_endpoint_for_dev_environments(self, stage):
-        assert get_api_endpoint_from_stage(stage, app='search-api') == 'http://localhost:5001'
+        with patch.dict("os.environ", {}):
+            assert get_api_endpoint_from_stage(stage, app="search-api") == "http://localhost:5001"
+
+        with patch.dict("os.environ", {"DM_SEARCH_API_PORT": "9001"}):
+            assert get_api_endpoint_from_stage(stage, app="search-api") == "http://localhost:9001"
 
     @pytest.mark.parametrize(
         'stage, expected_result',

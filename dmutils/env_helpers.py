@@ -1,3 +1,6 @@
+import os
+
+
 def get_api_endpoint_from_stage(stage, app='api'):
     """Return the full URL of given API or Search API environment.
 
@@ -14,9 +17,9 @@ def get_api_endpoint_from_stage(stage, app='api'):
     }
 
     dev_ports = {
-        'api': 5000,
-        'search-api': 5001,
-        'antivirus-api': 5008,
+        "api": os.getenv("DM_API_PORT", 5000),
+        "search-api": os.getenv("DM_SEARCH_API_PORT", 5001),
+        "antivirus-api": os.getenv("DM_ANTIVIRUS_API_PORT", 5008),
     }
 
     if stage in ['local', 'dev', 'development']:
