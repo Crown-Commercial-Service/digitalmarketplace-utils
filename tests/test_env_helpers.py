@@ -29,7 +29,7 @@ class TestGetAPIEndpointFromStage:
     @pytest.mark.parametrize("stage", ["local", "dev", "development"])
     def test_get_search_api_endpoint_for_dev_environments(self, stage):
         with patch.dict("os.environ", {}):
-            assert get_api_endpoint_from_stage(stage, app="search-api") == "http://localhost:5001"
+            assert get_api_endpoint_from_stage(stage, app="search-api") == "http://localhost:5009"
 
         with patch.dict("os.environ", {"DM_SEARCH_API_PORT": "9001"}):
             assert get_api_endpoint_from_stage(stage, app="search-api") == "http://localhost:9001"
