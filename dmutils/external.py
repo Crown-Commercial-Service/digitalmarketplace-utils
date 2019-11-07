@@ -44,6 +44,21 @@ def help():
     raise NotImplementedError()
 
 
+@external.route('/terms-and-conditions')
+def terms_and_conditions():
+    raise NotImplementedError()
+
+
+@external.route('/privacy-notice')
+def privacy_notice():
+    raise NotImplementedError()
+
+
+@external.route('/cookies')
+def cookies():
+    raise NotImplementedError()
+
+
 # Supplier frontend
 
 @external.route('/suppliers')
