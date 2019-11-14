@@ -40,7 +40,7 @@ setup(
          'python-json-logger<0.2,>=0.1.4',
          'pytz',
          'unicodecsv>=0.14.1',
-         'Werkzeug>=0.15.1,<0.16.0',
+         'Werkzeug>=0.16,<0.17',
          'workdays>=1.4',
     ],
     python_requires="==3.6.*",

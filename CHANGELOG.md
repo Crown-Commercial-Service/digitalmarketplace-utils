@@ -2,6 +2,12 @@
 
 Records breaking changes from major version bumps
 
+## 50.0.0
+
+PR [#542](https://github.com/alphagov/digitalmarketplace-scripts/pull/542)
+
+Bumping the werkzeug version restriction. Test & deploy with extra care.
+
 ## 49.0.0
 
 PR [#540](https://github.com/alphagov/digitalmarketplace-scripts/pull/540)
