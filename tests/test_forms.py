@@ -191,7 +191,7 @@ class TestFormatWTFormErrors:
             assert get_errors_from_wtform(form) == OrderedDict()
 
     @pytest.mark.parametrize(*email_address_parametrization)
-    def test_errors_are_formatted(self, app, email_address):
+    def test_errors_include_input_name_and_question_and_message(self, app, email_address):
         with app.app_context():
             form = EmailFieldFormatTestForm(
                 formdata=ImmutableMultiDict((
@@ -202,14 +202,44 @@ class TestFormatWTFormErrors:
 
             assert form.validate() is False
             assert form.errors
-            assert get_errors_from_wtform(form) == OrderedDict([(
-                'test_email',
-                {
-                    'input_name': 'test_email',
-                    'question': "An Electronic Mailing Address",
-                    'message': 'Please enter a valid email address.'
-                }
-            )])
+
+            errors = get_errors_from_wtform(form)["test_email"]
+            assert errors["input_name"] == "test_email"
+            assert errors["question"] == "An Electronic Mailing Address"
+            assert errors["message"] == "Please enter a valid email address."
+
+    @pytest.mark.parametrize(*email_address_parametrization)
+    def test_errors_include_error_message_for_govuk_frontend_error_message(self, app, email_address):
+        with app.app_context():
+            form = EmailFieldFormatTestForm(
+                formdata=ImmutableMultiDict((
+                    ("test_email", email_address,),
+                )),
+                meta={'csrf': False},
+            )
+
+            assert form.validate() is False
+            assert form.errors
+
+            error_message = get_errors_from_wtform(form)["test_email"]["errorMessage"]
+            assert error_message["text"] == "Please enter a valid email address."
+
+    @pytest.mark.parametrize(*email_address_parametrization)
+    def test_errors_include_href_and_text_for_govuk_frontend_error_summary(self, app, email_address):
+        with app.app_context():
+            form = EmailFieldFormatTestForm(
+                formdata=ImmutableMultiDict((
+                    ("test_email", email_address,),
+                )),
+                meta={'csrf': False},
+            )
+
+            assert form.validate() is False
+            assert form.errors
+
+            errors = get_errors_from_wtform(form)["test_email"]
+            assert errors["href"] == "#input-test_email"
+            assert errors["text"] == "Please enter a valid email address."
 
     def test_errors_retain_ordering(self, app):
         with app.app_context():
@@ -225,11 +255,8 @@ class TestFormatWTFormErrors:
 
             assert form.validate() is False
             assert form.errors
-            assert get_errors_from_wtform(form) == OrderedDict(
-                [
-                    ('test_one', {'input_name': 'test_one', 'question': "Email address",
-                                  'message': 'Please enter a valid email address.'}),
-                    ('test_three', {'input_name': 'test_three', 'question': "Test Three", 'message': 'Bad length.'}),
-                    ('test_four', {'input_name': 'test_four', 'question': "Test Four", 'message': 'Enter text.'}),
-                ]
-            )
+            assert list(get_errors_from_wtform(form).keys()) == [
+                "test_one",
+                "test_three",
+                "test_four",
+            ]
