@@ -68,6 +68,11 @@ class TestFormatLinks:
                          '&amp;gt;something.com</a>'
         assert format_links(text) == formatted_text
 
+    def test_format_links_open_links_in_new_tab(self):
+        link = 'http://www.example.com'
+        link_new_tab = '<a href="http://www.example.com" class="break-link" rel="external" target="_blank">http://www.example.com</a>'  # noqa
+        assert format_links(link, open_links_in_new_tab=True) == link_new_tab
+
     def test_multiple_urls(self):
         text = 'This is the first link http://www.example.com and this is the second http://secondexample.com.'  # noqa
         formatted_text = 'This is the first link <a href="http://www.example.com" class="break-link" '\
