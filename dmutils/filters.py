@@ -15,7 +15,7 @@ def smartjoin(input):
         return ''
 
 
-def format_links(text):
+def format_links(text, open_links_in_new_tab=None):
     """
     Filter that searches a given string (or other string-like object) for any URIs
     and wraps them with either an anchor link or a span, depending on whether the link contains a valid protocol.
@@ -31,7 +31,10 @@ def format_links(text):
                                 )""", re.X)
     matched_urls = [type(text)(substr) for substr in url_match.findall(text)]
     if matched_urls:
-        link = '<a href="{0}" class="break-link" rel="external">{0}</a>'
+        if open_links_in_new_tab:
+            link = '<a href="{0}" class="break-link" rel="external" target="_blank">{0}</a>'
+        else:
+            link = '<a href="{0}" class="break-link" rel="external">{0}</a>'
         plaintext_link = '<span class="break-link">{0}</span>'
         text_array = [type(text)(substr) for substr in url_match.split(text)]
         formatted_text_array = []
