@@ -70,7 +70,7 @@ class TestFormatLinks:
 
     def test_format_links_open_links_in_new_tab(self):
         link = 'http://www.example.com'
-        link_new_tab = '<a href="http://www.example.com" class="break-link" rel="external" target="_blank">http://www.example.com</a>'  # noqa
+        link_new_tab = '<a href="http://www.example.com" class="break-link" rel="external noreferrer noopener" target="_blank">http://www.example.com</a>'  # noqa
         assert format_links(link, open_links_in_new_tab=True) == link_new_tab
 
     def test_multiple_urls(self):
