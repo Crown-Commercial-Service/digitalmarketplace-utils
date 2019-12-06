@@ -1,7 +1,14 @@
 from collections import OrderedDict
+import typing
 
 
-def govuk_error(error):
+# TODO use TypedDict once we're on python 3.8 to allow us to be more specific about this mapping's contents
+ErrorMapping = typing.Mapping[str, typing.Any]
+# use typing.OrderedDict if available (python 3.7+)
+typing_OrderedDict = getattr(typing, "OrderedDict", typing.Mapping)
+
+
+def govuk_error(error: ErrorMapping) -> ErrorMapping:
     if error:
         text = error.get("message", error.get("question", ""))
         return {
@@ -13,7 +20,7 @@ def govuk_error(error):
         return {}
 
 
-def govuk_errors(errors):
+def govuk_errors(errors: typing.Mapping[str, ErrorMapping]) -> typing_OrderedDict[str, ErrorMapping]:
     """Converts digitalmarketplace-frontend-toolkit style errors into a format
     suitable for use with either digitalmarketplace-frontend-toolkit
     templates/macros or govuk-frontend macros.
