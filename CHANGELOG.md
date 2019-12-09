@@ -2,6 +2,28 @@
 
 Records breaking changes from major version bumps
 
+## 51.0.0
+
+Signature change to:
+
+`dmutils/status.py::get_app_status`
+
+```
+get_app_status(
+     search_api_client=None,
+     ignore_dependencies=False,
+     additional_checks=None,
+-    additional_checks_internal=None,
++    additional_checks_extended=None,
+ ):
+```
+
+Additional checks will now always be called regardless of the value of
+`ignore_dependencies`.
+
+New argument `additional_checks_extended` whose checks will only be
+called when `ignore_dependencies=False`.
+
 ## 50.0.0
 
 PR [#542](https://github.com/alphagov/digitalmarketplace-scripts/pull/542)
