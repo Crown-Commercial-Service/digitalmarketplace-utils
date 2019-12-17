@@ -64,7 +64,7 @@ def get_app_status(
     search_api_client=None,
     ignore_dependencies=False,
     additional_checks=None,
-    additional_checks_internal=None,
+    additional_checks_extended=None,
 ):
     """Generates output for `_status` endpoints on apps
 
@@ -74,9 +74,11 @@ def get_app_status(
     :param ignore_dependencies: Minimal endpoint checks only (i.e. the app is routable and disk space is fine).
     :param additional_checks: A sequence of callables that return dicts of data to be injected into the final JSON
                               response or raise StatusErrors if they need to log an error that should fail the
-                              check (this will cause the endpoint to return a 500).
-    :param additional_checks_internal: Similar to `additional_checks`, but will be called even if
-                                       ignore_dependencies=True
+                              check (this will cause the endpoint to return a 500). These will be called even if
+                              ignore_dependencies=True and should be reserved for checks that the service requires to
+                              operate. For example checks to backing services such as persistent datastores or
+                              processes.
+    :param additional_checks_extended: Similar to `additional_checks`, but only called when ignore_dependencies=False
     :return: A dictionary describing the current state of the app with, at least, a 'status' key with a value of 'ok'
              or 'error'.
     """
@@ -94,6 +96,9 @@ def get_app_status(
     if disk_status[0].lower() != 'ok':
         error_messages.append(f'Disk space low: {disk_status[1]}% remaining.')
 
+    if additional_checks:
+        _perform_additional_checks(additional_checks, response_data, error_messages)
+
     if not ignore_dependencies:
         response_data['version'] = current_app.config['VERSION']
 
@@ -108,12 +113,8 @@ def get_app_status(
             response_data['search_api_status'] = search_api_status
             if search_api_status['status'].lower() != 'ok':
                 error_messages.append('Error connecting to the Search API.')
-
-        if additional_checks:
-            _perform_additional_checks(additional_checks, response_data, error_messages)
-
-    if additional_checks_internal:
-        _perform_additional_checks(additional_checks_internal, response_data, error_messages)
+        if additional_checks_extended:
+            _perform_additional_checks(additional_checks_extended, response_data, error_messages)
 
     if error_messages:
         current_app.logger.error(

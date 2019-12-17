@@ -41,7 +41,7 @@ def additional_check(key, value):
                          'search_api_status, '
                          'ignore_dependencies, '
                          'additional_checks, '
-                         'additional_checks_internal, '
+                         'additional_checks_extended, '
                          'expected_json, '
                          'expected_http_status',
                          (
@@ -109,7 +109,7 @@ def additional_check(key, value):
                                  True,
                                  [additional_check('k', 'v'), additional_check('k2', 'v2')],
                                  [],
-                                 {'status': 'ok', 'disk': 'OK (90% free)'},
+                                 {'status': 'ok', 'disk': 'OK (90% free)', 'k': 'v', 'k2': 'v2'},
                                  200,
                              ),
                              (  # Test case #6 - data api client ERROR, search api OK, ignore_deps = False, result: 500
@@ -187,23 +187,20 @@ def additional_check(key, value):
                                  [additional_check('limp', 'galleypage'), additional_check('gauging', 'symmetry')],
                                  {
                                      'status': 'ok', 'disk': 'OK (88% free)',
-                                     'limp': 'galleypage', 'gauging': 'symmetry'
+                                     'spellingbee': 'conundrum'
                                  },
                                  200,
                              ),
                              (  # Test case #12 - data+search api clients OK, ignore_deps=True, +1,2 checks (1 fails),
-                                #                 result:500
+                                #                 result:200
                                  ('OK', 50),
                                  'ok',
                                  'ok',
                                  True,
                                  [additional_check('embarra', 'two ars')],
                                  [additional_check('unpar', 'one ar'), mock.Mock(side_effect=StatusError("double es"))],
-                                 {
-                                     'status': 'error', 'disk': 'OK (50% free)', 'message': ['double es'],
-                                     'unpar': 'one ar',
-                                 },
-                                 500,
+                                 {'status': 'ok', 'disk': 'OK (50% free)', 'embarra': 'two ars'},
+                                 200,
                              ),
                          ))
 def test_get_app_status(app,
@@ -212,7 +209,7 @@ def test_get_app_status(app,
                         search_api_status,
                         ignore_dependencies,
                         additional_checks,
-                        additional_checks_internal,
+                        additional_checks_extended,
                         expected_json,
                         expected_http_status):
     app.config['VERSION'] = 'release-0'
@@ -235,13 +232,19 @@ def test_get_app_status(app,
                                                    search_api_client=search_api_client,
                                                    ignore_dependencies=ignore_dependencies,
                                                    additional_checks=additional_checks,
-                                                   additional_checks_internal=additional_checks_internal)
+                                                   additional_checks_extended=additional_checks_extended)
 
     assert json.loads(response.data) == expected_json
     assert status_code == expected_http_status
 
+    # Expected calls
+
+    # Additional chacks should always run
+    for check in additional_checks:
+        assert check.call_args_list == [mock.call()]
+
     # If we pass in the ignore-dependencies flag we want to make sure that the API clients and additional checks
-    # aren't called so that the endpoint returns as quickly as possible with the lowest chance to error.
+    # extended aren't called so that the endpoint returns as quickly as possible with the lowest chance to error.
     expected_call_list = ([] if ignore_dependencies else [mock.call()])
 
     if data_api_status:
@@ -250,5 +253,6 @@ def test_get_app_status(app,
     if search_api_status:
         assert search_api_client.get_status.call_args_list == expected_call_list
 
-    for check in additional_checks:
-        assert check.call_args_list == expected_call_list
+    if not ignore_dependencies:
+        for check in additional_checks_extended:
+            assert check.call_args_list == [mock.call()]
