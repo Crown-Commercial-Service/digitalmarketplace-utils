@@ -59,6 +59,11 @@ def cookies():
     raise NotImplementedError()
 
 
+@external.route('/cookie-settings')
+def cookie_settings():
+    raise NotImplementedError()
+
+
 # Supplier frontend
 
 @external.route('/suppliers')
