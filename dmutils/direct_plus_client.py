@@ -3,6 +3,7 @@ import requests
 
 
 class DirectPlusClient(object):
+    """Client to interface with Dun and Bradstreet's Direct Plus API."""
 
     access_token = None
     protocol = 'https'
@@ -22,7 +23,7 @@ class DirectPlusClient(object):
         Set the access token and header authorisation parameter for requests to use.
         """
         basic_auth_string = requests.auth._basic_auth_str(self.username, self.password)
-        response = self._dnb_request(
+        response = self._direct_plus_request(
             'token',
             method='post',
             version='v2',
@@ -33,7 +34,7 @@ class DirectPlusClient(object):
         self.access_token = response.json().get('access_token')
         self.required_headers += (('Authorization', f'Bearer {self.access_token}'),)
 
-    def _dnb_request(
+    def _direct_plus_request(
         self,
         endpoint,
         method='get',
@@ -60,7 +61,7 @@ class DirectPlusClient(object):
             # If access token invalid (401) refresh access token manually
             # and retry request with allow_access_token_reset = False
             self._reset_access_token()
-            response = self._dnb_request(
+            response = self._direct_plus_request(
                 endpoint,
                 method=method,
                 version=version,
@@ -74,7 +75,7 @@ class DirectPlusClient(object):
         """
         Request a supplier by duns number from the Direct Plus API
         """
-        response = self._dnb_request(
+        response = self._direct_plus_request(
             f'data/duns/{duns_number}', payload={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 

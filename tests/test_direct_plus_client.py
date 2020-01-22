@@ -30,10 +30,10 @@ class TestGetOrganizationByDunsNumber:
     }
 
     @pytest.mark.parametrize('duns_number', ('123456', 'qwerty', 'test1'))
-    @mock.patch('dmutils.direct_plus_client.DirectPlusClient._dnb_request', autospec=True)
-    def test_calls_dnb_request(self, _dnb_request, duns_number, direct_plus_client):
+    @mock.patch('dmutils.direct_plus_client.DirectPlusClient._direct_plus_request', autospec=True)
+    def test_calls_direct_plus_request(self, _direct_plus_request, duns_number, direct_plus_client):
         direct_plus_client.get_organization_by_duns_number(duns_number)
-        _dnb_request.assert_called_once_with(
+        _direct_plus_request.assert_called_once_with(
             direct_plus_client,
             f'data/duns/{duns_number}',
             payload={'productId': 'cmpelk', 'versionId': 'v2'}
@@ -81,10 +81,10 @@ class TestGetOrganizationByDunsNumber:
 class TestResetAccessToken:
 
     @mock.patch('dmutils.direct_plus_client.requests.auth._basic_auth_str', autospec=True)
-    @mock.patch('dmutils.direct_plus_client.DirectPlusClient._dnb_request', autospec=True)
+    @mock.patch('dmutils.direct_plus_client.DirectPlusClient._direct_plus_request', autospec=True)
     def test_encodes_username_and_password(
         self,
-        _dnb_request_mock,
+        _direct_plus_request_mock,
         auth_mock,
         direct_plus_client,
         r_mock_with_token_request
@@ -92,10 +92,10 @@ class TestResetAccessToken:
         direct_plus_client._reset_access_token()
         auth_mock.assert_called_once_with('username', 'password')
 
-    @mock.patch('dmutils.direct_plus_client.DirectPlusClient._dnb_request', autospec=True)
-    def test_makes_dnb_request(self, _dnb_request_mock, direct_plus_client):
+    @mock.patch('dmutils.direct_plus_client.DirectPlusClient._direct_plus_request', autospec=True)
+    def test_makes_direct_plus_request(self, _direct_plus_request_mock, direct_plus_client):
         direct_plus_client._reset_access_token()
-        _dnb_request_mock.assert_called_once_with(
+        _direct_plus_request_mock.assert_called_once_with(
             direct_plus_client,
             'token',
             allow_access_token_reset=False,
@@ -128,7 +128,7 @@ class TestDnbRequest:
     @mock.patch('dmutils.direct_plus_client.DirectPlusClient._reset_access_token', autospec=True)
     @mock.patch('dmutils.direct_plus_client.requests', autospec=True)
     def test_attempts_token_reset_if_no_token(self, requests_mock, reset_access_token_mock, direct_plus_client):
-        direct_plus_client._dnb_request('dnb/endpoint')
+        direct_plus_client._direct_plus_request('dnb/endpoint')
         reset_access_token_mock.assert_called_once()
 
     @mock.patch('dmutils.direct_plus_client.DirectPlusClient._reset_access_token', autospec=True)
@@ -139,7 +139,7 @@ class TestDnbRequest:
             reset_access_token_mock,
             direct_plus_client
     ):
-        direct_plus_client._dnb_request('dnb/endpoint', allow_access_token_reset=False)
+        direct_plus_client._direct_plus_request('dnb/endpoint', allow_access_token_reset=False)
         reset_access_token_mock.assert_not_called()
 
     @pytest.mark.parametrize(
@@ -166,7 +166,7 @@ class TestDnbRequest:
     ):
         direct_plus_client.protocol = protocol
         direct_plus_client.domain = domain
-        direct_plus_client._dnb_request(endpoint, version=version)
+        direct_plus_client._direct_plus_request(endpoint, version=version)
         requests_mock.get.assert_called_once_with(expected_result, headers=mock.ANY, params=mock.ANY)
 
     @pytest.mark.parametrize(
@@ -216,14 +216,14 @@ class TestDnbRequest:
         direct_plus_client,
         r_mock_with_token_request
     ):
-        direct_plus_client._dnb_request('endpoint', extra_headers=extra_headers)
+        direct_plus_client._direct_plus_request('endpoint', extra_headers=extra_headers)
         requests_get_mock.assert_called_once_with(mock.ANY, headers=expected_headers, params=mock.ANY)
 
     @pytest.mark.parametrize('method', ('get', 'post', 'put', 'patch', 'delete', 'head'))
     @mock.patch('dmutils.direct_plus_client.DirectPlusClient._reset_access_token', autospec=True)
     @mock.patch('dmutils.direct_plus_client.requests', autospec=True)
     def test_calls_correct_requests_method(self, requests_mock, reset_access_token_mock, method, direct_plus_client):
-        direct_plus_client._dnb_request('endpoint', method=method)
+        direct_plus_client._direct_plus_request('endpoint', method=method)
         getattr(requests_mock, method).assert_called_once()
         for uncalled_method in {'get', 'post', 'put', 'patch', 'delete', 'head'} - {method}:
             getattr(requests_mock, uncalled_method).assert_not_called()
@@ -232,7 +232,7 @@ class TestDnbRequest:
     @mock.patch('dmutils.direct_plus_client.requests', autospec=True)
     def test_fails_with_non_existent_method(self, requests_mock, reset_access_token_mock, direct_plus_client):
         with pytest.raises(AttributeError, match="Mock object has no attribute 'foo'"):
-            direct_plus_client._dnb_request('endpoint', method='foo')
+            direct_plus_client._direct_plus_request('endpoint', method='foo')
 
     def test_request_is_retried_once_if_token_invalid(self, r_mock_with_token_request, direct_plus_client):
         unsuccessful_token_response = {
@@ -256,7 +256,7 @@ class TestDnbRequest:
             [unsuccessful_token_response, successful_token_response]
         )
 
-        resp = direct_plus_client._dnb_request(
+        resp = direct_plus_client._direct_plus_request(
             f'data/duns/291346567', payload={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 
@@ -288,7 +288,7 @@ class TestDnbRequest:
             [unsuccessful_token_response, unsuccessful_token_response]
         )
 
-        resp = direct_plus_client._dnb_request(
+        resp = direct_plus_client._direct_plus_request(
             f'data/duns/291346567', payload={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 
