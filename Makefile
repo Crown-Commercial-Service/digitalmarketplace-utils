@@ -17,7 +17,7 @@ test-flake8: virtualenv
 	${VIRTUALENV_ROOT}/bin/flake8 .
 
 .PHONY: test-python
-test-python: virtualenv
+test-python: virtualenv requirements-dev
 	${VIRTUALENV_ROOT}/bin/py.test ${PYTEST_ARGS}
 
 .PHONY: show-environment
