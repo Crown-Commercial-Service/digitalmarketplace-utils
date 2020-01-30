@@ -71,6 +71,12 @@ def supplier_dashboard():
     raise NotImplementedError()
 
 
+@external.route('/suppliers/supply')
+def become_a_supplier():
+    raise NotImplementedError()
+
+
+# Brief Responses frontend
 @external.route('/suppliers/opportunities/<brief_id>/responses/start')
 def start_brief_response(brief_id):
     raise NotImplementedError()
