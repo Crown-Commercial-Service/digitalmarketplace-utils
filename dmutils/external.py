@@ -4,7 +4,6 @@ external = Blueprint('external', __name__)
 
 
 # Buyer frontend
-
 @external.route('/')
 def index():
     raise NotImplementedError()
@@ -58,8 +57,8 @@ def privacy_notice():
 def cookies():
     raise NotImplementedError()
 
-# Supplier frontend
 
+# Supplier frontend
 @external.route('/suppliers')
 def supplier_dashboard():
     raise NotImplementedError()
@@ -87,14 +86,12 @@ def opportunities_dashboard(framework_slug):
 
 
 # Admin frontend
-
 @external.route('/admin')
 def admin_dashboard():
     raise NotImplementedError()
 
 
 # User frontend
-
 @external.route('/user/create/<encoded_token>')
 def create_user(encoded_token):
     raise NotImplementedError()
@@ -124,8 +121,8 @@ def change_password():
 def cookie_settings():
     raise NotImplementedError()
 
-# Briefs frontend
 
+# Briefs frontend
 @external.route('/buyers')
 def buyer_dashboard():
     raise NotImplementedError()
