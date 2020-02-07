@@ -58,12 +58,6 @@ def privacy_notice():
 def cookies():
     raise NotImplementedError()
 
-
-@external.route('/cookie-settings')
-def cookie_settings():
-    raise NotImplementedError()
-
-
 # Supplier frontend
 
 @external.route('/suppliers')
@@ -125,6 +119,10 @@ def user_research_consent():
 def change_password():
     raise NotImplementedError()
 
+
+@external.route('/user/cookie-settings')
+def cookie_settings():
+    raise NotImplementedError()
 
 # Briefs frontend
 
