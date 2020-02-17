@@ -1,6 +1,8 @@
 import base64
 import json
 import struct
+from warnings import warn
+
 
 from datetime import datetime, timedelta
 
@@ -100,7 +102,11 @@ def decode_password_reset_token(token, data_api_client):
         decoded, token_timestamp = decode_token(
             token,
             current_app.config["SHARED_EMAIL_KEY"],
-            current_app.config["RESET_PASSWORD_SALT"],
+            (
+                current_app.config.get('RESET_PASSWORD_TOKEN_NS')
+                or warn("RESET_PASSWORD_SALT has been renamed RESET_PASSWORD_TOKEN_NS", DeprecationWarning)
+                or current_app.config['RESET_PASSWORD_SALT']
+            ),
             ONE_DAY_IN_SECONDS,
         )
     except fernet.InvalidToken as e:
@@ -138,8 +144,12 @@ def decode_invitation_token(encoded_token):
         token, _ = decode_token(
             encoded_token,
             current_app.config['SHARED_EMAIL_KEY'],
-            current_app.config['INVITE_EMAIL_SALT'],
-            SEVEN_DAYS_IN_SECONDS
+            (
+                current_app.config.get('INVITE_EMAIL_TOKEN_NS')
+                or warn("INVITE_EMAIL_SALT has been renamed INVITE_EMAIL_TOKEN_NS", DeprecationWarning)
+                or current_app.config['INVITE_EMAIL_SALT']
+            ),
+            SEVEN_DAYS_IN_SECONDS,
         )
         return token
 
@@ -148,8 +158,12 @@ def decode_invitation_token(encoded_token):
             token, _ = decode_token(
                 encoded_token,
                 current_app.config['SHARED_EMAIL_KEY'],
-                current_app.config['INVITE_EMAIL_SALT'],
-                None
+                (
+                    current_app.config.get('INVITE_EMAIL_TOKEN_NS')
+                    or warn("INVITE_EMAIL_SALT has been renamed INVITE_EMAIL_TOKEN_NS", DeprecationWarning)
+                    or current_app.config['INVITE_EMAIL_SALT']
+                ),
+                None,
             )
 
             current_app.logger.info("Invitation reset attempt with expired token. error {error}",

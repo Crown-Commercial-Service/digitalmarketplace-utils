@@ -18,13 +18,14 @@ from dmutils.email.tokens import (
 from dmutils.email.helpers import hash_string
 
 
-@pytest.yield_fixture
-def email_app(app):
+# TODO remove parametrization once we've removed _SALT support
+@pytest.fixture(params=("SALT", "TOKEN_NS",))
+def email_app(request, app):
     init_app(app)
     app.config['SHARED_EMAIL_KEY'] = 'Key'
-    app.config['INVITE_EMAIL_SALT'] = 'Salt'
+    app.config[f'INVITE_EMAIL_{request.param}'] = 'Salt'
     app.config['SECRET_KEY'] = 'Secret'
-    app.config['RESET_PASSWORD_SALT'] = 'PassSalt'
+    app.config[f'RESET_PASSWORD_{request.param}'] = 'PassSalt'
     yield app
 
 
@@ -200,7 +201,9 @@ class TestDecodeInvitationToken:
                 'role': 'supplier'
             }
             token = generate_token(
-                data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT']
+                data,
+                email_app.config['SHARED_EMAIL_KEY'],
+                email_app.config.get('INVITE_EMAIL_TOKEN_NS') or email_app.config.get('INVITE_EMAIL_SALT'),
             )[1:]
 
             assert decode_invitation_token(token) == {'error': 'token_invalid'}
@@ -221,7 +224,11 @@ class TestDecodeInvitationToken:
                 'supplier_name': 'A. Supplier',
                 'role': 'supplier'
             }
-            token = generate_token(data, email_app.config['SHARED_EMAIL_KEY'], email_app.config['INVITE_EMAIL_SALT'])
+            token = generate_token(
+                data,
+                email_app.config['SHARED_EMAIL_KEY'],
+                email_app.config.get('INVITE_EMAIL_TOKEN_NS') or email_app.config.get('INVITE_EMAIL_SALT'),
+            )
 
         with freeze_time(decode_time):
             with email_app.app_context():

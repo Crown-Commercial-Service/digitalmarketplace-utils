@@ -1,3 +1,5 @@
+from warnings import warn
+
 from flask import current_app, session, abort, url_for
 from . import DMNotifyClient, generate_token, EmailError
 from .helpers import hash_string
@@ -15,7 +17,11 @@ def send_user_account_email(role, email_address, template_name_or_id, extra_toke
     token = generate_token(
         token_data,
         current_app.config['SHARED_EMAIL_KEY'],
-        current_app.config['INVITE_EMAIL_SALT']
+        (
+            current_app.config.get('INVITE_EMAIL_TOKEN_NS')
+            or warn("INVITE_EMAIL_SALT has been renamed INVITE_EMAIL_TOKEN_NS", DeprecationWarning)
+            or current_app.config['INVITE_EMAIL_SALT']
+        ),
     )
 
     link_url = url_for('external.create_user', encoded_token=token, _external=True)
