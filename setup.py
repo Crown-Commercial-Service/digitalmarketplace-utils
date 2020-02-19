@@ -25,7 +25,7 @@ setup(
     install_requires=[
          'Flask-Script>=2.0.6',
          'Flask-WTF>=0.14.2',
-         'Flask<1.1,>=1.0.2',
+         'Flask<1.1.0,>=1.0.2',
          'Flask-gzip>=0.2',
          'Flask-Login>=0.2.11',
          'boto3<2,>=1.7.83',
@@ -41,7 +41,7 @@ setup(
          'python-json-logger<0.2,>=0.1.4',
          'pytz',
          'unicodecsv>=0.14.1',
-         'Werkzeug>=0.16,<0.17',
+         'Werkzeug>=0.16,<1.1.0',
          'workdays>=1.4',
     ],
     python_requires="~=3.6",
