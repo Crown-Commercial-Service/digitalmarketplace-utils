@@ -22,7 +22,6 @@ from dmutils.urls import SafePurePathConverter
         "/beside/shakespeare/hamlet/../saxon.pdf",
         "/beside/shakespeare/../hamlet/bards",
         "/beside/shakespeare/saxon/hamlet/../bards.png",
-        "/beside/shakespeare//hamlet/saxon.pdf",
     )
 ))
 def test_safepurepath_undesirable_urls(app, route_pattern, request_path):
@@ -33,7 +32,7 @@ def test_safepurepath_undesirable_urls(app, route_pattern, request_path):
         assert False, f"View body not expected to be executed: {some_path!r}"
 
     with app.app_context():
-        response = app.test_client().get(request_path)
+        response = app.test_client().get(request_path, follow_redirects=True)
         assert response.status_code == 404
 
 
@@ -63,7 +62,7 @@ def test_safepurepath_acceptable_urls(app, route_pattern, request_path, expected
         return "Success", 201
 
     with app.app_context():
-        response = app.test_client().get(request_path)
+        response = app.test_client().get(request_path, follow_redirects=True)
         assert response.status_code == 201
 
 
