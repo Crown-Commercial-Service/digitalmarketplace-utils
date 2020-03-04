@@ -80,7 +80,9 @@ def assert_external_service_log_entry(service=r'\w+', description='.+', successf
 
 class PatchExternalServiceLogConditionMixin:
     def setup(self):
-        self.log_condition_patch = mock.patch('dmutils.timing.request_context_and_any_of_slow_call_or_sampled_request')
+        self.log_condition_patch = mock.patch(
+            'dmutils.timing.request_context_and_any_of_slow_call_or_sampled_request_or_exception_in_stack'
+        )
         self.log_condition = self.log_condition_patch.start()
         self.log_condition.return_value = True
 
