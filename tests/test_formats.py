@@ -11,6 +11,8 @@ from dmutils.formats import (
     timeformat,
     utcdatetimeformat,
     utctoshorttimelongdateformat,
+    get_localized_datetime,
+    EUROPE_LONDON,
 )
 import pytz
 from datetime import datetime
@@ -181,3 +183,49 @@ def test_utcdatetimeformat(dt, formatted_datetime):
 )
 def test_datetodatetimeformat(date, expected_formatted_date):
     assert datetodatetimeformat(date) == expected_formatted_date
+
+
+@pytest.mark.parametrize("value,localize,expected_datetime", (
+    (datetime(2012, 11, 10, 9, 8, 7, 6), True, EUROPE_LONDON.localize(datetime(2012, 11, 10, 9, 8, 7, 6))),
+    ("2012-11-10T09:08:07.0Z", True, EUROPE_LONDON.localize(datetime(2012, 11, 10, 9, 8, 7))),
+    (datetime(2012, 8, 10, 9, 8, 7, 6), True, EUROPE_LONDON.localize(datetime(2012, 8, 10, 10, 8, 7, 6))),
+    ("2012-08-10T09:08:07.0Z", True, EUROPE_LONDON.localize(datetime(2012, 8, 10, 10, 8, 7))),
+    ("2012-08-10T09:08:07.0Z", False, datetime(2012, 8, 10, 9, 8, 7, tzinfo=pytz.utc)),
+    (
+        datetime(2012, 8, 10, 9, 8, 7, 6, tzinfo=pytz.utc),
+        True,
+        EUROPE_LONDON.localize(datetime(2012, 8, 10, 10, 8, 7, 6)),
+    ),
+    (
+        datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc),
+        True,
+        EUROPE_LONDON.localize(datetime(2012, 8, 1, 10, 8, 7, 6)),
+    ),
+    (
+        datetime(2012, 8, 1, 22, 59, 7, 6, tzinfo=pytz.utc),
+        True,
+        EUROPE_LONDON.localize(datetime(2012, 8, 1, 23, 59, 7, 6)),
+    ),
+
+    # Daylight savings edge case
+    (
+        datetime(2012, 3, 25, 0, 59, 7, 6, tzinfo=pytz.utc),
+        True,
+        EUROPE_LONDON.localize(datetime(2012, 3, 25, 0, 59, 7, 6)),
+    ),
+    (
+        datetime(2012, 3, 25, 1, 59, 7, 6, tzinfo=pytz.utc),
+        True,
+        EUROPE_LONDON.localize(datetime(2012, 3, 25, 2, 59, 7, 6)),
+    ),
+
+    # Check localization can be disabled
+    (datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc), False, datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc)),
+    (
+        datetime(2012, 8, 1, 9, 8, 7, 6, tzinfo=pytz.utc),
+        True,
+        EUROPE_LONDON.localize(datetime(2012, 8, 1, 10, 8, 7, 6)),
+    ),
+))
+def test_get_localized_datetime(value, localize, expected_datetime):
+    assert get_localized_datetime(value, localize=localize) == expected_datetime
