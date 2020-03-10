@@ -116,15 +116,23 @@ def request_is_sampled(log_context):
     return has_request_context() and getattr(request, "is_sampled", False)
 
 
+def exception_in_stack():
+    """Return true if we are currently in the process of handling an exception, ie one has been caught in a try block.
+
+    https://docs.python.org/3/library/sys.html#sys.exc_info
+    """
+    return sys.exc_info()[0] is not None
+
+
 def different_message_for_success_or_error(success_message, error_message):
     """Can be passed into `logged_duration` as `message=different_message_for_success_or_error(x, y)` in order to
     generate different log messages depending on whether the block completed successfully or raised an exception."""
-    return lambda _: success_message if sys.exc_info()[0] is None else error_message
+    return lambda _: success_message if not exception_in_stack() else error_message
 
 
-def request_context_and_any_of_slow_call_or_sampled_request(log_context):
+def request_context_and_any_of_slow_call_or_sampled_request_or_exception_in_stack(log_context):
     return has_request_context() and (
-        exceeds_slow_external_call_threshold(log_context) or request_is_sampled(log_context)
+        exceeds_slow_external_call_threshold(log_context) or request_is_sampled(log_context) or exception_in_stack()
     )
 
 
@@ -156,6 +164,6 @@ def logged_duration_for_external_request(service, description=None, success_mess
 
     return logged_duration(
         message=different_message_for_success_or_error(success_message=success_message, error_message=error_message),
-        condition=request_context_and_any_of_slow_call_or_sampled_request,
+        condition=request_context_and_any_of_slow_call_or_sampled_request_or_exception_in_stack,
         **{'logger': logger} if logger else {}
     )

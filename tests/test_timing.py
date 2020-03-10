@@ -533,3 +533,34 @@ def test_logged_duration_real_logger(
     all_lines = tuple(json.loads(line) for line in stream.getvalue().splitlines())
 
     assert all_lines == (AnySupersetOf({"levelname": "INFO", "message": "Logging configured"}),) + expected_logs
+
+
+@mock.patch('dmutils.timing.has_request_context', return_value=True)
+@mock.patch('dmutils.timing.exceeds_slow_external_call_threshold', return_value=False)
+@mock.patch('dmutils.timing.request_is_sampled', return_value=False)
+def test_logged_duration_for_external_request_always_logs_on_error(*args):
+    logger_mock = mock.Mock()
+    try:
+        with timing.logged_duration_for_external_request('Test', 'Desc', None, None, logger_mock):
+            raise SystemError
+    except SystemError:
+        pass
+
+    assert logger_mock.log.called is True
+    logger_mock.log.assert_called_with(
+        10,
+        'Exception from call to Test (Desc) after {duration_real}s',
+        exc_info=True,
+        extra={'duration_real': mock.ANY, 'duration_process': mock.ANY}
+    )
+
+
+@mock.patch('dmutils.timing.has_request_context', return_value=True)
+@mock.patch('dmutils.timing.exceeds_slow_external_call_threshold', return_value=False)
+@mock.patch('dmutils.timing.request_is_sampled', return_value=False)
+def test_logged_duration_for_external_request_does_not_call_when_not_an_error(*args):
+    logger_mock = mock.Mock()
+    with timing.logged_duration_for_external_request('Test', 'Desc', 'Success', 'Fail', logger_mock):
+        pass
+
+    assert logger_mock.log.called is False
