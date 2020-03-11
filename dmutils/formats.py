@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-import pytz
 import re
+from typing import Union
+
+import pytz
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 DATE_FORMAT = "%Y-%m-%d"
@@ -181,20 +183,28 @@ def _use_gmt_timezone(date_string):
     return re.sub(r"UTC|BST", "GMT", date_string)
 
 
-def _format_date(value, default_value, fmt, localize=True):
-    if not value:
-        return default_value
-
+def get_localized_datetime(value: Union[str, datetime], localize: bool = True) -> datetime:
+    """
+    Given a datetime or an ISO timestamp, will return a London-timezone-localized datetime
+    """
     if not isinstance(value, datetime):
         value = datetime.strptime(value, DATETIME_FORMAT)
 
     if value.tzinfo is None:
+        # assume naive datetimes are UTC
         value = pytz.utc.localize(value)
 
     if localize:
-        value = value.astimezone(EUROPE_LONDON).strftime(fmt)
-    else:
-        value = value.strftime(fmt)
+        value = value.astimezone(EUROPE_LONDON)
+
+    return value
+
+
+def _format_date(value, default_value, fmt, localize=True):
+    if not value:
+        return default_value
+
+    value = get_localized_datetime(value, localize=localize).strftime(fmt)
 
     # en_GB locale uses uppercase AM/PM which contravenes our style guide
     value = value.replace('AM', 'am').replace('PM', 'pm').replace(" 0", " ")
