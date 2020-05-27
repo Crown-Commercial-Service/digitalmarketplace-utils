@@ -12,8 +12,27 @@ import pytest
 
 from dmtestutils.comparisons import AnyStringMatching, AnySupersetOf, RestrictedAny
 
-from dmutils.logging import init_app, RequestExtraContextFilter, JSONFormatter, CustomLogFormatter
-from dmutils.logging import LOG_FORMAT, get_json_log_format
+from dmutils.logging import init_app, JSONFormatter, CustomLogFormatter, configure_handler
+from dmutils.logging import (LOG_FORMAT, get_json_log_format, AppNameFilter, RequestExtraContextFilter,
+                             AppStackLocationFilter, AppInstanceFilter)
+
+
+def test_configure_handler(app):
+    handler = mock.Mock()
+    configure_handler(handler, app, mock.Mock())
+    filter_classes = [x[0][0].__class__ for x in handler.addFilter.call_args_list]
+    assert AppNameFilter in filter_classes
+    assert RequestExtraContextFilter in filter_classes
+    assert AppStackLocationFilter in filter_classes
+
+
+def test_configure_handler_has_instance_index_in_production(app, os_environ):
+    app.config.update({'DM_ENVIRONMENT': 'production'})
+    os_environ.update({'CF_INSTANCE_INDEX': '1'})
+    handler = mock.Mock()
+    configure_handler(handler, app, mock.Mock())
+    filter_classes = [x[0][0].__class__ for x in handler.addFilter.call_args_list]
+    assert AppInstanceFilter in filter_classes
 
 
 def test_request_extra_context_filter_not_in_app_context():
