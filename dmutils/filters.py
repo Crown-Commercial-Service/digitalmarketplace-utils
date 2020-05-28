@@ -85,8 +85,8 @@ _multiple_newlines_re = re.compile(r'(\r\n[ \t\f\v]*){2,}')
 _single_newline_re = re.compile(r'(\r\n)')
 
 
-@evalcontextfilter
-def preserve_line_breaks(eval_ctx, value):
+def replace_newlines_with_breaks(value):
+    """Replace newlines in a string with HTML <br> elements"""
 
     # `escape()` returns Markdown objects in python2
     # We want to cast the output value back into unicode strings
@@ -96,6 +96,13 @@ def preserve_line_breaks(eval_ctx, value):
     value = _multiple_newlines_re.sub(u'\r\n\r\n', value)
 
     result = _single_newline_re.sub(u'<br>', value)
+
+    return result
+
+
+@evalcontextfilter
+def preserve_line_breaks(eval_ctx, value):
+    result = replace_newlines_with_breaks(value)
 
     if eval_ctx.autoescape:
         result = Markup(result)
