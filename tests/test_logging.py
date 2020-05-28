@@ -21,10 +21,11 @@ def test_configure_handler(app):
     handler = mock.Mock()
     configure_handler(handler, app, mock.Mock())
     filter_classes = [x[0][0].__class__ for x in handler.addFilter.call_args_list]
-    assert AppNameFilter in filter_classes
-    assert RequestExtraContextFilter in filter_classes
-    assert AppStackLocationFilter in filter_classes
-    assert AppInstanceFilter not in filter_classes
+    assert filter_classes == [
+        AppNameFilter,
+        RequestExtraContextFilter,
+        AppStackLocationFilter,
+    ]
 
 
 def test_configure_handler_has_instance_index_where_present(app, os_environ):
@@ -32,7 +33,12 @@ def test_configure_handler_has_instance_index_where_present(app, os_environ):
     handler = mock.Mock()
     configure_handler(handler, app, mock.Mock())
     filter_classes = [x[0][0].__class__ for x in handler.addFilter.call_args_list]
-    assert AppInstanceFilter in filter_classes
+    assert filter_classes == [
+        AppNameFilter,
+        RequestExtraContextFilter,
+        AppStackLocationFilter,
+        AppInstanceFilter
+    ]
 
 
 def test_request_extra_context_filter_not_in_app_context():
