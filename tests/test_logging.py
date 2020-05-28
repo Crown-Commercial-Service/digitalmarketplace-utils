@@ -24,10 +24,10 @@ def test_configure_handler(app):
     assert AppNameFilter in filter_classes
     assert RequestExtraContextFilter in filter_classes
     assert AppStackLocationFilter in filter_classes
+    assert AppInstanceFilter not in filter_classes
 
 
-def test_configure_handler_has_instance_index_in_production(app, os_environ):
-    app.config.update({'DM_ENVIRONMENT': 'production'})
+def test_configure_handler_has_instance_index_where_present(app, os_environ):
     os_environ.update({'CF_INSTANCE_INDEX': '1'})
     handler = mock.Mock()
     configure_handler(handler, app, mock.Mock())

@@ -113,7 +113,7 @@ def configure_handler(handler, app, formatter):
     handler.addFilter(AppNameFilter(app.config['DM_APP_NAME']))
     handler.addFilter(RequestExtraContextFilter())
     handler.addFilter(AppStackLocationFilter("app_", app.root_path))
-    if app.config.get('DM_ENVIRONMENT') == 'production':
+    if os.environ.get('CF_INSTANCE_INDEX'):
         handler.addFilter(AppInstanceFilter())
 
     return handler
