@@ -113,6 +113,8 @@ def configure_handler(handler, app, formatter):
     handler.addFilter(AppNameFilter(app.config['DM_APP_NAME']))
     handler.addFilter(RequestExtraContextFilter())
     handler.addFilter(AppStackLocationFilter("app_", app.root_path))
+    if os.environ.get('CF_INSTANCE_INDEX'):
+        handler.addFilter(AppInstanceFilter())
 
     return handler
 
@@ -141,6 +143,16 @@ class AppNameFilter(logging.Filter):
 
     def filter(self, record):
         record.app_name = self.app_name
+
+        return record
+
+
+class AppInstanceFilter(logging.Filter):
+    def __init__(self):
+        self.instance_index = os.environ['CF_INSTANCE_INDEX']
+
+    def filter(self, record):
+        record.instance_index = self.instance_index
 
         return record
 
