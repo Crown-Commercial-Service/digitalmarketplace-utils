@@ -65,3 +65,21 @@ def test_field_class_can_have_type():
 
     form = TestForm()
     assert form.field.type == "test_field"
+
+
+def test_field_id_is_prefixed_with_input_prefix(field_class):
+    class TestForm(wtforms.Form):
+        field = field_class()
+
+    form = TestForm()
+
+    assert form.field.id == "input-field"
+
+
+def test_field_id_is_not_prefixed_with_input_prefix_if_specified(field_class):
+    class TestForm(wtforms.Form):
+        field = field_class(id="input-field")
+
+    form = TestForm()
+
+    assert form.field.id == "input-field"
