@@ -13,7 +13,7 @@ def govuk_error(error: ErrorMapping) -> ErrorMapping:
         text = error.get("message", error.get("question", ""))
         return {
             "text": text,
-            "href": f"#input-{error['input_name']}",
+            "href": error.get("href") or f"#input-{error['input_name']}",
             "errorMessage": {"text": text},
         }
     else:
@@ -102,6 +102,9 @@ def get_errors_from_wtform(form):
     This allows us to treat errors from both content-loader forms and wtforms the same way inside templates,
     and provides backwards-compatible support for the migration to using govuk-frontend components.
 
+    The `href` for the govuk-frontend error summary is derived from the `id` of the form field; if you need to
+    override the `href` for some reason you can do this by passing the correct `id` to the field constructor.
+
     Example usage:
 
         # app.py
@@ -111,7 +114,7 @@ def get_errors_from_wtform(form):
         @flask.route("/")
         def view():
             form = Form()
-            errors = get_errors_from_wtform()
+            errors = get_errors_from_wtform(form)
             return render(
                 "template.html",
                 errors=errors,
@@ -133,7 +136,7 @@ def get_errors_from_wtform(form):
     :return: A dict with error information in a form suitable for Digital Marketplace templates
     """
     return OrderedDict(
-        # TODO: remove legacy code (items for frontend toolkit validation banners, 'input-' prefix)
+        # TODO: remove legacy code (items for frontend toolkit validation banners)
         (
             key,
             {
@@ -141,7 +144,7 @@ def get_errors_from_wtform(form):
                 "input_name": key, "question": form[key].label.text, "message": form[key].errors[0],
 
                 # parameters for govuk-frontend macro govukErrorSummary
-                "text": form[key].errors[0], "href": f"#input-{key}",
+                "text": form[key].errors[0], "href": f"#{form[key].id}",
 
                 # parameters for govuk-frontend errorMessage parameter
                 "errorMessage": (
