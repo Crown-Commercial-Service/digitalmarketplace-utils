@@ -59,7 +59,7 @@ class DMFieldMixin:
     def __init__(self, label=None, validators=None, hint=None, question_advice=None, _id_prefix="input-", **kwargs):
         super().__init__(label=label, validators=validators, **kwargs)
 
-        if not "id" in kwargs:
+        if "id" not in kwargs:
             self.id = _id_prefix + self.id
 
         if hint:
@@ -108,6 +108,8 @@ class DMSelectFieldMixin:
     '''
     def __init__(self, label=None, validators=None, coerce=text_type, options=None, **kwargs):
         super().__init__(label, validators=validators, coerce=coerce, **kwargs)
+        if "id" not in kwargs:
+            self.id = self.id + "-1"
         if options:
             self.options = copy(options)
 

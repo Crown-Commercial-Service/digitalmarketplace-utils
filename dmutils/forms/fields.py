@@ -46,6 +46,12 @@ __all__ = ['DMBooleanField', 'DMDecimalField', 'DMHiddenField', 'DMIntegerField'
 class DMBooleanField(DMFieldMixin, wtforms.fields.BooleanField):
     widget = DMCheckboxInput(hide_question=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # digitalmarketplace-frontend-toolkit suffixes the id with `-1`
+        if "id" not in kwargs:
+            self.id = self.id + "-1"
+
     @property
     def options(self):
         return [{"label": self.label.text, "value": self.data}]
