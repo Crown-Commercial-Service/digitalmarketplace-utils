@@ -56,6 +56,13 @@ def test_template_context_is_populated_from_field(widget):
         assert k in get_render_context(widget)
 
 
+def test_template_context_does_not_include_id(widget, field):
+    """The id is managed by the template rather than by WTForms"""
+    field.id = "foobar"
+    widget(field)
+    assert "id" not in get_render_context(widget)
+
+
 def test_template_context_includes_hint(widget, field):
     field.hint = "Hint text."
     widget(field)
