@@ -56,11 +56,13 @@ class DMFieldMixin:
     Derived classes which include this mixin should have a
     subclass of `wtforms.Field` in their base classes.
     '''
-    def __init__(self, label=None, validators=None, hint=None, question_advice=None, _id_prefix="input-", **kwargs):
+    def __init__(self, label=None, validators=None, hint=None, question_advice=None, **kwargs):
         super().__init__(label=label, validators=validators, **kwargs)
 
-        if "id" not in kwargs:
-            self.id = _id_prefix + self.id
+        if "id" in kwargs:
+            self.href = kwargs["id"]
+        else:
+            self.href = "input-" + self.id
 
         if hint:
             self.hint = hint
@@ -109,7 +111,8 @@ class DMSelectFieldMixin:
     def __init__(self, label=None, validators=None, coerce=text_type, options=None, **kwargs):
         super().__init__(label, validators=validators, coerce=coerce, **kwargs)
         if "id" not in kwargs:
-            self.id = self.id + "-1"
+            # This should be the id for the first option
+            self.href = self.href + "-1"
         if options:
             self.options = copy(options)
 

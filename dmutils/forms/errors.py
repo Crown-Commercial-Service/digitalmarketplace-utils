@@ -144,7 +144,7 @@ def get_errors_from_wtform(form):
                 "input_name": key, "question": form[key].label.text, "message": form[key].errors[0],
 
                 # parameters for govuk-frontend macro govukErrorSummary
-                "text": form[key].errors[0], "href": f"#{form[key].id}",
+                "text": form[key].errors[0], "href": f"#{getattr(form[key], 'href', form[key].id)}",
 
                 # parameters for govuk-frontend errorMessage parameter
                 "errorMessage": (

@@ -50,7 +50,7 @@ class DMBooleanField(DMFieldMixin, wtforms.fields.BooleanField):
         super().__init__(*args, **kwargs)
         # digitalmarketplace-frontend-toolkit suffixes the id with `-1`
         if "id" not in kwargs:
-            self.id = self.id + "-1"
+            self.href = self.href + "-1"
 
     @property
     def options(self):

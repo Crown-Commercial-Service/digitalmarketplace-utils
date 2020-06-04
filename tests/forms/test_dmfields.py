@@ -67,43 +67,43 @@ def test_field_class_can_have_type():
     assert form.field.type == "test_field"
 
 
-def test_field_id_is_prefixed_with_input_prefix(field_class):
+def test_field_href_is_prefixed_with_input_prefix(field_class):
     class TestForm(wtforms.Form):
         field = field_class()
 
     form = TestForm()
 
-    assert form.field.id.startswith("input-")
+    assert form.field.href.startswith("input-")
 
 
-def test_field_id_is_not_prefixed_with_input_prefix_if_specified(field_class):
+def test_field_href_is_not_prefixed_with_input_prefix_if_specified(field_class):
     class TestForm(wtforms.Form):
         field = field_class(id="field")
 
     form = TestForm()
 
-    assert form.field.id == "field"
+    assert form.field.href == "field"
 
 
 @pytest.mark.parametrize("field_class", (
     dmutils.forms.fields.DMRadioField, dmutils.forms.fields.DMBooleanField
 ))
-def test_selection_field_id_is_suffixed_with_number(field_class):
+def test_selection_field_href_is_suffixed_with_number(field_class):
     class TestForm(wtforms.Form):
         field = field_class()
 
     form = TestForm()
 
-    assert form.field.id == "input-field-1"
+    assert form.field.href == "input-field-1"
 
 
 @pytest.mark.parametrize("field_class", (
     dmutils.forms.fields.DMRadioField, dmutils.forms.fields.DMBooleanField
 ))
-def test_selection_field_id_is_not_suffixed_with_number_if_id_is_specified(field_class):
+def test_selection_field_href_is_not_suffixed_with_number_if_id_is_specified(field_class):
     class TestForm(wtforms.Form):
         field = field_class(id="field")
 
     form = TestForm()
 
-    assert form.field.id == "field"
+    assert form.field.href == "field"
