@@ -85,10 +85,21 @@ def init_app(app):
         return response
 
     logging.getLogger().addHandler(logging.NullHandler())
+    handlers = [logging.StreamHandler(sys.stdout)]
 
     del app.logger.handlers[:]
 
-    handler = get_handler(app)
+    if app.config.get('DM_PLAIN_TEXT_LOGS'):
+        formatter = CustomLogFormatter(LOG_FORMAT)
+    else:
+        formatter = JSONFormatter(get_json_log_format())
+
+    if app.config.get('DM_LOG_PATH'):
+        handlers.append(logging.FileHandler(app.config['DM_LOG_PATH']))
+
+    for handler in handlers:
+        configure_handler(handler, app, formatter)
+
     loglevel = logging.getLevelName(app.config['DM_LOG_LEVEL'])
     loggers = [
         app.logger,
@@ -102,7 +113,8 @@ def init_app(app):
         loggers.append(logging.getLogger('urllib3.util.retry'))
 
     for logger_ in loggers:
-        logger_.addHandler(handler)
+        for handler in handlers:
+            logger_.addHandler(handler)
         logger_.setLevel(loglevel)
     app.logger.info('Logging configured')
 
@@ -121,20 +133,6 @@ def configure_handler(handler, app, formatter):
 
 def get_json_log_format():
     return LOG_FORMAT + "".join(f" %({key})s" for key in LOG_FORMAT_EXTRA_JSON_KEYS)
-
-
-def get_handler(app):
-    if app.config.get('DM_PLAIN_TEXT_LOGS'):
-        formatter = CustomLogFormatter(LOG_FORMAT)
-    else:
-        formatter = JSONFormatter(get_json_log_format())
-
-    if app.config.get('DM_LOG_PATH'):
-        handler = logging.FileHandler(app.config['DM_LOG_PATH'])
-    else:
-        handler = logging.StreamHandler(sys.stdout)
-
-    return configure_handler(handler, app, formatter)
 
 
 class AppNameFilter(logging.Filter):

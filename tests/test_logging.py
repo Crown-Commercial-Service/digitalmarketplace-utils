@@ -89,14 +89,15 @@ def test_init_app_adds_stream_handler_without_log_path(app):
     assert isinstance(app.logger.handlers[0].formatter, JSONFormatter)
 
 
-def test_init_app_adds_file_handler_with_log_path(app):
+def test_init_app_adds_file_handler_with_log_path_and_stream_handler(app):
     with tempfile.NamedTemporaryFile() as f:
         app.config['DM_LOG_PATH'] = f.name
         init_app(app)
 
-        assert len(app.logger.handlers) == 1
-        assert isinstance(app.logger.handlers[0], logging.FileHandler)
-        assert isinstance(app.logger.handlers[0].formatter, JSONFormatter)
+        assert len(app.logger.handlers) == 2
+        assert isinstance(app.logger.handlers[0], logging.StreamHandler)
+        assert isinstance(app.logger.handlers[1], logging.FileHandler)
+        assert isinstance(app.logger.handlers[1].formatter, JSONFormatter)
 
 
 def test_init_app_adds_stream_handler_with_plain_text_format_when_config_env_set(app):
