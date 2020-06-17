@@ -27,7 +27,7 @@ def app(request):
 def app_with_stream_logger(request):
     """Force StreamHandler to use our StringIO object.
 
-    In the dmutils.logging.get_handler method we default to StreamHandler(sys.stdout), if we override sys.stdout to our
+    In the dmutils.logging class we default to StreamHandler(sys.stdout), if we override sys.stdout to our
     stream it is possible to check the contents of the stream for the correct log entries.
     """
     stream = StringIO()
