@@ -97,7 +97,7 @@ def test_init_app_adds_file_handler_with_log_path_and_stream_handler(app):
         assert len(app.logger.handlers) == 2
         assert isinstance(app.logger.handlers[0], logging.StreamHandler)
         assert isinstance(app.logger.handlers[1], logging.FileHandler)
-        assert isinstance(app.logger.handlers[1].formatter, JSONFormatter)
+        assert all(isinstance(handler.formatter, JSONFormatter) for handler in app.logger.handlers)
 
 
 def test_init_app_adds_stream_handler_with_plain_text_format_when_config_env_set(app):
