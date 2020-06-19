@@ -31,7 +31,7 @@ class TestSmartJoin:
 class TestFormatLinks:
     def test_format_link(self):
         link = 'http://www.example.com'
-        formatted_link = '<a href="http://www.example.com" class="app-break-link" rel="external">http://www.example.com</a>' # noqa
+        formatted_link = '<a href="http://www.example.com" class="govuk-link app-break-link" rel="external">http://www.example.com</a>' # noqa
         assert format_links(link) == formatted_link
 
     def test_format_link_without_protocol(self):
@@ -41,12 +41,12 @@ class TestFormatLinks:
 
     def test_format_link_with_text(self):
         text = 'This is the Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ link: http://www.exΔmple.com'
-        formatted_text = 'This is the Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ link: <a href="http://www.exΔmple.com" class="app-break-link" rel="external">http://www.exΔmple.com</a>'  # noqa
+        formatted_text = 'This is the Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ link: <a href="http://www.exΔmple.com" class="govuk-link app-break-link" rel="external">http://www.exΔmple.com</a>'  # noqa
         assert format_links(text) == formatted_text
 
     def test_format_link_handles_markup_objects_with_protocol(self):
         text = Markup('<td class="summary-item-field">\n\n<span>Hurray - http://www.example.com is great</span></td>')
-        formatted_text = Markup('<td class="summary-item-field">\n\n<span>Hurray - <a href="http://www.example.com" class="app-break-link" rel="external">http://www.example.com</a> is great</span></td>')  # noqa
+        formatted_text = Markup('<td class="summary-item-field">\n\n<span>Hurray - <a href="http://www.example.com" class="govuk-link app-break-link" rel="external">http://www.example.com</a> is great</span></td>')  # noqa
         assert format_links(text) == formatted_text
 
     def test_format_link_handles_markup_objects_without_protocol(self):
@@ -56,7 +56,7 @@ class TestFormatLinks:
 
     def test_format_link_and_text_escapes_extra_html(self):
         text = 'This is the <strong>link</strong>: http://www.example.com'
-        formatted_text = 'This is the &lt;strong&gt;link&lt;/strong&gt;: <a href="http://www.example.com" class="app-break-link" rel="external">http://www.example.com</a>'  # noqa
+        formatted_text = 'This is the &lt;strong&gt;link&lt;/strong&gt;: <a href="http://www.example.com" class="govuk-link app-break-link" rel="external">http://www.example.com</a>'  # noqa
         assert format_links(text) == formatted_text
 
     def test_format_link_does_not_die_horribly(self):
@@ -64,20 +64,22 @@ class TestFormatLinks:
                'https://something&lt;span&gt;what&lt;/span&gt;something.com'
         formatted_text = 'This is the URL that made a previous regex die horribly' \
                          '<a href="https://something&amp;lt;span&amp;gt;what&amp;lt;/span&amp;gt;something.com" ' \
-                         'class="app-break-link" rel="external">https://something&amp;lt;span&amp;gt;what&amp;lt;/span'\
+                         'class="govuk-link app-break-link" rel="external">' \
+                         'https://something&amp;lt;span&amp;gt;what&amp;lt;/span'\
                          '&amp;gt;something.com</a>'
         assert format_links(text) == formatted_text
 
     def test_format_links_open_links_in_new_tab(self):
         link = 'http://www.example.com'
-        link_new_tab = '<a href="http://www.example.com" class="app-break-link" rel="external noreferrer noopener" target="_blank">http://www.example.com</a>'  # noqa
+        link_new_tab = '<a href="http://www.example.com" class="govuk-link app-break-link" rel="external noreferrer noopener" target="_blank">http://www.example.com</a>'  # noqa
         assert format_links(link, open_links_in_new_tab=True) == link_new_tab
 
     def test_multiple_urls(self):
         text = 'This is the first link http://www.example.com and this is the second http://secondexample.com.'  # noqa
-        formatted_text = 'This is the first link <a href="http://www.example.com" class="app-break-link" '\
+        formatted_text = 'This is the first link <a href="http://www.example.com" class="govuk-link app-break-link" '\
             'rel="external">http://www.example.com</a> and this is the second '\
-            '<a href="http://secondexample.com" class="app-break-link" rel="external">http://secondexample.com</a>.'
+            '<a href="http://secondexample.com" class="govuk-link app-break-link" rel="external">' \
+            'http://secondexample.com</a>.'
         assert format_links(text) == formatted_text
 
     def test_no_links_no_change(self):
