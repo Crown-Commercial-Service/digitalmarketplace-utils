@@ -35,13 +35,12 @@ def format_links(text, open_links_in_new_tab=None):
             link = '<a href="{0}" class="govuk-link" rel="external noreferrer noopener" target="_blank">{0}</a>'
         else:
             link = '<a href="{0}" class="govuk-link" rel="external">{0}</a>'
-        plaintext_link = '<span class="app-break-link">{0}</span>'
         text_array = [type(text)(substr) for substr in url_match.split(text)]
         formatted_text_array = []
         for partial_text in text_array:
             if partial_text in matched_urls:
                 if partial_text.startswith('www'):
-                    url = plaintext_link.format(Markup.escape(partial_text))
+                    url = '{0}'.format(Markup.escape(partial_text))
                 else:
                     url = link.format(Markup.escape(partial_text))
                 formatted_text_array.append(url)

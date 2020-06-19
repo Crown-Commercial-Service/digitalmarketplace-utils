@@ -36,7 +36,7 @@ class TestFormatLinks:
 
     def test_format_link_without_protocol(self):
         link = 'www.example.com'
-        formatted_link = '<span class="app-break-link">www.example.com</span>'
+        formatted_link = 'www.example.com'
         assert format_links(link) == formatted_link
 
     def test_format_link_with_text(self):
@@ -51,7 +51,7 @@ class TestFormatLinks:
 
     def test_format_link_handles_markup_objects_without_protocol(self):
         text = Markup('<td class="summary-item-field">\n\n<span>Hurray - www.example.com is great</span></td>')
-        formatted_text = Markup('<td class="summary-item-field">\n\n<span>Hurray - <span class="app-break-link">www.example.com</span> is great</span></td>')  # noqa
+        formatted_text = Markup('<td class="summary-item-field">\n\n<span>Hurray - www.example.com is great</span></td>')  # noqa
         assert format_links(text) == formatted_text
 
     def test_format_link_and_text_escapes_extra_html(self):
