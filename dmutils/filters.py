@@ -32,10 +32,9 @@ def format_links(text, open_links_in_new_tab=None):
     matched_urls = [type(text)(substr) for substr in url_match.findall(text)]
     if matched_urls:
         if open_links_in_new_tab:
-            link = '<a href="{0}" class="govuk-link app-break-link" ' \
-                   'rel="external noreferrer noopener" target="_blank">{0}</a>'
+            link = '<a href="{0}" class="govuk-link" rel="external noreferrer noopener" target="_blank">{0}</a>'
         else:
-            link = '<a href="{0}" class="govuk-link app-break-link" rel="external">{0}</a>'
+            link = '<a href="{0}" class="govuk-link" rel="external">{0}</a>'
         plaintext_link = '<span class="app-break-link">{0}</span>'
         text_array = [type(text)(substr) for substr in url_match.split(text)]
         formatted_text_array = []
