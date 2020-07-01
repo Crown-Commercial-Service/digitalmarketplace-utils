@@ -322,6 +322,23 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     email_reply_to_id=None
                 )
 
+    def test_send_email_with_resend_false_without_using_cache(self, dm_notify_client):
+        """Checks the Notify API directly for the reference"""
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
+            with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
+                get_all_notifications_mock.return_value = {
+                    "notifications": ["niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0="]
+                }
+
+                dm_notify_client.send_email(
+                    self.email_address, self.template_id, allow_resend=False, use_recent_cache=False
+                )
+
+                assert send_email_notification_mock.called is False
+                get_all_notifications_mock.assert_called_once_with(
+                    reference="niC4qhMflcnl8MkY82N7Gqze2ZA7ed1pSBTGnxeDPj0="
+                )
+
     def test_send_email_behaviour_outside_flask_app_context(self):
         """If logger is supplied then app context is not required"""
         dm_notify_client = DMNotifyClient(
