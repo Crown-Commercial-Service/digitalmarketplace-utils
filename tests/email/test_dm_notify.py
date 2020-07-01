@@ -216,26 +216,6 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 email_reply_to_id=None
             )
 
-    def test_send_email_personalisation_passed_to_client(self, dm_notify_client, notify_send_email):
-        """Assert the expected existence of personalisation."""
-        personalisation = {u'f\u00a3oo': u'bar\u00a3'}
-        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
-            notify_send_email.update(personalisation=personalisation)
-
-            dm_notify_client.send_email(
-                self.email_address,
-                self.template_id,
-                personalisation=personalisation
-            )
-
-            email_mock.assert_called_with(
-                self.email_address,
-                self.template_id,
-                personalisation=personalisation,
-                reference='CLkthp1ZgyeBSMCgQj-zf18netwEf3J9aJxLcm-FZ4s=',
-                email_reply_to_id=None
-            )
-
     def test_send_email_includes_personalisation_in_reference(self, dm_notify_client, notify_send_email):
         """Assert personalisation is added to the auto generated reference."""
         personalisation = {u'f\u00a3oo': u'bar\u00a3'}
