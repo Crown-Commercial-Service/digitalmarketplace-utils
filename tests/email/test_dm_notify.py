@@ -216,7 +216,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 email_reply_to_id=None
             )
 
-    def test_personalisation_passed(self, dm_notify_client, notify_send_email):
+    def test_send_email_personalisation_passed_to_client(self, dm_notify_client, notify_send_email):
         """Assert the expected existence of personalisation."""
         personalisation = {u'f\u00a3oo': u'bar\u00a3'}
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
@@ -236,7 +236,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 email_reply_to_id=None
             )
 
-    def test_personalisation_appears_in_reference(self, dm_notify_client, notify_send_email):
+    def test_send_email_includes_personalisation_in_reference(self, dm_notify_client, notify_send_email):
         """Assert personalisation is added to the auto generated reference."""
         personalisation = {u'f\u00a3oo': u'bar\u00a3'}
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
@@ -256,7 +256,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                 email_reply_to_id=None
             )
 
-    def test_cache_not_instantiated_with_allow_resend(self, dm_notify_client):
+    def test_send_email_does_not_instantiate_cache_with_allow_resend(self, dm_notify_client):
         """The cache shouldn't be touched until we pass `allow_resend=False` to `send_email`."""
         with mock.patch(self.client_class_str + '.' + 'send_email_notification'):
             assert dm_notify_client._sent_references_cache is None
@@ -265,7 +265,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
 
             assert dm_notify_client._sent_references_cache is None
 
-    def test_cache_instantiated_without_allow_resend(
+    def test_send_email_instantiates_cache_if_allow_resend_is_false(
             self,
             dm_notify_client,
             notify_send_email,
@@ -289,7 +289,9 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     dm_notify_client.get_reference(self.email_address, self.template_id, None)
                 )
 
-    def test_cache_always_populated_after_first_send_without_allow_resend(self, dm_notify_client, notify_send_email):
+    def test_send_email_populates_cache_after_first_send_without_allow_resend(
+        self, dm_notify_client, notify_send_email
+    ):
         """Until `allow_resend` is set to False for the first time the cache shouldn't be populated, after, it should.
 
         After the first instance of `allow_resend=False` every reference should be added to the cache.
@@ -322,7 +324,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     dm_notify_client.get_reference(self.email_address + 'foo', self.template_id + 'bar')
                 }, "Cache should now start populating regardless of allow_resend flag"
 
-    def test_not_allow_resend(self, dm_notify_client):
+    def test_send_email_with_allow_resend_false(self, dm_notify_client):
         """Trigger identical emails and make sure only one is sent!"""
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as send_email_notification_mock:
             with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
@@ -340,7 +342,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     email_reply_to_id=None
                 )
 
-    def test_behaviour_outside_flask_app_context(self):
+    def test_send_email_behaviour_outside_flask_app_context(self):
         """If logger is supplied then app context is not required"""
         dm_notify_client = DMNotifyClient(
             _test_api_key,
@@ -359,7 +361,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     email_reply_to_id=None
                 )
 
-    def test_replacement_address_allows_resend(self, app):
+    def test_send_email_allows_resend_to_replacement_addresses(self, app):
         """
             Test the replacement_email_address mechanism doesn't make calls to different addresses look like resends.
         """
@@ -434,7 +436,7 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     mock.ANY,
                 )
 
-    def test_can_use_templates_from_app_config(self, app):
+    def test_send_email_can_use_templates_from_app_config(self, app):
         app.config["NOTIFY_TEMPLATES"] = {"template_name": "template-id"}
 
         with app.app_context():
