@@ -75,8 +75,13 @@ class DMNotifyClient:
         if self._sent_references_cache is not None:
             self._sent_references_cache.update([reference])
 
-    def has_been_sent(self, reference):
-        """Checks for a matching reference in our list of delivered references."""
+    def has_been_sent(self, reference, use_recent_cache=True):
+        """
+        Checks for a matching reference in our list of recently delivered references (last 250 emails).
+        If use_recent_cache is set to False, we do a fresh lookup of the reference in the Notify API.
+        """
+        if not use_recent_cache:
+            return len(self.client.get_all_notifications(reference=reference)['notifications']) > 0
         return reference in self.get_delivered_references()
 
     @staticmethod

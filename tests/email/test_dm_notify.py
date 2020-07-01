@@ -450,3 +450,40 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
                     reference=mock.ANY,
                     email_reply_to_id=None
                 )
+
+    def test_has_been_sent_uses_local_cache_if_available(self, dm_notify_client):
+        dm_notify_client._sent_references_cache = "reference_123"
+
+        with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
+            assert dm_notify_client.has_been_sent('reference_123')
+            assert get_all_notifications_mock.called is False
+
+    @pytest.mark.parametrize(
+        'api_response, has_been_sent',
+        [
+            ({'notifications': []}, False),
+            ({'notifications': [{'reference': 'reference_123'}]}, True),
+        ]
+    )
+    def test_has_been_sent_refreshes_local_cache_if_empty(self, api_response, has_been_sent, dm_notify_client):
+        dm_notify_client._sent_references_cache = None
+
+        with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
+            get_all_notifications_mock.return_value = api_response
+            assert dm_notify_client.has_been_sent('reference_123') == has_been_sent
+            get_all_notifications_mock.assert_called_once_with(status='delivered')
+
+    @pytest.mark.parametrize(
+        'api_response, has_been_sent',
+        [
+            ({'notifications': []}, False),
+            ({'notifications': [{'reference': 'reference_123'}]}, True),
+        ]
+    )
+    def test_has_been_sent_looks_up_reference_directly_if_told_not_to_use_cache(
+        self, api_response, has_been_sent, dm_notify_client
+    ):
+        with mock.patch(self.client_class_str + '.' + 'get_all_notifications') as get_all_notifications_mock:
+            get_all_notifications_mock.return_value = api_response
+            assert dm_notify_client.has_been_sent('reference_123', use_recent_cache=False) == has_been_sent
+            get_all_notifications_mock.assert_called_once_with(reference='reference_123')
