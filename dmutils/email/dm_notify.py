@@ -75,8 +75,13 @@ class DMNotifyClient:
         if self._sent_references_cache is not None:
             self._sent_references_cache.update([reference])
 
-    def has_been_sent(self, reference):
-        """Checks for a matching reference in our list of delivered references."""
+    def has_been_sent(self, reference, use_recent_cache=True):
+        """
+        Checks for a matching reference in our list of recently delivered references (last 250 emails).
+        If use_recent_cache is set to False, we do a fresh lookup of the reference in the Notify API.
+        """
+        if not use_recent_cache:
+            return len(self.client.get_all_notifications(reference=reference)['notifications']) > 0
         return reference in self.get_delivered_references()
 
     @staticmethod
@@ -126,7 +131,8 @@ class DMNotifyClient:
         personalisation=None,
         allow_resend=True,
         reference=None,
-        reply_to_address_id=None
+        reply_to_address_id=None,
+        use_recent_cache=True
     ):
         """
         Method to send an email using the Notify api.
@@ -137,12 +143,14 @@ class DMNotifyClient:
         :param personalisation: The template variables, dict
         :param allow_resend: if False instantiate the delivered reference cache and ensure we are not sending duplicates
         :param reply_to_address_id: String id of reply-to email address. Must be set up in Notify config before use
+        :param use_recent_cache: Use the client's cache of recently sent references. If set to False, any
+                                 has_been_sent() calls will check the reference in the Notify API directly
         :return: response from the api. For more information see https://github.com/alphagov/notifications-python-client
         """
         template_id = self.templates.get(template_name_or_id, template_name_or_id)
         reference = reference or self.get_reference(to_email_address, template_id, personalisation)
 
-        if not allow_resend and self.has_been_sent(reference):
+        if not allow_resend and self.has_been_sent(reference, use_recent_cache=use_recent_cache):
             self.logger.info(
                 "Email with reference '{reference}' has already been sent",
                 extra=dict(
