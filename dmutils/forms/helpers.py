@@ -22,6 +22,23 @@ def remove_csrf_token(data):
 
 
 def govuk_option(option: typing.Dict) -> typing.Dict:
+    """Converts one digitalmarketplace-frontend-toolkit style option (of the radio and checkboxes elements)
+    into a format suitable for use with either digitalmarketplace-frontend-toolkit
+    templates/macros or govuk-frontend macros.
+
+    Example usage:
+
+    # app.py
+
+        @flask.route("/", methods=["GET", "POST"])
+        def view():
+            lot_question = {
+            option["value"]: option
+            for option in govuk_option(
+                ContentQuestion(content_loader.get_question(framework_slug, 'services', 'lot')).get('options')
+            )
+        }
+    """
     if option:
         # DMp's yml does not requires only labels, which is used as the value if none is provided
         item = {
@@ -36,4 +53,36 @@ def govuk_option(option: typing.Dict) -> typing.Dict:
 
 
 def govuk_options(options: typing.List[typing.Dict]) -> typing.List[typing.Dict]:
+    """Converts all digitalmarketplace-frontend-toolkit style options (of the radio and checkboxes elements)
+    into a format suitable for use with either digitalmarketplace-frontend-toolkit
+    templates/macros or govuk-frontend macros.
+
+    Example usage:
+
+    # app.py
+
+    @direct_award_public.route('/<string:framework_family>/choose-lot', methods=("GET", "POST"))
+    def choose_lot(framework_family):
+        all_frameworks = data_api_client.find_frameworks().get('frameworks')
+        framework = framework_helpers.get_latest_live_framework_or_404(all_frameworks, framework_family)
+
+        content_loader.load_messages(framework['slug'], ['advice', 'descriptions'])
+        gcloud_lot_messages = content_loader.get_message(framework['slug'], 'advice', 'lots')
+        gcloud_lot_messages = {x['slug']: x for x in gcloud_lot_messages}
+
+        lots = list()
+        for lot in framework['lots']:
+            lot_item = {
+                "value": lot['slug'],
+                "label": lot['name'],
+                "description": gcloud_lot_messages[lot['slug']]['body'],
+                "hint": gcloud_lot_messages[lot['slug']].get('advice'),
+            }
+
+            lots.append(lot_item)
+        return render_template('choose-lot.html',
+                            framework_family=framework_family,
+                            title="Choose a category",
+                            lots=govuk_options(lots))
+    """
     return [govuk_option(option) for option in options]
