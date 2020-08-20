@@ -21,7 +21,9 @@ def remove_csrf_token(data):
     return cleaned_data
 
 
-def govuk_option(option: typing.Dict) -> typing.Dict:
+def govuk_option(
+    option: typing.Dict, data: typing.Optional[typing.Union[typing.List[str], str]] = None
+) -> typing.Dict:
     """Converts one digitalmarketplace-frontend-toolkit style option (of the radio and checkboxes elements)
     into a format suitable for use with either digitalmarketplace-frontend-toolkit
     templates/macros or govuk-frontend macros.
@@ -39,12 +41,25 @@ def govuk_option(option: typing.Dict) -> typing.Dict:
             )
         }
     """
+    _data: typing.List[str]
+    if data is None:
+        _data = []
+    elif isinstance(data, str):
+        _data = [data]
+    elif isinstance(data, list):
+        _data = data
+    else:
+        raise TypeError("`data` must be a string or a list of strings")
+
     if option:
         # DMp does not require a value for an option, fallback to label if not present
+        value = option.get("value", option["label"])
         item = {
-            "value": option.get('value', option['label']),
+            "value": value,
             "text": option['label'],
         }
+        if value in _data:
+            item["checked"] = True
         if "description" in option:
             item.update({"hint": {"text": option["description"]}})
         return item
@@ -52,7 +67,9 @@ def govuk_option(option: typing.Dict) -> typing.Dict:
         return {}
 
 
-def govuk_options(options: typing.List[typing.Dict]) -> typing.List[typing.Dict]:
+def govuk_options(
+    options: typing.List[typing.Dict], data: typing.Optional[typing.Union[typing.List[str], str]] = None
+) -> typing.List[typing.Dict]:
     """Converts all digitalmarketplace-frontend-toolkit style options (of the radio and checkboxes elements)
     into a format suitable for use with either digitalmarketplace-frontend-toolkit
     templates/macros or govuk-frontend macros.
@@ -85,4 +102,4 @@ def govuk_options(options: typing.List[typing.Dict]) -> typing.List[typing.Dict]
                             title="Choose a category",
                             lots=govuk_options(lots))
     """
-    return [govuk_option(option) for option in options]
+    return [govuk_option(option, data) for option in options]
