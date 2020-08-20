@@ -40,7 +40,7 @@ def govuk_option(option: typing.Dict) -> typing.Dict:
         }
     """
     if option:
-        # DMp's yml does not requires only labels, which is used as the value if none is provided
+        # DMp does not require a value for an option, fallback to label if not present
         item = {
             "value": option.get('value', option['label']),
             "text": option['label'],
