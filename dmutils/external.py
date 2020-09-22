@@ -53,11 +53,6 @@ def privacy_notice():
     raise NotImplementedError()
 
 
-@external.route('/accessibility-statement')
-def accessibility_statement():
-    raise NotImplementedError()
-
-
 @external.route('/cookies')
 def cookies():
     raise NotImplementedError()
