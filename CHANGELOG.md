@@ -2,6 +2,10 @@
 
 Records breaking changes from major version bumps
 
+## 53.0.0
+
+- You must change any uses of `dmutils.api_stubs` to use `dmtestutils.api_model_stubs` instead. The api stubs in this package have been removed.
+
 ## 52.0.0
 
 There are now no uses of
