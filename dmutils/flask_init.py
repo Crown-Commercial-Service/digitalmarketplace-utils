@@ -5,7 +5,6 @@ from types import MappingProxyType
 from dmutils import config, logging, proxy_fix, request_id, formats, filters, cookie_probe
 from dmutils.errors import api as api_errors, frontend as fe_errors
 from dmutils.urls import SafePurePathConverter
-from flask_script import Manager, Server
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import default_exceptions
 
@@ -113,37 +112,3 @@ def get_extra_files(paths):
                 filename = os.path.join(dirname, filename)
                 if os.path.isfile(filename):
                     yield filename
-
-
-def init_manager(application, port, extra_directories=()):
-
-    manager = Manager(application)
-
-    extra_files = list(get_extra_files(extra_directories))
-
-    logging.logger.debug("Watching {} extra files".format(len(extra_files)))
-
-    manager.add_command(
-        "runserver",
-        Server(port=port, extra_files=extra_files)
-    )
-
-    def print_route(rule):
-        print("{:10} {}".format(", ".join(rule.methods - set(['OPTIONS', 'HEAD'])), rule.rule))
-
-    @manager.command
-    def list_routes():
-        """List URLs of all application routes."""
-        for rule in sorted(manager.app.url_map.iter_rules(), key=lambda r: r.rule):
-            if rule.endpoint.startswith("external"):
-                continue
-            print_route(rule)
-
-    @manager.command
-    def list_external_routes():
-        """List URLs of all external routes."""
-        for rule in sorted(manager.app.url_map.iter_rules(), key=lambda r: r.rule):
-            if rule.endpoint.startswith("external"):
-                print_route(rule)
-
-    return manager

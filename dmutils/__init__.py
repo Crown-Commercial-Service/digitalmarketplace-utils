@@ -1,5 +1,5 @@
 from . import config, formats, logging, proxy_fix, request_id
-from .flask_init import init_app, init_manager
+from .flask_init import init_app
 
 
-__version__ = '53.0.0'
+__version__ = '54.0.0'
