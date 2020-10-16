@@ -86,6 +86,18 @@ class TestFormatLinks:
         text = 'There are no Greek Γ Δ Ε Ζ Η Θ Ι Κ Λ links.'
         assert format_links(text) == text
 
+    def test_handles_url_in_brackets(self):
+        text = "(http://www.example.com)"
+        formatted_text = '(<a href="http://www.example.com" class="govuk-link" '\
+            'rel="external">http://www.example.com</a>)'
+        assert format_links(text) == formatted_text
+
+    def test_handles_url_in_angle_brackets(self):
+        text = "<http://www.example.com>"
+        formatted_text = '&lt;<a href="http://www.example.com" class="govuk-link" '\
+            'rel="external">http://www.example.com</a>&gt;'
+        assert format_links(text) == formatted_text
+
 
 class TestNbsp:
     def test_nbsp(self):
