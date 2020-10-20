@@ -27,7 +27,7 @@ def format_links(text, open_links_in_new_tab=None):
                                 (?:https?://|www\.)    # start with http:// or www.
                                 (?:[^\s<>"'/?#]+)      # domain doesn't have these characters
                                 (?:[^\s<>"']+)         # post-domain part of URL doesn't have these characters
-                                [^\s<>,"'\.]           # no dot at end
+                                [^\s<>,"'\.)]          # no dot or bracket at end
                                 )""", re.X)
     matched_urls = [type(text)(substr) for substr in url_match.findall(text)]
     if matched_urls:
