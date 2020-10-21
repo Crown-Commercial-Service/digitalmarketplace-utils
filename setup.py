@@ -27,6 +27,7 @@ setup(
          'Flask<1.1.0,>=1.0.2',
          'Flask-gzip>=0.2',
          'Flask-Login>=0.2.11',
+         'Flask-Session>=0.3.2',
          'boto3<2,>=1.7.83',
          'contextlib2>=0.4.0',
          'cryptography>=3.2',
@@ -34,6 +35,7 @@ setup(
          'govuk-country-register>=0.3.0',
          'mailchimp3==3.0.6',
          'requests>=2.22.0,<3',
+         'redis>=3.5.2'
          'fleep<1.1,>=1.0.1',
          'notifications-python-client<6.0.0,>=5.0.1',
          'odfpy>=1.3.6',
