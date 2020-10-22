@@ -60,7 +60,9 @@ def govuk_option(
         }
         if value in _data:
             item["checked"] = True
-        if "description" in option:
+        if "hint" in option:
+            item.update({"hint": {"text": option["hint"]}})
+        elif "description" in option:
             item.update({"hint": {"text": option["description"]}})
         return item
     else:

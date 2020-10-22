@@ -48,6 +48,22 @@ from dmutils.forms.helpers import govuk_options
             },
         ],
     ),
+    (
+        [
+            {
+                "label": "text of the label",
+                "value": "text of the value",
+                "hint": "text of the hint",
+            },
+        ],
+        [
+            {
+                "value": "text of the value",
+                "text": "text of the label",
+                "hint": {"text": "text of the hint"},
+            },
+        ],
+    ),
 ))
 def test_govuk_options(dm_options, expected_output):
     assert govuk_options(dm_options) == expected_output
