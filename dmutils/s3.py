@@ -7,6 +7,8 @@ import logging
 import mimetypes
 import os
 
+import flask
+
 # a bit of a lie here - retains compatibility with consumers that were importing boto2's S3ResponseError from here. this
 # is the exception boto3 raises in (mostly) the same situations.
 from botocore.exceptions import ClientError as S3ResponseError
@@ -22,8 +24,12 @@ default_region = "eu-west-1"
 
 
 class S3(object):
-    def __init__(self, bucket_name, region_name=default_region):
-        self._resource = boto3.resource("s3", region_name=region_name)
+    def __init__(self, bucket_name, region_name=default_region, **kwargs):
+        if flask.current_app:
+            app = flask.current_app
+            if app.env == "development" and app.config.get("DM_S3_ENDPOINT_URL"):
+                kwargs.setdefault("endpoint_url", app.config["DM_S3_ENDPOINT_URL"])
+        self._resource = boto3.resource("s3", region_name=region_name, **kwargs)
         self._bucket = self._resource.Bucket(bucket_name)
 
     @property
