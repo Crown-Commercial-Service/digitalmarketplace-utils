@@ -1,8 +1,10 @@
 import datetime
 import sys
+from unittest import mock
 
 from botocore.exceptions import ClientError
 import boto3
+import flask
 from moto import mock_s3
 import pytest
 from freezegun import freeze_time
@@ -89,6 +91,58 @@ def bucket_with_multiple_files(request, empty_bucket):
         # a "directory" which shouldn't show up in listings
         empty_bucket.Object("with/").put(Body=b"")
         yield bucket
+
+
+@pytest.mark.usefixtures("s3_mock")
+class TestS3:
+
+    @pytest.fixture
+    def boto3(self):
+        with mock.patch("dmutils.s3.boto3") as boto3:
+            yield boto3
+
+    def test_calls_boto3_resource(self, boto3):
+        S3("bucket")
+        assert boto3.resource.call_args == mock.call("s3", region_name="eu-west-1")
+
+    def test_kwargs(self, boto3):
+        S3("bucket", endpoint_url="http://localhost:5100")
+        assert boto3.resource.call_args[1]["endpoint_url"] == "http://localhost:5100"
+
+    def test_endpoint_url_from_flask_config(self, boto3):
+        app = flask.Flask("test_endpoint_url_from_flask_config")
+        app.env = "development"
+        app.config["DM_S3_ENDPOINT_URL"] = "http://localhost:5100"
+
+        with app.app_context():
+            S3("bucket")
+            assert boto3.resource.call_args[1]["endpoint_url"] == "http://localhost:5100"
+
+    def test_endpoint_url_config_none_in_development(self, boto3):
+        app = flask.Flask("test_endpoint_url_from_flask_config")
+        app.env = "development"
+        app.config["DM_S3_ENDPOINT_URL"] = None
+
+        with app.app_context():
+            S3("bucket")
+            assert "endpoint_url" not in boto3.resource.call_args[1]
+
+    def test_endpoint_url_config_not_set_in_development(self, boto3):
+        app = flask.Flask("test_endpoint_url_from_flask_config")
+        app.env = "development"
+
+        with app.app_context():
+            S3("bucket")
+            assert "endpoint_url" not in boto3.resource.call_args[1]
+
+    def test_endpoint_url_ignored_in_production(self, boto3):
+        app = flask.Flask("test_endpoint_url_from_flask_config")
+        app.env = "production"
+        app.config["DM_S3_ENDPOINT_URL"] = "http://localhost:5100"
+
+        with app.app_context():
+            S3("bucket")
+            assert "endpoint_url" not in boto3.resource.call_args[1]
 
 
 @pytest.mark.usefixtures("s3_mock")
