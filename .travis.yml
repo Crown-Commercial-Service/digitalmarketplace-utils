@@ -3,6 +3,7 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
+  - "3.9"
 install:
   - export BOTO_CONFIG=/dev/null
   - make requirements-dev
