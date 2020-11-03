@@ -7,8 +7,6 @@ from dmutils.errors import api as api_errors, frontend as fe_errors
 from dmutils.urls import SafePurePathConverter
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import default_exceptions
-from flask_session import Session
-import redis
 
 
 frontend_error_handlers = MappingProxyType(OrderedDict((
@@ -48,9 +46,6 @@ def init_app(
         config_object.init_app(application)
 
     application.config.from_object(__name__)
-    application.config['SESSION_REDIS'] = redis.from_url('redis://127.0.0.1:6379')
-    sess = Session()
-    sess.init_app(application)
 
     # all belong to dmutils
     config.init_app(application)
@@ -67,6 +62,8 @@ def init_app(
         db.init_app(application)
     if login_manager:
         login_manager.init_app(application)
+        import dmutils.session
+        dmutils.session.init_app(application)
     if search_api_client:
         search_api_client.init_app(application)
 
