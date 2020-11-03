@@ -2,12 +2,16 @@
 
 Records breaking changes from major version bumps
 
+## 55.0.0
+
+Adds support for Redis Flask session type. Note, this will only be used if `SESSION_TYPE= 'redis'` is set on the frontend apps.
+
 ## 54.0.0
 
 You should now use `flask routes` in an app, instead of `python application.py
 list_routes` or `python application.py list_external_routes`.
 
-`flask routes` incldues the fully qualified name of the route method, so if you
+`flask routes` includes the fully qualified name of the route method, so if you
 want to show only external routes you can use `flask routes | grep '^external'`.
 
 ## 53.0.0
