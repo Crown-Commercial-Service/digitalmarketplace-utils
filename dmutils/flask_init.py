@@ -63,7 +63,8 @@ def init_app(
     if login_manager:
         login_manager.init_app(application)
         import dmutils.session
-        dmutils.session.init_app(application)
+        if os.environ.get('DM_USE_REDIS_SESSION_TYPE'):
+            dmutils.session.init_app(application)
     if search_api_client:
         search_api_client.init_app(application)
 
