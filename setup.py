@@ -35,7 +35,7 @@ setup(
          'govuk-country-register>=0.3.0',
          'mailchimp3==3.0.6',
          'requests>=2.22.0,<3',
-         'redis>=3.5.2'
+         'redis>=3.5.2',
          'fleep<1.1,>=1.0.1',
          'notifications-python-client<6.0.0,>=5.0.1',
          'odfpy>=1.3.6',
