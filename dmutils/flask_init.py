@@ -45,6 +45,8 @@ def init_app(
     if hasattr(config_object, 'init_app'):
         config_object.init_app(application)
 
+    application.config.from_object(__name__)
+
     # all belong to dmutils
     config.init_app(application)
     logging.init_app(application)
@@ -60,6 +62,9 @@ def init_app(
         db.init_app(application)
     if login_manager:
         login_manager.init_app(application)
+        if os.environ.get('DM_USE_REDIS_SESSION_TYPE'):
+            import dmutils.session
+            dmutils.session.init_app(application)
     if search_api_client:
         search_api_client.init_app(application)
 

@@ -1,8 +1,10 @@
 from flask import Flask
 
 from dmutils.flask_init import pluralize, init_app
+import dmutils.session
 import mock
 import pytest
+import os
 
 
 @pytest.mark.parametrize("count,singular,plural,output", [
@@ -32,10 +34,10 @@ class TestFlaskInit:
     def test_init_app_sets_request_id_config(self):
         init_app(self.application, {})
         assert self.application.config['DM_TRACE_ID_HEADERS'] == ('DM-Request-ID', "X-B3-TraceId")
-        assert self.application.config['DM_SPAN_ID_HEADERS'] == ('X-B3-SpanId', )
-        assert self.application.config['DM_PARENT_SPAN_ID_HEADERS'] == ('X-B3-ParentSpanId', )
-        assert self.application.config['DM_IS_SAMPLED_HEADERS'] == ('X-B3-Sampled', )
-        assert self.application.config['DM_DEBUG_FLAG_HEADERS'] == ('X-B3-Flags', )
+        assert self.application.config['DM_SPAN_ID_HEADERS'] == ('X-B3-SpanId',)
+        assert self.application.config['DM_PARENT_SPAN_ID_HEADERS'] == ('X-B3-ParentSpanId',)
+        assert self.application.config['DM_IS_SAMPLED_HEADERS'] == ('X-B3-Sampled',)
+        assert self.application.config['DM_DEBUG_FLAG_HEADERS'] == ('X-B3-Flags',)
         assert self.application.config['DM_REQUEST_ID_HEADER'] == 'DM-Request-ID'
 
     def test_init_app_sets_cookie_probe_config(self):
@@ -87,3 +89,25 @@ class TestFlaskInit:
         assert db_mock.init_app.call_args_list == [mock.call(self.application)]
         assert login_manager_mock.init_app.call_args_list == [mock.call(self.application)]
         assert search_api_client_mock.init_app.call_args_list == [mock.call(self.application)]
+
+    @mock.patch.dict(os.environ, {"DM_USE_REDIS_SESSION_TYPE": "true"})
+    @mock.patch("dmutils.session", autospec=True)
+    def test_init_uses_session_if_env_var_set(self, _mock_session):
+        bootstrap_mock = mock.Mock()
+        data_api_client_mock = mock.Mock()
+        db_mock = mock.Mock()
+        login_manager_mock = mock.Mock()
+        search_api_client_mock = mock.Mock()
+        dmutils.session = mock.Mock()
+        init_app(
+            self.application,
+            {},
+            bootstrap=bootstrap_mock,
+            data_api_client=data_api_client_mock,
+            db=db_mock,
+            login_manager=login_manager_mock,
+            search_api_client=search_api_client_mock
+        )
+
+        assert os.getenv('DM_USE_REDIS_SESSION_TYPE') == 'true'
+        dmutils.session.init_app.assert_called_once()
