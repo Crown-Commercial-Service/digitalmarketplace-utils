@@ -17,4 +17,6 @@ def init_app(app):
 
             app.config["SESSION_REDIS"] = redis.from_url(redis_service["credentials"]["uri"])
 
+    app.config["SESSION_USE_SIGNER"] = True
+    app.config["SESSION_TYPE"] = 'redis'
     flask_session.Session(app)

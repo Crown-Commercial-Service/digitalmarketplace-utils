@@ -15,6 +15,8 @@ class TestSession:
         session.init_app(self.application)
         flask_session.Session.assert_called_once()
         assert type(self.application.config.get('SESSION_REDIS')).__name__ == 'Redis'
+        assert self.application.config.get('SESSION_TYPE') == 'redis'
+        assert self.application.config.get('SESSION_USE_SIGNER') is True
 
     @mock.patch("flask_session.Session", autospec=True)
     def test_session_initialises_flask_redis_session_with_credentials(self, _mock_session):
