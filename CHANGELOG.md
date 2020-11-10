@@ -4,7 +4,7 @@ Records breaking changes from major version bumps
 
 ## 55.0.0
 
-Adds support for Redis Flask session type. Note, this will only be used if `DM_USE_REDIS_SESSION_TYPE` env var is set and `SESSION_TYPE= 'redis'` is set on the frontend apps.
+Adds support for Redis Flask session type. Note, this will only be used if `DM_USE_REDIS_SESSION_TYPE` env var is set.
 
 ## 54.0.0
 
