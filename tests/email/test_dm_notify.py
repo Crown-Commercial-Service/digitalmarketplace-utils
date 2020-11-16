@@ -8,7 +8,9 @@ from collections import OrderedDict
 from itertools import product
 
 import pytest
+from notifications_python_client.errors import HTTPError
 
+from dmutils.email.exceptions import EmailError, EmailTemplateError
 from dmutils.email.dm_notify import DMNotifyClient
 from helpers import PatchExternalServiceLogConditionMixin, assert_external_service_log_entry
 
@@ -29,15 +31,16 @@ def dm_notify_client(app):
 @pytest.fixture
 def notify_example_http_error():
     """Return a mock object with attributes of Notify `HTTPError`."""
-    e = mock.Mock
-    e.status_code = 400
-    e.message = [
+    response = mock.Mock()
+    response.status_code = 400
+    response.json.side_effect = AttributeError
+    message = [
         {u'message': u'email_address Not a valid email address', u'error': u'ValidationError'},
         {u'message': u'template_id is not a valid UUID', u'error': u'ValidationError'},
         # notify do actually use non-ascii characters in their error messages
         {u'message': u'Won\u2019t send unless you give us \u00a3\u00a3\u00a3', u'error': u'ValidationError'},
     ]
-    return e
+    return HTTPError(response, message)
 
 
 @pytest.fixture
@@ -486,3 +489,21 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
             get_all_notifications_mock.return_value = api_response
             assert dm_notify_client.has_been_sent('reference_123', use_recent_cache=False) == has_been_sent
             get_all_notifications_mock.assert_called_once_with(reference='reference_123')
+
+    def test_raises_email_error(self, dm_notify_client, notify_example_http_error):
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+            email_mock.side_effect = notify_example_http_error
+
+            with pytest.raises(EmailError):
+                dm_notify_client.send_email(self.email_address, self.template_id)
+
+    def test_raises_email_template_error_if_personalisation_missing(self, dm_notify_client, notify_example_http_error):
+        notify_example_http_error._message = [
+            {"error": "BadRequestError", "message": "Missing personalisation: application_deadline"}
+        ]
+
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+            email_mock.side_effect = notify_example_http_error
+
+            with pytest.raises(EmailTemplateError):
+                dm_notify_client.send_email(self.email_address, self.template_id)

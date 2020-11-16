@@ -4,3 +4,7 @@
 
 class EmailError(Exception):
     pass
+
+
+class EmailTemplateError(Exception):
+    pass
