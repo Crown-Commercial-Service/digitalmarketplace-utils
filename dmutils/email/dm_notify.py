@@ -4,7 +4,7 @@ from flask import current_app
 from notifications_python_client import NotificationsAPIClient
 from notifications_python_client.errors import HTTPError
 
-from dmutils.email.exceptions import EmailError
+from dmutils.email.exceptions import EmailError, EmailTemplateError
 from dmutils.email.helpers import hash_string
 from dmutils.timing import logged_duration_for_external_request as log_external_request
 
@@ -185,6 +185,8 @@ class DMNotifyClient:
 
         except HTTPError as e:
             self._log_email_error_message(to_email_address, template_name_or_id, reference, e)
+            if any(msg["message"].startswith("Missing personalisation") for msg in e.message):
+                raise EmailTemplateError(str(e))
             raise EmailError(str(e))
 
         self._update_cache(reference)
