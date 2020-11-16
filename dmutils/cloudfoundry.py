@@ -3,15 +3,12 @@ Support for running on a CloudFoundry platform such as GOV.UK PaaS.
 """
 
 import json
+import os
+from typing import Union
 
 
-def get_vcap_services(app, default=None) -> dict:
-    if app.config.get("VCAP_SERVICES") is None:
-        return default
-
-    vcap_services = json.loads(app.config["VCAP_SERVICES"])
-
-    return vcap_services
+def get_vcap_services() -> Union[dict, KeyError]:
+    return json.loads(os.environ["VCAP_SERVICES"])
 
 
 def get_service_by_name_from_vcap_services(vcap_services: dict, name: str) -> dict:

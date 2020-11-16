@@ -1,3 +1,5 @@
+import os
+
 import flask_session
 from flask import Flask
 from dmutils import session
@@ -19,9 +21,7 @@ class TestSession:
         assert self.application.config.get('SESSION_USE_SIGNER') is True
 
     @mock.patch("flask_session.Session", autospec=True)
-    def test_session_initialises_flask_redis_session_with_credentials(self, _mock_session):
-        self.application.config['DM_REDIS_SERVICE_NAME'] = 'digitalmarketplace_redis'
-        self.application.config['VCAP_SERVICES'] = """
+    @mock.patch.dict(os.environ, {"VCAP_SERVICES": """
     {
         "redis": [{
             "binding_name": null,
@@ -35,7 +35,9 @@ class TestSession:
             "volume_mounts": []
         }]
     }
-            """
+            """})
+    def test_session_initialises_flask_redis_session_with_credentials(self, _mock_session):
+        self.application.config['DM_REDIS_SERVICE_NAME'] = 'digitalmarketplace_redis'
         session.init_app(self.application)
         flask_session.Session.assert_called_once()
         expected_dict = {'host': 'example.com', 'port': 6379, 'username': 'username', 'password': 'password', 'db': 0}
