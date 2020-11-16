@@ -4,10 +4,9 @@ Support for running on a CloudFoundry platform such as GOV.UK PaaS.
 
 import json
 import os
-from typing import Union
 
 
-def get_vcap_services() -> Union[dict, KeyError]:
+def get_vcap_services() -> dict:
     return json.loads(os.environ["VCAP_SERVICES"])
 
 
