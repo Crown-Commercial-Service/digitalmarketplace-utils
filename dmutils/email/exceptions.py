@@ -6,5 +6,5 @@ class EmailError(Exception):
     pass
 
 
-class EmailTemplateError(Exception):
+class EmailTemplateError(EmailError):
     pass

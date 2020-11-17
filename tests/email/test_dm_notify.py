@@ -507,3 +507,18 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
 
             with pytest.raises(EmailTemplateError):
                 dm_notify_client.send_email(self.email_address, self.template_id)
+
+    def test_catch_email_error_catches_email_template_error(self, dm_notify_client, notify_example_http_error):
+        notify_example_http_error._message = [
+            {"error": "BadRequestError", "message": "Missing personalisation: application_deadline"}
+        ]
+
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+            email_mock.side_effect = notify_example_http_error
+
+            try:
+                dm_notify_client.send_email(self.email_address, self.template_id)
+            except EmailError as e:
+                assert isinstance(e, EmailTemplateError)
+            else:
+                assert False, "EmailError was not raised"
