@@ -5,6 +5,7 @@ from types import MappingProxyType
 from dmutils import config, logging, proxy_fix, request_id, formats, filters, cookie_probe
 from dmutils.errors import api as api_errors, frontend as fe_errors
 from dmutils.urls import SafePurePathConverter
+import dmutils.session
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import default_exceptions
 
@@ -62,9 +63,7 @@ def init_app(
         db.init_app(application)
     if login_manager:
         login_manager.init_app(application)
-        if os.environ.get('DM_USE_REDIS_SESSION_TYPE'):
-            import dmutils.session
-            dmutils.session.init_app(application)
+        dmutils.session.init_app(application)
     if search_api_client:
         search_api_client.init_app(application)
 

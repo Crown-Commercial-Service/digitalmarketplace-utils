@@ -4,7 +4,6 @@ from dmutils.flask_init import pluralize, init_app
 import dmutils.session
 import mock
 import pytest
-import os
 
 
 @pytest.mark.parametrize("count,singular,plural,output", [
@@ -90,9 +89,8 @@ class TestFlaskInit:
         assert login_manager_mock.init_app.call_args_list == [mock.call(self.application)]
         assert search_api_client_mock.init_app.call_args_list == [mock.call(self.application)]
 
-    @mock.patch.dict(os.environ, {"DM_USE_REDIS_SESSION_TYPE": "true"})
     @mock.patch("dmutils.session", autospec=True)
-    def test_init_uses_session_if_env_var_set(self, _mock_session):
+    def test_init_uses_session(self, _mock_session):
         bootstrap_mock = mock.Mock()
         data_api_client_mock = mock.Mock()
         db_mock = mock.Mock()
@@ -109,25 +107,4 @@ class TestFlaskInit:
             search_api_client=search_api_client_mock
         )
 
-        assert os.getenv('DM_USE_REDIS_SESSION_TYPE') == 'true'
         dmutils.session.init_app.assert_called_once()
-
-    @mock.patch("dmutils.session", autospec=True)
-    def test_init_does_not_use_session_by_default(self, _mock_session):
-        bootstrap_mock = mock.Mock()
-        data_api_client_mock = mock.Mock()
-        db_mock = mock.Mock()
-        login_manager_mock = mock.Mock()
-        search_api_client_mock = mock.Mock()
-        dmutils.session = mock.Mock()
-        init_app(
-            self.application,
-            {},
-            bootstrap=bootstrap_mock,
-            data_api_client=data_api_client_mock,
-            db=db_mock,
-            login_manager=login_manager_mock,
-            search_api_client=search_api_client_mock
-        )
-
-        dmutils.session.init_app.assert_not_called()

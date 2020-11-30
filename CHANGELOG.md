@@ -2,6 +2,10 @@
 
 Records breaking changes from major version bumps
 
+## 56.0.0
+
+Flask Redis session type is enabled by default.
+
 ## 55.0.0
 
 Adds support for Redis Flask session type. Note, this will only be used if `DM_USE_REDIS_SESSION_TYPE` env var is set.
