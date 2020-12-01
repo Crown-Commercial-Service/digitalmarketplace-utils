@@ -258,6 +258,10 @@ class DateValidator:
             # remove processing errors from field
             field.errors[:] = []
 
+            # add errors to specific form field fields
+            for form_field_field in error_fields:
+                getattr(field.form_field, form_field_field).errors = [error_message]
+
             validation_error = ValidationError(error_message)
             validation_error.fields = error_fields
             raise validation_error
