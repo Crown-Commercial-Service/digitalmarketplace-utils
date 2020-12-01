@@ -174,6 +174,18 @@ class DMDateField(DMFieldMixin, wtforms.fields.Field):
         else:
             return {}
 
+    @property
+    def day(self):
+        return self.form_field.day
+
+    @property
+    def month(self):
+        return self.form_field.month
+
+    @property
+    def year(self):
+        return self.form_field.year
+
     def process(self, formdata, data=unset_value):
         '''
         Process incoming data.

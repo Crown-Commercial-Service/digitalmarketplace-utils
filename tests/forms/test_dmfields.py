@@ -1,9 +1,9 @@
-
 import pytest
 
 import wtforms
 
 import dmutils.forms.fields
+from dmutils.forms.fields import DMDateField
 
 
 @pytest.fixture(params=dmutils.forms.fields.__all__)
@@ -107,3 +107,14 @@ def test_selection_field_href_is_not_suffixed_with_number_if_id_is_specified(fie
     form = TestForm()
 
     assert form.field.href == "field"
+
+
+def test_dm_date_field_proxies_access_to_form_field_fields():
+    class TestForm(wtforms.Form):
+        date = DMDateField("Date")
+
+    field = TestForm().date
+
+    assert field.day == field.form_field.day
+    assert field.month == field.form_field.month
+    assert field.year == field.form_field.year
