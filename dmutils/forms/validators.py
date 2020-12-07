@@ -47,17 +47,25 @@ class GreaterThan:
         try:
             other = form[self.fieldname]
         except KeyError:
-            raise ValidationError(field.gettext("Invalid field name '%s'." % self.fieldname))
-        if other.data and not field.data > other.data:
-            d = {
-                'other_label': hasattr(other, 'label') and other.label.text or self.fieldname,
-                'other_name': self.fieldname
-            }
-            message = self.message
-            if message is None:
-                message = field.gettext('Field must be greater than %(other_name)s.')
+            raise ValidationError(
+                field.gettext("Invalid field name '%s'." % self.fieldname)
+            )
+        if field.data is None or other.data is None:
+            return
+        elif field.data > other.data:
+            return
 
-            raise ValidationError(message % d)
+        d = {
+            "other_label": hasattr(other, "label")
+            and other.label.text
+            or self.fieldname,
+            "other_name": self.fieldname,
+        }
+        message = self.message
+        if message is None:
+            message = field.gettext("Field must be greater than %(other_name)s.")
+
+        raise ValidationError(message % d)
 
 
 class FourDigitYear:

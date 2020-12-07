@@ -1,3 +1,4 @@
+from datetime import date
 
 import pytest
 import mock
@@ -5,16 +6,19 @@ import mock
 from wtforms.validators import ValidationError
 
 import dmutils.forms.validators
+from dmutils.forms.validators import (
+    GreaterThan,
+)
 
 
 @pytest.fixture
 def form():
-    return mock.Mock()
+    return mock.MagicMock()
 
 
 @pytest.fixture
-def field():
-    return mock.Mock()
+def field(form):
+    return form.field
 
 
 @pytest.mark.parametrize(
@@ -52,3 +56,57 @@ def test_email_validator_does_not_raise_on_a_valid_email_address(form, field, em
     field.data = email_address
 
     validator(form, field)
+
+
+class TestGreaterThan:
+    @pytest.fixture
+    def form(self, form):
+        form.other = form["other"]
+        return form
+
+    @pytest.fixture
+    def validator(self):
+        return GreaterThan("other")
+
+    @pytest.mark.parametrize("a, b", (
+        # a should be less than b
+        # this test will test both ways round
+        #
+        (0, 1),
+        (-1, 0),
+        (10, 100),
+        # doesn't have to be int or even number, any comparable will do
+        (1.0, 1.1),
+        (date(2000, 1, 1), date(2020, 1, 1)),
+        ("2000-01-01", "2020-01-01"),
+    ))
+    def test_greater_than_raises_validation_error_if_field_data_is_not_greater_than_other(
+        self, form, validator, a, b
+    ):
+        assert a < b, "this test expects a to be less than b"
+
+        # if field data is less than other data raises ValidationError
+        form.field.data = a
+        form.other.data = b
+
+        with pytest.raises(ValidationError):
+            validator(form, form.field)
+
+        # otherwise returns without error
+        form.field.data = b
+        form.other.data = a
+
+        assert validator(form, form.field) is None
+
+    @pytest.mark.parametrize("a, b", (
+        (10, None),
+        (None, 10),
+        (None, None),
+    ))
+    def test_returns_if_field_or_other_are_none(
+        self, form, validator, a, b,
+    ):
+        form.field.data = a
+        form.other.data = b
+
+        assert validator(form, form.field) is None
