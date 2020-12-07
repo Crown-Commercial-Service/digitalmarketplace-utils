@@ -174,6 +174,20 @@ class DMDateField(DMFieldMixin, wtforms.fields.Field):
             return {}
 
     @property
+    def href(self):
+        if self._href:
+            return self._href
+
+        # first form field field with an error,
+        if self.form_field.errors:
+            for subfield in self.form_field:
+                if subfield.errors:
+                    return "input-" + subfield.name
+
+        # or just the first form field field
+        return super().href + "-day"
+
+    @property
     def day(self):
         return self.form_field.day
 

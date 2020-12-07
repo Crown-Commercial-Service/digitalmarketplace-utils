@@ -1,5 +1,4 @@
 import pytest
-
 import wtforms
 
 import dmutils.forms.fields
@@ -83,6 +82,15 @@ def test_field_href_is_not_prefixed_with_input_prefix_if_specified(field_class):
     form = TestForm()
 
     assert form.field.href == "field"
+
+
+def test_date_field_href_is_suffixed_with_first_field_if_no_error():
+    class TestForm(wtforms.Form):
+        field = DMDateField()
+
+    form = TestForm()
+
+    assert form.field.href == "input-field-day"
 
 
 @pytest.mark.parametrize("field_class", (
