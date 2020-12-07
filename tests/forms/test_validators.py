@@ -156,9 +156,14 @@ class TestDateValidator:
         assert e.value.fields == invalid_fields
 
     @pytest.mark.parametrize("data, invalid_fields, error_message", (
-        ((2020, "", ""), {"month", "day"}, "Date must include a day and month"),
+        # 'Highlight the day, month or year field where the information is missing'.
         ((2020, 1, ""), {"day"}, "Date must include a day"),
-        (("", 1, ""), {"day", "year"}, "Date must include a day and year"),
+        ((2020, "", 1), {"month"}, "Date must include a month"),
+        (("", 1, 1), {"year"}, "Date must include a year"),
+        # 'If more than one field is missing information, highlight the date input as a whole'.
+        ((2020, "", ""), {"day", "month", "year"}, "Date must include a day and month"),
+        (("", 1, ""), {"day", "month", "year"}, "Date must include a day and year"),
+        (("", "", 1), {"day", "month", "year"}, "Date must include a month and year"),
     ))
     def test_date_error_message_raises_date_is_incomplete_message_for_missing_data(
         self, validate_date, data, invalid_fields, error_message
@@ -171,10 +176,13 @@ class TestDateValidator:
         assert e.value.fields == invalid_fields
 
     @pytest.mark.parametrize("data, invalid_fields", (
+        # 'Highlight the day, month or year field with the incorrect information'.
         ((2020, 13, 1), {"month"}),
         ((1999, 1, 310), {"day"}),
-        ((-19, 1, 310), {"year", "day"}),
         ((2001, 2, 29), {"day"}),
+        # 'Or highlight the date as a whole if there’s incorrect information in
+        # more than one field, or it’s not clear which field is incorrect'.
+        ((-19, 1, 310), {"day", "month", "year"}),
     ))
     def test_data_error_message_raises_date_entered_cant_be_correct_message_for_invalid_date(
         self, validate_date, data, invalid_fields

@@ -159,7 +159,14 @@ class DateValidator:
     def _error(self, error, fields, **kwargs):
         e = ValueError(self.format_error_message(error, **kwargs))
         e.error = error
-        e.fields = fields
+
+        # Design System guidance is that if more than one field has an error
+        # we should highlight all fields.
+        if len(fields) > 1:
+            e.fields = {"year", "month", "day"}
+        else:
+            e.fields = fields
+
         return e
 
     def format_error_message(self, error, **kwargs):
