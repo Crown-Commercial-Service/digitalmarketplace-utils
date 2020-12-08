@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 import mock
 
-from wtforms.validators import ValidationError
+from wtforms.validators import StopValidation, ValidationError
 
 import dmutils.forms.validators
 from dmutils.forms.validators import (
@@ -200,7 +200,7 @@ class TestDateValidator:
         field.form_field.day.data = None
         field.errors = []
 
-        with pytest.raises(ValidationError) as e:
+        with pytest.raises(StopValidation) as e:
             validator(form, field)
 
         assert str(e.value) == "Enter a date"

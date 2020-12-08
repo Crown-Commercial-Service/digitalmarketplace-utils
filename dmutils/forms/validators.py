@@ -10,7 +10,7 @@ DateValidator -- Error messages for a date input
 import datetime
 from typing import Any, Dict, Optional
 
-from wtforms.validators import ValidationError
+from wtforms.validators import StopValidation, ValidationError
 
 from dmutils.email.helpers import validate_email_address
 
@@ -269,6 +269,6 @@ class DateValidator:
             for form_field_field in error_fields:
                 getattr(field.form_field, form_field_field).errors = [error_message]
 
-            validation_error = ValidationError(error_message)
+            validation_error = StopValidation(error_message)
             validation_error.fields = error_fields
             raise validation_error
