@@ -239,3 +239,14 @@ class DMDateField(DMFieldMixin, wtforms.fields.Field):
             if not digits == 4:
                 self.data = None
                 self.process_errors.append(self.gettext('Not a valid date value'))
+
+    def post_validate(self, form, validation_stopped):
+        # Consumers of a data field might want to highlight individual inputs
+        # of the date input component, checking the values of {day, month,
+        # year}.errors.  In the case where the validator chain hasn't added
+        # errors to any of day month or year, we will add the errors to all the
+        # fields so that all inputs get highlighted.
+        if self.errors and not any((self.year.errors, self.month.errors, self.day.errors)):
+            self.year.errors = self.errors
+            self.month.errors = self.errors
+            self.day.errors = self.errors

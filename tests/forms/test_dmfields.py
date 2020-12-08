@@ -126,3 +126,20 @@ def test_dm_date_field_proxies_access_to_form_field_fields():
     assert field.day == field.form_field.day
     assert field.month == field.form_field.month
     assert field.year == field.form_field.year
+
+
+def test_dm_date_field_copies_errors_to_form_field_fields():
+    from wtforms.validators import ValidationError
+
+    def test_validator(form, field):
+        raise ValidationError("Validation error")
+
+    class TestForm(wtforms.Form):
+        date = DMDateField("Date", validators=[test_validator])
+
+    form = TestForm()
+    form.validate()
+
+    assert "Validation error" in form.date.day.errors
+    assert "Validation error" in form.date.month.errors
+    assert "Validation error" in form.date.year.errors
