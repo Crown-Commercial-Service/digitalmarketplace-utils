@@ -59,10 +59,7 @@ class DMFieldMixin:
     def __init__(self, label=None, validators=None, hint=None, question_advice=None, **kwargs):
         super().__init__(label=label, validators=validators, **kwargs)
 
-        if "id" in kwargs:
-            self.href = kwargs["id"]
-        else:
-            self.href = "input-" + self.id
+        self._href = kwargs.get("id")
 
         if hint:
             self.hint = hint
@@ -73,6 +70,10 @@ class DMFieldMixin:
         # if we want to specify it on a subclass
         # this line will bring it back
         self.type = getattr(self.__class__, 'type', self.type)
+
+    @property
+    def href(self):
+        return self._href or f"input-{self.id}"
 
     @property
     def question(self):
@@ -110,9 +111,6 @@ class DMSelectFieldMixin:
     '''
     def __init__(self, label=None, validators=None, coerce=text_type, options=None, **kwargs):
         super().__init__(label, validators=validators, coerce=coerce, **kwargs)
-        if "id" not in kwargs:
-            # This should be the id for the first option
-            self.href = self.href + "-1"
         if options:
             self.options = copy(options)
 
@@ -133,6 +131,11 @@ class DMSelectFieldMixin:
                         'value': value,
                     }
                 )
+
+    @property
+    def href(self):
+        # This should be the id for the first option
+        return self._href or super().href + "-1"
 
     @property
     def value(self):

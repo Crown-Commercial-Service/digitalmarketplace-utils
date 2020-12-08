@@ -3,11 +3,12 @@ from datetime import date
 import pytest
 import mock
 
-from wtforms.validators import ValidationError
+from wtforms.validators import StopValidation, ValidationError
 
 import dmutils.forms.validators
 from dmutils.forms.validators import (
     GreaterThan,
+    DateValidator,
 )
 
 
@@ -110,3 +111,104 @@ class TestGreaterThan:
         form.other.data = b
 
         assert validator(form, form.field) is None
+
+
+class TestDateValidator:
+    @pytest.fixture
+    def validate_date(self):
+        return DateValidator("a date").validate_date
+
+    @pytest.fixture
+    def validator(self):
+        return DateValidator("a date")
+
+    def test_date_error_message_returns_none_for_valid_date(self, validate_date):
+        assert validate_date(2020, 11, 27) is None
+        assert validate_date(2004, 2, 29) is None
+
+    @pytest.mark.parametrize("date", (
+        ("2020", 1, 26),
+        (2020, "1", 26),
+        (2020, 1, "26"),
+        ("2020", "1", "26"),
+        ("2020", "01", "26"),
+        ("2020", "01", "06"),
+    ))
+    def test_date_error_message_can_handle_strings(self, validate_date, date):
+        assert validate_date(*date) is None
+
+    @pytest.mark.parametrize("data, invalid_fields", (
+        ((None, None, None), {"year", "month", "day"}),
+        (("", "", ""), {"year", "month", "day"}),
+        (("foo", "bar", "baz"), {"year", "month", "day"}),
+        (("1.0", "1.0", "1.0"), {"year", "month", "day"}),
+        (("2020", "1", "baz"), {"day"}),
+        (("2020", "1", "1.0"), {"day"}),
+    ))
+    def test_date_error_message_raises_nothing_is_entered_message_if_data_is_empty_or_not_int(
+        self, validate_date, data, invalid_fields
+    ):
+        with pytest.raises(ValueError) as e:
+            validate_date(*data)
+
+        assert str(e.value) == "Enter a date"
+        assert e.value.error == "nothing_is_entered"
+        assert e.value.fields == invalid_fields
+
+    @pytest.mark.parametrize("data, invalid_fields, error_message", (
+        # 'Highlight the day, month or year field where the information is missing'.
+        ((2020, 1, ""), {"day"}, "Date must include a day"),
+        ((2020, "", 1), {"month"}, "Date must include a month"),
+        (("", 1, 1), {"year"}, "Date must include a year"),
+        # 'If more than one field is missing information, highlight the date input as a whole'.
+        ((2020, "", ""), {"day", "month", "year"}, "Date must include a day and month"),
+        (("", 1, ""), {"day", "month", "year"}, "Date must include a day and year"),
+        (("", "", 1), {"day", "month", "year"}, "Date must include a month and year"),
+    ))
+    def test_date_error_message_raises_date_is_incomplete_message_for_missing_data(
+        self, validate_date, data, invalid_fields, error_message
+    ):
+        with pytest.raises(ValueError) as e:
+            validate_date(*data)
+
+        assert str(e.value) == error_message
+        assert e.value.error == "date_is_incomplete"
+        assert e.value.fields == invalid_fields
+
+    @pytest.mark.parametrize("data, invalid_fields", (
+        # 'Highlight the day, month or year field with the incorrect information'.
+        ((2020, 13, 1), {"month"}),
+        ((1999, 1, 310), {"day"}),
+        ((2001, 2, 29), {"day"}),
+        # 'Or highlight the date as a whole if there’s incorrect information in
+        # more than one field, or it’s not clear which field is incorrect'.
+        ((-19, 1, 310), {"day", "month", "year"}),
+    ))
+    def test_data_error_message_raises_date_entered_cant_be_correct_message_for_invalid_date(
+        self, validate_date, data, invalid_fields
+    ):
+        with pytest.raises(ValueError) as e:
+            validate_date(*data)
+
+        assert str(e.value) == "Date must be a real date"
+        assert e.value.error == "date_entered_cant_be_correct"
+        assert e.value.fields == invalid_fields
+
+    def test_raises_validation_error_for_invalid_data(self, form, field, validator):
+        field.form_field.year.data = None
+        field.form_field.month.data = None
+        field.form_field.day.data = None
+        field.errors = []
+
+        with pytest.raises(StopValidation) as e:
+            validator(form, field)
+
+        assert str(e.value) == "Enter a date"
+        assert e.value.fields == {"year", "month", "day"}
+
+    def test_does_not_raise_validation_error_for_valid_data(self, form, field, validator):
+        field.form_field.year.data = 2020
+        field.form_field.month.data = 1
+        field.form_field.day.data = 26
+
+        validator(form, field)
