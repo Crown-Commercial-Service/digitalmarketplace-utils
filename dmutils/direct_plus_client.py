@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+
 import requests
 from requests import HTTPError
 
@@ -76,9 +78,14 @@ class DirectPlusClient(object):
             )
         return response
 
-    def get_organization_by_duns_number(self, duns_number):
+    def get_organization_by_duns_number(self, duns_number) -> Optional[dict]:
         """
         Request a supplier by duns number from the Direct Plus API
+
+        :return the organisation corresponding to the DUNS number; or `None` if the number is invalid or no
+                corresponding organisation exists.
+        :raises KeyError on unexpected failure if the response body is JSON.
+        :raises ValueError on unexpected failure if the response body is not valid JSON.
         """
         response = self._direct_plus_request(
             f'data/duns/{duns_number}', payload={'productId': 'cmpelk', 'versionId': 'v2'}
