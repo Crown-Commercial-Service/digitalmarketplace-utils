@@ -1,5 +1,10 @@
 import logging
 import requests
+from requests import HTTPError
+
+# See https://directplus.documentation.dnb.com/errorsAndInformationMessages.html
+DUNS_NUMBER_NOT_FOUND = 404, "10001"
+DUNS_NUMBER_INVALID = 400, "10003"
 
 
 class DirectPlusClient(object):
@@ -79,8 +84,16 @@ class DirectPlusClient(object):
             f'data/duns/{duns_number}', payload={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 
-        if response.status_code in (404, 400):
-            # 404 - DUNs number not found
-            # 400 - Incorrect format
-            return None
+        try:
+            response.raise_for_status()
+        except HTTPError as exception:
+            try:
+                error = response.json()['error']
+
+                if (response.status_code, error["errorCode"]) in [DUNS_NUMBER_INVALID, DUNS_NUMBER_NOT_FOUND]:
+                    return None
+
+                self.logger.error(f"Unable to get supplier by DUNS number: {error}")
+            except (ValueError, KeyError):
+                self.logger.error(f"Unable to get supplier by DUNS number: {exception}")
         return response.json()['organization']
