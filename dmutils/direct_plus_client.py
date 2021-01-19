@@ -1,5 +1,12 @@
 import logging
+from typing import Optional
+
 import requests
+from requests import HTTPError
+
+# See https://directplus.documentation.dnb.com/errorsAndInformationMessages.html
+DUNS_NUMBER_NOT_FOUND = 404, "10001"
+DUNS_NUMBER_INVALID = 400, "10003"
 
 
 class DirectPlusClient(object):
@@ -71,16 +78,29 @@ class DirectPlusClient(object):
             )
         return response
 
-    def get_organization_by_duns_number(self, duns_number):
+    def get_organization_by_duns_number(self, duns_number) -> Optional[dict]:
         """
         Request a supplier by duns number from the Direct Plus API
+
+        :return the organisation corresponding to the DUNS number; or `None` if the number is invalid or no
+                corresponding organisation exists.
+        :raises KeyError on unexpected failure if the response body is JSON.
+        :raises ValueError on unexpected failure if the response body is not valid JSON.
         """
         response = self._direct_plus_request(
             f'data/duns/{duns_number}', payload={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 
-        if response.status_code in (404, 400):
-            # 404 - DUNs number not found
-            # 400 - Incorrect format
-            return None
+        try:
+            response.raise_for_status()
+        except HTTPError as exception:
+            try:
+                error = response.json()['error']
+
+                if (response.status_code, error["errorCode"]) in [DUNS_NUMBER_INVALID, DUNS_NUMBER_NOT_FOUND]:
+                    return None
+
+                self.logger.error(f"Unable to get supplier by DUNS number: {error}")
+            except (ValueError, KeyError):
+                self.logger.error(f"Unable to get supplier by DUNS number: {exception}")
         return response.json()['organization']
