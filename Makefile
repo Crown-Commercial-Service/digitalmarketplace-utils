@@ -10,11 +10,15 @@ requirements-dev: virtualenv requirements-dev.txt
 	${VIRTUALENV_ROOT}/bin/pip install -Ur requirements-dev.txt
 
 .PHONY: test
-test: show-environment test-flake8 test-python
+test: show-environment test-flake8 test-mypy test-python
 
 .PHONY: test-flake8
 test-flake8: virtualenv
 	${VIRTUALENV_ROOT}/bin/flake8 .
+
+.PHONY: test-mypy
+test-mypy: virtualenv requirements-dev
+	${VIRTUALENV_ROOT}/bin/mypy dmutils/
 
 .PHONY: test-python
 test-python: virtualenv requirements-dev
