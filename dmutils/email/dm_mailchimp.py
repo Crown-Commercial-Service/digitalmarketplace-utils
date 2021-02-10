@@ -41,7 +41,7 @@ class DMMailChimpClient(object):
         self.retries = retries
 
     @staticmethod
-    def get_email_hash(email_address: Union[str, bytes]) -> bytes:
+    def get_email_hash(email_address: Union[str, bytes]) -> str:
         """md5 hashing of lower cased emails has been chosen by mailchimp to identify email addresses"""
         formatted_email_address = str(email_address.lower()).encode('utf-8')
         return md5(formatted_email_address).hexdigest()
