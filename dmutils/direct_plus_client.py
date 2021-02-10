@@ -103,4 +103,4 @@ class DirectPlusClient(object):
                 self.logger.error(f"Unable to get supplier by DUNS number: {error}")
             except (ValueError, KeyError):
                 self.logger.error(f"Unable to get supplier by DUNS number: {exception}")
-        return response.json()['organization']
+        return response.json()['organization']  # type: ignore

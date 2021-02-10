@@ -65,7 +65,7 @@ class DMMailChimpClient(object):
         try:
             with log_external_request(service='Mailchimp'):
                 campaign = self._client.campaigns.create(campaign_data)
-            return campaign['id']
+            return campaign['id']  # type: ignore
         except (RequestException, MailChimpError) as e:
             self.logger.error(
                 "Mailchimp failed to create campaign for '{campaign_title}'".format(

@@ -7,7 +7,7 @@ import fleep
 try:
     import urlparse
 except ImportError:
-    import urllib.parse as urlparse
+    import urllib.parse as urlparse  # type: ignore
 
 from .s3 import S3ResponseError, get_file_size
 
