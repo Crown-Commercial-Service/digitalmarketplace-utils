@@ -103,15 +103,13 @@ class DMNotifyClient:
     def _log_email_error_message(self, to_email_address, template_name_or_id, reference, error):
         """Format a logical error message from the error response and send it to the logger"""
 
-        error_messages = []
-        for error_message in error.message:
-            error_messages.append(
-                "{status_code} {error}: {message}".format(
-                    status_code=error.status_code,
-                    error=error_message["error"],
-                    message=error_message["message"],
-                )
-            )
+        if isinstance(error.message, str):
+            error_messages = [error.message]
+        else:
+            error_messages = [
+                f'{error.status_code} {error_message["error"]}: {error_message["message"]}'
+                for error_message in error.message
+            ]
 
         self.logger.error(
             "Error sending email: {error_messages}",
@@ -185,7 +183,8 @@ class DMNotifyClient:
 
         except HTTPError as e:
             self._log_email_error_message(to_email_address, template_name_or_id, reference, e)
-            if any(msg["message"].startswith("Missing personalisation") for msg in e.message):
+            if isinstance(e.message, list) and \
+                    any(msg["message"].startswith("Missing personalisation") for msg in e.message):
                 raise EmailTemplateError(str(e))
             raise EmailError(str(e))
 
