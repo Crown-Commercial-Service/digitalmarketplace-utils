@@ -4,7 +4,7 @@
 from json.decoder import JSONDecodeError
 from hashlib import md5
 from logging import Logger
-from typing import Callable, Iterator, Mapping, Sequence, Union
+from typing import Callable, Iterator, Mapping, Sequence, Union, cast
 
 from requests.exceptions import RequestException, HTTPError
 
@@ -65,7 +65,7 @@ class DMMailChimpClient(object):
         try:
             with log_external_request(service='Mailchimp'):
                 campaign = self._client.campaigns.create(campaign_data)
-            return campaign['id']  # type: ignore
+            return cast(str, campaign['id'])
         except (RequestException, MailChimpError) as e:
             self.logger.error(
                 "Mailchimp failed to create campaign for '{campaign_title}'".format(

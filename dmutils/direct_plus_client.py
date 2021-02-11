@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, cast
 
 import requests
 from requests import HTTPError
@@ -103,4 +103,4 @@ class DirectPlusClient(object):
                 self.logger.error(f"Unable to get supplier by DUNS number: {error}")
             except (ValueError, KeyError):
                 self.logger.error(f"Unable to get supplier by DUNS number: {exception}")
-        return response.json()['organization']  # type: ignore
+        return cast(dict, response.json()['organization'])
