@@ -490,7 +490,16 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
             assert dm_notify_client.has_been_sent('reference_123', use_recent_cache=False) == has_been_sent
             get_all_notifications_mock.assert_called_once_with(reference='reference_123')
 
-    def test_raises_email_error(self, dm_notify_client, notify_example_http_error):
+    def test_raises_email_error_for_string_error(self, dm_notify_client, notify_example_http_error):
+        notify_example_http_error._message = "An error"
+
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+            email_mock.side_effect = notify_example_http_error
+
+            with pytest.raises(EmailError):
+                dm_notify_client.send_email(self.email_address, self.template_id)
+
+    def test_raises_email_error_for_api_error(self, dm_notify_client, notify_example_http_error):
         with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
             email_mock.side_effect = notify_example_http_error
 
