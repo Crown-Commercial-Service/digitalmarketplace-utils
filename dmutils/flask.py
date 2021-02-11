@@ -13,9 +13,10 @@ SLOW_RENDER_THRESHOLD = 0.25
 _logged_duration_partial = partial(
     logged_duration,
     condition=lambda log_context: (
-        logged_duration.default_condition(log_context) or log_context["duration_real"] > SLOW_RENDER_THRESHOLD
+        logged_duration.default_condition(log_context)  # type: ignore
+        or log_context["duration_real"] > SLOW_RENDER_THRESHOLD
     ),
-)
+)  # type: ignore
 
 
 timed_render_template = _logged_duration_partial(

@@ -4,7 +4,7 @@
 from json.decoder import JSONDecodeError
 from hashlib import md5
 from logging import Logger
-from typing import Callable, Iterator, Mapping, Sequence, Union
+from typing import Callable, Iterator, Mapping, Sequence, Union, cast
 
 from requests.exceptions import RequestException, HTTPError
 
@@ -41,7 +41,7 @@ class DMMailChimpClient(object):
         self.retries = retries
 
     @staticmethod
-    def get_email_hash(email_address: Union[str, bytes]) -> bytes:
+    def get_email_hash(email_address: Union[str, bytes]) -> str:
         """md5 hashing of lower cased emails has been chosen by mailchimp to identify email addresses"""
         formatted_email_address = str(email_address.lower()).encode('utf-8')
         return md5(formatted_email_address).hexdigest()
@@ -65,7 +65,7 @@ class DMMailChimpClient(object):
         try:
             with log_external_request(service='Mailchimp'):
                 campaign = self._client.campaigns.create(campaign_data)
-            return campaign['id']
+            return cast(str, campaign['id'])
         except (RequestException, MailChimpError) as e:
             self.logger.error(
                 "Mailchimp failed to create campaign for '{campaign_title}'".format(

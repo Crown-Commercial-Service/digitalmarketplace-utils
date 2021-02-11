@@ -96,11 +96,11 @@ def logged_duration(
 # for the default when customizing the call. annotating them *onto* logged_duration itself allows these defaults to be
 # used without needing an extra import.
 #
-logged_duration.default_log_func = _logged_duration_default_log_func
-logged_duration.default_message = _logged_duration_default_message
-logged_duration.default_condition = _logged_duration_default_condition
+logged_duration.default_log_func = _logged_duration_default_log_func  # type: ignore
+logged_duration.default_message = _logged_duration_default_message  # type: ignore
+logged_duration.default_condition = _logged_duration_default_condition  # type: ignore
 # exposing this allows a caller to specify default_logger.getChild(...) as their logger
-logged_duration.default_logger = _logged_duration_default_logger
+logged_duration.default_logger = _logged_duration_default_logger  # type: ignore
 
 
 def exceeds_slow_external_call_threshold(log_context):

@@ -1,3 +1,4 @@
+from typing import Optional
 
 from flask import current_app
 
@@ -62,7 +63,7 @@ class DMJinjaWidgetBase:
 class DMSelectionButtonBase(DMJinjaWidgetBase):
     __template_file__ = "toolkit/forms/selection-buttons.html"
 
-    type = None
+    type: Optional[str] = None
     inline = None
     options = None
 
