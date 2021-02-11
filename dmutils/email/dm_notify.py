@@ -204,6 +204,8 @@ class DMNotifyClient:
                 raise EmailTemplateError(str(e))
             raise EmailError(str(e))
 
+        self._log(logging.INFO, f"Email with reference '{reference}' sent to Notify successfully", email_obj)
+
         self._update_cache(reference)
 
         return response
