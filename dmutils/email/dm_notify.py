@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """Digital Marketplace Notify integration."""
+
+from typing import Dict, NamedTuple, Optional
+import logging
+
 from flask import current_app
 from notifications_python_client import NotificationsAPIClient
 from notifications_python_client.errors import HTTPError
@@ -7,6 +11,13 @@ from notifications_python_client.errors import HTTPError
 from dmutils.email.exceptions import EmailError, EmailTemplateError
 from dmutils.email.helpers import hash_string
 from dmutils.timing import logged_duration_for_external_request as log_external_request
+
+
+class DMNotifyEmail(NamedTuple):
+    to_email_address: str
+    template_name_or_id: str
+    reference: str
+    personalisation: Optional[Dict[str, str]] = None
 
 
 class DMNotifyClient:
@@ -94,13 +105,13 @@ class DMNotifyClient:
         :param personalisation: Template parameters
         :return: Hashed string 'reference' to be passed to client.send_email_notification or self.send_email
         """
-        personalisation_string = u','.join(
-            list(map(lambda x: u'{}'.format(x), personalisation.values()))
-        ) if personalisation else u''
-        details_string = u'|'.join([to_email_address, template_id, personalisation_string])
+        personalisation_string = ",".join(
+            list(map(lambda x: "{}".format(x), personalisation.values()))
+        ) if personalisation else ""
+        details_string = "|".join([to_email_address, template_id, personalisation_string])
         return hash_string(details_string)
 
-    def _log_email_error_message(self, to_email_address, template_name_or_id, reference, error):
+    def _log_email_error_message(self, email_obj: DMNotifyEmail, error):
         """Format a logical error message from the error response and send it to the logger"""
 
         if isinstance(error.message, str):
@@ -111,16 +122,25 @@ class DMNotifyClient:
                 for error_message in error.message
             ]
 
-        self.logger.error(
+        self._log(
+            logging.ERROR,
             "Error sending email: {error_messages}",
+            email_obj,
             extra={
-                "client": self.__class__,
-                "reference": reference,
-                "template_name_or_id": template_name_or_id,
-                "to_email_address": hash_string(to_email_address),
                 "error_messages": error_messages,
             },
         )
+
+    def _log(self, lvl, msg, email_obj: DMNotifyEmail, *, extra: Optional[dict] = None, **kwargs):
+        if extra is None:
+            extra = {}
+        extra.update({
+            "client": self.__class__,
+            "reference": email_obj.reference,
+            "template_name_or_id": email_obj.template_name_or_id,
+            "to_email_address": hash_string(email_obj.to_email_address),
+        })
+        self.logger.log(lvl, msg, extra)
 
     def send_email(
         self,
@@ -147,17 +167,13 @@ class DMNotifyClient:
         """
         template_id = self.templates.get(template_name_or_id, template_name_or_id)
         reference = reference or self.get_reference(to_email_address, template_id, personalisation)
+        email_obj = DMNotifyEmail(to_email_address, template_name_or_id, reference, personalisation)
 
         if not allow_resend and self.has_been_sent(reference, use_recent_cache=use_recent_cache):
-            self.logger.info(
+            self._log(
+                logging.WARNING,
                 "Email with reference '{reference}' has already been sent",
-                extra=dict(
-                    client=self.client.__class__,
-                    to_email_address=hash_string(to_email_address),
-                    template_name_or_id=template_name_or_id,
-                    reference=reference,
-                    reply_to_address_id=reply_to_address_id
-                ),
+                email_obj,
             )
             return
 
@@ -182,11 +198,13 @@ class DMNotifyClient:
                 )
 
         except HTTPError as e:
-            self._log_email_error_message(to_email_address, template_name_or_id, reference, e)
+            self._log_email_error_message(email_obj, e)
             if isinstance(e.message, list) and \
                     any(msg["message"].startswith("Missing personalisation") for msg in e.message):
                 raise EmailTemplateError(str(e))
             raise EmailError(str(e))
+
+        self._log(logging.INFO, f"Email with reference '{reference}' sent to Notify successfully", email_obj)
 
         self._update_cache(reference)
 
