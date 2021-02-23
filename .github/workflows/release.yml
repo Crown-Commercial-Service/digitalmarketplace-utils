@@ -1,0 +1,48 @@
+# Create a release using the version number from the Python package
+#
+# This workflow is designed to create a GitHub release whenever a pull request
+# is merged to the main branch that updates the version number for this repo's
+# Python package.
+#
+# The release is created with the tag and name of the version number.
+#
+# If there already exists a tag for the package version number the release
+# should not be created.
+
+name: Create a GitHub release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+
+      - name: Get package version
+        id: package_version
+        run: echo "::set-output name=python::"$(python setup.py --version)
+
+      - name: Check if version tag already exists
+        id: version_tag
+        uses: mukunku/tag-exists-action@f8003af57c02ede2638326be67523df10cf6b10a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: ${{ steps.package_version.outputs.python }}
+
+      - name: Create GitHub release
+        if: ${{ steps.version_tag.outputs.exists == 'false' }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.DM_GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.package_version.outputs.python }}
+          release_name: Release v${{ steps.package_version.outputs.python }}
