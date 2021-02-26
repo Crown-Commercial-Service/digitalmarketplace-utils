@@ -21,8 +21,11 @@ jobs:
           path: venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
 
+      - name: Install developer tools
+        run: make bootstrap
+
       - name: Install dependencies
-        run: make requirements-dev
+        run: invoke requirements-dev
 
       - name: Run tests
-        run: make test
+        run: invoke test
