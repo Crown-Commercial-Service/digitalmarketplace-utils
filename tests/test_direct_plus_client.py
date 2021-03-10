@@ -2,7 +2,12 @@ import mock
 import pytest
 import requests_mock
 
-from dmutils.direct_plus_client import DirectPlusClient
+from dmutils.direct_plus_client import (
+    DirectPlusClient,
+    DirectPlusError,
+    DUNSNumberInvalid,
+    DUNSNumberNotFound,
+)
 
 
 @pytest.fixture
@@ -52,21 +57,28 @@ class TestGetOrganizationByDunsNumber:
             params={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 
-    def test_404_returns_none(self, direct_plus_client, r_mock_with_token_request):
+    @pytest.mark.parametrize("json_error", [
+        {"errorMessage": "DUNS not found", "errorCode": "10001"},
+        {"errorMessage": "Requested product not available due to insufficient data",
+         "errorCode": "40105", "errorDetails": []},
+    ])
+    def test_404_raises_duns_number_not_found(self, direct_plus_client, r_mock_with_token_request, json_error):
         r_mock_with_token_request.get(
-            'https://plus.dnb.com/v1/data/duns/123456789',
-            json={'error': {"errorMessage": 'DUNS not found', "errorCode": '10001'}},
+            "https://plus.dnb.com/v1/data/duns/123456789",
+            json={"error": json_error},
             status_code=404
         )
-        assert direct_plus_client.get_organization_by_duns_number(123456789) is None
+        with pytest.raises(DUNSNumberNotFound):
+            direct_plus_client.get_organization_by_duns_number(123456789)
 
-    def test_400_returns_none(self, direct_plus_client, r_mock_with_token_request):
+    def test_400_raises_duns_number_invalid(self, direct_plus_client, r_mock_with_token_request):
         r_mock_with_token_request.get(
             'https://plus.dnb.com/v1/data/duns/123456789',
             json={'error': {"errorMessage": 'Supplied DUNS number format is invalid', "errorCode": '10003'}},
             status_code=400
         )
-        assert direct_plus_client.get_organization_by_duns_number(123456789) is None
+        with pytest.raises(DUNSNumberInvalid):
+            direct_plus_client.get_organization_by_duns_number(123456789)
 
     def test_500_raises(self, direct_plus_client, r_mock_with_token_request):
         r_mock_with_token_request.get(
@@ -74,7 +86,7 @@ class TestGetOrganizationByDunsNumber:
             json={'error': {"errorMessage": 'Server Error'}},
             status_code=500
         )
-        with pytest.raises(KeyError):
+        with pytest.raises(DirectPlusError):
             direct_plus_client.get_organization_by_duns_number(123456789)
 
 
