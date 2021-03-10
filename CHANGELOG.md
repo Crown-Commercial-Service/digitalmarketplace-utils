@@ -2,6 +2,17 @@
 
 Records breaking changes from major version bumps
 
+## 57.0.0
+
+### Breaking changes
+
+The Direct+ client no longer returns `None` if a DUNS number is in valid or not
+found.
+
+You must change calls of `DirectPlusClient.get_organization_by_duns_number()`
+to catch `DirectPlusError` exceptions or these errors will be propogated to
+users.
+
 ## 56.0.0
 
 Flask Redis session type is enabled by default.
