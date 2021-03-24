@@ -106,10 +106,9 @@ class DMNotifyClient:
         :return: Hashed string 'reference' to be passed to client.send_email_notification or self.send_email
         """
         personalisation_string = ",".join(
-            list(map(lambda x: "{}".format(x), personalisation.values()))
+            map(str, personalisation.values())
         ) if personalisation else ""
-        details_string = "|".join([to_email_address, template_id, personalisation_string])
-        return hash_string(details_string)
+        return hash_string(f"{to_email_address}|{template_id}|{personalisation_string}")
 
     def _log_email_error_message(self, email_obj: DMNotifyEmail, error):
         """Format a logical error message from the error response and send it to the logger"""
