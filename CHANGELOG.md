@@ -2,6 +2,14 @@
 
 Records breaking changes from major version bumps
 
+## 58.0.0
+
+### Breaking changes
+
+Mark this package as PEP 561 compatible. If you have dmutils as a dependency and run type checking, the type checker
+will now check that you're using dmutils correctly. This might break your application's type checking if you're using 
+dmutils incorrectly. 
+
 ## 57.0.0
 
 ### Breaking changes
