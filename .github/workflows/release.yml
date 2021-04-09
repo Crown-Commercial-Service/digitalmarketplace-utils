@@ -14,7 +14,7 @@ name: Create a GitHub release
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   release:
