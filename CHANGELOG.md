@@ -44,7 +44,7 @@ want to show only external routes you can use `flask routes | grep '^external'`.
 ## 52.0.0
 
 There are now no uses of
-[`dmutils.repoutils.freeze_requirements`](https://github.com/alphagov/digitalmarketplace-utils/blob/master/dmutils/repoutils/freeze_requirements.py)
+[`dmutils.repoutils.freeze_requirements`](https://github.com/alphagov/digitalmarketplace-utils/blob/main/dmutils/repoutils/freeze_requirements.py)
 in any of our repos, as we have replaced it with `pip-tools`
 (see https://trello.com/c/iLQca47V/251-replace-custom-script-to-freeze-requirements-with-pip-tools).
 
