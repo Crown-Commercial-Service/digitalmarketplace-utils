@@ -21,6 +21,7 @@ setup(
     description='Common utils for Digital Marketplace apps.',
     long_description=__doc__,
     packages=find_packages(),
+    package_data={'dmutils': ['py.typed']},
     include_package_data=True,
     install_requires=[
          'Flask-WTF>=0.14.2',

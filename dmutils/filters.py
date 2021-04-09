@@ -1,11 +1,14 @@
 from __future__ import unicode_literals
 
+from typing import Iterable, Any
+
 import govuk_country_register
 import re
 from jinja2 import evalcontextfilter, Markup, escape
+from jinja2.nodes import EvalContext
 
 
-def smartjoin(input):
+def smartjoin(input: Iterable) -> str:
     list_to_join = list(input)
     if len(list_to_join) > 1:
         return '{} and {}'.format(', '.join(list_to_join[:-1]), list_to_join[-1])
@@ -15,7 +18,7 @@ def smartjoin(input):
         return ''
 
 
-def format_links(text, open_links_in_new_tab=None):
+def format_links(text: str, open_links_in_new_tab: bool = False) -> str:
     """
     Filter that searches a given string (or other string-like object) for any URIs
     and wraps them with either an anchor link or a span, depending on whether the link contains a valid protocol.
@@ -53,7 +56,7 @@ def format_links(text, open_links_in_new_tab=None):
         return text
 
 
-def nbsp(text):
+def nbsp(text: str) -> str:
     """Replace spaces with nbsp.
 
     If you want to use html with this filter you need to pass it in as marksafe
@@ -63,7 +66,7 @@ def nbsp(text):
     return text.replace(' ', Markup('&nbsp;'))
 
 
-def capitalize_first(maybe_text):
+def capitalize_first(maybe_text: Any) -> Any:
     """If it's a string capitalise the first character, unless it looks like a URL
 
     :param maybe_text: Could be anything
@@ -84,7 +87,7 @@ _multiple_newlines_re = re.compile(r'(\r\n[ \t\f\v]*){2,}')
 _single_newline_re = re.compile(r'(\r\n)')
 
 
-def replace_newlines_with_breaks(value):
+def replace_newlines_with_breaks(value: str) -> str:
     """Replace newlines in a string with HTML <br> elements"""
 
     # `escape()` returns Markdown objects in python2
@@ -100,7 +103,7 @@ def replace_newlines_with_breaks(value):
 
 
 @evalcontextfilter
-def preserve_line_breaks(eval_ctx, value):
+def preserve_line_breaks(eval_ctx: EvalContext, value: str) -> str:
     result = replace_newlines_with_breaks(value)
 
     if eval_ctx.autoescape:
@@ -109,7 +112,7 @@ def preserve_line_breaks(eval_ctx, value):
     return result
 
 
-def sub_country_codes(text):
+def sub_country_codes(text: str) -> str:
     """Replace country codes with country common name
 
     :param text:    text containing country codes in the form 'country:AA'
