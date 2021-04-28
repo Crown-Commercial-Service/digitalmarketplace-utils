@@ -1,0 +1,16 @@
+-e file:.
+
+coverage
+coveralls
+flake8
+freezegun
+hypothesis
+mock
+moto
+mypy
+pytest
+pytest-cov
+requests-mock
+testfixtures<7.0.0,>=6.0.2
+
+digitalmarketplace-test-utils<3.0.0,>=2.8.2
