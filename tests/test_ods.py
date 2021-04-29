@@ -3,7 +3,7 @@ import functools
 
 import dmutils.ods as ods
 
-from hypothesis import strategies as st
+from hypothesis import strategies as st, settings
 from hypothesis import given, example
 
 po = functools.partial(mock.patch.object, autospec=True)
@@ -155,6 +155,7 @@ class TestSpreadSheet(object):
         assert instance._sheets == {}
 
     @given(st.text())
+    @settings(deadline=None)
     def test_sheet(self, name):
         instance = ods.SpreadSheet()
         instance._document = mock.MagicMock(spec_set=instance._document)
@@ -174,6 +175,7 @@ class TestSpreadSheet(object):
 
     @given(st.text(), st.text(), st.integers(min_value=0, max_value=10),
            st.dictionaries(st.text(), st.text()))
+    @settings(deadline=None)
     def test_add_style(self, name, family, count, kwargs):
         styles = [mock.Mock() for v in range(count)]
 
