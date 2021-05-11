@@ -46,13 +46,6 @@ click==7.1.2
     # via flask
 contextlib2==0.6.0.post1
     # via digitalmarketplace-utils
-coverage==4.5.3
-    # via
-    #   -r requirements-dev.in
-    #   coveralls
-    #   pytest-cov
-coveralls==1.8.1
-    # via -r requirements-dev.in
 cryptography==3.4.7
     # via
     #   digitalmarketplace-utils
@@ -66,9 +59,7 @@ digitalmarketplace-test-utils==2.8.2
 docker==5.0.0
     # via moto
 docopt==0.6.2
-    # via
-    #   coveralls
-    #   notifications-python-client
+    # via notifications-python-client
 ecdsa==0.14.1
     # via python-jose
 entrypoints==0.3
@@ -192,12 +183,8 @@ pyparsing==2.4.7
     # via packaging
 pyrsistent==0.17.3
     # via jsonschema
-pytest-cov==2.7.1
-    # via -r requirements-dev.in
 pytest==4.6.3
-    # via
-    #   -r requirements-dev.in
-    #   pytest-cov
+    # via -r requirements-dev.in
 python-dateutil==2.8.1
     # via
     #   botocore
@@ -221,7 +208,6 @@ requests-mock==1.7.0
     # via -r requirements-dev.in
 requests==2.25.1
     # via
-    #   coveralls
     #   digitalmarketplace-utils
     #   docker
     #   mailchimp3
