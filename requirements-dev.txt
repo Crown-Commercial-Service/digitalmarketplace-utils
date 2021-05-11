@@ -22,8 +22,8 @@ blinker==1.4
 boto3==1.17.59
     # via
     #   aws-sam-translator
-    #   digitalmarketplace-utils
     #   moto
+    #   sanitized-package
 boto==2.49.0
     # via moto
 botocore==1.20.59
@@ -45,8 +45,8 @@ chardet==4.0.0
 click==7.1.2
     # via flask
 contextlib2==0.6.0.post1
-    # via digitalmarketplace-utils
-coverage==4.5.3
+    # via sanitized-package
+coverage==4.5.4
     # via
     #   -r requirements-dev.in
     #   coveralls
@@ -55,8 +55,8 @@ coveralls==1.8.1
     # via -r requirements-dev.in
 cryptography==3.4.7
     # via
-    #   digitalmarketplace-utils
     #   moto
+    #   sanitized-package
 decorator==4.4.2
     # via networkx
 defusedxml==0.7.1
@@ -76,23 +76,23 @@ entrypoints==0.3
 flake8==3.7.7
     # via -r requirements-dev.in
 flask-gzip==0.2
-    # via digitalmarketplace-utils
+    # via sanitized-package
 flask-login==0.5.0
-    # via digitalmarketplace-utils
+    # via sanitized-package
 flask-session==0.3.2
-    # via digitalmarketplace-utils
+    # via sanitized-package
 flask-wtf==0.14.3
-    # via digitalmarketplace-utils
+    # via sanitized-package
 flask==1.0.4
     # via
-    #   digitalmarketplace-utils
     #   flask-gzip
     #   flask-login
     #   flask-session
     #   flask-wtf
     #   gds-metrics
+    #   sanitized-package
 fleep==1.0.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 freezegun==0.3.12
     # via -r requirements-dev.in
 future==0.18.2
@@ -100,9 +100,9 @@ future==0.18.2
     #   aws-xray-sdk
     #   notifications-python-client
 gds-metrics==0.2.4
-    # via digitalmarketplace-utils
+    # via sanitized-package
 govuk-country-register==0.5.0
-    # via digitalmarketplace-utils
+    # via sanitized-package
 hypothesis==4.24.3
     # via -r requirements-dev.in
 idna==2.8
@@ -110,12 +110,7 @@ idna==2.8
     #   moto
     #   requests
 importlib-metadata==4.0.1
-    # via
-    #   jsonschema
-    #   pluggy
-    #   pytest
-importlib-resources==3.3.1
-    # via cfn-lint
+    # via pytest
 itsdangerous==1.1.0
     # via
     #   flask
@@ -141,7 +136,7 @@ jsonschema==3.2.0
 junit-xml==1.9
     # via cfn-lint
 mailchimp3==3.0.6
-    # via digitalmarketplace-utils
+    # via sanitized-package
 markupsafe==1.1.1
     # via
     #   jinja2
@@ -165,9 +160,9 @@ mypy==0.812
 networkx==2.5.1
     # via cfn-lint
 notifications-python-client==5.7.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 odfpy==1.4.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 packaging==20.9
     # via pytest
 pluggy==0.13.1
@@ -206,29 +201,29 @@ python-dateutil==2.8.1
 python-jose==3.2.0
     # via moto
 python-json-logger==0.1.11
-    # via digitalmarketplace-utils
+    # via sanitized-package
 pytz==2021.1
     # via
-    #   digitalmarketplace-utils
     #   moto
+    #   sanitized-package
 pyyaml==5.4.1
     # via
     #   cfn-lint
     #   moto
 redis==3.5.3
-    # via digitalmarketplace-utils
+    # via sanitized-package
 requests-mock==1.7.0
     # via -r requirements-dev.in
 requests==2.25.1
     # via
     #   coveralls
-    #   digitalmarketplace-utils
     #   docker
     #   mailchimp3
     #   moto
     #   notifications-python-client
     #   requests-mock
     #   responses
+    #   sanitized-package
 responses==0.13.3
     # via moto
 rsa==4.7.2
@@ -256,11 +251,9 @@ testfixtures==6.17.1
 typed-ast==1.4.3
     # via mypy
 typing-extensions==3.7.4.3
-    # via
-    #   importlib-metadata
-    #   mypy
+    # via mypy
 unicodecsv==0.14.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 urllib3==1.26.4
     # via
     #   botocore
@@ -272,11 +265,11 @@ websocket-client==0.58.0
     # via docker
 werkzeug==1.0.1
     # via
-    #   digitalmarketplace-utils
     #   flask
     #   moto
+    #   sanitized-package
 workdays==1.4
-    # via digitalmarketplace-utils
+    # via sanitized-package
 wrapt==1.12.1
     # via aws-xray-sdk
 wtforms==2.3.3
@@ -284,9 +277,7 @@ wtforms==2.3.3
 xmltodict==0.12.0
     # via moto
 zipp==3.4.1
-    # via
-    #   importlib-metadata
-    #   importlib-resources
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
