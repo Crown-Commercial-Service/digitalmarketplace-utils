@@ -17,13 +17,12 @@ from dmutils.formats import DATETIME_FORMAT
 
 @pytest.yield_fixture
 def s3_mock(request, os_environ):
+    m = mock_s3()
     # we don't want any real aws credentials this environment might have used in the tests
-    os_environ.update({
+    m.FAKE_KEYS.update({
         "AWS_ACCESS_KEY_ID": "AKIAIABCDABCDABCDABC",
         "AWS_SECRET_ACCESS_KEY": "foobarfoobarfoobarfoobarfoobarfoobarfoob",
     })
-
-    m = mock_s3()
     m.start()
     yield m
     m.stop()
@@ -32,8 +31,7 @@ def s3_mock(request, os_environ):
 @pytest.yield_fixture
 def empty_bucket(request, s3_mock):
     s3_res = boto3.resource("s3", region_name=default_region)
-    bucket = s3_res.Bucket("dear-liza")
-    bucket.create()
+    bucket = s3_res.create_bucket(Bucket="dear-liza", CreateBucketConfiguration={'LocationConstraint': default_region})
     yield bucket
 
 
