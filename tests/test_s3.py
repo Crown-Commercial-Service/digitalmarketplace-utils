@@ -15,7 +15,7 @@ from dmutils.s3 import S3, get_file_size, default_region
 from dmutils.formats import DATETIME_FORMAT
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def s3_mock(request, os_environ):
     m = mock_s3()
     # we don't want any real aws credentials this environment might have used in the tests
@@ -28,14 +28,14 @@ def s3_mock(request, os_environ):
     m.stop()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def empty_bucket(request, s3_mock):
     s3_res = boto3.resource("s3", region_name=default_region)
     bucket = s3_res.create_bucket(Bucket="dear-liza", CreateBucketConfiguration={'LocationConstraint': default_region})
     yield bucket
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def bucket_with_file(request, empty_bucket):
     bucket = empty_bucket
     obj = empty_bucket.Object("with/straw.dear.pdf")
@@ -50,7 +50,7 @@ def bucket_with_file(request, empty_bucket):
     yield bucket
 
 
-@pytest.yield_fixture(params=(
+@pytest.fixture(params=(
     # tuples of (timestamp, expected_returned_timestamp)
     (" 6th May 2011, 17:03", "2011-05-06T17:03:00.000000Z",),  # arbitrarily formatted timestamp
     (None, "2018-01-25T00:00:00.000000Z",),  # timestamp metadata not set, so should return last_modified of object
@@ -75,7 +75,7 @@ def bucket_with_weird_file(request, empty_bucket):
         yield {"expected_returned_timestamp": expected_returned_timestamp}
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def bucket_with_multiple_files(request, empty_bucket):
     with freeze_time('2014-09-30'):
         bucket = empty_bucket
