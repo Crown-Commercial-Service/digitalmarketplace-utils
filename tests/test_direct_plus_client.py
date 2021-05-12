@@ -269,7 +269,7 @@ class TestDnbRequest:
         )
 
         resp = direct_plus_client._direct_plus_request(
-            f'data/duns/291346567', payload={'productId': 'cmpelk', 'versionId': 'v2'}
+            'data/duns/291346567', payload={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 
         # r_mock_with_token_request calls '/v2/token' on setup
@@ -301,7 +301,7 @@ class TestDnbRequest:
         )
 
         resp = direct_plus_client._direct_plus_request(
-            f'data/duns/291346567', payload={'productId': 'cmpelk', 'versionId': 'v2'}
+            'data/duns/291346567', payload={'productId': 'cmpelk', 'versionId': 'v2'}
         )
 
         # r_mock_with_token_request calls '/v2/token' on setup
