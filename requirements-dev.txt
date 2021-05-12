@@ -65,7 +65,7 @@ flask==1.0.4
     #   sanitized-package
 fleep==1.0.1
     # via sanitized-package
-freezegun==0.3.12
+freezegun==1.1.0
     # via -r requirements-dev.in
 future==0.18.2
     # via notifications-python-client
@@ -169,7 +169,6 @@ s3transfer==0.4.2
     # via boto3
 six==1.15.0
     # via
-    #   freezegun
     #   mock
     #   moto
     #   python-dateutil
