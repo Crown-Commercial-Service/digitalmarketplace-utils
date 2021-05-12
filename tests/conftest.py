@@ -5,8 +5,6 @@ from flask import Flask
 from io import StringIO
 from logging import Logger, StreamHandler
 
-from boto.ec2.cloudwatch import CloudWatchConnection
-
 from dmutils.logging import init_app as logging_init_app
 
 
@@ -43,14 +41,6 @@ def app_with_mocked_logger(request):
     with mock.patch('flask.app.create_logger', return_value=mock.Mock(spec=Logger('flask.app'), handlers=[])):
         # Use the above app fixture method to return the app
         yield create_app(request)
-
-
-@pytest.yield_fixture
-def cloudwatch():
-    with mock.patch('dmutils.metrics.connect_to_region') as connect_to_region:
-        conn = mock.Mock(spec=CloudWatchConnection)
-        connect_to_region.return_value = conn
-        yield conn
 
 
 @pytest.fixture
