@@ -3,7 +3,6 @@
 flake8
 freezegun
 hypothesis
-mock
 moto
 mypy
 pytest
