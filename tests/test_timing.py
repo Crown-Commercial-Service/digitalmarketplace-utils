@@ -6,12 +6,12 @@ from contextlib import contextmanager
 from itertools import chain, product
 import json
 import logging
-import mock
 from numbers import Number
 import random
 import re
 import sys
 import time
+from unittest import mock
 
 from flask import request
 import pytest

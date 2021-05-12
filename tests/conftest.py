@@ -1,9 +1,9 @@
-import mock
 import pytest
 
 from flask import Flask
 from io import StringIO
 from logging import Logger, StreamHandler
+from unittest import mock
 
 from dmutils.logging import init_app as logging_init_app
 

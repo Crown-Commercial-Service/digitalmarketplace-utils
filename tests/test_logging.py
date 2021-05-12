@@ -5,10 +5,9 @@ import os.path
 import tempfile
 import time
 
-import mock
-
 from flask import request
 import pytest
+from unittest import mock
 
 from dmtestutils.comparisons import AnyStringMatching, AnySupersetOf, RestrictedAny
 

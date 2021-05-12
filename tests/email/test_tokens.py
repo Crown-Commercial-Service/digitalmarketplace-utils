@@ -2,10 +2,10 @@
 import base64
 from datetime import datetime
 
-import mock
 import pytest
 from cryptography import fernet
 from freezegun import freeze_time
+from unittest import mock
 
 from dmutils.config import init_app
 from dmutils.email.tokens import (

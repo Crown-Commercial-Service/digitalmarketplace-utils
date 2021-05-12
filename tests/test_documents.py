@@ -1,9 +1,9 @@
 # coding: utf-8
-import mock
 import pytest
 
 from botocore.exceptions import ClientError
 from freezegun import freeze_time
+from unittest import mock
 
 from dmutils.documents import (
     generate_file_name, get_extension,

@@ -1,5 +1,5 @@
-import mock
 from dmutils.jinja2_environment import DMSandboxedEnvironment
+from unittest import mock
 
 
 def test_custom_filters_added():

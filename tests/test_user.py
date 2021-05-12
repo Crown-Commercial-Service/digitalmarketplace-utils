@@ -1,5 +1,5 @@
-import mock
 import pytest
+from unittest import mock
 from dmutils.user import user_has_role, User
 
 

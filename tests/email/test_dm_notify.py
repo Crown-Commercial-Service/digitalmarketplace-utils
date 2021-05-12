@@ -2,10 +2,10 @@
 """Tests for the Digital Marketplace Notify client."""
 import json
 
-import mock
 import os
 from collections import OrderedDict
 from itertools import product
+from unittest import mock
 
 import pytest
 from notifications_python_client.errors import HTTPError

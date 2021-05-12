@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import mock
 import pytest
 
 from flask import Markup
+from unittest import mock
 
 from dmutils.filters import (
     capitalize_first, format_links, nbsp, smartjoin, preserve_line_breaks, sub_country_codes

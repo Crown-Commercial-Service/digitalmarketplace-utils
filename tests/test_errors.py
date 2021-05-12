@@ -1,5 +1,4 @@
 import json
-import mock
 import pytest
 
 from flask import session
@@ -9,6 +8,7 @@ from werkzeug.exceptions import (
 )
 from werkzeug.http import dump_cookie
 from jinja2.exceptions import TemplateNotFound
+from unittest import mock
 
 from dmutils.authentication import UnauthorizedWWWAuthenticate
 from dmutils.errors.frontend import csrf_handler, redirect_to_login, render_error_page

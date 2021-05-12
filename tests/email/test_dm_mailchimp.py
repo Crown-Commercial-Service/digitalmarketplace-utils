@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for the Digital Marketplace MailChimp integration."""
 import logging
-import mock
 import pytest
 import types
 
 from json.decoder import JSONDecodeError
 from requests import RequestException
 from requests.exceptions import HTTPError, ConnectTimeout
+from unittest import mock
 
 from dmutils.email.dm_mailchimp import DMMailChimpClient, get_response_from_exception
 from mailchimp3.mailchimpclient import MailChimpError

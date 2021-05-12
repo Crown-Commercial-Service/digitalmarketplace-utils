@@ -1,5 +1,5 @@
-import mock
 import functools
+from unittest import mock
 
 import dmutils.ods as ods
 

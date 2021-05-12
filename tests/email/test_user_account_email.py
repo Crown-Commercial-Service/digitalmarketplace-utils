@@ -1,6 +1,6 @@
-import mock
 import pytest
 from flask import session, current_app
+from unittest import mock
 
 from dmutils.config import init_app
 from dmutils.email import send_user_account_email, EmailError

@@ -1,6 +1,6 @@
-import mock
 import pytest
 import requests_mock
+from unittest import mock
 
 from dmutils.direct_plus_client import (
     DirectPlusClient,

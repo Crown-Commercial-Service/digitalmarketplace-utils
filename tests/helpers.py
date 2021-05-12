@@ -1,8 +1,8 @@
 from contextlib import contextmanager
 from datetime import datetime
 from io import BytesIO
+from unittest import mock
 
-import mock
 from testfixtures import logcapture
 from dmtestutils.comparisons import AnyStringMatching
 

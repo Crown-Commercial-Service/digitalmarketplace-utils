@@ -1,6 +1,5 @@
-
-import mock
 import pytest
+from unittest import mock
 
 import dmutils.forms.fields
 import dmutils.forms.mixins

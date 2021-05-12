@@ -2,8 +2,8 @@ from flask import Flask
 
 from dmutils.flask_init import pluralize, init_app
 import dmutils.session
-import mock
 import pytest
+from unittest import mock
 
 
 @pytest.mark.parametrize("count,singular,plural,output", [

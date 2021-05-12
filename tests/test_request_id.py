@@ -1,7 +1,7 @@
 from flask import request
 from itertools import chain, product
-import mock
 import pytest
+from unittest import mock
 
 from dmtestutils.mocking import assert_args_and_return
 from dmtestutils.comparisons import AnySupersetOf
