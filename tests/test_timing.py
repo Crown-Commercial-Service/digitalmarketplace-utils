@@ -220,7 +220,7 @@ def _expect_log(
                     raise_exception,
                     inject_context,
                 ) else []
-            ) for  # noqa - i don't know what you want me to do here flake8 nor do i care
+            ) for (
                 is_sampled,
                 sleep_time,
                 message,
@@ -228,6 +228,7 @@ def _expect_log(
                 condition,
                 raise_exception,
                 inject_context
+            )
             in _parameter_combinations
         ),
         (   #
@@ -402,7 +403,7 @@ def test_logged_duration_mock_logger(
                     raise_exception,
                     inject_context,
                 ) else ()
-            ) for  # noqa - i don't know what you want me to do here flake8 nor do i care
+            ) for (
                 is_sampled,
                 sleep_time,
                 message,
@@ -410,6 +411,7 @@ def test_logged_duration_mock_logger(
                 condition,
                 raise_exception,
                 inject_context
+            )
             in _parameter_combinations
         ),
         (   #
