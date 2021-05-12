@@ -477,7 +477,7 @@ _param_combinations = tuple(
         expected_is_sampled,
         expected_debug_flag,
         d_expected_onwards_req_headers,
-    )in product(
+    ) in product(
         _trace_id_related_params,
         _span_id_related_params,
         _debug_sampling_related_params,
