@@ -7,7 +7,7 @@ from dmutils.email import send_user_account_email, EmailError
 from dmutils.external import external as external_blueprint
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def email_app(app):
     init_app(app)
     app.register_blueprint(external_blueprint)
