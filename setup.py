@@ -40,7 +40,7 @@ setup(
          'fleep<1.1,>=1.0.1',
          'notifications-python-client<6.0.0,>=5.0.1',
          'odfpy>=1.3.6',
-         'python-json-logger<0.2,>=0.1.4',
+         'python-json-logger>=0.1.4,<2.1',
          'pytz',
          'unicodecsv>=0.14.1',
          'Werkzeug>=0.16,<1.1.0',
