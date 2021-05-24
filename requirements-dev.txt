@@ -71,7 +71,7 @@ gds-metrics==0.2.4
     # via sanitized-package
 govuk-country-register==0.5.0
     # via sanitized-package
-hypothesis==6.12.0
+hypothesis==6.13.4
     # via -r requirements-dev.in
 idna==2.8
     # via requests
