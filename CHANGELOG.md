@@ -1,6 +1,13 @@
 # Digital marketplace utils changelog
 
-Records breaking changes from major version bumps
+Records breaking changes from major version bumps.
+
+## 59.0.0
+
+### Breaking changes
+
+Upgrade to Flask 1.1. This has some known
+[breaking changes](https://flask.palletsprojects.com/en/2.0.x/changes/#version-1-1-0).
 
 ## 58.0.0
 
