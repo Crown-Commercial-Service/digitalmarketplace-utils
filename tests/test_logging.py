@@ -120,7 +120,7 @@ def test_init_app_only_adds_handlers_to_defined_loggers(app):
         and isinstance(v.handlers[0], logging.StreamHandler)
     }
 
-    assert loggers == {'flask.app', 'dmutils', 'dmapiclient', 'flask_wtf.csrf', 'urllib3.util.retry'}
+    assert loggers == {'conftest', 'dmutils', 'dmapiclient', 'flask_wtf.csrf', 'urllib3.util.retry'}
 
 
 def test_urllib3_retry_logger_not_configured_for_search_api(app):

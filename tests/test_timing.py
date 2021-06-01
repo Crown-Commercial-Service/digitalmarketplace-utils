@@ -109,8 +109,8 @@ _messages_expected = OrderedDict((
                 'error': "{name}: {street} - {duration_process}s",
             },
             {
-                'success': AnyStringMatching(r"flask\.app\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
-                'error': AnyStringMatching(r"flask\.app\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
+                'success': AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
+                'error': AnyStringMatching(r"conftest\.foobar: (\{.*\}|eccles) - [0-9eE.-]+s"),
             },
         ),
     ),
@@ -375,7 +375,7 @@ def test_logged_duration_mock_logger(
                         if ("street" in str(message) and "street" not in (inject_context or {})) else ()
                     ),
                     AnySupersetOf({
-                        "name": "flask.app.foobar",
+                        "name": "conftest.foobar",
                         "levelname": logging.getLevelName(log_level),
                         "message": _messages_expected[message][1].get('error' if raise_exception else 'success'),
                         "duration_real": RestrictedAny(
@@ -445,7 +445,7 @@ def test_logged_duration_mock_logger(
                     "key": "D#",
                     "duration_real": RestrictedAny(lambda value: 0.48 < value < 0.6),
                     "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
-                    "name": "flask.app.foobar",
+                    "name": "conftest.foobar",
                 }),),
             ),
             (
@@ -483,7 +483,7 @@ def test_logged_duration_mock_logger(
                         ),
                         "duration_real": RestrictedAny(lambda value: 0.18 < value < 0.35),
                         "duration_process": RestrictedAny(lambda value: isinstance(value, Number)),
-                        "name": "flask.app.foobar",
+                        "name": "conftest.foobar",
                     }),
                 ),
             ),
