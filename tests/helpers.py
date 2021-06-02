@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from io import BytesIO
 
-import mock
+from unittest import mock
 from testfixtures import logcapture
 from dmtestutils.comparisons import AnyStringMatching
 

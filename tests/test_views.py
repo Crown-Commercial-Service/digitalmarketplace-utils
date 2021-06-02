@@ -1,7 +1,7 @@
 from flask import Response
 from werkzeug.exceptions import BadRequest
 
-import mock
+from unittest import mock
 import pytest
 
 from dmutils.views import DownloadFileView, SimpleDownloadFileView

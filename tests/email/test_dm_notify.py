@@ -2,7 +2,7 @@
 """Tests for the Digital Marketplace Notify client."""
 import json
 
-import mock
+from unittest import mock
 import os
 from collections import OrderedDict
 from itertools import product

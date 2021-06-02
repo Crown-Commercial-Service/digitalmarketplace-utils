@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the Digital Marketplace MailChimp integration."""
 import logging
-import mock
+from unittest import mock
 import pytest
 import types
 
