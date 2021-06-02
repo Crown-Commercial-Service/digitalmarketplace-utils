@@ -103,7 +103,7 @@ markupsafe==1.1.1
     #   wtforms
 mccabe==0.6.1
     # via flake8
-mock==3.0.5
+mock==4.0.3
     # via -r requirements-dev.in
 monotonic==1.6
     # via notifications-python-client
@@ -168,7 +168,6 @@ s3transfer==0.4.2
     # via boto3
 six==1.15.0
     # via
-    #   mock
     #   moto
     #   python-dateutil
     #   requests-mock
