@@ -1,5 +1,5 @@
 import json
-import mock
+from unittest import mock
 import pytest
 
 from flask import session
@@ -18,21 +18,17 @@ from dmutils.external import external as external_blueprint
 
 @pytest.mark.parametrize('cookie_probe_expect_present', (True, False))
 @pytest.mark.parametrize('user_session', (True, False))
-@mock.patch('dmutils.errors.frontend.current_app')
-def test_csrf_handler_redirects_to_login(current_app, user_session, app, cookie_probe_expect_present):
-    current_app.config = {
-        "DM_COOKIE_PROBE_COOKIE_NAME": "foo",
-        "DM_COOKIE_PROBE_COOKIE_VALUE": "bar",
-        "DM_COOKIE_PROBE_EXPECT_PRESENT": cookie_probe_expect_present,
-    }
-
+def test_csrf_handler_redirects_to_login(user_session, app, cookie_probe_expect_present):
     with app.test_request_context('/', environ_base={
-        "HTTP_COOKIE": dump_cookie(
-            current_app.config["DM_COOKIE_PROBE_COOKIE_NAME"],
-            current_app.config["DM_COOKIE_PROBE_COOKIE_VALUE"],
-        ),
+        "HTTP_COOKIE": dump_cookie("foo", "bar"),
     }):
-        app.config['WTF_CSRF_ENABLED'] = True
+        app.logger = mock.MagicMock()
+        app.config.update({
+            "DM_COOKIE_PROBE_COOKIE_NAME": "foo",
+            "DM_COOKIE_PROBE_COOKIE_VALUE": "bar",
+            "DM_COOKIE_PROBE_EXPECT_PRESENT": cookie_probe_expect_present,
+            "WTF_CSRF_ENABLED": True,
+        })
         app.register_blueprint(external_blueprint)
 
         if user_session:
@@ -45,11 +41,11 @@ def test_csrf_handler_redirects_to_login(current_app, user_session, app, cookie_
         assert response.location == '/user/login?next=%2F'
 
         if user_session:
-            assert current_app.logger.info.call_args_list == [
+            assert app.logger.info.call_args_list == [
                 mock.call('csrf.invalid_token: Aborting request, user_id: {user_id}', extra={'user_id': 1234})
             ]
         else:
-            assert current_app.logger.info.call_args_list == [
+            assert app.logger.info.call_args_list == [
                 mock.call('csrf.session_expired: Redirecting user to log in page')
             ]
 
@@ -59,20 +55,19 @@ def test_csrf_handler_redirects_to_login(current_app, user_session, app, cookie_
     ("foo", "blah",),
     None,
 ))
-@mock.patch('dmutils.cookie_probe.current_app')
 @mock.patch('dmutils.errors.frontend.render_template')
-def test_cookie_probe_incorrect(render_template, current_app, app, cookie_kv):
-    current_app.config = {
-        "DM_COOKIE_PROBE_COOKIE_NAME": "foo",
-        "DM_COOKIE_PROBE_COOKIE_VALUE": "bar",
-        "DM_COOKIE_PROBE_EXPECT_PRESENT": True,
-    }
+def test_cookie_probe_incorrect(render_template, app, cookie_kv):
     render_template.return_value = "<html>Oh dear</html>"
 
     with app.test_request_context('/', environ_base=cookie_kv and {
         "HTTP_COOKIE": dump_cookie(*cookie_kv),
     }):
-        app.config['WTF_CSRF_ENABLED'] = True
+        app.config.update({
+            "DM_COOKIE_PROBE_COOKIE_NAME": "foo",
+            "DM_COOKIE_PROBE_COOKIE_VALUE": "bar",
+            "DM_COOKIE_PROBE_EXPECT_PRESENT": True,
+            "WTF_CSRF_ENABLED": True,
+        })
         app.register_blueprint(external_blueprint)
 
         response, status_code = csrf_handler(CSRFError())

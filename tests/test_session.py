@@ -3,7 +3,7 @@ import os
 import flask_session
 from flask import Flask
 from dmutils import session
-import mock
+from unittest import mock
 
 
 class TestSession:

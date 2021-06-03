@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 import json
-import mock
+from unittest import mock
 import pytest
 
 from dmutils.status import get_disk_space_status, get_app_status, StatusError

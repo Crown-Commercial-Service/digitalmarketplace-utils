@@ -1,6 +1,6 @@
 from flask import request
 from itertools import chain, product
-import mock
+from unittest import mock
 import pytest
 
 from dmtestutils.mocking import assert_args_and_return

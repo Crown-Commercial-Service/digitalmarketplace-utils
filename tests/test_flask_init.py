@@ -2,7 +2,7 @@ from flask import Flask
 
 from dmutils.flask_init import pluralize, init_app
 import dmutils.session
-import mock
+from unittest import mock
 import pytest
 
 

@@ -5,7 +5,7 @@ import os.path
 import tempfile
 import time
 
-import mock
+from unittest import mock
 
 from flask import request
 import pytest

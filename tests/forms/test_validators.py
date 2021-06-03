@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-import mock
+from unittest import mock
 
 from wtforms.validators import StopValidation, ValidationError
 
