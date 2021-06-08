@@ -3,7 +3,7 @@ from pathlib import PurePath
 from flask import url_for
 import pytest
 
-from dmutils.urls import SafePurePathConverter
+from dmutils.urls import SafePurePathConverter, rewrite_supplier_asset_path
 
 
 @pytest.mark.parametrize("route_pattern,request_path", tuple(
@@ -84,3 +84,17 @@ def test_safepurepath_url_reversing(app, arg_value, expected_url):
 
     with app.app_context():
         assert url_for("some_view", some_path=arg_value) == expected_url
+
+
+@pytest.mark.parametrize("input_url,expected_url", [
+    (
+        'https://gov.uk/suppliers/assets/digital-outcomes-and-specialists-5/documents/modern-slavery-statement.pdf',
+        'https://assets.gov.uk/digital-outcomes-and-specialists-5/documents/modern-slavery-statement.pdf'
+    ),
+    (
+        'https://assets.gov.uk/digital-outcomes-and-specialists-5/documents/modern-slavery-statement.pdf',
+        'https://assets.gov.uk/digital-outcomes-and-specialists-5/documents/modern-slavery-statement.pdf'
+    ),
+])
+def test_rewrite_supplier_asset_path(input_url, expected_url):
+    assert rewrite_supplier_asset_path(input_url, 'https://assets.gov.uk') == expected_url
