@@ -142,7 +142,7 @@ python-dateutil==2.8.1
     #   botocore
     #   freezegun
     #   moto
-python-json-logger==0.1.11
+python-json-logger==2.0.1
     # via sanitized-package
 pytz==2021.1
     # via
