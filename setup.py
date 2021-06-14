@@ -38,7 +38,7 @@ setup(
          'requests>=2.22.0,<3',
          'redis>=3.5.2',
          'fleep<1.1,>=1.0.1',
-         'notifications-python-client<6.0.0,>=5.0.1',
+         'notifications-python-client>=5.0.1,<7.0.0',
          'odfpy>=1.3.6',
          'python-json-logger>=0.1.11,<3.0.0',
          'pytz',
