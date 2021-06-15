@@ -10,3 +10,9 @@ requests-mock
 testfixtures<7.0.0,>=6.0.2
 
 digitalmarketplace-test-utils<3.0.0,>=2.8.2
+types-Jinja2
+types-Werkzeug
+types-python-dateutil
+types-pytz
+types-redis
+types-requests
