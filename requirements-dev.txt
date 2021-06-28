@@ -12,11 +12,11 @@ attrs==20.3.0
     #   pytest
 blinker==1.4
     # via gds-metrics
-boto3==1.17.97
+boto3==1.17.101
     # via
     #   moto
     #   sanitized-package
-botocore==1.20.97
+botocore==1.20.101
     # via
     #   boto3
     #   moto
@@ -45,14 +45,6 @@ docopt==0.6.2
     # via notifications-python-client
 flake8==3.9.2
     # via -r requirements-dev.in
-flask-gzip==0.2
-    # via sanitized-package
-flask-login==0.5.0
-    # via sanitized-package
-flask-session==0.3.2
-    # via sanitized-package
-flask-wtf==0.15.1
-    # via sanitized-package
 flask==1.1.4
     # via
     #   flask-gzip
@@ -61,6 +53,14 @@ flask==1.1.4
     #   flask-wtf
     #   gds-metrics
     #   sanitized-package
+flask-gzip==0.2
+    # via sanitized-package
+flask-login==0.5.0
+    # via sanitized-package
+flask-session==0.3.2
+    # via sanitized-package
+flask-wtf==0.15.1
+    # via sanitized-package
 fleep==1.0.1
     # via sanitized-package
 freezegun==1.1.0
@@ -105,10 +105,10 @@ more-itertools==8.7.0
     # via moto
 moto==2.0.9
     # via -r requirements-dev.in
-mypy-extensions==0.4.3
-    # via mypy
 mypy==0.902
     # via -r requirements-dev.in
+mypy-extensions==0.4.3
+    # via mypy
 notifications-python-client==6.2.0
     # via sanitized-package
 odfpy==1.4.1
@@ -146,8 +146,6 @@ pytz==2021.1
     #   sanitized-package
 redis==3.5.3
     # via sanitized-package
-requests-mock==1.9.3
-    # via -r requirements-dev.in
 requests==2.25.1
     # via
     #   mailchimp3
@@ -156,6 +154,8 @@ requests==2.25.1
     #   requests-mock
     #   responses
     #   sanitized-package
+requests-mock==1.9.3
+    # via -r requirements-dev.in
 responses==0.13.3
     # via moto
 s3transfer==0.4.2
