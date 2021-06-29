@@ -31,7 +31,7 @@ chardet==4.0.0
     # via requests
 click==7.1.2
     # via flask
-contextlib2==0.6.0.post1
+contextlib2==21.6.0
     # via sanitized-package
 cryptography==3.4.7
     # via
