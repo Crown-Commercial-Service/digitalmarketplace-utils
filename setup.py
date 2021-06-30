@@ -25,7 +25,7 @@ setup(
     include_package_data=True,
     install_requires=[
          'Flask-WTF>=0.14.2',
-         'Flask~=1.0',
+         'Flask>=1,<3',
          'Flask-gzip>=0.2',
          'Flask-Login>=0.2.11',
          'Flask-Session>=0.3.2',
