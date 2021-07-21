@@ -12,11 +12,11 @@ attrs==20.3.0
     #   pytest
 blinker==1.4
     # via gds-metrics
-boto3==1.17.109
+boto3==1.18.1
     # via
     #   moto
     #   sanitized-package
-botocore==1.20.109
+botocore==1.21.1
     # via
     #   boto3
     #   moto
@@ -158,7 +158,7 @@ requests-mock==1.9.3
     # via -r requirements-dev.in
 responses==0.13.3
     # via moto
-s3transfer==0.4.2
+s3transfer==0.5.0
     # via boto3
 six==1.15.0
     # via
