@@ -27,7 +27,7 @@ certifi==2020.12.5
     # via requests
 cffi==1.14.5
     # via cryptography
-chardet==4.0.0
+charset-normalizer==2.0.3
     # via requests
 click==7.1.2
     # via flask
@@ -146,7 +146,7 @@ pytz==2021.1
     #   sanitized-package
 redis==3.5.3
     # via sanitized-package
-requests==2.25.1
+requests==2.26.0
     # via
     #   mailchimp3
     #   moto
