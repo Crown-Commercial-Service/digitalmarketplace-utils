@@ -2,6 +2,8 @@
 """Tests for the Digital Marketplace MailChimp integration."""
 import logging
 from unittest import mock
+from unittest.mock import ANY
+
 import pytest
 import types
 
@@ -481,6 +483,16 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                 mock.call('a_list_id', count=100, offset=0),
                 mock.call('a_list_id', count=100, offset=100),
             ]
+
+    def test_passes_through_query_parameters(self):
+        dm_mailchimp_client = DMMailChimpClient(
+            'username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp')
+        )
+        with mock.patch.object(dm_mailchimp_client._client.lists.members, 'all', autospec=True) as all_members:
+            all_members.side_effect = [{"members": []}]
+            list(dm_mailchimp_client.get_email_addresses_from_list('a_list_id', foo="bar"))
+
+        assert all_members.mock_calls == [mock.call(ANY, count=ANY, offset=ANY, foo="bar")]
 
     def test_offset_increments_until_no_members(self):
         dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
