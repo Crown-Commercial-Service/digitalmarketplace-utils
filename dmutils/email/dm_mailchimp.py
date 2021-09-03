@@ -183,12 +183,20 @@ class DMMailChimpClient(object):
                     success = False
         return success
 
-    def get_email_addresses_from_list(self, list_id: str, pagination_size: int = 100) -> Iterator[str]:
+    def get_email_addresses_from_list(
+            self,
+            list_id: str,
+            pagination_size: int = 100,
+            **query_parameters,
+    ) -> Iterator[str]:
+        """
+        See https://mailchimp.com/developer/marketing/api/list-members/list-members-info/ for possible query parameters.
+        """
         offset = 0
         while True:
             member_data = self.timeout_retry(
                 self._client.lists.members.all
-            )(list_id, count=pagination_size, offset=offset)
+            )(list_id, count=pagination_size, offset=offset, **query_parameters)
             if not member_data.get("members", None):
                 break
             offset += pagination_size
