@@ -1,7 +1,7 @@
 Digital Marketplace utils
 =========================
 
-![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)
+![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)
 
 ## What's in here?
 
@@ -41,9 +41,7 @@ To make a new version:
 - update the version in the `dmutils/__init__.py` file
 - if you are making a major change, also update the change log;
 
-When the pull request is merged
-[a Jenkins job](https://ci.marketplace.team/view/Utils%20and%20toolkit/job/tag-dmutils/)
-will be run to tag the new version.
+When the pull request is merged a GitHub Action will tag the new version.
 
 ## Licence
 

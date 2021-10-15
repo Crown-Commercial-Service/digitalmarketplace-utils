@@ -45,5 +45,5 @@ setup(
          'unicodecsv>=0.14.1',
          'workdays>=1.4',
     ],
-    python_requires="~=3.6",
+    python_requires="~=3.8",
 )

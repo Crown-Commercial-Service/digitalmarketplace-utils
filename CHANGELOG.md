@@ -2,6 +2,10 @@
 
 Records breaking changes from major version bumps.
 
+## 60.0.0
+
+Update to python 3.8 as python 3.6 nears end of life
+
 ## 59.0.0
 
 ### Breaking changes

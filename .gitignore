@@ -6,3 +6,4 @@
 venv*
 .hypothesis
 local.nix
+.idea/
