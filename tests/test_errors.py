@@ -276,14 +276,17 @@ def test_api_validation_error_handler(app_with_mocked_logger):
 def test_api_unauth(app_with_mocked_logger):
     with app_with_mocked_logger.test_request_context('/'):
         try:
-            raise UnauthorizedWWWAuthenticate(www_authenticate="lemur", description="Bogeyman's trick")
+            raise UnauthorizedWWWAuthenticate(
+                www_authenticate="Bearer realm=foo",
+                description="Unauthorized; bearer token must be provided",
+            )
         except UnauthorizedWWWAuthenticate as e:
             response = json_error_handler(e)
             assert json.loads(response.get_data()) == {
-                "error": "Bogeyman's trick",
+                "error": "Unauthorized; bearer token must be provided",
             }
             assert response.status_code == 401
-            assert response.headers["www-authenticate"] == "lemur"
+            assert response.headers["www-authenticate"] == "Bearer realm=foo"
             assert app_with_mocked_logger.logger.warning.mock_calls == []
 
 
