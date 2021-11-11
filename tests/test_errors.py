@@ -35,18 +35,21 @@ def test_csrf_handler_redirects_to_login(user_session, app, cookie_probe_expect_
             # Our user is logged in
             session['user_id'] = 1234
 
-        response = csrf_handler(CSRFError())
+        response = csrf_handler(CSRFError('reason'))
 
         assert response.status_code == 302
         assert response.location == '/user/login?next=%2F'
 
         if user_session:
             assert app.logger.info.call_args_list == [
-                mock.call('csrf.invalid_token: Aborting request, user_id: {user_id}', extra={'user_id': 1234})
+                mock.call(
+                    'csrf.invalid_token: Aborting request, user_id: {user_id}',
+                    extra={'user_id': 1234, 'error': 'reason'},
+                )
             ]
         else:
             assert app.logger.info.call_args_list == [
-                mock.call('csrf.session_expired: Redirecting user to log in page')
+                mock.call('csrf.session_expired: Redirecting user to log in page', extra={'error': 'reason'})
             ]
 
 
