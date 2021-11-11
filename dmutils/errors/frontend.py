@@ -21,11 +21,11 @@ def csrf_handler(csrf_error):
         )
     elif 'user_id' not in session:
         current_app.logger.info(
-            u'csrf.session_expired: Redirecting user to log in page'
+            'csrf.session_expired: Redirecting user to log in page'
         )
     else:
         current_app.logger.info(
-            u'csrf.invalid_token: Aborting request, user_id: {user_id}',
+            'csrf.invalid_token: Aborting request, user_id: {user_id}',
             extra={'user_id': session['user_id']}
         )
 
