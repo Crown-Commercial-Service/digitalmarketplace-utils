@@ -39,6 +39,8 @@ cryptography==36.0.0
     #   sanitized-package
 defusedxml==0.7.1
     # via odfpy
+deprecated==1.2.13
+    # via redis
 digitalmarketplace-test-utils==3.0.0
     # via -r requirements-dev.in
 docopt==0.6.2
@@ -139,7 +141,7 @@ pytz==2021.3
     # via
     #   moto
     #   sanitized-package
-redis==3.5.3
+redis==4.0.2
     # via sanitized-package
 requests==2.26.0
     # via
@@ -198,6 +200,8 @@ werkzeug==1.0.1
     #   moto
 workdays==1.4
     # via sanitized-package
+wrapt==1.13.3
+    # via deprecated
 wtforms==2.3.3
     # via flask-wtf
 xmltodict==0.12.0
