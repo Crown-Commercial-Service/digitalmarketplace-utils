@@ -10,7 +10,7 @@ from itertools import product
 import pytest
 from notifications_python_client.errors import HTTPError
 
-from dmutils.email.exceptions import EmailError, EmailTemplateError
+from dmutils.email.exceptions import EmailError, EmailTemplateError, EmailInvalidError
 from dmutils.email.dm_notify import DMNotifyClient
 from helpers import PatchExternalServiceLogConditionMixin, assert_external_service_log_entry
 
@@ -504,6 +504,17 @@ class TestDMNotifyClient(PatchExternalServiceLogConditionMixin):
             email_mock.side_effect = notify_example_http_error
 
             with pytest.raises(EmailError):
+                dm_notify_client.send_email(self.email_address, self.template_id)
+
+    def test_raises_email_invalid_error_if_email_invalid(self, dm_notify_client, notify_example_http_error):
+        notify_example_http_error._message = [
+            {'error': 'ValidationError', 'message': 'email_address Not a valid email address'}
+        ]
+
+        with mock.patch(self.client_class_str + '.' + 'send_email_notification') as email_mock:
+            email_mock.side_effect = notify_example_http_error
+
+            with pytest.raises(EmailInvalidError):
                 dm_notify_client.send_email(self.email_address, self.template_id)
 
     def test_raises_email_template_error_if_personalisation_missing(self, dm_notify_client, notify_example_http_error):

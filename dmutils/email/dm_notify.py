@@ -8,7 +8,7 @@ from flask import current_app
 from notifications_python_client import NotificationsAPIClient
 from notifications_python_client.errors import HTTPError
 
-from dmutils.email.exceptions import EmailError, EmailTemplateError
+from dmutils.email.exceptions import EmailError, EmailTemplateError, EmailInvalidError
 from dmutils.email.helpers import hash_string
 from dmutils.timing import logged_duration_for_external_request as log_external_request
 
@@ -201,6 +201,11 @@ class DMNotifyClient:
             if isinstance(e.message, list) and \
                     any(msg["message"].startswith("Missing personalisation") for msg in e.message):
                 raise EmailTemplateError(str(e))
+
+            if isinstance(e.message, list) and \
+                    any(msg["message"].startswith("email_address Not a valid email address") for msg in e.message):
+                raise EmailInvalidError(str(e))
+
             raise EmailError(str(e))
 
         self._log(logging.INFO, f"Email with reference '{reference}' sent to Notify successfully", email_obj)
