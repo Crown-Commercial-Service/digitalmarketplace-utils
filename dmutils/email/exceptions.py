@@ -8,3 +8,7 @@ class EmailError(Exception):
 
 class EmailTemplateError(EmailError):
     pass
+
+
+class EmailInvalidError(EmailError):
+    pass
