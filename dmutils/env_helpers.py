@@ -1,7 +1,7 @@
 import os
 
 
-def get_api_endpoint_from_stage(stage, app='api'):
+def get_api_endpoint_from_stage(stage: str, app: str = 'api') -> str:
     """Return the full URL of given API or Search API environment.
 
     :param stage: environment name. Can be 'production', 'dev' (aliases: 'local', 'development'), 'staging', 'preview',
@@ -23,7 +23,7 @@ def get_api_endpoint_from_stage(stage, app='api'):
     return f'https://{app}.{stage}.marketplace.team'
 
 
-def get_web_url_from_stage(stage):
+def get_web_url_from_stage(stage: str) -> str:
     """Return the full URL of given web environment.
 
     :param stage: environment name. Can be 'production', 'dev' (aliases: 'local', 'development'), 'staging', 'preview',
@@ -37,7 +37,7 @@ def get_web_url_from_stage(stage):
     return f'https://www.{stage}.marketplace.team'
 
 
-def get_assets_endpoint_from_stage(stage):
+def get_assets_endpoint_from_stage(stage: str) -> str:
     if stage in ['local', 'dev', 'development']:
         # Static files are not served via nginx for local environments
         raise NotImplementedError()
