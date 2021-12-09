@@ -15,6 +15,7 @@ def get_api_endpoint_from_stage(stage, app='api'):
         'staging': 'https://{}.staging.marketplace.team'.format(app),
         'production': 'https://{}.digitalmarketplace.service.gov.uk'.format(app),
         'nft': 'https://{}.nft.marketplace.team'.format(app),
+        'uat': 'https://{}.uat.marketplace.team'.format(app),
     }
 
     dev_ports = {
@@ -43,6 +44,7 @@ def get_web_url_from_stage(stage):
         'staging': 'https://www.staging.marketplace.team',
         'production': 'https://www.digitalmarketplace.service.gov.uk',
         'nft': 'https://www.nft.marketplace.team',
+        'uat': 'https://www.uat.marketplace.team',
     }
     return stage_domains[stage]
 
