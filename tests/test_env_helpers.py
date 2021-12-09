@@ -21,7 +21,8 @@ class TestGetAPIEndpointFromStage:
             ('preview', 'https://api.preview.marketplace.team'),
             ('staging', 'https://api.staging.marketplace.team'),
             ('production', 'https://api.digitalmarketplace.service.gov.uk'),
-            ('nft', 'https://api.nft.marketplace.team')
+            ('nft', 'https://api.nft.marketplace.team'),
+            ('uat', 'https://api.uat.marketplace.team'),
         ]
     )
     def test_get_api_endpoint_for_non_dev_environments(self, stage, expected_result):
@@ -41,7 +42,8 @@ class TestGetAPIEndpointFromStage:
             ('preview', 'https://search-api.preview.marketplace.team'),
             ('staging', 'https://search-api.staging.marketplace.team'),
             ('production', 'https://search-api.digitalmarketplace.service.gov.uk'),
-            ('nft', 'https://search-api.nft.marketplace.team')
+            ('nft', 'https://search-api.nft.marketplace.team'),
+            ('uat', 'https://search-api.uat.marketplace.team'),
         ]
     )
     def test_get_search_api_endpoint_for_non_dev_environments(self, stage, expected_result):
@@ -57,7 +59,8 @@ class TestGetAPIEndpointFromStage:
             ('preview', 'https://antivirus-api.preview.marketplace.team'),
             ('staging', 'https://antivirus-api.staging.marketplace.team'),
             ('production', 'https://antivirus-api.digitalmarketplace.service.gov.uk'),
-            ('nft', 'https://antivirus-api.nft.marketplace.team')
+            ('nft', 'https://antivirus-api.nft.marketplace.team'),
+            ('uat', 'https://antivirus-api.uat.marketplace.team'),
         ]
     )
     def test_get_antivirus_api_endpoint_for_non_dev_environments(self, stage, expected_result):
@@ -76,7 +79,8 @@ class TestGetWebUrlFromStage:
             ('preview', 'https://www.preview.marketplace.team'),
             ('staging', 'https://www.staging.marketplace.team'),
             ('production', 'https://www.digitalmarketplace.service.gov.uk'),
-            ('nft', 'https://www.nft.marketplace.team')
+            ('nft', 'https://www.nft.marketplace.team'),
+            ('uat', 'https://www.uat.marketplace.team'),
         ]
     )
     def test_get_api_endpoint_for_non_dev_environments(self, stage, expected_result):
@@ -96,7 +100,8 @@ class TestGetAssetsEndpointFromStage:
             ('preview', 'https://assets.preview.marketplace.team'),
             ('staging', 'https://assets.staging.marketplace.team'),
             ('production', 'https://assets.digitalmarketplace.service.gov.uk'),
-            ('nft', 'https://assets.nft.marketplace.team')
+            ('nft', 'https://assets.nft.marketplace.team'),
+            ('uat', 'https://assets.uat.marketplace.team'),
         ]
     )
     def test_get_assets_endpoint_for_non_dev_environments(self, stage, expected_result):
