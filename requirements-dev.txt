@@ -39,6 +39,8 @@ cryptography==36.0.0
     #   sanitized-package
 defusedxml==0.7.1
     # via odfpy
+deprecated==1.2.13
+    # via redis
 digitalmarketplace-test-utils==3.0.0
     # via -r requirements-dev.in
 docopt==0.6.2
@@ -108,8 +110,10 @@ notifications-python-client==6.3.0
     # via sanitized-package
 odfpy==1.4.1
     # via sanitized-package
-packaging==20.9
-    # via pytest
+packaging==21.3
+    # via
+    #   pytest
+    #   redis
 pluggy==0.13.1
     # via pytest
 prometheus-client==0.10.1
@@ -139,7 +143,7 @@ pytz==2021.3
     # via
     #   moto
     #   sanitized-package
-redis==3.5.3
+redis==4.1.0
     # via sanitized-package
 requests==2.26.0
     # via
@@ -198,6 +202,8 @@ werkzeug==1.0.1
     #   moto
 workdays==1.4
     # via sanitized-package
+wrapt==1.13.3
+    # via deprecated
 wtforms==2.3.3
     # via flask-wtf
 xmltodict==0.12.0
