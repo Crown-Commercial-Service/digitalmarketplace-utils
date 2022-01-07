@@ -40,5 +40,5 @@ class TestSession:
         self.application.config['DM_REDIS_SERVICE_NAME'] = 'digitalmarketplace_redis'
         session.init_app(self.application)
         flask_session.Session.assert_called_once()
-        expected_dict = {'host': 'example.com', 'port': 6379, 'username': 'username', 'password': 'password', 'db': 0}
+        expected_dict = {'host': 'example.com', 'port': 6379, 'username': 'username', 'password': 'password'}
         assert self.application.config["SESSION_REDIS"].connection_pool.connection_kwargs == expected_dict
