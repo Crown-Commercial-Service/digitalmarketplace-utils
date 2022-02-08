@@ -89,7 +89,7 @@ jmespath==0.10.0
     # via
     #   boto3
     #   botocore
-mailchimp3==3.0.16
+mailchimp3==3.0.17
     # via sanitized-package
 markupsafe==1.1.1
     # via
