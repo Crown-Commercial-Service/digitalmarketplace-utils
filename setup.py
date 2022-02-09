@@ -34,7 +34,7 @@ setup(
          'cryptography>=3.2',
          'gds-metrics>=0.2.0,<1',
          'govuk-country-register>=0.3.0',
-         'mailchimp3==3.0.16',
+         'mailchimp3==3.0.17',
          'requests>=2.22.0,<3',
          'redis>=3.5.2',
          'fleep<1.1,>=1.0.1',
