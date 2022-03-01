@@ -29,5 +29,5 @@ def test_should_be_false_if_before_date_and_not_go_live_param():
 
 
 @freeze_time('2022-02-24 15:00:01')
-def test_should_be_false_after_dos6_closes():
+def test_should_be_false_after_g13_closes():
     assert are_new_frameworks_live({'show_dmp_1.0_banner': 'true'}) is False
