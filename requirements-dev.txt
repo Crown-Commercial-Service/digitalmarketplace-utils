@@ -33,7 +33,7 @@ click==7.1.2
     # via flask
 contextlib2==21.6.0
     # via sanitized-package
-cryptography==36.0.1
+cryptography==36.0.2
     # via
     #   moto
     #   sanitized-package
