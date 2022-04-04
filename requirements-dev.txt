@@ -6,6 +6,8 @@
 #
 -e file:.
     # via -r requirements-dev.in
+async-timeout==4.0.2
+    # via redis
 attrs==20.3.0
     # via
     #   hypothesis
@@ -143,7 +145,7 @@ pytz==2021.3
     # via
     #   moto
     #   sanitized-package
-redis==4.1.4
+redis==4.2.1
     # via sanitized-package
 requests==2.27.1
     # via
