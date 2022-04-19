@@ -229,8 +229,7 @@ class DMMailChimpClient(object):
                 )
             return True
         except (RequestException, MailChimpError) as e:
-            self.logger.error(
+            self.logger.exception(
                 f"Mailchimp failed to permanently remove user ({hashed_email}) from list ({list_id})",
-                extra={"error": str(e), "mailchimp_response": get_response_from_exception(e)},
             )
         return False
