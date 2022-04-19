@@ -229,8 +229,10 @@ class DMMailChimpClient(object):
                 )
             return True
         except (RequestException, MailChimpError) as e:
-            self.logger.error(
+            if get_response_from_exception(e).get('status') == 404:
+                self.logger.info(f"User ({hashed_email}) not found in list ({list_id})")
+                return True
+            self.logger.exception(
                 f"Mailchimp failed to permanently remove user ({hashed_email}) from list ({list_id})",
-                extra={"error": str(e), "mailchimp_response": get_response_from_exception(e)},
             )
         return False

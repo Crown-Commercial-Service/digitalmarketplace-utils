@@ -603,3 +603,27 @@ class TestMailchimp(PatchExternalServiceLogConditionMixin):
                     subscriber_hash="ee5ae5f54bdf3394d48ea4e79e6d0e39",
                 ),
             ]
+
+    def test_permanently_remove_email_from_list_already_removed(self):
+        dm_mailchimp_client = DMMailChimpClient('username', DUMMY_MAILCHIMP_API_KEY, logging.getLogger('mailchimp'))
+        with mock.patch.object(
+            dm_mailchimp_client._client.lists.members,
+            'delete_permanent',
+            autospec=True,
+        ) as del_perm:
+            del_perm.side_effect = MailChimpError({"status": 404})
+
+            with assert_external_service_log_entry(successful_call=False, extra_modules=['mailchimp'], count=1):
+                result = dm_mailchimp_client.permanently_remove_email_from_list(
+                    "trousers.potato@purse.net",
+                    "modern_society",
+                )
+
+            assert result is True
+
+            assert del_perm.call_args_list == [
+                mock.call(
+                    list_id="modern_society",
+                    subscriber_hash="ee5ae5f54bdf3394d48ea4e79e6d0e39",
+                ),
+            ]
