@@ -8,3 +8,7 @@ updates:
   open-pull-requests-limit: 10
   allow:
     - dependency-type: production
+  ignore:
+    - dependency-name: flask
+      versions:
+        - ">=2.1"  # v2.1 removes deprecations added in 2.0. We can't upgrade to 2.1 until all consumers are on 2.0.
