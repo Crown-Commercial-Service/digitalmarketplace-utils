@@ -14,11 +14,11 @@ attrs==20.3.0
     #   pytest
 blinker==1.4
     # via gds-metrics
-boto3==1.21.43
+boto3==1.22.4
     # via
     #   moto
     #   sanitized-package
-botocore==1.24.43
+botocore==1.25.4
     # via
     #   boto3
     #   moto
