@@ -147,7 +147,7 @@ pytz==2022.1
     #   sanitized-package
 redis==4.3.4
     # via sanitized-package
-requests==2.28.0
+requests==2.28.1
     # via
     #   mailchimp3
     #   moto
