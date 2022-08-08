@@ -2,6 +2,7 @@
 
 from dmutils.dmp_so_status import are_new_frameworks_live
 
+
 def test_should_be_true():
     assert are_new_frameworks_live({}) is True
 
