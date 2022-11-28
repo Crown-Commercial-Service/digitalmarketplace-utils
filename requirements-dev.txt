@@ -16,8 +16,8 @@ blinker==1.4
     # via gds-metrics
 boto3==1.26.8
     # via
-    #   digitalmarketplace-utils
     #   moto
+    #   sanitized-package
 botocore==1.29.8
     # via
     #   boto3
@@ -34,15 +34,13 @@ charset-normalizer==2.0.3
 click==7.1.2
     # via flask
 contextlib2==21.6.0
-    # via digitalmarketplace-utils
+    # via sanitized-package
 cryptography==38.0.3
     # via
-    #   digitalmarketplace-utils
     #   moto
+    #   sanitized-package
 defusedxml==0.7.1
     # via odfpy
-deprecated==1.2.13
-    # via redis
 digitalmarketplace-test-utils==3.0.0
     # via -r requirements-dev.in
 docopt==0.6.2
@@ -51,28 +49,28 @@ flake8==3.9.2
     # via -r requirements-dev.in
 flask==1.1.4
     # via
-    #   digitalmarketplace-utils
     #   flask-gzip
     #   flask-login
     #   flask-session
     #   flask-wtf
     #   gds-metrics
+    #   sanitized-package
 flask-gzip==0.2
-    # via digitalmarketplace-utils
+    # via sanitized-package
 flask-login==0.6.2
-    # via digitalmarketplace-utils
+    # via sanitized-package
 flask-session==0.4.0
-    # via digitalmarketplace-utils
+    # via sanitized-package
 flask-wtf==1.0.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 fleep==1.0.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 freezegun==1.1.0
     # via -r requirements-dev.in
 gds-metrics==0.2.4
-    # via digitalmarketplace-utils
+    # via sanitized-package
 govuk-country-register==0.5.0
-    # via digitalmarketplace-utils
+    # via sanitized-package
 hypothesis==6.14.0
     # via -r requirements-dev.in
 idna==2.8
@@ -92,7 +90,7 @@ jmespath==0.10.0
     #   boto3
     #   botocore
 mailchimp3==3.0.17
-    # via digitalmarketplace-utils
+    # via sanitized-package
 markupsafe==1.1.1
     # via
     #   jinja2
@@ -109,9 +107,9 @@ mypy==0.902
 mypy-extensions==0.4.3
     # via mypy
 notifications-python-client==6.4.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 odfpy==1.4.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 packaging==21.3
     # via
     #   pytest
@@ -140,21 +138,21 @@ python-dateutil==2.8.1
     #   freezegun
     #   moto
 python-json-logger==2.0.4
-    # via digitalmarketplace-utils
+    # via sanitized-package
 pytz==2022.6
     # via
-    #   digitalmarketplace-utils
     #   moto
-redis==4.3.4
-    # via digitalmarketplace-utils
+    #   sanitized-package
+redis==4.3.5
+    # via sanitized-package
 requests==2.28.1
     # via
-    #   digitalmarketplace-utils
     #   mailchimp3
     #   moto
     #   notifications-python-client
     #   requests-mock
     #   responses
+    #   sanitized-package
 requests-mock==1.9.3
     # via -r requirements-dev.in
 responses==0.13.3
@@ -192,7 +190,7 @@ types-werkzeug==1.0.1
 typing-extensions==3.7.4.3
     # via mypy
 unicodecsv==0.14.1
-    # via digitalmarketplace-utils
+    # via sanitized-package
 urllib3==1.26.5
     # via
     #   botocore
@@ -204,9 +202,7 @@ werkzeug==1.0.1
     #   flask-login
     #   moto
 workdays==1.4
-    # via digitalmarketplace-utils
-wrapt==1.13.3
-    # via deprecated
+    # via sanitized-package
 wtforms==2.3.3
     # via flask-wtf
 xmltodict==0.12.0
