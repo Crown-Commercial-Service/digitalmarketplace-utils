@@ -141,7 +141,7 @@ pytz==2022.6
     # via
     #   moto
     #   sanitized-package
-redis==4.4.0
+redis==4.4.1
     # via sanitized-package
 requests==2.28.1
     # via
