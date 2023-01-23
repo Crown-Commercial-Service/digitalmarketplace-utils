@@ -61,7 +61,7 @@ flask-login==0.6.2
     # via sanitized-package
 flask-session==0.4.0
     # via sanitized-package
-flask-wtf==1.0.1
+flask-wtf==1.1.1
     # via sanitized-package
 fleep==1.0.1
     # via sanitized-package
