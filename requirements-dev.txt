@@ -106,7 +106,7 @@ mypy==0.902
     # via -r requirements-dev.in
 mypy-extensions==0.4.3
     # via mypy
-notifications-python-client==6.4.1
+notifications-python-client==8.1.0
     # via sanitized-package
 odfpy==1.4.1
     # via sanitized-package
