@@ -32,7 +32,7 @@ jobs:
 
       - name: Check if version tag already exists
         id: version_tag
-        uses: mukunku/tag-exists-action@9298fbcc409758ba624a0ae16b83df86637cb8ce
+        uses: mukunku/tag-exists-action@78009d2b13e10ba051fe68d8d2f6778a9b2adab3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
