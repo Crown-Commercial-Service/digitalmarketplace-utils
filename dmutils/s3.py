@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import subprocess
 import boto3
 import datetime
 from dateutil.parser import parse as parse_time
@@ -135,14 +136,34 @@ class S3(object):
         """
         path = self._normalize_path(path)
         if self.path_exists(path):
-            return self._resource.meta.client.generate_presigned_url(
-                "get_object",
-                Params={
-                    "Bucket": self._bucket.name,
-                    "Key": path,
-                },
-                ExpiresIn=expires_in,
-            )
+            # Because we are using cloudfront as a load balancer for the assets
+            # the URL we generate needs to include the region.
+            # However boto3 does not do this so we are having to make use of
+            # the AWS CLI to create this URL.
+            if os.getenv("DM_ENVIRONMENT", None) == "native-aws":
+                result = subprocess.run(
+                    [
+                        'aws',
+                        's3',
+                        'presign',
+                        f's3://{self._bucket.name}/{path}',
+                        '--expires-in',
+                        str(expires_in)
+                    ],
+                    stdout=subprocess.PIPE,
+                    check=True,
+                )
+
+                return result.stdout.decode()
+            else:
+                return self._resource.meta.client.generate_presigned_url(
+                    "get_object",
+                    Params={
+                        "Bucket": self._bucket.name,
+                        "Key": path,
+                    },
+                    ExpiresIn=expires_in,
+                )
 
     def _get_key(self, path):
         path = self._normalize_path(path)
