@@ -165,6 +165,30 @@ class TestS3Uploader(object):
         assert parsed_qs["AWSAccessKeyId"] == ["AKIAIABCDABCDABCDABC"]
         assert parsed_qs["Signature"]
 
+    def test_get_signed_url_aws_native(self, bucket_with_file, monkeypatch):
+        with mock.patch('dmutils.s3.subprocess.run') as mock_run:
+            mock_stdout = mock.MagicMock()
+            mock_stdout.configure_mock(
+                **{
+                    "stdout.decode.return_value": 'https://dear-liza.s3.amazonaws.com/with/straw.dear.pdf?'
+                                                  'X-Amz-Algorithm=AnAlgorithm&'
+                                                  'X-Amz-Credential=SomeCredentials&'
+                                                  'X-Amz-Signature=SomeSignature'
+                }
+            )
+
+            mock_run.return_value = mock_stdout
+
+            monkeypatch.setenv('DM_ENVIRONMENT', 'native-aws')
+            signed_url = S3('dear-liza').get_signed_url('with/straw.dear.pdf')
+            parsed_signed_url = urlparse(signed_url)
+            assert "dear-liza" in parsed_signed_url.hostname
+            assert parsed_signed_url.path == "/with/straw.dear.pdf"
+            parsed_qs = parse_qs(parsed_signed_url.query)
+            assert parsed_qs["X-Amz-Algorithm"][0] == "AnAlgorithm"
+            assert parsed_qs["X-Amz-Credential"][0] == "SomeCredentials"
+            assert parsed_qs["X-Amz-Signature"][0] == "SomeSignature"
+
     @freeze_time('2015-10-10')
     def test_get_signed_url_with_expires_at(self, bucket_with_file):
         signed_url = S3('dear-liza').get_signed_url('with/straw.dear.pdf', expires_in=10)
