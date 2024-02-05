@@ -137,7 +137,7 @@ python-dateutil==2.8.1
     #   moto
 python-json-logger==2.0.7
     # via sanitized-package
-pytz==2022.7.1
+pytz==2024.1
     # via
     #   moto
     #   sanitized-package
