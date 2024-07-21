@@ -25,7 +25,7 @@ botocore==1.29.89
     #   s3transfer
 cachelib==0.1.1
     # via flask-session
-certifi==2022.12.7
+certifi==2024.7.4
     # via requests
 cffi==1.14.5
     # via cryptography
@@ -35,7 +35,7 @@ click==7.1.2
     # via flask
 contextlib2==21.6.0
     # via sanitized-package
-cryptography==39.0.2
+cryptography==42.0.6
     # via
     #   moto
     #   sanitized-package
@@ -47,7 +47,7 @@ docopt==0.6.2
     # via notifications-python-client
 flake8==3.9.2
     # via -r requirements-dev.in
-flask==1.1.4
+flask==2.2.5
     # via
     #   flask-gzip
     #   flask-login
@@ -73,7 +73,7 @@ govuk-country-register==0.5.0
     # via sanitized-package
 hypothesis==6.14.0
     # via -r requirements-dev.in
-idna==2.8
+idna==3.7
     # via requests
 iniconfig==1.1.1
     # via pytest
@@ -81,7 +81,7 @@ itsdangerous==1.1.0
     # via
     #   flask
     #   flask-wtf
-jinja2==2.11.3
+jinja2==3.1.4
     # via
     #   flask
     #   moto
@@ -141,9 +141,9 @@ pytz==2022.7.1
     # via
     #   moto
     #   sanitized-package
-redis==4.5.1
+redis==4.5.4
     # via sanitized-package
-requests==2.28.2
+requests==2.32.2
     # via
     #   mailchimp3
     #   moto
@@ -189,12 +189,12 @@ typing-extensions==3.7.4.3
     # via mypy
 unicodecsv==0.14.1
     # via sanitized-package
-urllib3==1.26.5
+urllib3==1.26.19
     # via
     #   botocore
     #   requests
     #   responses
-werkzeug==1.0.1
+werkzeug==3.0.3
     # via
     #   flask
     #   flask-login
@@ -208,3 +208,4 @@ xmltodict==0.12.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
