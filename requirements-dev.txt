@@ -189,7 +189,7 @@ typing-extensions==3.7.4.3
     # via mypy
 unicodecsv==0.14.1
     # via sanitized-package
-urllib3==1.26.5
+urllib3==1.26.18
     # via
     #   botocore
     #   requests
