@@ -203,7 +203,7 @@ workdays==1.4
     # via sanitized-package
 wtforms==2.3.3
     # via flask-wtf
-xmltodict==0.12.0
+xmltodict==0.15.0
     # via moto
 
 # The following packages are considered to be unsafe in a requirements file:
